@@ -11,7 +11,7 @@ from backend.nucleo_herbal.aplicacion.puertos.repositorios import (
     RepositorioPlantas,
     RepositorioProductos,
 )
-from backend.nucleo_herbal.dominio.entidades import Intencion, Planta, Producto
+from backend.nucleo_herbal.dominio.entidades import Planta, Producto, Intencion
 
 
 def _planta_melisa() -> Planta:
@@ -57,7 +57,7 @@ class RepositorioProductosEnMemoria(RepositorioProductos):
         return tuple(
             producto
             for producto in self._productos
-            if producto.es_herbal and producto.planta_id == id_planta
+            if producto.tipo_producto == "hierbas-a-granel" and producto.planta_id == id_planta
         )
 
 
@@ -70,17 +70,19 @@ class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
                 Producto(
                     id="prod-1",
                     sku="HERB-001",
+                    slug="melisa-a-granel-50g",
                     nombre="Melisa a granel 50g",
+                    tipo_producto="hierbas-a-granel",
                     categoria_comercial="hierbas-a-granel",
-                    es_herbal=True,
                     planta_id="pla-1",
                 ),
                 Producto(
                     id="prod-2",
                     sku="ESC-001",
+                    slug="vela-ritual-pequena",
                     nombre="Vela ritual pequeña",
+                    tipo_producto="herramientas-rituales",
                     categoria_comercial="herramientas-esotericas",
-                    es_herbal=False,
                     planta_id=None,
                 ),
             )
@@ -119,6 +121,8 @@ class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
 
         self.assertEqual(len(resultado), 1)
         self.assertEqual(resultado[0].sku, "HERB-001")
+        self.assertEqual(resultado[0].slug, "melisa-a-granel-50g")
+        self.assertEqual(resultado[0].tipo_producto, "hierbas-a-granel")
 
     def test_obtener_relaciones_herbales_por_intencion(self) -> None:
         caso = ObtenerRelacionesHerbalesPorIntencion(self.repo_plantas)

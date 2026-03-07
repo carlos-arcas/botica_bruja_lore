@@ -10,9 +10,10 @@ class TestEntidadesDominio(unittest.TestCase):
             Producto(
                 id="prod-1",
                 sku="SKU-001",
-                nombre="Rosa a granel",
+                slug="rosa-a-granel-50g",
+                nombre="Rosa a granel 50g",
+                tipo_producto="hierbas-a-granel",
                 categoria_comercial="hierbas-a-granel",
-                es_herbal=True,
                 planta_id=None,
             )
 
@@ -37,13 +38,41 @@ class TestEntidadesDominio(unittest.TestCase):
         producto = Producto(
             id="prod-2",
             sku="SKU-002",
+            slug="tarro-altar-lunar",
             nombre="Tarro de altar",
+            tipo_producto="herramientas-rituales",
             categoria_comercial="herramientas-esotericas",
-            es_herbal=False,
             planta_id=None,
         )
 
-        self.assertEqual(producto.planta_id, None)
+        self.assertIsNone(producto.planta_id)
+
+    def test_producto_requiere_slug_obligatorio(self) -> None:
+        with self.assertRaises(ErrorDominio):
+            Producto(
+                id="prod-3",
+                sku="SKU-003",
+                slug=" ",
+                nombre="Sahumerio artesanal",
+                tipo_producto="inciensos-y-sahumerios",
+                categoria_comercial="herramientas-esotericas",
+                planta_id=None,
+            )
+
+    def test_tipo_producto_y_categoria_comercial_son_ejes_distintos(self) -> None:
+        producto = Producto(
+            id="prod-4",
+            sku="SKU-004",
+            slug="melisa-cosecha-lore-50g",
+            nombre="Melisa cosecha Lore 50g",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="destacados-temporada",
+            planta_id="pla-1",
+        )
+
+        self.assertEqual(producto.tipo_producto, "hierbas-a-granel")
+        self.assertEqual(producto.categoria_comercial, "destacados-temporada")
+        self.assertNotEqual(producto.tipo_producto, producto.categoria_comercial)
 
 
 if __name__ == "__main__":

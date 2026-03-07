@@ -6,6 +6,16 @@ from dataclasses import dataclass
 
 from .excepciones import ErrorDominio
 
+TIPOS_PRODUCTO_VALIDOS = {
+    "hierbas-a-granel",
+    "inciensos-y-sahumerios",
+    "herramientas-rituales",
+    "tarot-y-oraculos",
+    "minerales-y-piedras",
+    "packs-y-cestas",
+}
+TIPO_PRODUCTO_HERBAL = "hierbas-a-granel"
+
 
 @dataclass(frozen=True, slots=True)
 class Intencion:
@@ -47,20 +57,27 @@ class Producto:
 
     id: str
     sku: str
+    slug: str
     nombre: str
+    tipo_producto: str
     categoria_comercial: str
-    es_herbal: bool
     planta_id: str | None
 
     def __post_init__(self) -> None:
         if not self.sku.strip():
             raise ErrorDominio("El producto requiere SKU.")
+        if not self.slug.strip():
+            raise ErrorDominio("El producto requiere slug.")
         if not self.nombre.strip():
             raise ErrorDominio("El producto requiere nombre.")
+        if self.tipo_producto not in TIPOS_PRODUCTO_VALIDOS:
+            raise ErrorDominio("El producto requiere un tipo de producto válido.")
         if not self.categoria_comercial.strip():
             raise ErrorDominio("El producto requiere categoría comercial.")
-        if self.es_herbal and not _hay_texto(self.planta_id):
-            raise ErrorDominio("Un producto herbal debe vincularse a una planta.")
+        if self.tipo_producto == TIPO_PRODUCTO_HERBAL and not _hay_texto(self.planta_id):
+            raise ErrorDominio(
+                "Un producto de tipo hierbas-a-granel debe vincularse a una planta."
+            )
 
 
 
