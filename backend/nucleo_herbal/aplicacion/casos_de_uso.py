@@ -95,7 +95,9 @@ def _a_planta_detalle(planta: Planta) -> PlantaDetalleDTO:
 def _a_producto_resumen(producto: Producto) -> ProductoResumenDTO:
     return ProductoResumenDTO(
         sku=producto.sku,
+        slug=producto.slug,
         nombre=producto.nombre,
+        tipo_producto=producto.tipo_producto,
         categoria_comercial=producto.categoria_comercial,
     )
 

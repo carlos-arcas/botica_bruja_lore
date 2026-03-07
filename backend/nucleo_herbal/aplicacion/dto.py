@@ -29,7 +29,9 @@ class PlantaDetalleDTO:
 @dataclass(frozen=True, slots=True)
 class ProductoResumenDTO:
     sku: str
+    slug: str
     nombre: str
+    tipo_producto: str
     categoria_comercial: str
 
 
