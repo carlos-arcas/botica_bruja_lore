@@ -13,6 +13,7 @@ def serializar_planta_resumen(dto: PlantaResumenDTO) -> dict:
     return {
         "slug": dto.slug,
         "nombre": dto.nombre,
+        "descripcion_breve": dto.descripcion_breve,
         "intenciones": [serializar_intencion(item) for item in dto.intenciones],
     }
 

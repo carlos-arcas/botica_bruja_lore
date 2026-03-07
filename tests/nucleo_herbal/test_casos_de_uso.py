@@ -95,6 +95,7 @@ class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
 
         self.assertEqual(len(resultado), 1)
         self.assertEqual(resultado[0].slug, "melisa")
+        self.assertIn("tradición herbal", resultado[0].descripcion_breve)
         self.assertEqual(resultado[0].intenciones[0].slug, "calma")
 
     def test_obtener_detalle_planta(self) -> None:
