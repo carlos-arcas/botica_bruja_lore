@@ -1,0 +1,96 @@
+# ===============================
+# Python / Django
+# ===============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.python-version
+
+.venv/
+venv/
+env/
+ENV/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.pyre/
+.tox/
+.nox/
+.dmypy.json
+.pytype/
+
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+*.log
+logs/
+
+# Django locales compilados (mantener solo .po versionados)
+*.mo
+
+# ===============================
+# Node / Next.js
+# ===============================
+node_modules/
+.next/
+out/
+.npm/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.parcel-cache/
+
+# Builds y artefactos frontend
+build/
+dist/
+coverage/
+
+# ===============================
+# Variables de entorno / secretos locales
+# ===============================
+.env
+.env.*
+!.env.example
+
+# ===============================
+# SQLite y bases locales efímeras
+# ===============================
+*.sqlite3
+*.db
+
+# ===============================
+# Sistema operativo (Windows/macOS)
+# ===============================
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.temp
+
+.DS_Store
+
+# ===============================
+# IDE / editores
+# ===============================
+.vscode/
+.idea/
+*.iml
+*.suo
+*.user
+*.userossc
+*.sln.docstates
+
+# ===============================
+# Artefactos de ejecución local
+# ===============================
+pip-log.txt
+pip-delete-this-directory.txt
