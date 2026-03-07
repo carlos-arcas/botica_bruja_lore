@@ -23,8 +23,7 @@ export default async function PaginaListadoHerbal(): Promise<JSX.Element> {
         <p className="hero-portada__eyebrow">Núcleo herbal navegable</p>
         <h1>Línea herbal</h1>
         <p>
-          Explora plantas publicadas con contexto breve e intención principal. Esta base prepara la
-          navegación hacia la ficha conectada del siguiente prompt.
+          Explora plantas publicadas con contexto breve e intención principal. Desde aquí puedes entrar a la ficha herbal conectada con contexto editorial y salida comercial mínima.
         </p>
         <Link href="/" className="boton boton--secundario">
           Volver a portada

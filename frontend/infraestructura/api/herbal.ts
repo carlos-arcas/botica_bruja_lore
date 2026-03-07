@@ -11,6 +11,19 @@ export type PlantaPublica = {
   urlDetalle: string;
 };
 
+export type ProductoHerbalMinimoPublico = {
+  sku: string;
+  slug: string;
+  nombre: string;
+  tipo_producto: string;
+  categoria_comercial: string;
+};
+
+export type FichaHerbalPublica = {
+  planta: PlantaPublica;
+  productos: ProductoHerbalMinimoPublico[];
+};
+
 type PlantaApi = {
   slug: string;
   nombre: string;
@@ -18,12 +31,34 @@ type PlantaApi = {
   intenciones: IntencionPublica[];
 };
 
+type ProductoHerbalApi = {
+  sku: string;
+  slug: string;
+  nombre: string;
+  tipo_producto: string;
+  categoria_comercial: string;
+};
+
 type RespuestaListadoHerbal = {
   plantas: PlantaApi[];
 };
 
+type RespuestaDetallePlanta = {
+  planta: PlantaApi;
+};
+
+type RespuestaProductosPlanta = {
+  planta_slug: string;
+  productos: ProductoHerbalApi[];
+};
+
 export type ResultadoListadoHerbal =
   | { estado: "ok"; plantas: PlantaPublica[] }
+  | { estado: "error"; mensaje: string };
+
+export type ResultadoFichaHerbal =
+  | { estado: "ok"; ficha: FichaHerbalPublica }
+  | { estado: "no_encontrado" }
   | { estado: "error"; mensaje: string };
 
 const API_BASE_URL =
@@ -60,6 +95,53 @@ export async function obtenerListadoHerbal(): Promise<ResultadoListadoHerbal> {
       estado: "error",
       mensaje:
         "La línea herbal no está disponible temporalmente. Puedes continuar explorando la portada y volver a intentar en breve.",
+    };
+  }
+}
+
+export async function obtenerFichaHerbalConectada(slugPlanta: string): Promise<ResultadoFichaHerbal> {
+  const endpointDetalle = `${API_BASE_URL}/api/v1/herbal/plantas/${slugPlanta}/`;
+  const endpointProductos = `${API_BASE_URL}/api/v1/herbal/plantas/${slugPlanta}/productos/`;
+
+  try {
+    const [respuestaDetalle, respuestaProductos] = await Promise.all([
+      fetch(endpointDetalle, {
+        headers: { Accept: "application/json" },
+        next: { revalidate: 120 },
+      }),
+      fetch(endpointProductos, {
+        headers: { Accept: "application/json" },
+        next: { revalidate: 120 },
+      }),
+    ]);
+
+    if (respuestaDetalle.status === 404 || respuestaProductos.status === 404) {
+      return { estado: "no_encontrado" };
+    }
+
+    if (!respuestaDetalle.ok || !respuestaProductos.ok) {
+      return {
+        estado: "error",
+        mensaje:
+          "No pudimos cargar esta ficha herbal ahora mismo. Inténtalo de nuevo en unos minutos.",
+      };
+    }
+
+    const detalle: RespuestaDetallePlanta = await respuestaDetalle.json();
+    const resolucionComercial: RespuestaProductosPlanta = await respuestaProductos.json();
+
+    return {
+      estado: "ok",
+      ficha: {
+        planta: mapearPlanta(detalle.planta),
+        productos: resolucionComercial.productos,
+      },
+    };
+  } catch {
+    return {
+      estado: "error",
+      mensaje:
+        "La ficha herbal no está disponible por un problema de conexión entre frontend y backend.",
     };
   }
 }
