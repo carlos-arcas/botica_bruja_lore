@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { PlantaPublica } from "@/infraestructura/api/herbal";
 
 type Props = {
@@ -9,9 +11,7 @@ export function PreviewLineaHerbal({ plantas }: Props): JSX.Element {
     <section id="linea-herbal" className="bloque-home">
       <div className="bloque-home__cabecera">
         <h2>Línea herbal</h2>
-        <a href="#" aria-disabled>
-          Ver listado completo (siguiente entrega)
-        </a>
+        <Link href="/hierbas">Ver listado completo</Link>
       </div>
       <p>
         Primer acceso real al núcleo herbal público. Esta vista muestra una selección navegable de
@@ -29,7 +29,7 @@ export function PreviewLineaHerbal({ plantas }: Props): JSX.Element {
             ) : (
               <p className="meta-intencion">Sin intención pública asociada todavía.</p>
             )}
-            <a href={planta.urlDetalle} target="_blank" rel="noreferrer">Ver detalle público</a>
+            <Link href={planta.urlDetalle}>Ver ficha herbal</Link>
           </li>
         ))}
       </ul>

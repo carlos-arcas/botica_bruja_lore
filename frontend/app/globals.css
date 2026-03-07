@@ -134,3 +134,18 @@ body {
     padding: 1rem;
   }
 }
+
+
+.rejilla-plantas--listado {
+  margin-top: 0.5rem;
+}
+
+.tarjeta-planta-herbal {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.bloque-home--vacio {
+  border-color: #d8ccb8;
+  background: #fffaf2;
+}

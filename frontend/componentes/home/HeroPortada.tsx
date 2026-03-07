@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function HeroPortada(): JSX.Element {
   return (
     <section className="hero-portada">
@@ -8,9 +10,9 @@ export function HeroPortada(): JSX.Element {
         natural que evoluciona hacia lo místico sin perder claridad.
       </p>
       <div className="hero-portada__acciones">
-        <a href="#linea-herbal" className="boton boton--principal">
+        <Link href="/hierbas" className="boton boton--principal">
           Entrar a la línea herbal
-        </a>
+        </Link>
         <a href="#descubrimiento-intencion" className="boton boton--secundario">
           Descubrir por intención
         </a>

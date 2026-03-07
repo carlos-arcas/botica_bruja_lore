@@ -15,6 +15,7 @@ class IntencionDTO:
 class PlantaResumenDTO:
     slug: str
     nombre: str
+    descripcion_breve: str
     intenciones: tuple[IntencionDTO, ...]
 
 

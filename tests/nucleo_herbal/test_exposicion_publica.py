@@ -86,6 +86,7 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         data = response.json()
         self.assertEqual(len(data["plantas"]), 1)
         self.assertEqual(data["plantas"][0]["slug"], "melisa")
+        self.assertEqual(data["plantas"][0]["descripcion_breve"], "Planta aromática tradicional.")
         self.assertEqual(len(data["plantas"][0]["intenciones"]), 1)
         self.assertEqual(data["plantas"][0]["intenciones"][0]["slug"], "calma")
 

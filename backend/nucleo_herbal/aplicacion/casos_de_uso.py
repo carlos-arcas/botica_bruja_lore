@@ -79,6 +79,7 @@ def _a_planta_resumen(planta: Planta) -> PlantaResumenDTO:
     return PlantaResumenDTO(
         slug=planta.slug,
         nombre=planta.nombre,
+        descripcion_breve=planta.descripcion_breve,
         intenciones=tuple(_a_intencion_dto(item) for item in planta.intenciones),
     )
 
