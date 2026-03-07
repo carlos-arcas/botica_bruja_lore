@@ -13,6 +13,11 @@ class IntencionModelo(models.Model):
     class Meta:
         db_table = "nucleo_intencion"
         ordering = ("nombre",)
+        verbose_name = "intención"
+        verbose_name_plural = "intenciones"
+
+    def __str__(self) -> str:
+        return self.nombre
 
 
 class PlantaModelo(models.Model):
@@ -21,11 +26,20 @@ class PlantaModelo(models.Model):
     nombre = models.CharField(max_length=120)
     descripcion_breve = models.TextField()
     publicada = models.BooleanField(default=True)
-    intenciones = models.ManyToManyField(IntencionModelo, related_name="plantas")
+    intenciones = models.ManyToManyField(
+        IntencionModelo,
+        related_name="plantas",
+        help_text="Intenciones editoriales vinculadas al descubrimiento herbal.",
+    )
 
     class Meta:
         db_table = "nucleo_planta"
         ordering = ("nombre",)
+        verbose_name = "planta"
+        verbose_name_plural = "plantas"
+
+    def __str__(self) -> str:
+        return self.nombre
 
 
 class ProductoModelo(models.Model):
@@ -41,9 +55,15 @@ class ProductoModelo(models.Model):
         related_name="productos",
         null=True,
         blank=True,
+        help_text="Planta asociada cuando el producto es herbal.",
     )
     publicado = models.BooleanField(default=True)
 
     class Meta:
         db_table = "nucleo_producto"
         ordering = ("nombre",)
+        verbose_name = "producto"
+        verbose_name_plural = "productos"
+
+    def __str__(self) -> str:
+        return f"{self.nombre} [{self.sku}]"
