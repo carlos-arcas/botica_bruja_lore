@@ -179,3 +179,29 @@ body {
   display: grid;
   gap: 0.65rem;
 }
+
+.ficha-ritual__cabecera h1 {
+  margin: 0;
+}
+
+.ficha-ritual__plantas,
+.ficha-ritual__productos {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ficha-ritual__plantas li,
+.ficha-ritual__productos li {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: #fff;
+}
+
+.ficha-ritual__plantas a {
+  color: var(--acento);
+  font-weight: 600;
+}
