@@ -40,11 +40,52 @@ body {
   margin-top: 0;
 }
 
+
+.hero-portada {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-portada--con-fondo {
+  background-image: url('/fondos/Fondo_Hero.webp');
+  background-size: cover;
+  background-position: center;
+  min-height: 350px;
+  display: flex;
+  align-items: center;
+  border-color: #d9cebf;
+}
+
+.hero-portada__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(27, 22, 16, 0.62), rgba(27, 22, 16, 0.42));
+  pointer-events: none;
+}
+
+.hero-portada__contenido {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+  color: #f7f3ea;
+}
+
+.hero-portada__contenido h1 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.15;
+}
+
+.hero-portada__contenido p {
+  margin-bottom: 0;
+}
+
 .hero-portada__eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.8rem;
-  color: #6e645e;
+  color: #efe3d4;
 }
 
 .hero-portada__acciones {
@@ -69,6 +110,12 @@ body {
 .boton--secundario {
   border: 1px solid var(--acento-secundario);
   color: var(--acento-secundario);
+}
+
+.boton--secundario-claro {
+  border-color: rgba(247, 243, 234, 0.75);
+  color: #f7f3ea;
+  background: rgba(247, 243, 234, 0.08);
 }
 
 .hero-portada__nota {
@@ -132,6 +179,10 @@ body {
   .hero-portada,
   .bloque-home {
     padding: 1rem;
+  }
+
+  .hero-portada--con-fondo {
+    min-height: 300px;
   }
 }
 

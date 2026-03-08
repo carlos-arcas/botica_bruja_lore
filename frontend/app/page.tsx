@@ -8,7 +8,7 @@ export default async function Home(): Promise<JSX.Element> {
   const previewHerbal = await obtenerPreviewHerbal();
 
   return (
-    <main className="contenedor-home">
+    <main className="contenedor-home contenedor-home--portada">
       <HeroPortada />
       <DescubrimientoIntencion />
       {previewHerbal.estado === "ok" ? (
