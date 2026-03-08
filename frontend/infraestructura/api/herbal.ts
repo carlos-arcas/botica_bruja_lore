@@ -11,6 +11,14 @@ export type PlantaPublica = {
   urlDetalle: string;
 };
 
+export type RitualRelacionadoHerbal = {
+  slug: string;
+  nombre: string;
+  contexto_breve: string;
+  intenciones: IntencionPublica[];
+  urlDetalle: string;
+};
+
 export type ProductoHerbalMinimoPublico = {
   sku: string;
   slug: string;
@@ -22,12 +30,20 @@ export type ProductoHerbalMinimoPublico = {
 export type FichaHerbalPublica = {
   planta: PlantaPublica;
   productos: ProductoHerbalMinimoPublico[];
+  rituales: RitualRelacionadoHerbal[];
 };
 
 type PlantaApi = {
   slug: string;
   nombre: string;
   descripcion_breve: string;
+  intenciones: IntencionPublica[];
+};
+
+type RitualApi = {
+  slug: string;
+  nombre: string;
+  contexto_breve: string;
   intenciones: IntencionPublica[];
 };
 
@@ -52,6 +68,11 @@ type RespuestaProductosPlanta = {
   productos: ProductoHerbalApi[];
 };
 
+type RespuestaRitualesPlanta = {
+  planta_slug: string;
+  rituales: RitualApi[];
+};
+
 export type ResultadoListadoHerbal =
   | { estado: "ok"; plantas: PlantaPublica[] }
   | { estado: "error"; mensaje: string };
@@ -68,6 +89,13 @@ function mapearPlanta(planta: PlantaApi): PlantaPublica {
   return {
     ...planta,
     urlDetalle: `/hierbas/${planta.slug}`,
+  };
+}
+
+function mapearRitual(ritual: RitualApi): RitualRelacionadoHerbal {
+  return {
+    ...ritual,
+    urlDetalle: `/rituales/${ritual.slug}`,
   };
 }
 
@@ -102,9 +130,10 @@ export async function obtenerListadoHerbal(): Promise<ResultadoListadoHerbal> {
 export async function obtenerFichaHerbalConectada(slugPlanta: string): Promise<ResultadoFichaHerbal> {
   const endpointDetalle = `${API_BASE_URL}/api/v1/herbal/plantas/${slugPlanta}/`;
   const endpointProductos = `${API_BASE_URL}/api/v1/herbal/plantas/${slugPlanta}/productos/`;
+  const endpointRituales = `${API_BASE_URL}/api/v1/herbal/plantas/${slugPlanta}/rituales/`;
 
   try {
-    const [respuestaDetalle, respuestaProductos] = await Promise.all([
+    const [respuestaDetalle, respuestaProductos, respuestaRituales] = await Promise.all([
       fetch(endpointDetalle, {
         headers: { Accept: "application/json" },
         next: { revalidate: 120 },
@@ -113,13 +142,21 @@ export async function obtenerFichaHerbalConectada(slugPlanta: string): Promise<R
         headers: { Accept: "application/json" },
         next: { revalidate: 120 },
       }),
+      fetch(endpointRituales, {
+        headers: { Accept: "application/json" },
+        next: { revalidate: 120 },
+      }),
     ]);
 
-    if (respuestaDetalle.status === 404 || respuestaProductos.status === 404) {
+    if (
+      respuestaDetalle.status === 404 ||
+      respuestaProductos.status === 404 ||
+      respuestaRituales.status === 404
+    ) {
       return { estado: "no_encontrado" };
     }
 
-    if (!respuestaDetalle.ok || !respuestaProductos.ok) {
+    if (!respuestaDetalle.ok || !respuestaProductos.ok || !respuestaRituales.ok) {
       return {
         estado: "error",
         mensaje:
@@ -129,12 +166,14 @@ export async function obtenerFichaHerbalConectada(slugPlanta: string): Promise<R
 
     const detalle: RespuestaDetallePlanta = await respuestaDetalle.json();
     const resolucionComercial: RespuestaProductosPlanta = await respuestaProductos.json();
+    const ritualesRelacionados: RespuestaRitualesPlanta = await respuestaRituales.json();
 
     return {
       estado: "ok",
       ficha: {
         planta: mapearPlanta(detalle.planta),
         productos: resolucionComercial.productos,
+        rituales: ritualesRelacionados.rituales.map(mapearRitual),
       },
     };
   } catch {

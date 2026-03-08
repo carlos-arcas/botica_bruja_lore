@@ -155,7 +155,8 @@ body {
 }
 
 .ficha-herbal__intenciones,
-.ficha-herbal__productos {
+.ficha-herbal__productos,
+.ficha-herbal__rituales {
   list-style: none;
   margin: 1rem 0 0;
   padding: 0;
@@ -164,7 +165,8 @@ body {
 }
 
 .ficha-herbal__intenciones li,
-.ficha-herbal__productos li {
+.ficha-herbal__productos li,
+.ficha-herbal__rituales li {
   border: 1px solid var(--borde);
   border-radius: 12px;
   padding: 0.85rem;
@@ -202,6 +204,16 @@ body {
 }
 
 .ficha-ritual__plantas a {
+  color: var(--acento);
+  font-weight: 600;
+}
+
+
+.bloque-home--rituales-relacionados {
+  border-color: #c9beaf;
+}
+
+.ficha-herbal__rituales a {
   color: var(--acento);
   font-weight: 600;
 }

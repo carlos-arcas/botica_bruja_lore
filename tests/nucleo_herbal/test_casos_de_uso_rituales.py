@@ -6,6 +6,7 @@ from backend.nucleo_herbal.aplicacion.casos_de_uso_rituales import (
     ObtenerListadoRitualNavegable,
     ObtenerPlantasRelacionadasDeRitual,
     ObtenerProductosRelacionadosDeRitual,
+    ObtenerRitualesRelacionadosDePlantaPorSlug,
     ObtenerRitualesRelacionadosPorIntencion,
     ObtenerRitualesRelacionadosPorPlanta,
     ObtenerRitualesRelacionadosPorProducto,
@@ -105,9 +106,22 @@ class RepositorioRitualesEnMemoria(RepositorioRituales):
         return self._productos_por_ritual.get(id_ritual, ())
 
 
+
+class RepositorioPlantasEnMemoria:
+    def __init__(self, plantas: tuple[Planta, ...]) -> None:
+        self._plantas = plantas
+
+    def obtener_por_slug(self, slug_planta: str) -> Planta | None:
+        for planta in self._plantas:
+            if planta.slug == slug_planta:
+                return planta
+        return None
+
+
 class TestCasosDeUsoRitualesConectados(unittest.TestCase):
     def setUp(self) -> None:
         self.ritual = _ritual_calma()
+        self.repositorio_plantas = RepositorioPlantasEnMemoria((_planta_melisa(),))
         self.repositorio = RepositorioRitualesEnMemoria(
             rituales=(self.ritual,),
             plantas_por_ritual={"rit-1": (_planta_melisa(),)},
@@ -168,6 +182,27 @@ class TestCasosDeUsoRitualesConectados(unittest.TestCase):
 
         self.assertEqual(len(resultado), 1)
         self.assertEqual(resultado[0].slug, "cierre-sereno")
+
+
+    def test_obtener_rituales_por_slug_planta(self) -> None:
+        caso = ObtenerRitualesRelacionadosDePlantaPorSlug(
+            self.repositorio_plantas,
+            self.repositorio,
+        )
+
+        resultado = caso.ejecutar("melisa")
+
+        self.assertEqual(len(resultado), 1)
+        self.assertEqual(resultado[0].slug, "cierre-sereno")
+
+    def test_obtener_rituales_por_slug_planta_inexistente(self) -> None:
+        caso = ObtenerRitualesRelacionadosDePlantaPorSlug(
+            self.repositorio_plantas,
+            self.repositorio,
+        )
+
+        with self.assertRaises(ErrorAplicacionLookup):
+            caso.ejecutar("inexistente")
 
     def test_obtener_rituales_por_producto(self) -> None:
         caso = ObtenerRitualesRelacionadosPorProducto(self.repositorio)

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { BloqueComercialMinimo } from "@/componentes/herbal/detalle/BloqueComercialMinimo";
 import { BloqueEditorialPlanta } from "@/componentes/herbal/detalle/BloqueEditorialPlanta";
+import { BloqueRitualesRelacionados } from "@/componentes/herbal/detalle/BloqueRitualesRelacionados";
 import { CabeceraFichaHerbal } from "@/componentes/herbal/detalle/CabeceraFichaHerbal";
 import { EstadoErrorFichaHerbal } from "@/componentes/herbal/detalle/EstadoFichaHerbal";
 import { obtenerFichaHerbalConectada } from "@/infraestructura/api/herbal";
@@ -35,13 +36,14 @@ export default async function PaginaDetalleHerbal({ params }: Props): Promise<JS
     );
   }
 
-  const { planta, productos } = resultado.ficha;
+  const { planta, productos, rituales } = resultado.ficha;
 
   return (
     <main className="contenedor-home">
       <CabeceraFichaHerbal planta={planta} />
       <BloqueEditorialPlanta planta={planta} />
       <BloqueComercialMinimo productos={productos} />
+      <BloqueRitualesRelacionados rituales={rituales} />
     </main>
   );
 }
