@@ -29,15 +29,15 @@ Los estados oficiales de proyecto y capacidad son:
 
 ## 4. Estado global actual del proyecto
 - Estado de definición estratégica/documental: **alto y consistente**.
-- Estado de implementación funcional de producto: **Ciclo 1 implementado en alcance núcleo herbal**.
-- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado para alcance Ciclo 1**.
-- Frontend (home + listado herbal + ficha herbal conectada): **implementado para alcance Ciclo 1**.
-- Backoffice/admin mínimo: **implementado para operación base del ciclo**.
+- Estado de implementación funcional de producto: **Ciclos 1 y 2 implementados en alcance comprometido**.
+- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado para alcance Ciclo 1 + rituales conectados de Ciclo 2**.
+- Frontend (home + herbal + rituales conectados): **implementado para recorrido navegable de Ciclo 2**.
+- Backoffice/admin mínimo: **implementado para operación base herbal y ritual**.
 - Checkout demo: **no implementado (fuera de alcance de Ciclo 1)**.
 - Calendario ritual: **no implementado (ciclo posterior)**.
-- Quality gate Ciclo 1: **activo en nivel mínimo operativo con evidencia parcial condicionada por entorno**.
+- Quality gate Ciclo 2 (mínimo operativo razonable): **ejecutado con evidencia reproducible en entorno actual**.
 
-Resumen ejecutivo de estado real: existe un recorrido funcional del núcleo herbal y una base técnica coherente con las anclas del dominio. El cierre fuerte de verificación integrada quedó parcialmente bloqueado por limitaciones externas de instalación de dependencias (proxy 403 para `pip`/`npm`).
+Resumen ejecutivo de estado real: existe un recorrido funcional y defendible para rituales conectados sin romper el enfoque herbal-first. Se validó flujo directo e inverso entre home, herbal y rituales, con separación editorial/comercial preservada y checks mínimos del ciclo en verde (backend Django + frontend lint/build).
 
 ## 5. Estado por capacidades
 | Capacidad | Estado actual | Ciclo asociado | Evidencia / referencia | Notas operativas |
@@ -51,7 +51,14 @@ Resumen ejecutivo de estado real: existe un recorrido funcional del núcleo herb
 | Home orientadora conectada | DONE | Ciclo 1 | `frontend/app/page.tsx`, `frontend/componentes/home/` | Home conectada con preview herbal y entrada a exploración. |
 | Listado herbal navegable | DONE | Ciclo 1 | `frontend/app/hierbas/page.tsx`, `frontend/componentes/herbal/ListadoHerbal.tsx` | Listado conectado al contrato público backend. |
 | Ficha herbal conectada (editorial + comercial mínima) | DONE | Ciclo 1 | `frontend/app/hierbas/[slug]/page.tsx`, `frontend/componentes/herbal/detalle/` | Separación editorial/comercial visible en UI y consumo de API. |
-| Quality gate mínimo operativo de ciclo | EN_PROGRESO | Ciclo 1 (cierre) | `python -m pytest -q` ejecutado; intentos de `python manage.py check`, `python -m pip install -r requirements.txt`, `npm install` | Gate parcial: tests disponibles pasan, pero no se pudo ejecutar verificación Django/Next integrada por bloqueo externo de dependencias. |
+| Dominio/aplicación ritual conectada (`Ritual` + casos de uso) | DONE | Ciclo 2 | `backend/nucleo_herbal/dominio/rituales.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_rituales.py`, `tests/nucleo_herbal/test_entidades_rituales.py`, `tests/nucleo_herbal/test_casos_de_uso_rituales.py` | Intención como eje puente y relaciones ritual ↔ planta/producto implementadas y validadas. |
+| Persistencia/repositorios ritual | DONE | Ciclo 2 | `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`, `tests/nucleo_herbal/infraestructura/test_repositorios_django.py` | Persistencia mínima de rituales y cruces críticos operativa en Django. |
+| Exposición pública ritual mínima real | DONE | Ciclo 2 | `backend/nucleo_herbal/presentacion/publica/urls_rituales.py`, `backend/nucleo_herbal/presentacion/publica/views.py`, `tests/nucleo_herbal/test_exposicion_publica.py` | Listado/ficha ritual y endpoints de relaciones publicados con contrato consistente. |
+| Backoffice mínimo ritual | DONE | Ciclo 2 | `backend/nucleo_herbal/infraestructura/persistencia_django/admin.py`, `tests/nucleo_herbal/infraestructura/test_admin_django.py` | Admin permite gestionar rituales y relaciones del ciclo sin ampliar alcance. |
+| Listado ritual navegable | DONE | Ciclo 2 | `frontend/app/rituales/page.tsx`, `frontend/componentes/rituales/ListadoRituales.tsx` | Ruta pública funcional y conectada a backend real. |
+| Ficha ritual conectada | DONE | Ciclo 2 | `frontend/app/rituales/[slug]/page.tsx`, `frontend/componentes/rituales/detalle/` | Ficha con bloques editoriales y resolución comercial mínima enlazando a herbal/producto. |
+| Integración bidireccional herbal ↔ ritual | DONE | Ciclo 2 | `frontend/componentes/herbal/detalle/BloqueRitualesRelacionados.tsx`, `frontend/componentes/rituales/detalle/BloquePlantasRelacionadas.tsx`, `tests/nucleo_herbal/test_exposicion_publica.py` | Recorridos de ida y vuelta implementados sin romper prioridad herbal en navegación. |
+| Quality gate mínimo operativo de ciclo | DONE | Ciclo 2 (cierre) | `python manage.py check`, `python manage.py test`, `pytest -q tests/nucleo_herbal/test_entidades.py tests/nucleo_herbal/test_casos_de_uso.py tests/nucleo_herbal/test_entidades_rituales.py tests/nucleo_herbal/test_casos_de_uso_rituales.py`, `npm run lint`, `npm run build` | Gate mínimo de cierre ejecutado en entorno local con resultados favorables. |
 | Checkout demo | PLANIFICADO | Ciclo 3 | `docs/02_alcance_y_fases.md` | Sin cambios, fuera de alcance. |
 | Login / invitado | PLANIFICADO | Ciclo 3–4 | `docs/02_alcance_y_fases.md` | Sin cambios, fuera de alcance. |
 | Historial de pedidos demo | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
@@ -60,39 +67,36 @@ Resumen ejecutivo de estado real: existe un recorrido funcional del núcleo herb
 | Calendario ritual | PLANIFICADO | Ciclo 5 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 
 ## 6. Último ciclo cerrado
-- **Ciclo cerrado formalmente**: Ciclo 0 (documental).
-- **Estado de Ciclo 1**: **casi cerrado técnicamente** (implementación funcional completada, verificación integral parcialmente bloqueada por entorno).
-- **Evidencia de avance de Ciclo 1**:
-  - recorrido funcional implementado: home → listado herbal → ficha herbal conectada,
-  - separación editorial/comercial preservada,
-  - exposición pública mínima implementada,
-  - backoffice mínimo implementado,
-  - tests ejecutables en entorno actual en estado passing.
+- **Ciclo cerrado formalmente**: Ciclo 2 (rituales conectados).
+- **Estado de Ciclo 2**: **DONE técnico** para su contrato de alcance.
+- **Evidencia de cierre de Ciclo 2**:
+  - recorrido directo validado: home → rituales → ficha ritual conectada → plantas/productos,
+  - recorrido inverso validado: home → hierbas → ficha herbal → rituales relacionados,
+  - separación editorial/comercial mantenida en backend y frontend,
+  - backoffice mínimo ritual y exposición pública mínima ritual operativos,
+  - quality gate mínimo ejecutado con checks backend/frontend en verde.
 
 ## 7. Ciclo actual
-- **Ciclo actual operativo**: cierre de Ciclo 1.
-- **Estado**: implementación y validación base completadas; pendiente cierre fuerte de gate integrado cuando el entorno permita instalar dependencias de Django/Next.
-- **Condición de salida para marcar Ciclo 1 como DONE técnico fuerte**:
-  1. instalar dependencias backend y frontend sin bloqueo de red/proxy,
-  2. ejecutar checks Django (`manage.py check` + tests no omitidos),
-  3. ejecutar checks frontend (`lint` y build/typecheck),
-  4. registrar evidencia final de gate completo.
+- **Ciclo actual operativo**: cierre técnico de Ciclo 2 completado.
+- **Estado**: ciclo listo para transición a planificación/arranque de Ciclo 3, sin sobrealcance introducido en esta tarea de cierre.
+- **Condición de salida aplicada**:
+  1. validación del contrato funcional del ciclo (rituales conectados) completada,
+  2. checks mínimos backend/frontend ejecutados en entorno actual,
+  3. documentación de estado sincronizada con evidencia real.
 
 ## 8. Deuda y bloqueos conocidos
-1. **Bloqueo externo de entorno**: `pip` no puede descargar Django por `403 Forbidden` de proxy.
-2. **Bloqueo externo de entorno**: `npm install` no puede descargar paquetes por `403 Forbidden` en registry.
-3. Derivado de lo anterior, no es posible en este entorno ejecutar la batería integrada completa de Django ni checks de Next.js.
-4. No se identificaron defectos bloqueantes nuevos en el código ya ejecutable con dependencias locales actuales.
+1. El comando genérico `pytest -q` no debe tomarse como gate único para tests Django con acceso a BD en este repositorio; el runner contractual para ese alcance es `python manage.py test`.
+2. No se identificaron defectos bloqueantes de producto en rutas, wiring o contratos del alcance congelado de Ciclo 2.
+3. Queda pendiente, como mejora futura (no bloqueante para cierre de Ciclo 2), formalizar una estrategia única de ejecución de tests para evitar ambigüedad entre `pytest` y test runner de Django.
 
 ## 9. Próximos movimientos recomendados
-1. Resolver primero la conectividad/credenciales del proxy o habilitar mirror interno para `pip` y `npm`.
-2. Re-ejecutar quality gate completo de Ciclo 1 (backend + frontend) en entorno sin bloqueo.
-3. Si ese gate pasa, marcar Ciclo 1 como **DONE técnico** y abrir formalmente Ciclo 2.
-4. Iniciar Ciclo 2 sin sobrealcance, manteniendo separación editorial/comercial y anclas de dominio congeladas.
+1. Abrir formalmente Ciclo 3 con alcance congelado de roadmap, sin adelantar checkout/login/calendario ritual.
+2. Mantener el gate mínimo operativo ya ejecutado como baseline y endurecerlo progresivamente según `docs/13_testing_ci_y_quality_gate.md`.
+3. Si se desea eliminar fricción de ejecución de tests, acordar y documentar en ciclo futuro un comando canónico de suite backend.
 
 ---
 
 **Regla de lectura rápida del estado actual:**
-- Ciclo 1 tiene implementación funcional real y coherente con su contrato.
-- El cierre técnico integral depende de resolver bloqueos externos de instalación.
-- El siguiente paso correcto es completar el quality gate en entorno habilitado y cerrar formalmente el ciclo.
+- Ciclo 2 está técnicamente cerrado con evidencia de recorrido y quality gate mínimo operativo.
+- No se detectan bloqueos externos que impidan declarar DONE dentro del contrato de este ciclo.
+- El siguiente paso correcto es abrir Ciclo 3 respetando el alcance ya definido.
