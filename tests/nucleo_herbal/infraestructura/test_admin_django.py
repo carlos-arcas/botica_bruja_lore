@@ -1,6 +1,13 @@
+import os
 import unittest
 
 try:
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.configuracion_django.settings")
+
+    import django
+
+    django.setup()
+
     from django.contrib import admin
     from django.contrib.auth import get_user_model
     from django.test import TestCase
@@ -10,6 +17,7 @@ try:
         IntencionModelo,
         PlantaModelo,
         ProductoModelo,
+        RitualModelo,
     )
 
     DJANGO_DISPONIBLE = True
@@ -28,10 +36,11 @@ class TestAdminNucleoHerbal(TestCase):
             password="demo-admin",
         )
 
-    def test_admin_site_registra_modelos_ciclo_1(self) -> None:
+    def test_admin_site_registra_modelos_ciclo_1_y_2(self) -> None:
         self.assertTrue(admin.site.is_registered(IntencionModelo))
         self.assertTrue(admin.site.is_registered(PlantaModelo))
         self.assertTrue(admin.site.is_registered(ProductoModelo))
+        self.assertTrue(admin.site.is_registered(RitualModelo))
 
     def test_superusuario_puede_abrir_index_admin(self) -> None:
         self.client.force_login(self.superusuario)
@@ -53,3 +62,10 @@ class TestAdminNucleoHerbal(TestCase):
             with self.subTest(vista=vista):
                 response = self.client.get(vista)
                 self.assertEqual(response.status_code, 200)
+
+    def test_superusuario_puede_abrir_changelist_ritual(self) -> None:
+        self.client.force_login(self.superusuario)
+
+        response = self.client.get(reverse("admin:persistencia_django_ritualmodelo_changelist"))
+
+        self.assertEqual(response.status_code, 200)

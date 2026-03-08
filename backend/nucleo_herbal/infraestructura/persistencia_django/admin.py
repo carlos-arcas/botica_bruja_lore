@@ -1,4 +1,4 @@
-"""Backoffice mínimo útil del Ciclo 1 sobre Django Admin."""
+"""Backoffice mínimo útil del Ciclo 1 y Ciclo 2 sobre Django Admin."""
 
 from django.contrib import admin
 
@@ -6,6 +6,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
     IntencionModelo,
     PlantaModelo,
     ProductoModelo,
+    RitualModelo,
 )
 
 
@@ -81,3 +82,58 @@ class ProductoAdmin(admin.ModelAdmin):
     list_editable = ("publicado",)
     autocomplete_fields = ("planta",)
     actions = (publicar_productos, despublicar_productos)
+
+
+@admin.action(description="Publicar rituales")
+def publicar_rituales(modeladmin, request, queryset):
+    queryset.update(publicado=True)
+
+
+@admin.action(description="Despublicar rituales")
+def despublicar_rituales(modeladmin, request, queryset):
+    queryset.update(publicado=False)
+
+
+@admin.register(RitualModelo)
+class RitualAdmin(admin.ModelAdmin):
+    list_display = (
+        "nombre",
+        "slug",
+        "publicado",
+        "mostrar_intenciones",
+        "mostrar_plantas_relacionadas",
+        "mostrar_productos_relacionados",
+    )
+    search_fields = (
+        "nombre",
+        "slug",
+        "contexto_breve",
+        "intenciones__nombre",
+        "plantas_relacionadas__nombre",
+        "productos_relacionados__nombre",
+    )
+    list_filter = (
+        "publicado",
+        "intenciones",
+        "plantas_relacionadas",
+        "productos_relacionados",
+    )
+    ordering = ("nombre",)
+    list_editable = ("publicado",)
+    filter_horizontal = ("intenciones", "plantas_relacionadas", "productos_relacionados")
+    actions = (publicar_rituales, despublicar_rituales)
+
+    @admin.display(description="Intenciones")
+    def mostrar_intenciones(self, obj):
+        nombres = obj.intenciones.values_list("nombre", flat=True)
+        return ", ".join(nombres)
+
+    @admin.display(description="Plantas relacionadas")
+    def mostrar_plantas_relacionadas(self, obj):
+        nombres = obj.plantas_relacionadas.values_list("nombre", flat=True)
+        return ", ".join(nombres)
+
+    @admin.display(description="Productos relacionados")
+    def mostrar_productos_relacionados(self, obj):
+        nombres = obj.productos_relacionados.values_list("nombre", flat=True)
+        return ", ".join(nombres)
