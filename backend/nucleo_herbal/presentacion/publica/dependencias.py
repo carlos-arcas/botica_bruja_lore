@@ -8,9 +8,17 @@ from ...aplicacion.casos_de_uso import (
     ObtenerRelacionesHerbalesPorIntencion,
     ObtenerResolucionComercialMinimaDePlanta,
 )
+from ...aplicacion.casos_de_uso_rituales import (
+    ObtenerDetalleRitual,
+    ObtenerListadoRitualNavegable,
+    ObtenerPlantasRelacionadasDeRitual,
+    ObtenerProductosRelacionadosDeRitual,
+    ObtenerRitualesRelacionadosPorIntencion,
+)
 from ...infraestructura.persistencia_django.repositorios import (
     RepositorioPlantasORM,
     RepositorioProductosORM,
+    RepositorioRitualesORM,
 )
 
 
@@ -20,6 +28,15 @@ class ServiciosPublicosHerbales:
     detalle_planta: ObtenerDetallePlanta
     resolucion_comercial: ObtenerResolucionComercialMinimaDePlanta
     relaciones_por_intencion: ObtenerRelacionesHerbalesPorIntencion
+
+
+@dataclass(frozen=True, slots=True)
+class ServiciosPublicosRituales:
+    listado_ritual: ObtenerListadoRitualNavegable
+    detalle_ritual: ObtenerDetalleRitual
+    plantas_por_ritual: ObtenerPlantasRelacionadasDeRitual
+    productos_por_ritual: ObtenerProductosRelacionadosDeRitual
+    rituales_por_intencion: ObtenerRitualesRelacionadosPorIntencion
 
 
 def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
@@ -33,4 +50,15 @@ def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
             repositorio_productos,
         ),
         relaciones_por_intencion=ObtenerRelacionesHerbalesPorIntencion(repositorio_plantas),
+    )
+
+
+def construir_servicios_publicos_rituales() -> ServiciosPublicosRituales:
+    repositorio_rituales = RepositorioRitualesORM()
+    return ServiciosPublicosRituales(
+        listado_ritual=ObtenerListadoRitualNavegable(repositorio_rituales),
+        detalle_ritual=ObtenerDetalleRitual(repositorio_rituales),
+        plantas_por_ritual=ObtenerPlantasRelacionadasDeRitual(repositorio_rituales),
+        productos_por_ritual=ObtenerProductosRelacionadosDeRitual(repositorio_rituales),
+        rituales_por_intencion=ObtenerRitualesRelacionadosPorIntencion(repositorio_rituales),
     )

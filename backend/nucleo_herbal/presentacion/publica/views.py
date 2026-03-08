@@ -3,12 +3,18 @@
 from django.http import HttpRequest, JsonResponse
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
-from .dependencias import construir_servicios_publicos_herbales
+from .dependencias import (
+    construir_servicios_publicos_herbales,
+    construir_servicios_publicos_rituales,
+)
 from .serializadores import (
     serializar_planta_detalle,
     serializar_planta_resumen,
     serializar_producto_resumen,
     serializar_relacion_intencion,
+    serializar_relacion_intencion_ritual,
+    serializar_ritual_detalle,
+    serializar_ritual_resumen,
 )
 
 
@@ -48,6 +54,58 @@ def relaciones_por_intencion(request: HttpRequest, slug_intencion: str) -> JsonR
     except ErrorAplicacionLookup as error:
         return _json_no_encontrado(str(error))
     return JsonResponse(serializar_relacion_intencion(relaciones))
+
+
+def listado_rituales(request: HttpRequest) -> JsonResponse:
+    servicios = construir_servicios_publicos_rituales()
+    rituales = servicios.listado_ritual.ejecutar()
+    return JsonResponse({"rituales": [serializar_ritual_resumen(item) for item in rituales]})
+
+
+def detalle_ritual(request: HttpRequest, slug_ritual: str) -> JsonResponse:
+    servicios = construir_servicios_publicos_rituales()
+    try:
+        ritual = servicios.detalle_ritual.ejecutar(slug_ritual)
+    except ErrorAplicacionLookup as error:
+        return _json_no_encontrado(str(error))
+    return JsonResponse({"ritual": serializar_ritual_detalle(ritual)})
+
+
+def plantas_por_ritual(request: HttpRequest, slug_ritual: str) -> JsonResponse:
+    servicios = construir_servicios_publicos_rituales()
+    try:
+        plantas = servicios.plantas_por_ritual.ejecutar(slug_ritual)
+    except ErrorAplicacionLookup as error:
+        return _json_no_encontrado(str(error))
+    return JsonResponse(
+        {
+            "ritual_slug": slug_ritual,
+            "plantas": [serializar_planta_resumen(item) for item in plantas],
+        }
+    )
+
+
+def productos_por_ritual(request: HttpRequest, slug_ritual: str) -> JsonResponse:
+    servicios = construir_servicios_publicos_rituales()
+    try:
+        productos = servicios.productos_por_ritual.ejecutar(slug_ritual)
+    except ErrorAplicacionLookup as error:
+        return _json_no_encontrado(str(error))
+    return JsonResponse(
+        {
+            "ritual_slug": slug_ritual,
+            "productos": [serializar_producto_resumen(item) for item in productos],
+        }
+    )
+
+
+def rituales_por_intencion(request: HttpRequest, slug_intencion: str) -> JsonResponse:
+    servicios = construir_servicios_publicos_rituales()
+    try:
+        relacion = servicios.rituales_por_intencion.ejecutar(slug_intencion)
+    except ErrorAplicacionLookup as error:
+        return _json_no_encontrado(str(error))
+    return JsonResponse(serializar_relacion_intencion_ritual(relacion))
 
 
 def _json_no_encontrado(detalle: str) -> JsonResponse:

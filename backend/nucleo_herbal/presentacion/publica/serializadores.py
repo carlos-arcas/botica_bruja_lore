@@ -6,6 +6,9 @@ from ...aplicacion.dto import (
     PlantaResumenDTO,
     ProductoResumenDTO,
     RelacionIntencionHerbalDTO,
+    RelacionIntencionRitualDTO,
+    RitualDetalleDTO,
+    RitualResumenDTO,
 )
 
 
@@ -41,6 +44,33 @@ def serializar_relacion_intencion(dto: RelacionIntencionHerbalDTO) -> dict:
     return {
         "intencion": serializar_intencion(dto.intencion),
         "plantas": [serializar_planta_resumen(item) for item in dto.plantas],
+    }
+
+
+def serializar_ritual_resumen(dto: RitualResumenDTO) -> dict:
+    return {
+        "slug": dto.slug,
+        "nombre": dto.nombre,
+        "contexto_breve": dto.contexto_breve,
+        "intenciones": [serializar_intencion(item) for item in dto.intenciones],
+    }
+
+
+def serializar_ritual_detalle(dto: RitualDetalleDTO) -> dict:
+    return {
+        "slug": dto.slug,
+        "nombre": dto.nombre,
+        "contexto_breve": dto.contexto_breve,
+        "intenciones": [serializar_intencion(item) for item in dto.intenciones],
+        "ids_plantas_relacionadas": list(dto.ids_plantas_relacionadas),
+        "ids_productos_relacionados": list(dto.ids_productos_relacionados),
+    }
+
+
+def serializar_relacion_intencion_ritual(dto: RelacionIntencionRitualDTO) -> dict:
+    return {
+        "intencion": serializar_intencion(dto.intencion),
+        "rituales": [serializar_ritual_resumen(item) for item in dto.rituales],
     }
 
 
