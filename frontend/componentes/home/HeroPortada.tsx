@@ -16,6 +16,9 @@ export function HeroPortada(): JSX.Element {
         <a href="#descubrimiento-intencion" className="boton boton--secundario">
           Descubrir por intención
         </a>
+        <Link href="/rituales" className="boton boton--secundario">
+          Ver rituales conectados
+        </Link>
       </div>
       <div className="hero-portada__nota">
         <strong>Bruja Lore</strong> te orienta con microguías prácticas, contexto tradicional y una

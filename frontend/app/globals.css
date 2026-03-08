@@ -174,3 +174,8 @@ body {
 .bloque-home--comercial-minimo {
   border-color: #d6ccbf;
 }
+
+.tarjeta-ritual {
+  display: grid;
+  gap: 0.65rem;
+}
