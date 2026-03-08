@@ -13,6 +13,7 @@ from ...aplicacion.casos_de_uso_rituales import (
     ObtenerListadoRitualNavegable,
     ObtenerPlantasRelacionadasDeRitual,
     ObtenerProductosRelacionadosDeRitual,
+    ObtenerRitualesRelacionadosDePlantaPorSlug,
     ObtenerRitualesRelacionadosPorIntencion,
 )
 from ...infraestructura.persistencia_django.repositorios import (
@@ -28,6 +29,7 @@ class ServiciosPublicosHerbales:
     detalle_planta: ObtenerDetallePlanta
     resolucion_comercial: ObtenerResolucionComercialMinimaDePlanta
     relaciones_por_intencion: ObtenerRelacionesHerbalesPorIntencion
+    rituales_por_planta: ObtenerRitualesRelacionadosDePlantaPorSlug
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,6 +52,10 @@ def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
             repositorio_productos,
         ),
         relaciones_por_intencion=ObtenerRelacionesHerbalesPorIntencion(repositorio_plantas),
+        rituales_por_planta=ObtenerRitualesRelacionadosDePlantaPorSlug(
+            repositorio_plantas,
+            RepositorioRitualesORM(),
+        ),
     )
 
 

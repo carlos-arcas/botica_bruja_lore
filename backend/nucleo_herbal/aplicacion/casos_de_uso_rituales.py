@@ -15,6 +15,7 @@ from .dto import (
     RitualDetalleDTO,
     RitualResumenDTO,
 )
+from .puertos.repositorios import RepositorioPlantas
 from .puertos.repositorios_rituales import RepositorioRituales
 
 
@@ -79,6 +80,19 @@ class ObtenerRitualesRelacionadosPorPlanta:
 
     def ejecutar(self, id_planta: str) -> tuple[RitualResumenDTO, ...]:
         rituales = self.repositorio_rituales.listar_por_planta(id_planta)
+        return tuple(_a_ritual_resumen(ritual) for ritual in rituales)
+
+
+@dataclass(slots=True)
+class ObtenerRitualesRelacionadosDePlantaPorSlug:
+    repositorio_plantas: RepositorioPlantas
+    repositorio_rituales: RepositorioRituales
+
+    def ejecutar(self, slug_planta: str) -> tuple[RitualResumenDTO, ...]:
+        planta = self.repositorio_plantas.obtener_por_slug(slug_planta)
+        if planta is None:
+            raise ErrorAplicacionLookup(f"Planta no encontrada: {slug_planta}")
+        rituales = self.repositorio_rituales.listar_por_planta(planta.id)
         return tuple(_a_ritual_resumen(ritual) for ritual in rituales)
 
 

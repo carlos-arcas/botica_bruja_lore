@@ -13,6 +13,11 @@ urlpatterns = [
         name="publico-productos-por-planta",
     ),
     path(
+        "plantas/<slug:slug_planta>/rituales/",
+        views.rituales_por_planta,
+        name="publico-rituales-por-planta",
+    ),
+    path(
         "intenciones/<slug:slug_intencion>/plantas/",
         views.relaciones_por_intencion,
         name="publico-relaciones-por-intencion",

@@ -148,6 +148,22 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         self.assertEqual(response.status_code, 404)
         self.assertIn("Intención", response.json()["detalle"])
 
+
+    def test_rituales_relacionados_por_planta(self) -> None:
+        response = self.client.get("/api/v1/herbal/plantas/melisa/rituales/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["planta_slug"], "melisa")
+        self.assertEqual(len(data["rituales"]), 1)
+        self.assertEqual(data["rituales"][0]["slug"], "cierre-sereno")
+
+    def test_rituales_relacionados_por_planta_inexistente_devuelve_404(self) -> None:
+        response = self.client.get("/api/v1/herbal/plantas/inexistente/rituales/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("Planta no encontrada", response.json()["detalle"])
+
     def test_listado_rituales_publica_solo_rituales_navegables(self) -> None:
         response = self.client.get("/api/v1/rituales/")
 

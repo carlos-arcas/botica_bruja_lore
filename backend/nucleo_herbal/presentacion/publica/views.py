@@ -56,6 +56,20 @@ def relaciones_por_intencion(request: HttpRequest, slug_intencion: str) -> JsonR
     return JsonResponse(serializar_relacion_intencion(relaciones))
 
 
+def rituales_por_planta(request: HttpRequest, slug_planta: str) -> JsonResponse:
+    servicios = construir_servicios_publicos_herbales()
+    try:
+        rituales = servicios.rituales_por_planta.ejecutar(slug_planta)
+    except ErrorAplicacionLookup as error:
+        return _json_no_encontrado(str(error))
+    return JsonResponse(
+        {
+            "planta_slug": slug_planta,
+            "rituales": [serializar_ritual_resumen(item) for item in rituales],
+        }
+    )
+
+
 def listado_rituales(request: HttpRequest) -> JsonResponse:
     servicios = construir_servicios_publicos_rituales()
     rituales = servicios.listado_ritual.ejecutar()
