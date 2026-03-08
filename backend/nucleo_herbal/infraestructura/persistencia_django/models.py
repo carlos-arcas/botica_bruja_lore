@@ -1,4 +1,4 @@
-"""Modelos ORM mínimos del núcleo herbal para Ciclo 1."""
+"""Modelos ORM mínimos del núcleo herbal para Ciclo 1 y 2."""
 
 from django.db import models
 
@@ -67,3 +67,37 @@ class ProductoModelo(models.Model):
 
     def __str__(self) -> str:
         return f"{self.nombre} [{self.sku}]"
+
+
+class RitualModelo(models.Model):
+    id = models.CharField(primary_key=True, max_length=36)
+    slug = models.SlugField(unique=True, max_length=120)
+    nombre = models.CharField(max_length=180)
+    contexto_breve = models.TextField()
+    publicado = models.BooleanField(default=True)
+    intenciones = models.ManyToManyField(
+        IntencionModelo,
+        related_name="rituales",
+        help_text="Intenciones editoriales que guían el descubrimiento del ritual.",
+    )
+    plantas_relacionadas = models.ManyToManyField(
+        PlantaModelo,
+        related_name="rituales",
+        blank=True,
+        help_text="Plantas conectadas editorialmente al ritual.",
+    )
+    productos_relacionados = models.ManyToManyField(
+        ProductoModelo,
+        related_name="rituales",
+        blank=True,
+        help_text="Productos conectados al ritual sin convertirlo en categoría comercial.",
+    )
+
+    class Meta:
+        db_table = "nucleo_ritual"
+        ordering = ("nombre",)
+        verbose_name = "ritual"
+        verbose_name_plural = "rituales"
+
+    def __str__(self) -> str:
+        return self.nombre
