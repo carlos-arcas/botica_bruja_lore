@@ -1,15 +1,76 @@
-"""Settings mínimos para backend Django ejecutable en desarrollo local."""
+"""Settings base para backend Django con soporte local y despliegue en Railway."""
 
+import importlib.util
+import os
 from pathlib import Path
+from urllib.parse import urlparse
+
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 LOCAL_VAR_DIR = BASE_DIR / "var"
 LOCAL_VAR_DIR.mkdir(exist_ok=True)
 
-SECRET_KEY = "botica-demo-dev"
-DEBUG = True
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
+
+def _leer_booleano(nombre: str, valor_por_defecto: bool = False) -> bool:
+    valor = os.getenv(nombre)
+    if valor is None:
+        return valor_por_defecto
+    return valor.strip().lower() in {"1", "true", "t", "yes", "y", "on"}
+
+
+def _leer_lista(nombre: str, valor_por_defecto: list[str]) -> list[str]:
+    valor = os.getenv(nombre)
+    if not valor:
+        return valor_por_defecto
+    return [item.strip() for item in valor.split(",") if item.strip()]
+
+
+def _configuracion_db_desde_url(database_url: str) -> dict[str, str | int]:
+    parsed = urlparse(database_url)
+    esquema = parsed.scheme
+
+    if esquema in {"postgres", "postgresql"}:
+        return {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": parsed.path.lstrip("/"),
+            "USER": parsed.username or "",
+            "PASSWORD": parsed.password or "",
+            "HOST": parsed.hostname or "",
+            "PORT": str(parsed.port or 5432),
+            "CONN_MAX_AGE": 600,
+            "OPTIONS": {"sslmode": "require"},
+        }
+
+    if esquema == "sqlite":
+        ruta_sqlite = parsed.path or "/dev.sqlite3"
+        return {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ruta_sqlite,
+        }
+
+    raise ValueError(f"DATABASE_URL no soportada: {esquema}")
+
+
+def _configuracion_base_de_datos() -> dict[str, dict[str, str | int]]:
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return {"default": _configuracion_db_desde_url(database_url)}
+    return {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": LOCAL_VAR_DIR / "dev.sqlite3",
+        }
+    }
+
+
+SECRET_KEY = os.getenv("SECRET_KEY", "botica-demo-dev")
+DEBUG = _leer_booleano("DEBUG", True)
+
+ALLOWED_HOSTS = _leer_lista("ALLOWED_HOSTS", ["localhost", "127.0.0.1", "testserver"])
+CSRF_TRUSTED_ORIGINS = _leer_lista("CSRF_TRUSTED_ORIGINS", [])
+
 ROOT_URLCONF = "backend.configuracion_django.urls"
+WSGI_APPLICATION = "backend.configuracion_django.wsgi.application"
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -30,6 +91,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
+if importlib.util.find_spec("whitenoise"):
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -45,12 +109,7 @@ TEMPLATES = [
     }
 ]
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": LOCAL_VAR_DIR / "dev.sqlite3",
-    }
-}
+DATABASES = _configuracion_base_de_datos()
 
 LANGUAGE_CODE = "es-es"
 TIME_ZONE = "UTC"
@@ -58,4 +117,19 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "var" / "staticfiles"
+
+if importlib.util.find_spec("whitenoise"):
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
