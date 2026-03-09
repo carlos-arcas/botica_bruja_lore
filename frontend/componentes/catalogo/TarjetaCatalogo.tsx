@@ -25,8 +25,8 @@ export function TarjetaCatalogo({ producto }: Props): JSX.Element {
           <li key={`${producto.id}-${etiqueta}`}>{etiqueta}</li>
         ))}
       </ul>
-      <Link href="/rituales" className="boton boton--secundario" aria-label={`Ir al espacio de rituales desde ${producto.nombre}`}>
-        Ir a rituales
+      <Link href={`/colecciones/${producto.slug}`} className="boton boton--secundario" aria-label={`Ver ficha de ${producto.nombre}`}>
+        Ver ficha
       </Link>
     </li>
   );
