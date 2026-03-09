@@ -110,3 +110,17 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - mejoras UX: navegación por anclas, tabs de intenciones sin recarga y acordeón FAQ accesible.
 - Tests añadidos para lógica de interacción de tabs/FAQ en `frontend/tests/home-interacciones.test.ts`.
 - Nota operativa: la ampliación de contenido futuro debe hacerse sobre el módulo de contenido, evitando hardcodear bloques largos dentro de componentes de presentación.
+
+## 11. Catálogo/colecciones navegables (Ciclo 3 en progreso)
+- Capacidad: **Catálogo ritual navegable con filtros y ordenación**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - ruta pública `frontend/app/colecciones/page.tsx` como entrada de colecciones;
+  - fuente de datos tipada en `frontend/contenido/catalogo/catalogo.ts`;
+  - lógica pura de filtrado/ordenación en `frontend/contenido/catalogo/filtrosCatalogo.ts`;
+  - UI de catálogo con controles y estado vacío en `frontend/componentes/catalogo/`;
+  - enlace desde home al catálogo actualizado en `frontend/contenido/home/contenidoHome.ts`.
+- Regla operativa para ampliar catálogo:
+  1. Añadir productos en `PRODUCTOS_CATALOGO` siguiendo el tipo `ProductoCatalogo`.
+  2. Si se incorpora una nueva intención/categoría, extender primero `OPCIONES_INTENCION` y/o `OPCIONES_CATEGORIA`.
+  3. Mantener filtros/ordenación en helpers puros (`filtrosCatalogo.ts`), evitando hardcodear lógica en componentes de presentación.
