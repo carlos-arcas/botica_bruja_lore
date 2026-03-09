@@ -7,6 +7,7 @@ import {
   obtenerProductosRelacionados,
 } from "@/contenido/catalogo/detalleCatalogo";
 import { ProductoCatalogo } from "@/contenido/catalogo/catalogo";
+import { BotonAnadirCestaRitual } from "@/componentes/catalogo/cesta/BotonAnadirCestaRitual";
 
 import estilos from "./fichaProductoCatalogo.module.css";
 
@@ -61,9 +62,11 @@ export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
           ))}
         </ol>
         <div className={estilos.accionesFicha}>
+          <BotonAnadirCestaRitual slugProducto={producto.slug} />
           <Link href={`/encargo?producto=${producto.slug}`} className="boton boton--principal">
             Encargar o consultar esta pieza
           </Link>
+          <Link href="/cesta" className="boton boton--secundario">Ver cesta ritual</Link>
           <Link href="/colecciones" className="boton boton--secundario">Seguir explorando colecciones</Link>
         </div>
       </section>

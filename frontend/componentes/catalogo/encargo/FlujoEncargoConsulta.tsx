@@ -14,7 +14,7 @@ import {
   construirResumenConsulta,
   construirEstadoInicialConsulta,
   DatosConsulta,
-  resolverProductoPreseleccionado,
+  resolverContextoPreseleccionado,
   validarSolicitudConsulta,
 } from "@/contenido/catalogo/encargoConsulta";
 
@@ -22,11 +22,12 @@ import estilos from "./flujoEncargoConsulta.module.css";
 
 type Props = {
   slugPreseleccionado?: string;
+  cestaPreseleccionada?: string;
 };
 
-export function FlujoEncargoConsulta({ slugPreseleccionado }: Props): JSX.Element {
-  const productoPreseleccionado = resolverProductoPreseleccionado(slugPreseleccionado ?? null);
-  const [datos, setDatos] = useState<DatosConsulta>(() => construirEstadoInicialConsulta(productoPreseleccionado));
+export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada }: Props): JSX.Element {
+  const contextoPreseleccionado = resolverContextoPreseleccionado(slugPreseleccionado ?? null, cestaPreseleccionada ?? null);
+  const [datos, setDatos] = useState<DatosConsulta>(() => construirEstadoInicialConsulta(contextoPreseleccionado));
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [resumen, setResumen] = useState<string>("");
   const [mensajeCopia, setMensajeCopia] = useState<string>("");
@@ -98,7 +99,9 @@ export function FlujoEncargoConsulta({ slugPreseleccionado }: Props): JSX.Elemen
 
       <article className={estilos.resumenProducto} aria-live="polite">
         <h2>Producto seleccionado</h2>
-        {productoSeleccionado ? (
+        {contextoPreseleccionado.itemsPreseleccionados.length > 0 ? (
+          <p>Has llegado con una selección múltiple desde la cesta ritual. Puedes ajustar producto base, cantidad y mensaje antes de enviar.</p>
+        ) : productoSeleccionado ? (
           <>
             <p><strong>{productoSeleccionado.nombre}</strong> · {productoSeleccionado.precioVisible}</p>
             <p>{productoSeleccionado.subtitulo}</p>

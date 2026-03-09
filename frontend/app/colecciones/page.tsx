@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CatalogoColecciones } from "@/componentes/catalogo/CatalogoColecciones";
+import { IndicadorCestaRitual } from "@/componentes/catalogo/cesta/IndicadorCestaRitual";
 
 export const metadata: Metadata = {
   title: "Colecciones rituales | La Botica de la Bruja Lore",
@@ -12,6 +13,11 @@ export const metadata: Metadata = {
 export default function PaginaColecciones(): JSX.Element {
   return (
     <main className="contenedor-home">
+      <section className="bloque-home">
+        <h2>Tu selección ritual</h2>
+        <p>Guarda piezas de interés y prepara una consulta con varias referencias en un solo paso.</p>
+        <IndicadorCestaRitual />
+      </section>
       <CatalogoColecciones />
       <section className="bloque-home">
         <h2>Exploración conectada</h2>

@@ -1,0 +1,81 @@
+.accionesTarjeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.estadoAnadido {
+  margin: 0;
+  color: #456346;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.indicador {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.contador {
+  border-radius: 999px;
+  background: #4b6848;
+  color: #fff;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.listado {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.linea {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.lineaCabecera {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.controlesLinea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.controlesLinea input {
+  width: 6rem;
+  border: 1px solid #cfc2b0;
+  border-radius: 10px;
+  padding: 0.45rem;
+}
+
+.accionesCesta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.resumen {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: #fff;
+}
