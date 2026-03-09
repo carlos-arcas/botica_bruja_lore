@@ -19,6 +19,10 @@ gunicorn backend.configuracion_django.wsgi:application --bind 0.0.0.0:${PORT:-80
 
 - Healthcheck esperado: `/healthz`
 
+- `/healthz` ejecuta una comprobación mínima de base de datos (`SELECT 1`).
+- Si la BBDD no responde, `/healthz` devuelve `503` con JSON de error controlado.
+- Railway debe seguir apuntando su healthcheck a `/healthz` (sin cambios de path).
+
 ### Frontend (Next.js)
 - Servicio dedicado para la web pública.
 - `Root directory`: `frontend`
@@ -83,7 +87,7 @@ Reemplaza `SERVICE_NAME` por el nombre real del servicio Postgres en Railway UI.
 
 ## 6) Verificaciones tras deploy
 
-1. `GET https://TU-BACKEND.up.railway.app/healthz` responde `200`.
+1. `GET https://TU-BACKEND.up.railway.app/healthz` responde `200` solo cuando app + BBDD están operativas (readiness real).
 2. `GET https://TU-FRONTEND.up.railway.app/` responde correctamente.
 3. Frontend consume API desde `NEXT_PUBLIC_API_BASE_URL`.
 4. Logs backend sin imports/rutas legacy.
