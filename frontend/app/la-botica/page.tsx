@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 
 import { PaginaEditorialBotica } from "@/componentes/marca/PaginaEditorialBotica";
+import { METADATA_LA_BOTICA } from "@/contenido/marca/contenidoMarca";
 
-export const metadata: Metadata = {
-  title: "La Botica | Filosofía artesanal y criterio editorial",
-  description:
-    "Conoce cómo La Botica de la Bruja Lore selecciona colecciones y rituales: manifiesto, principios de la casa y ruta directa a catálogo y encargo.",
-};
+export const metadata: Metadata = METADATA_LA_BOTICA;
 
 export default function PaginaLaBotica(): JSX.Element {
   return <PaginaEditorialBotica />;

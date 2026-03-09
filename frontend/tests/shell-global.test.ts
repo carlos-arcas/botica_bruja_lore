@@ -19,10 +19,14 @@ test("esRutaActiva resuelve coincidencia exacta y por prefijo", () => {
   const colecciones = NAVEGACION_PRINCIPAL[1]!;
   const inicio = NAVEGACION_PRINCIPAL[0]!;
 
+  const laBotica = NAVEGACION_PRINCIPAL[2]!;
+
   assert.equal(esRutaActiva("/colecciones", colecciones), true);
   assert.equal(esRutaActiva("/colecciones/kit-luna", colecciones), true);
   assert.equal(esRutaActiva("/", inicio), true);
   assert.equal(esRutaActiva("/rituales", inicio), false);
+  assert.equal(esRutaActiva("/la-botica", laBotica), true);
+  assert.equal(esRutaActiva("/la-botica/historia", laBotica), false);
 });
 
 test("contador de cesta muestra fallback correcto", () => {

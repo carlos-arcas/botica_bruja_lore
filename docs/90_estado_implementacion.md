@@ -183,7 +183,7 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Capacidad: **Capa de marca sólida conectada al flujo comercial**.
 - Estado: **EN_PROGRESO**.
 - Implementación activa:
-  - nueva ruta pública `frontend/app/la-botica/page.tsx` con metadata SEO específica;
+  - nueva ruta pública `frontend/app/la-botica/page.tsx` con metadata SEO específica centralizada en contenido de marca;
   - composición en `frontend/componentes/marca/PaginaEditorialBotica.tsx` + estilos encapsulados;
   - contenido tipado y mantenible en `frontend/contenido/marca/contenidoMarca.ts`.
 - Integración con shell global:

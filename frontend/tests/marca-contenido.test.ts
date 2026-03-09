@@ -6,6 +6,7 @@ import {
   FAQ_MARCA,
   HERO_MARCA,
   MANIFIESTO_BOTICA,
+  METADATA_LA_BOTICA,
   PASOS_CURADURIA,
   PRINCIPIOS_BOTICA,
 } from "../contenido/marca/contenidoMarca";
@@ -21,4 +22,11 @@ test("contenido editorial de marca expone bloques mínimos del recorrido", () =>
 test("cta de marca conecta con catálogo y encargo", () => {
   assert.equal(CTA_MARCA.primaria.href, "/colecciones");
   assert.equal(CTA_MARCA.secundaria.href, "/encargo");
+});
+
+test("hero y metadata mantienen narrativa y destino comercial", () => {
+  assert.equal(HERO_MARCA.acciones[0].href, "/colecciones");
+  assert.equal(HERO_MARCA.acciones[1].href, "/encargo");
+  assert.equal(METADATA_LA_BOTICA.title.includes("La Botica"), true);
+  assert.equal(METADATA_LA_BOTICA.description.includes("colecciones"), true);
 });
