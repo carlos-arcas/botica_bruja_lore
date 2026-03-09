@@ -178,3 +178,20 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - Ruta activa resuelta con helper tipado y `aria-current`.
   - Contador de cesta integrado en navegación global sin convertir el layout entero en componente cliente.
   - Responsive base resuelta sin dependencias nuevas ni rediseño masivo.
+
+## 13. Página editorial de marca / La Botica (Ciclo 3 en progreso)
+- Capacidad: **Capa de marca sólida conectada al flujo comercial**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - nueva ruta pública `frontend/app/la-botica/page.tsx` con metadata SEO específica;
+  - composición en `frontend/componentes/marca/PaginaEditorialBotica.tsx` + estilos encapsulados;
+  - contenido tipado y mantenible en `frontend/contenido/marca/contenidoMarca.ts`.
+- Integración con shell global:
+  - enlace de navegación principal y footer en `frontend/contenido/shell/navegacionGlobal.ts`.
+- Tests añadidos:
+  - `frontend/tests/marca-contenido.test.ts` valida bloques mínimos y CTA conectadas a catálogo/encargo;
+  - `frontend/tests/shell-global.test.ts` actualizado para reflejar la nueva ruta editorial.
+- Guía de ampliación controlada:
+  1. Añadir o ajustar copy de marca exclusivamente en `contenidoMarca.ts`.
+  2. Mantener composición declarativa en `PaginaEditorialBotica.tsx` evitando hardcodear texto largo en componentes de shell.
+  3. Conservar CTA principales a `/colecciones` y `/encargo` para sostener continuidad narrativa → acción comercial.
