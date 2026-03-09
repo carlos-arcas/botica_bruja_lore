@@ -162,3 +162,19 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   3. El texto final que viaja a canales externos se centraliza en `construirResumenConsulta`.
   4. La configuración pública vive en variables `NEXT_PUBLIC_CONTACT_EMAIL` y/o `NEXT_PUBLIC_CONTACT_WHATSAPP`; si no existen o son inválidas, no se expone canal.
   5. Si más adelante se conecta un canal real adicional, extender `canalContactoPublico.ts` sin duplicar la composición del mensaje ni mezclar reglas de validación en componentes grandes.
+
+## 13. Shell comercial global + navegación unificada (Ciclo 3 en progreso)
+- Capacidad: **Shell global reusable para frontend público**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - shell global en `frontend/componentes/shell/ShellComercialGlobal.tsx` integrada desde `frontend/app/layout.tsx`;
+  - cabecera global con marca, navegación principal, estado activo por ruta y acceso visible a cesta en `frontend/componentes/shell/CabeceraComercialGlobal.tsx`;
+  - footer editorial/comercial con enlaces de continuidad y CTA en `frontend/componentes/shell/PieComercialGlobal.tsx`;
+  - fuente tipada y mantenible de navegación/footer en `frontend/contenido/shell/navegacionGlobal.ts`;
+  - helper de contador de cesta y fallback accesible en `frontend/contenido/shell/cestaGlobal.ts`.
+- Tests añadidos:
+  - `frontend/tests/shell-global.test.ts` cubre helper de ruta activa, fallback/estado del contador y consistencia de rutas globales.
+- Guía de ampliación:
+  1. Nuevos enlaces globales se editan en `NAVEGACION_GLOBAL` y `ENLACES_FOOTER` (sin hardcodear en componentes de presentación).
+  2. Cualquier ajuste de copy de contador de cesta se mantiene en `construirEstadoContadorCesta`.
+  3. El estilo de shell se conserva encapsulado en `frontend/componentes/shell/shellComercial.module.css` para no degradar `globals.css`.

@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+
+import { ShellComercialGlobal } from "@/componentes/shell/ShellComercialGlobal";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +17,9 @@ export default function RootLayout({
 }>): JSX.Element {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <ShellComercialGlobal>{children}</ShellComercialGlobal>
+      </body>
     </html>
   );
 }
