@@ -65,6 +65,23 @@
   border: 1px solid #eadfce;
 }
 
+.estadoCanal {
+  margin: 0.3rem 0;
+}
+
+.disponibilidad {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #456346;
+  font-weight: 600;
+}
+
+.ctasResumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
 .estado {
   color: #456346;
   font-weight: 600;

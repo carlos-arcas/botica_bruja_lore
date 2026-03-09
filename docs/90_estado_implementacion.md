@@ -142,14 +142,18 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - ruta `frontend/app/encargo/page.tsx` para iniciar consultas ligeras con metadata propia;
   - CTA principal de ficha en `frontend/componentes/catalogo/detalle/FichaProductoCatalogo.tsx` enlazado a `/encargo?producto=<slug>`;
   - formulario y UX del flujo en `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx` + estilos encapsulados;
-  - helpers puros en `frontend/contenido/catalogo/encargoConsulta.ts` para preselección, estado inicial, validación, resumen y fallback por slug inválido.
+  - helpers puros en `frontend/contenido/catalogo/encargoConsulta.ts` para preselección, estado inicial, validación, resumen y fallback por slug inválido;
+  - configuración pública de contacto y resolución de canal en `frontend/contenido/catalogo/canalContactoPublico.ts`.
 - Cierre de flujo actual:
   - sin backend nuevo ni integraciones externas;
-  - salida con resumen copiable de solicitud para uso en canal real externo configurado por negocio.
+  - salida con resumen copiable de solicitud y CTA real solo si existe configuración pública legítima;
+  - fallback seguro a "Copiar solicitud" cuando no hay email o WhatsApp público válido.
 - Tests añadidos:
   - `frontend/tests/encargo-consulta.test.ts` cubre preselección por slug, slug inválido, entrada directa sin slug, validación y construcción de resumen.
+  - `frontend/tests/encargo-canal-contacto.test.ts` cubre disponibilidad de canal, construcción de enlace y fallback sin configuración.
 - Guía de ampliación controlada:
   1. Para preseleccionar desde cualquier ficha, usar query param `producto` con slug (`/encargo?producto=<slug>`).
   2. Nuevos campos del formulario deben iniciar en `construirEstadoInicialConsulta` y validarse en `validarSolicitudConsulta`.
   3. El texto final que viaja a canales externos se centraliza en `construirResumenConsulta`.
-  4. Si más adelante se conecta un canal real (ej. endpoint o mailto verificado), hacerlo desde capa de presentación sin mezclar reglas de validación en componentes grandes.
+  4. La configuración pública vive en variables `NEXT_PUBLIC_CONTACT_EMAIL` y/o `NEXT_PUBLIC_CONTACT_WHATSAPP`; si no existen o son inválidas, no se expone canal.
+  5. Si más adelante se conecta un canal real adicional, extender `canalContactoPublico.ts` sin duplicar la composición del mensaje ni mezclar reglas de validación en componentes grandes.

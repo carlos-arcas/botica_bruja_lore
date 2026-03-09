@@ -8,8 +8,8 @@ type Props = {
 };
 
 export const metadata: Metadata = {
-  title: "Encargo ritual | La Botica de la Bruja Lore",
-  description: "Flujo ligero para preparar una consulta de encargo desde las fichas de colección.",
+  title: "Solicitud de encargo artesanal | La Botica de la Bruja Lore",
+  description: "Prepara una solicitud de encargo clara y compártela por un canal real si está configurado.",
 };
 
 export default function PaginaEncargo({ searchParams }: Props): JSX.Element {
@@ -20,7 +20,7 @@ export default function PaginaEncargo({ searchParams }: Props): JSX.Element {
         <h2>Camino editorial recomendado</h2>
         <p>
           Si aún estás explorando, vuelve a colecciones para revisar intenciones, formatos y notas sensoriales antes de
-          cerrar la consulta.
+          cerrar la solicitud.
         </p>
         <Link href="/colecciones" className="boton boton--secundario">Explorar colecciones</Link>
       </section>

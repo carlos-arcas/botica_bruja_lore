@@ -5,6 +5,12 @@ import { FormEvent, useMemo, useState } from "react";
 
 import { PRODUCTOS_CATALOGO } from "@/contenido/catalogo/catalogo";
 import {
+  construirEnlaceCanal,
+  obtenerConfiguracionContactoPublico,
+  resolverEstadoCanalContacto,
+  TipoCanalContacto,
+} from "@/contenido/catalogo/canalContactoPublico";
+import {
   construirResumenConsulta,
   construirEstadoInicialConsulta,
   DatosConsulta,
@@ -24,6 +30,10 @@ export function FlujoEncargoConsulta({ slugPreseleccionado }: Props): JSX.Elemen
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [resumen, setResumen] = useState<string>("");
   const [mensajeCopia, setMensajeCopia] = useState<string>("");
+  const [mensajeCanal, setMensajeCanal] = useState<string>("");
+
+  const configuracionCanal = useMemo(() => obtenerConfiguracionContactoPublico(), []);
+  const estadoCanal = useMemo(() => resolverEstadoCanalContacto(configuracionCanal), [configuracionCanal]);
 
   const productoSeleccionado = useMemo(
     () => PRODUCTOS_CATALOGO.find((producto) => producto.slug === datos.productoSlug) ?? null,
@@ -39,6 +49,7 @@ export function FlujoEncargoConsulta({ slugPreseleccionado }: Props): JSX.Elemen
     const nuevosErrores = validarSolicitudConsulta(datos);
     setErrores(nuevosErrores);
     setMensajeCopia("");
+    setMensajeCanal("");
 
     if (Object.keys(nuevosErrores).length > 0) {
       return;
@@ -58,16 +69,31 @@ export function FlujoEncargoConsulta({ slugPreseleccionado }: Props): JSX.Elemen
     }
 
     await navigator.clipboard.writeText(resumen);
-    setMensajeCopia("Resumen copiado. Ya puedes compartirlo por tu canal habitual.");
+    setMensajeCopia("Solicitud copiada. Ya puedes compartirla por tu canal habitual.");
+  };
+
+  const obtenerEnlaceCanal = (tipo: TipoCanalContacto): string | null => {
+    const canal = estadoCanal.canales.find((item) => item.tipo === tipo);
+    if (!canal) {
+      return null;
+    }
+
+    return construirEnlaceCanal(canal, configuracionCanal, resumen);
+  };
+
+  const registrarIntentoCanal = (tipo: TipoCanalContacto): void => {
+    if (!obtenerEnlaceCanal(tipo)) {
+      setMensajeCanal("No se pudo abrir el canal porque faltan datos válidos de configuración o resumen.");
+    }
   };
 
   return (
     <section className="bloque-home" aria-labelledby="titulo-encargo">
       <p className={estilos.eyebrow}>Encargo ligero · consulta comercial</p>
-      <h1 id="titulo-encargo">Preparar una consulta de encargo</h1>
+      <h1 id="titulo-encargo">Preparar una solicitud artesanal</h1>
       <p>
-        Cuéntanos qué pieza te interesa y cómo deseas integrarla en tu práctica. Te devolvemos la solicitud lista para
-        compartir por tu canal de confianza.
+        Cuéntanos qué pieza te interesa y en qué contexto deseas usarla. Al final tendrás un texto listo para copiar
+        o enviar por un canal real, si está configurado.
       </p>
 
       <article className={estilos.resumenProducto} aria-live="polite">
@@ -78,7 +104,7 @@ export function FlujoEncargoConsulta({ slugPreseleccionado }: Props): JSX.Elemen
             <p>{productoSeleccionado.subtitulo}</p>
           </>
         ) : (
-          <p>No hay producto preseleccionado. Elige uno desde el formulario para continuar.</p>
+          <p>No hay producto preseleccionado. Elige una pieza desde el formulario para continuar.</p>
         )}
       </article>
 
@@ -169,14 +195,50 @@ export function FlujoEncargoConsulta({ slugPreseleccionado }: Props): JSX.Elemen
         </label>
         {errores.consentimiento && <p className={estilos.error}>{errores.consentimiento}</p>}
 
-        <button className="boton boton--principal" type="submit">Generar resumen de consulta</button>
+        <button className="boton boton--principal" type="submit">Generar resumen de solicitud</button>
       </form>
 
       {resumen && (
         <article className={estilos.resumenFinal} aria-live="polite">
-          <h2>Resumen listo para compartir</h2>
+          <h2>Resumen listo</h2>
+          <p className={estilos.estadoCanal}>{estadoCanal.descripcion}</p>
+          <p className={estilos.disponibilidad}>
+            {estadoCanal.disponible ? "Canal disponible" : "Canal no disponible"}
+          </p>
           <pre>{resumen}</pre>
-          <button type="button" className="boton boton--secundario" onClick={copiarResumen}>Copiar solicitud</button>
+          <div className={estilos.ctasResumen}>
+            {estadoCanal.canales.map((canal) => {
+              const href = obtenerEnlaceCanal(canal.tipo);
+              if (!href) {
+                return (
+                  <button
+                    key={canal.tipo}
+                    type="button"
+                    className="boton boton--principal"
+                    onClick={() => registrarIntentoCanal(canal.tipo)}
+                  >
+                    {canal.etiqueta}
+                  </button>
+                );
+              }
+
+              return (
+                <a
+                  key={canal.tipo}
+                  className="boton boton--principal"
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {canal.etiqueta}
+                </a>
+              );
+            })}
+            <button type="button" className="boton boton--secundario" onClick={copiarResumen}>
+              {estadoCanal.ctaSecundaria}
+            </button>
+          </div>
+          {mensajeCanal && <p className={estilos.error}>{mensajeCanal}</p>}
           {mensajeCopia && <p className={estilos.estado}>{mensajeCopia}</p>}
         </article>
       )}
