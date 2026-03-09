@@ -162,3 +162,19 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   3. El texto final que viaja a canales externos se centraliza en `construirResumenConsulta`.
   4. La configuración pública vive en variables `NEXT_PUBLIC_CONTACT_EMAIL` y/o `NEXT_PUBLIC_CONTACT_WHATSAPP`; si no existen o son inválidas, no se expone canal.
   5. Si más adelante se conecta un canal real adicional, extender `canalContactoPublico.ts` sin duplicar la composición del mensaje ni mezclar reglas de validación en componentes grandes.
+
+## 9. Actualización puntual — Shell comercial global (frontend)
+- **Capacidad**: shell comercial global con cabecera, navegación unificada, acceso visible a cesta y footer editorial.
+- **Estado**: DONE.
+- **Ciclo asociado**: evolución ecommerce demo (frontend).
+- **Evidencia técnica**:
+  - `frontend/app/layout.tsx`
+  - `frontend/componentes/shell/CabeceraComercial.tsx`
+  - `frontend/componentes/shell/NavegacionPrincipal.tsx`
+  - `frontend/componentes/shell/FooterComercial.tsx`
+  - `frontend/contenido/shell/navegacionGlobal.ts`
+  - `frontend/tests/shell-global.test.ts`
+- **Notas**:
+  - Ruta activa resuelta con helper tipado y `aria-current`.
+  - Contador de cesta integrado en navegación global sin convertir el layout entero en componente cliente.
+  - Responsive base resuelta sin dependencias nuevas ni rediseño masivo.

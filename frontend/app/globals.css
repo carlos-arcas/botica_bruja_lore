@@ -329,3 +329,18 @@ button:focus-visible {
     min-height: 300px;
   }
 }
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: #2f2a25;
+  color: #fff;
+  padding: 0.55rem 0.8rem;
+  z-index: 30;
+}
+
+.skip-link:focus-visible {
+  left: 0.7rem;
+  top: 0.7rem;
+}
