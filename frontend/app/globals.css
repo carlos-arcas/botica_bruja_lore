@@ -40,7 +40,6 @@ body {
   margin-top: 0;
 }
 
-
 .hero-portada {
   position: relative;
   overflow: hidden;
@@ -100,6 +99,14 @@ body {
   border-radius: 999px;
   padding: 0.6rem 1rem;
   font-weight: 600;
+  display: inline-block;
+}
+
+.boton:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #8c5a3c;
+  outline-offset: 2px;
 }
 
 .boton--principal {
@@ -119,31 +126,112 @@ body {
 }
 
 .hero-portada__nota {
+  margin-top: 0.85rem;
   border-left: 4px solid #d8c9b6;
   padding-left: 0.75rem;
-  color: #4a443f;
+  color: #efe5d8;
 }
 
-.rejilla-intenciones,
+.navegacion-secciones ul,
+.lista-destacada,
+.faq-home,
+.pasos-ritual,
 .rejilla-plantas {
   list-style: none;
-  margin: 1rem 0 0;
+  margin: 0;
   padding: 0;
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-.rejilla-intenciones li,
-.rejilla-plantas li {
+.navegacion-secciones ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.navegacion-secciones a {
+  display: inline-block;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  text-decoration: none;
+  color: #544f49;
+  background: #fff;
+}
+
+.lista-destacada,
+.pasos-ritual,
+.rejilla-plantas {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.lista-destacada li,
+.pasos-ritual li,
+.rejilla-plantas li,
+.faq-home li,
+.panel-intencion {
   border: 1px solid var(--borde);
   border-radius: 12px;
   padding: 0.85rem;
   background: #fff;
 }
 
-.rejilla-plantas h3,
-.rejilla-intenciones h3 {
+.tabs-intenciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 0.8rem;
+}
+
+.tab-intencion {
+  border: 1px solid #d8cab8;
+  border-radius: 999px;
+  background: #fff;
+  color: #5d554d;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
+.tab-intencion--activa {
+  background: #4b6848;
+  color: #fff;
+  border-color: #4b6848;
+}
+
+.panel-intencion h3 {
+  margin: 0 0 0.55rem;
+}
+
+.panel-intencion ol {
+  margin: 0.6rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.faq-home {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.faq-home__pregunta {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: #2f2a25;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.faq-home__respuesta p {
+  margin: 0.65rem 0 0;
+  color: #4c4742;
+}
+
+.rejilla-plantas h3 {
   margin-top: 0;
   margin-bottom: 0.4rem;
 }
@@ -175,23 +263,16 @@ body {
   background: #fff7f3;
 }
 
-@media (max-width: 640px) {
-  .hero-portada,
-  .bloque-home {
-    padding: 1rem;
-  }
-
-  .hero-portada--con-fondo {
-    min-height: 300px;
-  }
+.cta-final-home {
+  text-align: center;
 }
-
 
 .rejilla-plantas--listado {
   margin-top: 0.5rem;
 }
 
-.tarjeta-planta-herbal {
+.tarjeta-planta-herbal,
+.tarjeta-ritual {
   display: grid;
   gap: 0.65rem;
 }
@@ -201,13 +282,16 @@ body {
   background: #fffaf2;
 }
 
-.ficha-herbal__cabecera h1 {
+.ficha-herbal__cabecera h1,
+.ficha-ritual__cabecera h1 {
   margin: 0;
 }
 
 .ficha-herbal__intenciones,
 .ficha-herbal__productos,
-.ficha-herbal__rituales {
+.ficha-herbal__rituales,
+.ficha-ritual__plantas,
+.ficha-ritual__productos {
   list-style: none;
   margin: 1rem 0 0;
   padding: 0;
@@ -217,7 +301,9 @@ body {
 
 .ficha-herbal__intenciones li,
 .ficha-herbal__productos li,
-.ficha-herbal__rituales li {
+.ficha-herbal__rituales li,
+.ficha-ritual__plantas li,
+.ficha-ritual__productos li {
   border: 1px solid var(--borde);
   border-radius: 12px;
   padding: 0.85rem;
@@ -228,43 +314,18 @@ body {
   border-color: #d6ccbf;
 }
 
-.tarjeta-ritual {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.ficha-ritual__cabecera h1 {
-  margin: 0;
-}
-
-.ficha-ritual__plantas,
-.ficha-ritual__productos {
-  list-style: none;
-  margin: 1rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.ficha-ritual__plantas li,
-.ficha-ritual__productos li {
-  border: 1px solid var(--borde);
-  border-radius: 12px;
-  padding: 0.85rem;
-  background: #fff;
-}
-
 .ficha-ritual__plantas a {
   color: var(--acento);
   font-weight: 600;
 }
 
+@media (max-width: 640px) {
+  .hero-portada,
+  .bloque-home {
+    padding: 1rem;
+  }
 
-.bloque-home--rituales-relacionados {
-  border-color: #c9beaf;
-}
-
-.ficha-herbal__rituales a {
-  color: var(--acento);
-  font-weight: 600;
+  .hero-portada--con-fondo {
+    min-height: 300px;
+  }
 }

@@ -1,24 +1,24 @@
 import Link from "next/link";
 
+import { HERO_HOME } from "@/contenido/home/contenidoHome";
+
 export function HeroPortada(): JSX.Element {
   return (
-    <section className="hero-portada hero-portada--con-fondo">
+    <section className="hero-portada hero-portada--con-fondo" aria-labelledby="titulo-home">
       <div className="hero-portada__overlay" />
       <div className="hero-portada__contenido">
-        <p className="hero-portada__eyebrow">Portada narrativa de la botica</p>
-        <h1>La Botica de la Bruja Lore</h1>
-        <p>
-          Hierbas a granel, guía editorial y descubrimiento por intención para una experiencia
-          natural que evoluciona hacia lo místico sin perder claridad.
-        </p>
+        <p className="hero-portada__eyebrow">{HERO_HOME.etiqueta}</p>
+        <h1 id="titulo-home">{HERO_HOME.titulo}</h1>
+        <p>{HERO_HOME.descripcion}</p>
         <div className="hero-portada__acciones">
-          <Link href="/hierbas" className="boton boton--principal">
-            Explorar hierbas
+          <Link href={HERO_HOME.ctaPrimaria.href} className="boton boton--principal">
+            {HERO_HOME.ctaPrimaria.texto}
           </Link>
-          <Link href="/rituales" className="boton boton--secundario boton--secundario-claro">
-            Ver rituales
+          <Link href={HERO_HOME.ctaSecundaria.href} className="boton boton--secundario boton--secundario-claro">
+            {HERO_HOME.ctaSecundaria.texto}
           </Link>
         </div>
+        <p className="hero-portada__nota">{HERO_HOME.nota}</p>
       </div>
     </section>
   );
