@@ -1,0 +1,55 @@
+.etiqueta {
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.82rem;
+  color: #695f54;
+  margin-top: 0;
+}
+
+.nota {
+  margin-bottom: 0;
+  border-left: 3px solid #d4c2ae;
+  padding-left: 0.7rem;
+  color: #5c544a;
+}
+
+.listaPasos,
+.listaPuntos,
+.rejillaPrincipios,
+.listaFaq {
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.listaPasos li,
+.listaPuntos li,
+.rejillaPrincipios li,
+.listaFaq li {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.85rem;
+}
+
+.listaPasos h3,
+.rejillaPrincipios h3 {
+  margin: 0 0 0.45rem;
+}
+
+.listaFaq details[open] summary {
+  margin-bottom: 0.45rem;
+}
+
+.listaFaq summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+@media (min-width: 760px) {
+  .rejillaPrincipios {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

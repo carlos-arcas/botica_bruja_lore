@@ -12,17 +12,19 @@ import {
 test("navegación principal expone accesos comerciales clave", () => {
   const rutas = NAVEGACION_PRINCIPAL.map((enlace) => enlace.href);
 
-  assert.deepEqual(rutas, ["/", "/colecciones", "/cesta", "/encargo"]);
+  assert.deepEqual(rutas, ["/", "/la-botica", "/colecciones", "/cesta", "/encargo"]);
 });
 
 test("esRutaActiva resuelve coincidencia exacta y por prefijo", () => {
-  const colecciones = NAVEGACION_PRINCIPAL[1]!;
+  const colecciones = NAVEGACION_PRINCIPAL[2]!;
   const inicio = NAVEGACION_PRINCIPAL[0]!;
+  const laBotica = NAVEGACION_PRINCIPAL[1]!;
 
   assert.equal(esRutaActiva("/colecciones", colecciones), true);
   assert.equal(esRutaActiva("/colecciones/kit-luna", colecciones), true);
   assert.equal(esRutaActiva("/", inicio), true);
   assert.equal(esRutaActiva("/rituales", inicio), false);
+  assert.equal(esRutaActiva("/la-botica", laBotica), true);
 });
 
 test("contador de cesta muestra fallback correcto", () => {

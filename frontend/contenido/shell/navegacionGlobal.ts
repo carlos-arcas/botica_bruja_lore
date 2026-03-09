@@ -11,12 +11,14 @@ export type EnlaceFooter = {
 
 export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
   { etiqueta: "Inicio", href: "/", coincidencia: "exacta" },
+  { etiqueta: "La Botica", href: "/la-botica", coincidencia: "exacta" },
   { etiqueta: "Colecciones", href: "/colecciones", coincidencia: "prefijo" },
   { etiqueta: "Cesta ritual", href: "/cesta", coincidencia: "exacta" },
   { etiqueta: "Encargo", href: "/encargo", coincidencia: "exacta" },
 ];
 
 export const ENLACES_FOOTER: EnlaceFooter[] = [
+  { etiqueta: "Conocer la Botica", href: "/la-botica" },
   { etiqueta: "Colecciones curadas", href: "/colecciones" },
   { etiqueta: "Ruta herbal", href: "/hierbas" },
   { etiqueta: "Rituales conectados", href: "/rituales" },
