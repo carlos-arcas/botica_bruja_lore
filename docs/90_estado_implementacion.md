@@ -100,3 +100,13 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Ciclo 2 está técnicamente cerrado con evidencia de recorrido y quality gate mínimo operativo.
 - No se detectan bloqueos externos que impidan declarar DONE dentro del contrato de este ciclo.
 - El siguiente paso correcto es abrir Ciclo 3 respetando el alcance ya definido.
+
+## 10. Actualización incremental de home (Ciclo 3 en progreso)
+- Capacidad: **Home comercial + narrativa + UX ligera**.
+- Estado: **EN_PROGRESO**.
+- Evidencia implementada:
+  - estructura de contenido mantenible centralizada en `frontend/contenido/home/contenidoHome.ts`;
+  - secciones nuevas en home: hero refinado, Alquimia del Deseo, intenciones con selector, cómo elegir ritual, confianza comercial, FAQ accesible y CTA final;
+  - mejoras UX: navegación por anclas, tabs de intenciones sin recarga y acordeón FAQ accesible.
+- Tests añadidos para lógica de interacción de tabs/FAQ en `frontend/tests/home-interacciones.test.ts`.
+- Nota operativa: la ampliación de contenido futuro debe hacerse sobre el módulo de contenido, evitando hardcodear bloques largos dentro de componentes de presentación.

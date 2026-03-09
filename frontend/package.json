@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:home": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/home-interacciones.test.ts componentes/home/interaccionesHome.ts contenido/home/contenidoHome.ts && node .tmp-tests/tests/home-interacciones.test.js"
   },
   "dependencies": {
     "next": "^14.2.35",
