@@ -1,0 +1,27 @@
+.etiqueta {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: #7b6c5f;
+  margin-bottom: 0.4rem;
+}
+
+.aviso {
+  margin: 0.9rem 0 0;
+  border-left: 4px solid #cdb59c;
+  padding-left: 0.7rem;
+  color: #4d443d;
+  font-weight: 600;
+}
+
+.notaCanal {
+  margin: 0.6rem 0 0;
+  color: #5a534c;
+}
+
+.lista {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.35rem;
+}

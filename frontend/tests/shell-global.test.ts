@@ -37,7 +37,11 @@ test("contador de cesta muestra fallback correcto", () => {
 });
 
 test("footer mantiene enlaces de continuidad editorial-comercial", () => {
-  assert.equal(ENLACES_FOOTER.length >= 5, true);
+  assert.equal(ENLACES_FOOTER.length >= 8, true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/la-botica"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/encargo"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/condiciones-encargo"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/envios-y-preparacion"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/privacidad"), true);
+
 });

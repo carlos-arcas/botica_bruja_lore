@@ -195,3 +195,21 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   1. Añadir o ajustar copy de marca exclusivamente en `contenidoMarca.ts`.
   2. Mantener composición declarativa en `PaginaEditorialBotica.tsx` evitando hardcodear texto largo en componentes de shell.
   3. Conservar CTA principales a `/colecciones` y `/encargo` para sostener continuidad narrativa → acción comercial.
+
+## 14. Páginas legales/comerciales mínimas de confianza (Ciclo 3 en progreso)
+- Capacidad: **Capa mínima de confianza operativa/legal en frontend**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - nuevas rutas públicas: `frontend/app/condiciones-encargo/page.tsx`, `frontend/app/envios-y-preparacion/page.tsx`, `frontend/app/privacidad/page.tsx`;
+  - composición compartida en `frontend/componentes/legal/PaginaLegalComercial.tsx` con estilos encapsulados;
+  - contenido tipado + metadata centralizada en `frontend/contenido/legal/paginasLegalesComerciales.ts`.
+- Integración:
+  - enlaces legales/comerciales incorporados al footer global mediante `frontend/contenido/shell/navegacionGlobal.ts`;
+  - refuerzo contextual dentro de `/encargo` con accesos directos a condiciones, envíos y privacidad.
+- Regla operativa para ampliar textos sin hardcodear:
+  1. Ajustar títulos, introducción, secciones, CTA y metadata en `paginasLegalesComerciales.ts`.
+  2. Mantener la presentación en `PaginaLegalComercial.tsx` sin duplicar contenido por página.
+  3. Para notas dinámicas de contacto público usar `describirCanalPublico` con la configuración existente (`NEXT_PUBLIC_CONTACT_EMAIL` y `NEXT_PUBLIC_CONTACT_WHATSAPP`), preservando fallback honesto cuando no exista canal.
+- Tests añadidos:
+  - `frontend/tests/legal-comercial.test.ts` (estructura mínima, metadata, rutas y fallback de contacto);
+  - `frontend/tests/shell-global.test.ts` actualizado para comprobar enlaces legales en footer.
