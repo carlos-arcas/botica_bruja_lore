@@ -1,4 +1,5 @@
 import { ProductoCatalogo } from "./catalogo";
+import { buscarProductosPorTexto } from "./busquedaCatalogo";
 
 export type OrdenCatalogo = "destacados" | "precio-asc" | "nombre-asc";
 
@@ -26,8 +27,15 @@ export function ordenarCatalogo(productos: ProductoCatalogo[], orden: OrdenCatal
   return copia.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 }
 
-export function resolverCatalogo(productos: ProductoCatalogo[], intencion: string, categoria: string, orden: OrdenCatalogo): ProductoCatalogo[] {
-  const porIntencion = filtrarPorIntencion(productos, intencion);
+export function resolverCatalogo(
+  productos: ProductoCatalogo[],
+  intencion: string,
+  categoria: string,
+  orden: OrdenCatalogo,
+  busqueda = "",
+): ProductoCatalogo[] {
+  const porBusqueda = buscarProductosPorTexto(productos, busqueda);
+  const porIntencion = filtrarPorIntencion(porBusqueda, intencion);
   const porCategoria = filtrarPorCategoria(porIntencion, categoria);
   return ordenarCatalogo(porCategoria, orden);
 }

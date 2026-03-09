@@ -10,7 +10,11 @@ export const metadata: Metadata = {
     "Catálogo navegable de colecciones rituales con filtros por intención y formato dentro de La Botica de la Bruja Lore.",
 };
 
-export default function PaginaColecciones(): JSX.Element {
+type Props = {
+  searchParams?: { q?: string; in?: string; cat?: string; ord?: string };
+};
+
+export default function PaginaColecciones({ searchParams }: Props): JSX.Element {
   return (
     <main className="contenedor-home">
       <section className="bloque-home">
@@ -18,7 +22,7 @@ export default function PaginaColecciones(): JSX.Element {
         <p>Guarda piezas de interés y prepara una consulta con varias referencias en un solo paso.</p>
         <IndicadorCestaRitual />
       </section>
-      <CatalogoColecciones />
+      <CatalogoColecciones searchParamsIniciales={searchParams} />
       <section className="bloque-home">
         <h2>Exploración conectada</h2>
         <p>Si prefieres una entrada por contenido vivo, puedes recorrer la línea herbal o la sección de rituales publicados.</p>

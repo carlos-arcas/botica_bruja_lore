@@ -23,12 +23,36 @@
   font-size: 0.92rem;
 }
 
+
+.controles input,
 .controles select {
   border: 1px solid #d9cebf;
   border-radius: 10px;
   padding: 0.5rem;
   background: #fff;
 }
+
+.controles input:focus-visible,
+.controles select:focus-visible {
+  outline: 2px solid #9d7f63;
+  outline-offset: 1px;
+}
+
+.resumenControles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.resumenControles p {
+  margin: 0;
+  color: #5d554e;
+  font-size: 0.92rem;
+}
+
 
 .rejilla {
   list-style: none;
