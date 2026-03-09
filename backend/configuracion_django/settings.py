@@ -3,7 +3,7 @@
 import importlib.util
 import os
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -39,12 +39,12 @@ def _configuracion_db_desde_url(database_url: str) -> dict[str, str | int]:
     parsed = urlparse(database_url)
     esquema = parsed.scheme
 
-    if esquema in {"postgres", "postgresql"}:
+    if esquema in {"postgres", "postgresql", "postgresql+psycopg", "postgresql+psycopg2"}:
         return {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": parsed.path.lstrip("/"),
-            "USER": parsed.username or "",
-            "PASSWORD": parsed.password or "",
+            "USER": unquote(parsed.username or ""),
+            "PASSWORD": unquote(parsed.password or ""),
             "HOST": parsed.hostname or "",
             "PORT": str(parsed.port or 5432),
             "CONN_MAX_AGE": 600,
@@ -52,7 +52,7 @@ def _configuracion_db_desde_url(database_url: str) -> dict[str, str | int]:
         }
 
     if esquema == "sqlite":
-        ruta_sqlite = parsed.path or "/dev.sqlite3"
+        ruta_sqlite = parsed.path or str(LOCAL_VAR_DIR / "dev.sqlite3")
         return {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": ruta_sqlite,
@@ -74,7 +74,7 @@ def _configuracion_base_de_datos() -> dict[str, dict[str, str | int]]:
 
 
 SECRET_KEY = os.getenv("SECRET_KEY", "botica-demo-dev")
-DEBUG = _leer_booleano("DEBUG", True)
+DEBUG = _leer_booleano("DEBUG", os.getenv("DATABASE_URL") is None)
 
 ALLOWED_HOSTS = _leer_lista("ALLOWED_HOSTS", ["localhost", "127.0.0.1", "testserver"])
 
