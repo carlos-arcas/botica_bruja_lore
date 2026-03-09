@@ -1,51 +1,41 @@
-# Despliegue en Railway (backend + frontend)
+# Despliegue en Railway
 
-Este repositorio se despliega en Railway como **dos servicios separados**:
-
-1. **Backend Django** (API, admin, healthcheck).
-2. **Frontend Next.js** (sitio público).
+Este proyecto se despliega en Railway con **dos servicios separados**:
+- **Backend Django**
+- **Frontend Next.js**
 
 ## Configuración recomendada por servicio
 
 ### Backend
-
-- **Config file path:** `/backend/railway.toml`
-- Builder: `RAILPACK`
-- Start command: Gunicorn sobre Django WSGI
-- Pre-deploy: `migrate` + `collectstatic`
-- Healthcheck: `/healthz`
+- Servicio independiente para API, admin y healthcheck.
+- `Config file path`: `/backend/railway.toml`.
+- Builder recomendado: `RAILPACK`.
+- Healthcheck: `/healthz`.
 
 ### Frontend
-
-- **Root directory del servicio:** `frontend`
-- **Config file path:** `/frontend/railway.toml`
-- Builder: `RAILPACK`
-- Start command: `npm run start`
-- Healthcheck: `/`
+- Servicio independiente para web pública.
+- `Root directory`: `frontend`.
+- `Config file path`: `/frontend/railway.toml`.
+- Builder recomendado: `RAILPACK`.
+- Healthcheck: `/`.
 
 ## Variables requeridas en Railway UI
 
-> Definir en la UI de Railway (no en `railway.toml`).
-
 ### Backend
-
 - `SECRET_KEY`
 - `DEBUG`
 - `ALLOWED_HOSTS`
 - `CSRF_TRUSTED_ORIGINS`
 - `DATABASE_URL`
 
-Ejemplo de referencia para PostgreSQL en Railway:
+### Frontend
+- `NEXT_PUBLIC_API_BASE_URL`
+
+## Ejemplos de variables
 
 ```env
 DATABASE_URL=${{SERVICE_NAME.DATABASE_URL}}
 ```
-
-### Frontend
-
-- `NEXT_PUBLIC_API_BASE_URL`
-
-Ejemplo:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://TU-BACKEND.up.railway.app
@@ -53,19 +43,18 @@ NEXT_PUBLIC_API_BASE_URL=https://TU-BACKEND.up.railway.app
 
 ## Pasos básicos post-deploy
 
-1. Verificar que el backend arranca y ejecuta `preDeployCommand`.
-2. Comprobar backend en `https://TU-BACKEND.up.railway.app/healthz` (200 esperado).
-3. Comprobar backend admin/API en su dominio de backend (`/admin/`, `/api/v1/...`).
-4. Comprobar frontend en su dominio de frontend (`/`, `/hierbas`, `/rituales`).
-5. Confirmar que `NEXT_PUBLIC_API_BASE_URL` apunta al dominio backend correcto.
+1. Confirmar que el backend inicia sin errores.
+2. Verificar `https://TU-BACKEND.up.railway.app/healthz` con respuesta 200.
+3. Verificar frontend en su dominio Railway (`/`).
+4. Confirmar que `NEXT_PUBLIC_API_BASE_URL` apunta al backend correcto.
 
 ## URLs esperadas por servicio
 
-- **URL backend:** dominio Railway del servicio Django (usa `/healthz` para verificación de vida).
-- **URL frontend:** dominio Railway del servicio Next.js (experiencia pública).
+- **Backend:** `https://TU-BACKEND.up.railway.app`
+- **Frontend:** `https://TU-FRONTEND.up.railway.app`
 
-## Fuera de alcance de este documento
+## Fuera de alcance del documento
 
-- DNS custom, certificados y dominios propios.
-- Estrategias avanzadas de observabilidad/alertado.
-- CI/CD externo y políticas de promoción entre entornos.
+- DNS custom y dominios propios.
+- Certificados avanzados y políticas de red.
+- CI/CD externo y promoción entre entornos.
