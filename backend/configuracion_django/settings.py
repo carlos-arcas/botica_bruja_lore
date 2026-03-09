@@ -25,6 +25,16 @@ def _leer_lista(nombre: str, valor_por_defecto: list[str]) -> list[str]:
     return [item.strip() for item in valor.split(",") if item.strip()]
 
 
+def _agregar_sin_duplicados(destino: list[str], valores: list[str]) -> list[str]:
+    existentes = {item for item in destino}
+    for valor in valores:
+        limpio = valor.strip()
+        if limpio and limpio not in existentes:
+            destino.append(limpio)
+            existentes.add(limpio)
+    return destino
+
+
 def _configuracion_db_desde_url(database_url: str) -> dict[str, str | int]:
     parsed = urlparse(database_url)
     esquema = parsed.scheme
@@ -67,7 +77,29 @@ SECRET_KEY = os.getenv("SECRET_KEY", "botica-demo-dev")
 DEBUG = _leer_booleano("DEBUG", True)
 
 ALLOWED_HOSTS = _leer_lista("ALLOWED_HOSTS", ["localhost", "127.0.0.1", "testserver"])
+
+railway_public_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
+railway_private_domain = os.getenv("RAILWAY_PRIVATE_DOMAIN", "")
+
+_agregar_sin_duplicados(
+    ALLOWED_HOSTS,
+    [
+        railway_public_domain,
+        railway_private_domain,
+        ".up.railway.app",
+        ".railway.internal",
+        "localhost",
+        "127.0.0.1",
+        "testserver",
+    ],
+)
+
 CSRF_TRUSTED_ORIGINS = _leer_lista("CSRF_TRUSTED_ORIGINS", [])
+if railway_public_domain:
+    _agregar_sin_duplicados(
+        CSRF_TRUSTED_ORIGINS,
+        [f"https://{railway_public_domain}", f"http://{railway_public_domain}"],
+    )
 
 ROOT_URLCONF = "backend.configuracion_django.urls"
 WSGI_APPLICATION = "backend.configuracion_django.wsgi.application"
@@ -118,6 +150,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "var" / "staticfiles"
+STATIC_ROOT.mkdir(parents=True, exist_ok=True)
 
 if importlib.util.find_spec("whitenoise"):
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
@@ -125,6 +158,7 @@ if importlib.util.find_spec("whitenoise"):
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
