@@ -1,0 +1,39 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+
+import { FichaProductoCatalogo } from "@/componentes/catalogo/detalle/FichaProductoCatalogo";
+import { obtenerProductoPorSlug } from "@/contenido/catalogo/detalleCatalogo";
+
+type Props = {
+  params: { slug: string };
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const producto = obtenerProductoPorSlug(params.slug);
+
+  if (!producto) {
+    return {
+      title: "Producto no encontrado | Colecciones | La Botica de la Bruja Lore",
+      description: "El producto solicitado no está disponible en las colecciones actuales.",
+    };
+  }
+
+  return {
+    title: `${producto.nombre} | Colecciones | La Botica de la Bruja Lore`,
+    description: producto.descripcion,
+  };
+}
+
+export default function PaginaDetalleColeccion({ params }: Props): JSX.Element {
+  const producto = obtenerProductoPorSlug(params.slug);
+
+  if (!producto) {
+    notFound();
+  }
+
+  return (
+    <main className="contenedor-home">
+      <FichaProductoCatalogo producto={producto} />
+    </main>
+  );
+}

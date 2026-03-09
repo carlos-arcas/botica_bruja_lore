@@ -120,6 +120,16 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - lógica pura de filtrado/ordenación en `frontend/contenido/catalogo/filtrosCatalogo.ts`;
   - UI de catálogo con controles y estado vacío en `frontend/componentes/catalogo/`;
   - enlace desde home al catálogo actualizado en `frontend/contenido/home/contenidoHome.ts`.
+- Ampliación implementada (ficha por slug):
+  - ruta dinámica `frontend/app/colecciones/[slug]/page.tsx` con `notFound()` para slugs inválidos;
+  - componente de detalle en `frontend/componentes/catalogo/detalle/FichaProductoCatalogo.tsx`;
+  - helpers puros de resolución y relacionados en `frontend/contenido/catalogo/detalleCatalogo.ts`;
+  - navegación de tarjetas actualizada en `frontend/componentes/catalogo/TarjetaCatalogo.tsx` hacia `/colecciones/[slug]`.
+- Tests añadidos para detalle de catálogo en `frontend/tests/catalogo-detalle.test.ts` (slug válido/inexistente, relacionados y fallback).
+- Regla operativa para ampliar fichas y relacionados:
+  1. Cada nuevo producto debe incluir `slug` único en `PRODUCTOS_CATALOGO`.
+  2. La lógica de resolución de detalle y relacionados se mantiene en `detalleCatalogo.ts`, nunca dentro del componente de página.
+  3. Los textos de guía ritual por intención se amplían en `obtenerGuiaRitual` para mantener presentación desacoplada de la capa de datos.
 - Regla operativa para ampliar catálogo:
   1. Añadir productos en `PRODUCTOS_CATALOGO` siguiendo el tipo `ProductoCatalogo`.
   2. Si se incorpora una nueva intención/categoría, extender primero `OPCIONES_INTENCION` y/o `OPCIONES_CATEGORIA`.
