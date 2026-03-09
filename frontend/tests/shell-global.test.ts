@@ -12,7 +12,7 @@ import {
 test("navegación principal expone accesos comerciales clave", () => {
   const rutas = NAVEGACION_PRINCIPAL.map((enlace) => enlace.href);
 
-  assert.deepEqual(rutas, ["/", "/colecciones", "/cesta", "/encargo"]);
+  assert.deepEqual(rutas, ["/", "/colecciones", "/la-botica", "/cesta", "/encargo"]);
 });
 
 test("esRutaActiva resuelve coincidencia exacta y por prefijo", () => {
@@ -33,6 +33,7 @@ test("contador de cesta muestra fallback correcto", () => {
 });
 
 test("footer mantiene enlaces de continuidad editorial-comercial", () => {
-  assert.equal(ENLACES_FOOTER.length >= 4, true);
+  assert.equal(ENLACES_FOOTER.length >= 5, true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/la-botica"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/encargo"), true);
 });
