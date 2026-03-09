@@ -60,7 +60,12 @@ export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
             <li key={paso}>{paso}</li>
           ))}
         </ol>
-        <Link href="/colecciones" className="boton boton--principal">Seguir explorando colecciones</Link>
+        <div className={estilos.accionesFicha}>
+          <Link href={`/encargo?producto=${producto.slug}`} className="boton boton--principal">
+            Encargar o consultar esta pieza
+          </Link>
+          <Link href="/colecciones" className="boton boton--secundario">Seguir explorando colecciones</Link>
+        </div>
       </section>
 
       <section className="bloque-home" aria-labelledby="relacionados-titulo">
