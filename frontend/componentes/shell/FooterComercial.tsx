@@ -5,6 +5,9 @@ import { ENLACES_FOOTER } from "@/contenido/shell/navegacionGlobal";
 import estilos from "./shellComercial.module.css";
 
 export function FooterComercial(): JSX.Element {
+  const enlacesExploracion = ENLACES_FOOTER.filter((enlace) => enlace.categoria === "explorar");
+  const enlacesConfianza = ENLACES_FOOTER.filter((enlace) => enlace.categoria === "confianza");
+
   return (
     <footer className={estilos.footer}>
       <div className={estilos.footerInterior}>
@@ -13,7 +16,14 @@ export function FooterComercial(): JSX.Element {
           y combinaciones pensadas como piezas artesanales.
         </p>
         <nav aria-label="Navegación de cierre" className={estilos.footerNavegacion}>
-          {ENLACES_FOOTER.map((enlace) => (
+          {enlacesExploracion.map((enlace) => (
+            <Link key={enlace.href} href={enlace.href}>
+              {enlace.etiqueta}
+            </Link>
+          ))}
+        </nav>
+        <nav aria-label="Información comercial y privacidad" className={estilos.footerNavegacion}>
+          {enlacesConfianza.map((enlace) => (
             <Link key={enlace.href} href={enlace.href}>
               {enlace.etiqueta}
             </Link>

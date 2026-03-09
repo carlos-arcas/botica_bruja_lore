@@ -195,3 +195,21 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   1. Añadir o ajustar copy de marca exclusivamente en `contenidoMarca.ts`.
   2. Mantener composición declarativa en `PaginaEditorialBotica.tsx` evitando hardcodear texto largo en componentes de shell.
   3. Conservar CTA principales a `/colecciones` y `/encargo` para sostener continuidad narrativa → acción comercial.
+
+## 14. Páginas legales/comerciales mínimas (Ciclo 3 en progreso)
+- Capacidad: **Capa de confianza comercial/legal mínima para frontend**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - contenido tipado centralizado en `frontend/contenido/legal/contenidoLegalComercial.ts`;
+  - páginas públicas `frontend/app/condiciones-encargo/page.tsx`, `frontend/app/envios-y-preparacion/page.tsx` y `frontend/app/privacidad/page.tsx`;
+  - composición reutilizable en `frontend/componentes/legal/PaginaLegalComercial.tsx`.
+- Integración con shell y flujo comercial:
+  - enlaces de confianza incorporados al footer vía `frontend/contenido/shell/navegacionGlobal.ts` + `frontend/componentes/shell/FooterComercial.tsx`;
+  - bloque contextual añadido en `frontend/app/encargo/page.tsx` para visibilidad previa del alcance (sin checkout automático).
+- Tests añadidos:
+  - `frontend/tests/legal-comercial-contenido.test.ts` para validar estructura, metadata y redacción honesta mínima;
+  - `frontend/tests/shell-global.test.ts` ampliado para verificar enlaces de confianza en footer.
+- Guía de ampliación controlada:
+  1. Ajustar textos y metadata solo en `contenidoLegalComercial.ts`.
+  2. Añadir nuevas páginas informativas reutilizando `PaginaLegalComercialBase`.
+  3. Mantener consistencia de integración mediante `ENLACES_FOOTER` con categorías `explorar` y `confianza`.

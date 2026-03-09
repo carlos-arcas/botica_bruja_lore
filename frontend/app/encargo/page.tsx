@@ -16,6 +16,19 @@ export default function PaginaEncargo({ searchParams }: Props): JSX.Element {
   return (
     <main className="contenedor-home">
       <FlujoEncargoConsulta slugPreseleccionado={searchParams?.producto} cestaPreseleccionada={searchParams?.cesta} />
+      <section className="bloque-home" aria-labelledby="titulo-confianza-encargo">
+        <h2 id="titulo-confianza-encargo">Antes de enviar: información clave</h2>
+        <p>
+          Esta web canaliza solicitudes y encargos artesanales. La confirmación final se realiza por el canal de contacto
+          disponible, sin compra o pago automático en esta fase.
+        </p>
+        <div className="hero-portada__acciones">
+          <Link href="/condiciones-encargo" className="boton boton--secundario">Ver condiciones del encargo</Link>
+          <Link href="/envios-y-preparacion" className="boton boton--secundario">Consultar envíos e incidencias</Link>
+          <Link href="/privacidad" className="boton boton--secundario">Revisar privacidad</Link>
+        </div>
+      </section>
+
       <section className="bloque-home">
         <h2>Camino editorial recomendado</h2>
         <p>

@@ -7,6 +7,7 @@ export type EnlaceNavegacionGlobal = {
 export type EnlaceFooter = {
   etiqueta: string;
   href: string;
+  categoria: "explorar" | "confianza";
 };
 
 export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
@@ -18,11 +19,14 @@ export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
 ];
 
 export const ENLACES_FOOTER: EnlaceFooter[] = [
-  { etiqueta: "Colecciones curadas", href: "/colecciones" },
-  { etiqueta: "Ruta herbal", href: "/hierbas" },
-  { etiqueta: "Rituales conectados", href: "/rituales" },
-  { etiqueta: "La Botica", href: "/la-botica" },
-  { etiqueta: "Preparar encargo", href: "/encargo" },
+  { etiqueta: "Colecciones curadas", href: "/colecciones", categoria: "explorar" },
+  { etiqueta: "Ruta herbal", href: "/hierbas", categoria: "explorar" },
+  { etiqueta: "Rituales conectados", href: "/rituales", categoria: "explorar" },
+  { etiqueta: "La Botica", href: "/la-botica", categoria: "explorar" },
+  { etiqueta: "Preparar encargo", href: "/encargo", categoria: "explorar" },
+  { etiqueta: "Condiciones de encargo", href: "/condiciones-encargo", categoria: "confianza" },
+  { etiqueta: "Envíos y preparación", href: "/envios-y-preparacion", categoria: "confianza" },
+  { etiqueta: "Privacidad", href: "/privacidad", categoria: "confianza" },
 ];
 
 export function esRutaActiva(rutaActual: string, enlace: EnlaceNavegacionGlobal): boolean {
