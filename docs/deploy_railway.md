@@ -46,17 +46,19 @@ gunicorn backend.configuracion_django.wsgi:application --bind 0.0.0.0:${PORT:-80
 - Si falta `DATABASE_URL` en Railway, Django aborta arranque con: `DATABASE_URL es obligatoria en Railway/producción.`
 - Este fallo es intencionado para evitar deploys “aparentemente correctos” conectados a una base equivocada.
 
+
 ## 3) Variables legacy que deben eliminarse en Railway UI
 
-Si existen en el servicio backend, eliminarlas para evitar arranque con configuración antigua:
+Aunque este repo **ya fuerza por código** `backend.configuracion_django.settings` en `manage.py` y `backend/configuracion_django/wsgi.py`, hay que limpiar variables antiguas para evitar configuraciones ambiguas en Railway UI.
+
+Si existen en el servicio backend, eliminarlas:
 
 - `APP_DEBUG`
 - `DJANGO_SETTINGS_MODULE`
 - `WSGI_APPLICATION`
+- `Start Command` manual heredado en UI (dejar que prevalezca `backend/railway.toml`)
 
-También elimina cualquier variable manual que apunte a rutas legacy como:
-- `presentacion/proyecto_web`
-- `configuracion/app_config`
+Este hardening reduce el riesgo de que Railway arranque otro proyecto/settings por arrastre histórico, pero la limpieza de UI sigue siendo obligatoria para cerrar el riesgo operativo.
 
 ## 4) URLs y conexión entre servicios
 
@@ -91,6 +93,6 @@ Reemplaza `SERVICE_NAME` por el nombre real del servicio Postgres en Railway UI.
 Si aparece alguno de estos síntomas, Railway sigue usando configuración residual:
 
 - Logs intentando cargar `presentacion/proyecto_web` o `configuracion/app_config`.
-- `Start Command` manual en UI distinto al definido en `backend/railway.toml`.
+- `Start Command` manual en UI distinto al definido en `backend/railway.toml` (puede saltarse el flujo esperado).
 - Variables legacy (`APP_DEBUG`, `DJANGO_SETTINGS_MODULE`, `WSGI_APPLICATION`) aún presentes.
 - Frontend apuntando a una API incorrecta en `NEXT_PUBLIC_API_BASE_URL`.
