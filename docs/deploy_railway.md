@@ -100,3 +100,28 @@ Si aparece alguno de estos síntomas, Railway sigue usando configuración residu
 - `Start Command` manual en UI distinto al definido en `backend/railway.toml` (puede saltarse el flujo esperado).
 - Variables legacy (`APP_DEBUG`, `DJANGO_SETTINGS_MODULE`, `WSGI_APPLICATION`) aún presentes.
 - Frontend apuntando a una API incorrecta en `NEXT_PUBLIC_API_BASE_URL`.
+
+## 8) Seed demo pública mínima (staging/demo)
+
+Para evitar un entorno vacío tras deploy, existe un comando idempotente que carga una base editorial/comercial mínima pública (intenciones, plantas, productos y rituales):
+
+```bash
+python manage.py seed_demo_publico
+```
+
+Cuándo ejecutarlo:
+- justo después de `migrate` en un entorno nuevo de Railway,
+- cuando se resetee la base de datos de staging/demo,
+- en local para validar rápidamente navegación pública sin carga manual desde admin.
+
+Qué desbloquea visualmente (mínimo):
+- `/`
+- `/hierbas`
+- `/hierbas/[slug]`
+- `/rituales`
+- `/rituales/[slug]`
+
+Notas operativas:
+- el comando es idempotente: puede ejecutarse más de una vez sin duplicar registros,
+- está diseñado para demo/staging y validación visual inicial,
+- no sustituye la carga curada definitiva del catálogo real de producción.
