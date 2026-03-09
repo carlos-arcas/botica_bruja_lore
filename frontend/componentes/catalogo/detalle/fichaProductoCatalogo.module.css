@@ -103,3 +103,9 @@
   color: #7b6c5f;
   font-size: 0.82rem;
 }
+
+.accionesFicha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}

@@ -134,3 +134,22 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   1. Añadir productos en `PRODUCTOS_CATALOGO` siguiendo el tipo `ProductoCatalogo`.
   2. Si se incorpora una nueva intención/categoría, extender primero `OPCIONES_INTENCION` y/o `OPCIONES_CATEGORIA`.
   3. Mantener filtros/ordenación en helpers puros (`filtrosCatalogo.ts`), evitando hardcodear lógica en componentes de presentación.
+
+## 12. Flujo ligero de encargo/consulta desde ficha (Ciclo 3 en progreso)
+- Capacidad: **Conversión de ficha de colección a acción comercial sin checkout**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - ruta `frontend/app/encargo/page.tsx` para iniciar consultas ligeras con metadata propia;
+  - CTA principal de ficha en `frontend/componentes/catalogo/detalle/FichaProductoCatalogo.tsx` enlazado a `/encargo?producto=<slug>`;
+  - formulario y UX del flujo en `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx` + estilos encapsulados;
+  - helpers puros en `frontend/contenido/catalogo/encargoConsulta.ts` para preselección, estado inicial, validación, resumen y fallback por slug inválido.
+- Cierre de flujo actual:
+  - sin backend nuevo ni integraciones externas;
+  - salida con resumen copiable de solicitud para uso en canal real externo configurado por negocio.
+- Tests añadidos:
+  - `frontend/tests/encargo-consulta.test.ts` cubre preselección por slug, slug inválido, entrada directa sin slug, validación y construcción de resumen.
+- Guía de ampliación controlada:
+  1. Para preseleccionar desde cualquier ficha, usar query param `producto` con slug (`/encargo?producto=<slug>`).
+  2. Nuevos campos del formulario deben iniciar en `construirEstadoInicialConsulta` y validarse en `validarSolicitudConsulta`.
+  3. El texto final que viaja a canales externos se centraliza en `construirResumenConsulta`.
+  4. Si más adelante se conecta un canal real (ej. endpoint o mailto verificado), hacerlo desde capa de presentación sin mezclar reglas de validación en componentes grandes.
