@@ -30,12 +30,21 @@ gunicorn backend.configuracion_django.wsgi:application --bind 0.0.0.0:${PORT:-80
 ### Backend
 - `SECRET_KEY`
 - `DEBUG=false`
-- `DATABASE_URL` (inyectada desde el servicio PostgreSQL)
+- `DATABASE_URL` **obligatoria** (inyectada desde el servicio PostgreSQL).
+  - Si falta en Railway/producción, el backend falla por diseño con error de configuración temprano.
 - `ALLOWED_HOSTS` (CSV)
 - `CSRF_TRUSTED_ORIGINS` (CSV con URLs completas)
 
 ### Frontend
 - `NEXT_PUBLIC_API_BASE_URL` con la URL pública del backend.
+
+
+## 2.1) Regla de seguridad para base de datos
+
+- En local/desarrollo, si `DATABASE_URL` no existe, el backend usa fallback a SQLite en `var/dev.sqlite3`.
+- En Railway/producción, `DATABASE_URL` es obligatoria y no existe fallback a SQLite.
+- Si falta `DATABASE_URL` en Railway, Django aborta arranque con: `DATABASE_URL es obligatoria en Railway/producción.`
+- Este fallo es intencionado para evitar deploys “aparentemente correctos” conectados a una base equivocada.
 
 ## 3) Variables legacy que deben eliminarse en Railway UI
 
