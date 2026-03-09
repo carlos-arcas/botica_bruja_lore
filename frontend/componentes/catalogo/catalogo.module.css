@@ -1,0 +1,111 @@
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: #7b6c5f;
+}
+
+.cabecera p:last-child {
+  color: #4f4841;
+}
+
+.controles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.controles label {
+  display: grid;
+  gap: 0.35rem;
+  color: #4f4841;
+  font-size: 0.92rem;
+}
+
+.controles select {
+  border: 1px solid #d9cebf;
+  border-radius: 10px;
+  padding: 0.5rem;
+  background: #fff;
+}
+
+.rejilla {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.tarjeta {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.tarjeta h2 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.tarjetaMeta {
+  margin: 0;
+  text-transform: capitalize;
+  color: #7b6c5f;
+  font-size: 0.84rem;
+}
+
+.subtitulo {
+  margin: 0;
+  font-weight: 600;
+  color: #3b342f;
+}
+
+.notas {
+  margin: 0;
+  color: #5d554e;
+  font-size: 0.92rem;
+}
+
+.pieTarjeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.agotado {
+  color: #8f3c34;
+}
+
+.etiquetas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.etiquetas li {
+  border: 1px solid #e6ddcf;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.vacio {
+  border: 1px dashed #c9baa8;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.vacio h2 {
+  margin-top: 0;
+}

@@ -136,5 +136,5 @@ export const CTA_FINAL = {
   titulo: "Tu ritual puede empezar hoy",
   descripcion:
     "Explora la línea herbal y la colección de rituales para construir una práctica personal con estética cuidada y sentido comercial real.",
-  cta: { texto: "Comenzar recorrido", href: "/hierbas" },
+  cta: { texto: "Explorar colecciones", href: "/colecciones" },
 };
