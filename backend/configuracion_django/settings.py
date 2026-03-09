@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
+from django.core.exceptions import ImproperlyConfigured
+
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 LOCAL_VAR_DIR = BASE_DIR / "var"
@@ -63,6 +65,8 @@ def _configuracion_db_desde_url(database_url: str) -> dict[str, str | int]:
 
 def _configuracion_base_de_datos() -> dict[str, dict[str, str | int]]:
     database_url = os.getenv("DATABASE_URL")
+    if not database_url and _en_entorno_railway():
+        raise ImproperlyConfigured("DATABASE_URL es obligatoria en Railway/producción.")
     if database_url:
         return {"default": _configuracion_db_desde_url(database_url)}
     return {
@@ -71,6 +75,17 @@ def _configuracion_base_de_datos() -> dict[str, dict[str, str | int]]:
             "NAME": LOCAL_VAR_DIR / "dev.sqlite3",
         }
     }
+
+
+def _en_entorno_railway() -> bool:
+    return any(
+        os.getenv(variable)
+        for variable in (
+            "RAILWAY_PUBLIC_DOMAIN",
+            "RAILWAY_ENVIRONMENT_ID",
+            "RAILWAY_PROJECT_ID",
+        )
+    )
 
 
 SECRET_KEY = os.getenv("SECRET_KEY", "botica-demo-dev")
