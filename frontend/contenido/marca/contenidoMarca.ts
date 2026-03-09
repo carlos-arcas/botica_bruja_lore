@@ -31,6 +31,12 @@ export type PreguntaMarca = {
   respuesta: string;
 };
 
+export const METADATA_LA_BOTICA = {
+  title: "La Botica | Filosofía artesanal y criterio editorial",
+  description:
+    "Conoce cómo La Botica de la Bruja Lore selecciona colecciones y rituales: manifiesto, principios de la casa y ruta directa a catálogo y encargo.",
+};
+
 export const HERO_MARCA: HeroMarca = {
   etiqueta: "La casa editorial de la botica",
   titulo: "Una botica artesanal con criterio comercial y voz propia",
