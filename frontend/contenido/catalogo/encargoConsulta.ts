@@ -1,3 +1,8 @@
+import {
+  ItemEncargoPreseleccionado,
+  construirResumenItemsEncargo,
+  deserializarItemsEncargo,
+} from "./cestaRitual";
 import { PRODUCTOS_CATALOGO, ProductoCatalogo } from "./catalogo";
 import { obtenerProductoPorSlug } from "./detalleCatalogo";
 
@@ -19,6 +24,11 @@ export type DatosConsulta = {
   consentimiento: boolean;
 };
 
+export type ContextoPreseleccionConsulta = {
+  productoPreseleccionado: ProductoCatalogo | null;
+  itemsPreseleccionados: ItemEncargoPreseleccionado[];
+};
+
 export type ErroresConsulta = Partial<Record<keyof DatosConsulta, string>>;
 
 export function resolverProductoPreseleccionado(
@@ -32,12 +42,34 @@ export function resolverProductoPreseleccionado(
   return obtenerProductoPorSlug(slug, productos);
 }
 
-export function construirEstadoInicialConsulta(producto: ProductoCatalogo | null): DatosConsulta {
+export function resolverContextoPreseleccionado(
+  slug: string | null,
+  cestaSerializada: string | null,
+): ContextoPreseleccionConsulta {
+  return {
+    productoPreseleccionado: resolverProductoPreseleccionado(slug),
+    itemsPreseleccionados: deserializarItemsEncargo(cestaSerializada),
+  };
+}
+
+export function construirEstadoInicialConsulta(contexto: ContextoPreseleccionConsulta): DatosConsulta {
+  if (contexto.itemsPreseleccionados.length > 0) {
+    return {
+      nombre: "",
+      email: "",
+      telefono: "",
+      productoSlug: contexto.itemsPreseleccionados[0].slug,
+      cantidad: "Selección múltiple desde cesta",
+      mensaje: construirResumenItemsEncargo(contexto.itemsPreseleccionados),
+      consentimiento: false,
+    };
+  }
+
   return {
     nombre: "",
     email: "",
     telefono: "",
-    productoSlug: producto?.slug ?? "",
+    productoSlug: contexto.productoPreseleccionado?.slug ?? "",
     cantidad: "1 unidad",
     mensaje: "",
     consentimiento: false,

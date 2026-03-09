@@ -109,3 +109,10 @@
 .vacio h2 {
   margin-top: 0;
 }
+
+
+.accionesTarjeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

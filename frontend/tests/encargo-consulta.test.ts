@@ -5,6 +5,7 @@ import { PRODUCTOS_CATALOGO } from "../contenido/catalogo/catalogo";
 import {
   construirEstadoInicialConsulta,
   construirResumenConsulta,
+  resolverContextoPreseleccionado,
   resolverProductoPreseleccionado,
   validarSolicitudConsulta,
 } from "../contenido/catalogo/encargoConsulta";
@@ -20,7 +21,7 @@ test("resolverProductoPreseleccionado usa fallback seguro con slug inválido", (
 });
 
 test("construirEstadoInicialConsulta permite entrada directa sin slug", () => {
-  const estado = construirEstadoInicialConsulta(null);
+  const estado = construirEstadoInicialConsulta({ productoPreseleccionado: null, itemsPreseleccionados: [] });
   assert.equal(estado.productoSlug, "");
   assert.equal(estado.cantidad, "1 unidad");
 });
@@ -61,4 +62,18 @@ test("construirResumenConsulta compone texto final reutilizable", () => {
   assert.match(resumen, /Lore/);
   assert.match(resumen, /Bruma de Lavanda Serena/);
   assert.match(resumen, /2 unidades/);
+});
+
+
+test("resolverContextoPreseleccionado mantiene compatibilidad entre producto individual y cesta", () => {
+  const desdeFicha = resolverContextoPreseleccionado("infusion-bruma-lavanda", null);
+  assert.equal(desdeFicha.productoPreseleccionado?.slug, "infusion-bruma-lavanda");
+  assert.equal(desdeFicha.itemsPreseleccionados.length, 0);
+
+  const desdeCesta = resolverContextoPreseleccionado(
+    null,
+    encodeURIComponent(JSON.stringify([{ slug: "pack-bosque-dorado", cantidad: 2 }])),
+  );
+  assert.equal(desdeCesta.productoPreseleccionado, null);
+  assert.equal(desdeCesta.itemsPreseleccionados[0]?.slug, "pack-bosque-dorado");
 });
