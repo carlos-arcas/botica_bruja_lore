@@ -194,3 +194,29 @@ export function construirSchemasFichaColeccion(producto: ProductoCatalogo): Obje
 
   return [productSchema, ...(breadcrumb ? [breadcrumb] : [])];
 }
+
+
+export function construirSchemasPaginaInformativa(args: {
+  ruta: string;
+  titulo: string;
+  descripcion: string;
+  incluirBreadcrumb: boolean;
+}): ObjetoJsonLd[] {
+  const url = resolverUrlCanonicalAbsoluta(args.ruta);
+  if (!url) {
+    return [];
+  }
+
+  const pagina = construirSchemaPagina("WebPage", url, args.titulo, args.descripcion);
+
+  if (!args.incluirBreadcrumb) {
+    return [pagina];
+  }
+
+  const breadcrumb = construirSchemaBreadcrumb([
+    { nombre: "Inicio", ruta: "/" },
+    { nombre: args.titulo, ruta: args.ruta },
+  ]);
+
+  return [pagina, ...(breadcrumb ? [breadcrumb] : [])];
+}

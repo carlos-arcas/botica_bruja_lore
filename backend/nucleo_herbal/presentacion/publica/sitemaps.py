@@ -45,9 +45,7 @@ class SitemapPaginasPublicas(SitemapPublicoBase):
             "/rituales",
             "/colecciones",
             "/la-botica",
-            "/condiciones-encargo",
             "/envios-y-preparacion",
-            "/privacidad",
         ]
 
     def location(self, item: str) -> str:

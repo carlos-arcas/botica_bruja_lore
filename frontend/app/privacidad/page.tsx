@@ -11,6 +11,7 @@ export const metadata: Metadata = construirMetadataSeo({
   title: CONTENIDO.metadata.title,
   description: CONTENIDO.metadata.description,
   rutaCanonical: "/privacidad",
+  indexable: CONTENIDO.seo.indexable,
 });
 
 export default function PaginaPrivacidad(): JSX.Element {

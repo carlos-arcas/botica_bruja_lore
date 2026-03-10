@@ -28,10 +28,12 @@ const ENLACES_BASE_FOOTER: EnlaceFooter[] = [
   { etiqueta: "Preparar encargo", href: "/encargo" },
 ];
 
-export const ENLACES_FOOTER: EnlaceFooter[] = [
-  ...ENLACES_BASE_FOOTER,
-  ...ENLACES_LEGALES_FOOTER.map((enlace) => ({ etiqueta: enlace.texto, href: enlace.href })),
-];
+const ENLACES_LEGALES_SECUNDARIOS: EnlaceFooter[] = ENLACES_LEGALES_FOOTER.map((enlace) => ({
+  etiqueta: enlace.texto,
+  href: enlace.href,
+}));
+
+export const ENLACES_FOOTER: EnlaceFooter[] = [...ENLACES_BASE_FOOTER, ...ENLACES_LEGALES_SECUNDARIOS];
 
 export function esRutaActiva(rutaActual: string, enlace: EnlaceNavegacionGlobal): boolean {
   if (enlace.coincidencia === "exacta") {

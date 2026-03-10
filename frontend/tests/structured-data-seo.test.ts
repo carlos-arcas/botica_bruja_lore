@@ -11,6 +11,7 @@ import {
   construirSchemasFichaRitual,
   construirSchemasHome,
   construirSchemasLandingCatalogo,
+  construirSchemasPaginaInformativa,
 } from "../infraestructura/seo/structuredData";
 
 test("resolverUrlCanonicalAbsoluta limpia query y hash", () => {
@@ -112,4 +113,22 @@ test("páginas clave renderizan componente JsonLd", () => {
   assert.equal(home.includes("<JsonLd"), true);
   assert.equal(landingHierbas.includes("<JsonLd"), true);
   assert.equal(detalleColeccion.includes("<JsonLd"), true);
+});
+
+
+test("página informativa estratégica emite WebPage y breadcrumb opcional", () => {
+  const previo = process.env.PUBLIC_SITE_URL;
+  process.env.PUBLIC_SITE_URL = "https://laboticabrujalore.com";
+
+  const schemas = construirSchemasPaginaInformativa({
+    ruta: "/envios-y-preparacion",
+    titulo: "Envíos y preparación",
+    descripcion: "Detalle operativo",
+    incluirBreadcrumb: true,
+  });
+
+  process.env.PUBLIC_SITE_URL = previo;
+
+  assert.equal(schemas.some((schema) => schema["@type"] === "WebPage"), true);
+  assert.equal(schemas.some((schema) => schema["@type"] === "BreadcrumbList"), true);
 });
