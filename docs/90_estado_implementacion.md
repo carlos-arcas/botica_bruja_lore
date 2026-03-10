@@ -436,3 +436,25 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - este cambio cubre el alcance oficial del **Prompt 2 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
   - queda pendiente Prompt 3 (API/backoffice mínimo de cuenta), sin adelantar frontend ni gate final del ciclo.
 
+
+## 29. API y backoffice mínimo de cuenta demo (Prompt 3 oficial Ciclo 4)
+- Capacidad: **Exposición API mínima de cuenta demo y soporte admin básico para operar cuentas con historial de `PedidoDemo`**.
+- Estado: **DONE**.
+- Implementación activa:
+  - endpoints públicos mínimos de cuenta demo en `backend/nucleo_herbal/presentacion/publica/views_cuentas_demo.py` y `backend/nucleo_herbal/presentacion/publica/urls_cuentas_demo.py`;
+  - serialización HTTP de cuenta/perfil/historial en `backend/nucleo_herbal/presentacion/publica/cuentas_demo_serializadores.py`;
+  - cableado de casos de uso de cuenta demo en `backend/nucleo_herbal/presentacion/publica/dependencias.py`;
+  - publicación de rutas bajo `api/v1/cuentas-demo/` en `backend/configuracion_django/urls.py`;
+  - alta de `CuentaDemoModelo` en Django Admin con búsqueda/listado mínimo en `backend/nucleo_herbal/infraestructura/persistencia_django/admin.py`.
+- Operaciones mínimas cerradas en este incremento:
+  1. registro de cuenta demo por API (`POST /api/v1/cuentas-demo/registro/`);
+  2. autenticación demo mínima por API (`POST /api/v1/cuentas-demo/autenticacion/`) sin sesión real;
+  3. consulta de perfil mínimo (`GET /api/v1/cuentas-demo/{id_usuario}/perfil/`);
+  4. consulta de historial de `PedidoDemo` asociado por vínculo `id_usuario` y/o `email_contacto` (`GET /api/v1/cuentas-demo/{id_usuario}/pedidos-demo/`);
+  5. soporte admin básico para operación de cuentas demo sin abrir frontend de cuenta.
+- Tests añadidos:
+  - `tests/nucleo_herbal/test_api_cuentas_demo.py`;
+  - ampliación de cobertura de admin en `tests/nucleo_herbal/infraestructura/test_admin_django.py`.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 3 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
+  - queda pendiente Prompt 4 (frontend + quality gate de ciclo), sin adelantar sesión real ni capacidades de Ciclo 5+.
