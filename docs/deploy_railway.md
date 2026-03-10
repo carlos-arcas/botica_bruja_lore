@@ -94,20 +94,25 @@ Reemplaza `SERVICE_NAME` por el nombre real del servicio Postgres en Railway UI.
 
 ## 6.1) Verificación canónica previa (antes de deploy)
 
-Antes de promover cambios a Railway, ejecutar en local el check canónico de readiness técnica del backend:
+Antes de promover cambios a Railway, ejecutar en local el gate técnico canónico de demo/release:
 
 ```bash
-python scripts/check_backend_readiness.py
+python scripts/check_release_gate.py
 ```
 
-Este comando confirma que:
+Este comando entrega un veredicto único (`OK`/`ERROR`) y ejecuta:
 
-- la configuración local razonable arranca,
-- Railway sin `DATABASE_URL` falla de forma temprana y explícita,
-- `DEBUG=false` sin `SECRET_KEY` falla por hardening,
-- bootstrap de `manage.py`/`wsgi.py` permanece alineado con `backend.configuracion_django.settings`.
+- readiness backend,
+- `python manage.py check`,
+- tests backend críticos (healthcheck + seed demo),
+- `seed_demo_publico` dos veces (idempotencia operativa) + conteos públicos,
+- validación frontend básica (`npm run lint` y `npm run build`) cuando el entorno lo permite.
 
-Este check no reemplaza `python manage.py test`; ambos comandos son complementarios.
+Interpretación operativa:
+
+- `ERROR` en bloques backend/seed: no promover deploy.
+- `SKIP` en frontend: permitido solo cuando el entorno no puede ejecutarlo (sin `frontend/package.json` o sin Node/npm), siempre con motivo explícito.
+- Este gate no reemplaza verificaciones manuales en Railway UI ni monitoreo post-deploy.
 
 ## 7) Síntomas de configuración antigua en Railway UI
 
