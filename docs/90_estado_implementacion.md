@@ -35,10 +35,10 @@ Los estados oficiales de proyecto y capacidad son:
 - Backoffice/admin mínimo: **implementado para operación base herbal/ritual + pedidos demo + cuenta demo**.
 - Checkout demo y confirmación/recibo: **implementados (Ciclo 3)**.
 - Cuenta demo con valor (registro/auth demo, perfil, historial): **implementada (Ciclo 4)**.
-- Calendario ritual: **no implementado (reservado para Ciclo 5)**.
+- Calendario ritual: **base de dominio/aplicación implementada (Ciclo 5 Prompt 1), persistencia/API/UI pendientes**.
 - Quality gate y CI canónica: **activos** con workflow `Quality Gate` en GitHub Actions (`push` + `pull_request`).
 
-Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta pedido demo y continuidad en cuenta demo, con trazabilidad de prompts 1–4 del Ciclo 4 y sin apertura funcional de Ciclo 5.
+Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta pedido demo y continuidad en cuenta demo, con trazabilidad de prompts 1–4 del Ciclo 4 y apertura controlada del Prompt 1 de Ciclo 5 en núcleo dominio/aplicación.
 
 ## 5. Estado por capacidades
 | Capacidad | Estado actual | Ciclo asociado | Evidencia / referencia | Notas operativas |
@@ -65,7 +65,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 | Historial de pedidos demo | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Favoritos | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Recordatorios | PLANIFICADO | Ciclo 4–5 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
-| Calendario ritual | PLANIFICADO | Ciclo 5 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
+| Calendario ritual | EN_PROGRESO | Ciclo 5 | `backend/nucleo_herbal/dominio/calendario_ritual.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_calendario_ritual.py`, `tests/nucleo_herbal/test_entidades_calendario_ritual.py`, `tests/nucleo_herbal/test_casos_de_uso_calendario_ritual.py`, `docs/ciclos/ciclo_05_calendario_editorial.md` | Prompt 1 oficial cubierto en dominio/aplicación; Prompt 2 (persistencia/API) y Prompt 3 (frontend/gate) pendientes. |
 
 ## 6. Último ciclo cerrado
 - **Ciclo cerrado formalmente**: Ciclo 2 (rituales conectados).
@@ -78,20 +78,20 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - quality gate mínimo ejecutado con checks backend/frontend en verde.
 
 ## 7. Ciclo actual
-- **Ciclo operativo vigente**: Ciclo 4 completado en sus prompts oficiales 1–4.
-- **Estado**: **DONE (cierre oficial de ciclo declarado)**.
-- **Condición de salida aplicada**:
-  1. validación del contrato funcional de cuenta con valor completada (registro/auth demo, perfil e historial),
-  2. evidencia de no-regresión del flujo ecommerce demo del Ciclo 3,
-  3. documentación de estado sincronizada con cierre oficial y apertura controlada del siguiente ciclo.
+- **Ciclo operativo vigente**: Ciclo 5 (Prompt 1 ejecutado en dominio/aplicación).
+- **Estado**: **EN_PROGRESO**.
+- **Condición de continuidad aplicada**:
+  1. Prompt 1 de Ciclo 5 implementado en núcleo limpio y testeable;
+  2. Ciclos 3 y 4 permanecen cerrados sin reapertura de alcance;
+  3. siguientes pasos limitados a Prompt 2 (persistencia/API mínima) y Prompt 3 (frontend + gate).
 
 ## 8. Deuda y bloqueos conocidos
-1. El calendario ritual y su capa editorial diferencial siguen pendientes por diseño y se mantienen fuera de Ciclo 4.
-2. No se detectan bloqueos técnicos/documentales que impidan declarar DONE el Ciclo 4 en su contrato oficial.
+1. La persistencia, API y frontend del calendario ritual siguen pendientes por diseño y se mantienen fuera de Prompt 1.
+2. No se detectan bloqueos técnicos/documentales para continuar con Prompt 2 oficial del Ciclo 5.
 3. La activación de nuevas capacidades debe entrar exclusivamente por roadmap oficial de Ciclo 5, evitando frentes paralelos.
 
 ## 9. Próximos movimientos recomendados
-1. Ejecutar únicamente el Prompt 1 oficial del Ciclo 5 cuando se abra implementación, sin mezclar prompts posteriores.
+1. Ejecutar el Prompt 2 oficial del Ciclo 5 (persistencia + API mínima) sin mezclar Prompt 3.
 2. Mantener `python scripts/check_release_gate.py` como verificación de no-regresión por cada incremento de ciclo.
 3. Preservar trazabilidad estado↔roadmap para evitar reabrir capacidades ya cerradas de Ciclos 3 y 4.
 
@@ -496,3 +496,23 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   3. no se implementa ningún prompt de Ciclo 5 dentro de esta actualización.
 - Prompt 1 oficial permitido para el siguiente incremento:
   - implementar base de dominio/aplicación de `ReglaCalendario` y casos de uso mínimos de calendario ritual conectados a `Ritual`, con tests unitarios y sin tocar checkout/cuenta.
+
+
+## 32. Ciclo 5 — Prompt 1 oficial (base dominio/aplicación de calendario ritual)
+- Capacidad: **Base mínima de `ReglaCalendario` + consulta temporal/editorial conectada a `Ritual`**.
+- Estado: **DONE (Prompt 1)**.
+- Implementación activa:
+  - entidad de dominio `ReglaCalendario` con invariantes y evaluación temporal (`aplica_en`) en `backend/nucleo_herbal/dominio/calendario_ritual.py`;
+  - puerto de aplicación para reglas temporales en `backend/nucleo_herbal/aplicacion/puertos/repositorios_calendario_ritual.py`;
+  - caso de uso `ConsultarCalendarioRitualPorFecha` y DTOs de respuesta en `backend/nucleo_herbal/aplicacion/casos_de_uso_calendario_ritual.py` y `backend/nucleo_herbal/aplicacion/dto.py`.
+- Reglas cerradas en este incremento:
+  1. `ReglaCalendario` permanece separada de `Ritual` (frontera de entidades preservada).
+  2. Las reglas validan rango temporal, prioridad y datos mínimos obligatorios.
+  3. La consulta temporal devuelve rituales aplicables por fecha con prioridad mínima por ritual cuando coinciden múltiples reglas.
+  4. Se mantiene alcance de Prompt 1 sin abrir persistencia, API ni frontend de calendario.
+- Tests añadidos:
+  - `tests/nucleo_herbal/test_entidades_calendario_ritual.py`;
+  - `tests/nucleo_herbal/test_casos_de_uso_calendario_ritual.py`.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 1 del Ciclo 5** (`docs/ciclos/ciclo_05_calendario_editorial.md`);
+  - queda pendiente Prompt 2 (persistencia/API mínima) y Prompt 3 (integración frontend + gate de ciclo).
