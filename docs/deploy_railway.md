@@ -94,7 +94,7 @@ Reemplaza `SERVICE_NAME` por el nombre real del servicio Postgres en Railway UI.
 
 ## 6.1) Verificación canónica previa (antes de deploy)
 
-Antes de promover cambios a Railway, ejecutar en local el gate técnico canónico de demo/release:
+Antes de promover cambios a Railway, ejecutar en local el gate técnico canónico de demo/release (solo lectura):
 
 ```bash
 python scripts/check_release_gate.py
@@ -105,14 +105,34 @@ Este comando entrega un veredicto único (`OK`/`ERROR`) y ejecuta:
 - readiness backend,
 - `python manage.py check`,
 - tests backend críticos (healthcheck + seed demo),
-- `seed_demo_publico` dos veces (idempotencia operativa) + conteos públicos,
+- snapshot de conteos públicos en modo lectura,
 - validación frontend básica (`npm run lint` y `npm run build`) cuando el entorno lo permite.
+
+Regla clave de auditoría:
+
+- El gate canónico **no ejecuta** `migrate` ni `seed_demo_publico` por defecto.
+- Si se necesita preparar datos demo, usar operación de bootstrap separada (mutante).
 
 Interpretación operativa:
 
-- `ERROR` en bloques backend/seed: no promover deploy.
+- `ERROR` en bloques backend: no promover deploy.
 - `SKIP` en frontend: permitido solo cuando el entorno no puede ejecutarlo (sin `frontend/package.json` o sin Node/npm), siempre con motivo explícito.
 - Este gate no reemplaza verificaciones manuales en Railway UI ni monitoreo post-deploy.
+
+## 6.2) Bootstrap demo explícito (operación mutante)
+
+Para preparar un entorno nuevo o reseteado (local/demo/staging), ejecutar de forma explícita:
+
+```bash
+python scripts/bootstrap_demo_release.py
+```
+
+Esta operación **sí muta estado** (esquema y datos):
+
+- `python manage.py migrate --noinput`,
+- `python manage.py seed_demo_publico` (primera ejecución),
+- segunda ejecución de `seed_demo_publico` para comprobar idempotencia (opcional con `--skip-second-seed`),
+- resumen final de conteos públicos.
 
 ## 7) Síntomas de configuración antigua en Railway UI
 
@@ -123,7 +143,7 @@ Si aparece alguno de estos síntomas, Railway sigue usando configuración residu
 - Variables legacy (`APP_DEBUG`, `DJANGO_SETTINGS_MODULE`, `WSGI_APPLICATION`) aún presentes.
 - Frontend apuntando a una API incorrecta en `NEXT_PUBLIC_API_BASE_URL`.
 
-## 8) Seed demo pública mínima (staging/demo)
+## 8) Seed demo pública mínima (staging/demo, operación mutante)
 
 Para evitar un entorno vacío tras deploy, existe un comando idempotente que carga una base editorial/comercial mínima pública (intenciones, plantas, productos y rituales):
 

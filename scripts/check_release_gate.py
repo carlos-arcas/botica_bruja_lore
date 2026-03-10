@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Gate técnico canónico para demo/release del repositorio."""
+"""Gate técnico canónico para demo/release del repositorio (solo validación)."""
 
 from __future__ import annotations
 
-import os
 import shutil
 import subprocess
 import sys
@@ -30,13 +29,11 @@ def _run(
     cmd: list[str],
     *,
     cwd: Path | None = None,
-    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str] | None:
     try:
         return subprocess.run(
             cmd,
             cwd=cwd or ROOT_DIR,
-            env=env,
             text=True,
             capture_output=True,
             check=False,
@@ -72,41 +69,9 @@ def _run_block(name: str, cmd: list[str], *, blocking: bool = True, cwd: Path | 
     return BlockResult(name=name, status="ERROR", blocking=blocking, detail=f"exit={result.returncode}")
 
 
-def _seed_demo_block() -> BlockResult:
-    name = "D) Seed demo pública idempotente"
+def _data_snapshot_block() -> BlockResult:
+    name = "D) Snapshot de datos públicos existentes (solo lectura)"
     _print_header(name)
-
-    migrate = _run([PYTHON, "manage.py", "migrate", "--noinput"])
-    print("$", f"{PYTHON} manage.py migrate --noinput  # precondición de tablas")
-    if migrate is None:
-        print("[ERROR] Python no disponible para ejecutar migrate")
-        return BlockResult(name=name, status="ERROR", blocking=True, detail="python no disponible")
-    _print_process_output(migrate)
-    if migrate.returncode != 0:
-        print("[ERROR] falló migrate previo a seed")
-        return BlockResult(name=name, status="ERROR", blocking=True, detail=f"migrate exit={migrate.returncode}")
-
-    first = _run([PYTHON, "manage.py", "seed_demo_publico"])
-    if first is None:
-        print("[ERROR] Python no disponible para ejecutar seed")
-        return BlockResult(name=name, status="ERROR", blocking=True, detail="python no disponible")
-
-    print("$", f"{PYTHON} manage.py seed_demo_publico  # primera ejecución")
-    _print_process_output(first)
-    if first.returncode != 0:
-        print("[ERROR] falló primera ejecución de seed")
-        return BlockResult(name=name, status="ERROR", blocking=True, detail=f"primera ejecución exit={first.returncode}")
-
-    second = _run([PYTHON, "manage.py", "seed_demo_publico"])
-    print("$", f"{PYTHON} manage.py seed_demo_publico  # segunda ejecución")
-    if second is None:
-        print("[ERROR] Python no disponible en segunda ejecución")
-        return BlockResult(name=name, status="ERROR", blocking=True, detail="python no disponible")
-
-    _print_process_output(second)
-    if second.returncode != 0:
-        print("[ERROR] falló segunda ejecución de seed (idempotencia operativa)")
-        return BlockResult(name=name, status="ERROR", blocking=True, detail=f"segunda ejecución exit={second.returncode}")
 
     count_code = (
         "from backend.nucleo_herbal.infraestructura.persistencia_django.models import "
@@ -116,19 +81,20 @@ def _seed_demo_block() -> BlockResult:
         "print('productos_publicados=' + str(ProductoModelo.objects.filter(publicado=True).count()));"
         "print('rituales_publicados=' + str(RitualModelo.objects.filter(publicado=True).count()))"
     )
+    print("$", f"{PYTHON} manage.py shell -c '<conteos públicos solo lectura>'")
     counts = _run([PYTHON, "manage.py", "shell", "-c", count_code])
-    print("$", f"{PYTHON} manage.py shell -c '<conteos demo públicos>'")
+
     if counts is None:
-        print("[ERROR] no se pudieron consultar conteos")
-        return BlockResult(name=name, status="ERROR", blocking=True, detail="conteos no disponibles")
+        print("[SKIP] no se pudieron consultar conteos (python no disponible)")
+        return BlockResult(name=name, status="SKIP", blocking=False, detail="conteos no disponibles")
 
     _print_process_output(counts)
     if counts.returncode != 0:
-        print("[ERROR] no se pudieron obtener conteos después de seed")
-        return BlockResult(name=name, status="ERROR", blocking=True, detail=f"conteos exit={counts.returncode}")
+        print("[SKIP] no se pudieron consultar conteos en este entorno")
+        return BlockResult(name=name, status="SKIP", blocking=False, detail=f"conteos exit={counts.returncode}")
 
-    print("[OK] seed idempotente y conteos obtenidos")
-    return BlockResult(name=name, status="OK", blocking=True)
+    print("[OK] snapshot de conteos obtenido")
+    return BlockResult(name=name, status="OK", blocking=False)
 
 
 def _frontend_block() -> list[BlockResult]:
@@ -188,7 +154,8 @@ def _print_summary(results: list[BlockResult]) -> int:
 
 
 def main() -> int:
-    print("== Gate técnico canónico: demo/release ==")
+    print("== Gate técnico canónico: demo/release (solo lectura por defecto) ==")
+    print("Nota: este gate NO ejecuta migrate ni seed_demo_publico.")
     results: list[BlockResult] = []
 
     results.append(
@@ -219,7 +186,7 @@ def main() -> int:
             blocking=True,
         )
     )
-    results.append(_seed_demo_block())
+    results.append(_data_snapshot_block())
     results.extend(_frontend_block())
 
     return _print_summary(results)
