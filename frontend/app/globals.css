@@ -352,3 +352,33 @@ button:focus-visible {
   left: 0.7rem;
   top: 0.7rem;
 }
+
+.calendario-ritual__formulario {
+  display: grid;
+  gap: 0.7rem;
+  max-width: 360px;
+}
+
+.calendario-ritual__formulario input {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+}
+
+.calendario-ritual__estado {
+  margin-top: 0.9rem;
+}
+
+.calendario-ritual__estado--error {
+  color: #8a3f2f;
+}
+
+.calendario-ritual__estado--vacio {
+  color: #655a4f;
+}
+
+.calendario-ritual__estado--ok {
+  color: #36563c;
+  font-weight: 600;
+}

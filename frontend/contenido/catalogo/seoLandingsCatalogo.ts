@@ -58,6 +58,28 @@ export const INTRO_LISTADO_RITUALES: IntroduccionLandingCatalogo = {
   ],
 };
 
+
+export const METADATA_CALENDARIO_RITUAL: MetadataLandingCatalogo = {
+  title: "Calendario ritual editorial por fecha | La Botica de la Bruja Lore",
+  description:
+    "Consulta el calendario ritual editorial por fecha para descubrir rituales activos según reglas temporales publicadas.",
+  rutaCanonical: "/calendario-ritual",
+};
+
+export const INTRO_CALENDARIO_RITUAL: IntroduccionLandingCatalogo = {
+  eyebrow: "Consulta editorial temporal",
+  h1: "Calendario ritual por fecha",
+  parrafos: [
+    "Esta entrada editorial conecta reglas temporales del calendario con rituales publicados para facilitar un descubrimiento guiado por fecha.",
+    "El backend mantiene la lógica temporal oficial; aquí solo eliges una fecha para visualizar resultados activos y navegar a cada ritual.",
+  ],
+  enlacesInternos: [
+    { href: "/rituales", etiqueta: "Ver todos los rituales publicados" },
+    { href: "/hierbas", etiqueta: "Explorar hierbas relacionadas" },
+    { href: "/colecciones", etiqueta: "Continuar al catálogo comercial" },
+  ],
+};
+
 export const METADATA_LISTADO_COLECCIONES: MetadataLandingCatalogo = {
   title: "Colecciones esotéricas y packs rituales | La Botica de la Bruja Lore",
   description:
