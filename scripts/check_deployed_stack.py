@@ -14,6 +14,10 @@ from dataclasses import dataclass
 from typing import Any
 
 
+CONFIG_ERROR_EXIT_CODE = 2
+BLOCKING_FAILURE_EXIT_CODE = 1
+
+
 class RequestFailure(Exception):
     """Error de conectividad/timeout al consultar un endpoint remoto."""
 
@@ -55,6 +59,8 @@ def _normalized_base_url(name: str) -> str:
         raise ValueError(f"{name} debe incluir esquema http/https: {value!r}")
     if not parsed.netloc:
         raise ValueError(f"{name} no parece una URL válida: {value!r}")
+    if parsed.params or parsed.query or parsed.fragment:
+        raise ValueError(f"{name} debe ser base URL limpia sin query/fragment: {value!r}")
     return value
 
 
@@ -234,7 +240,7 @@ def main() -> int:
     except ValueError as error:
         LOGGER.error("deployed_stack_bad_config error=%s", error)
         print(f"[ERROR] Configuración: {error}")
-        return 2
+        return CONFIG_ERROR_EXIT_CODE
 
     herbal_slug = os.environ.get("HERBAL_SLUG", "").strip()
     ritual_slug = os.environ.get("RITUAL_SLUG", "").strip()
@@ -352,7 +358,7 @@ def main() -> int:
     if blocking_failures:
         LOGGER.error("deployed_stack_error failures=%s", len(blocking_failures))
         print("Veredicto: ERROR (fallaron checks bloqueantes del entorno desplegado).")
-        return 1
+        return BLOCKING_FAILURE_EXIT_CODE
 
     LOGGER.info("deployed_stack_ok")
     print("Veredicto: OK (stack desplegado operativo para rutas públicas verificadas).")
