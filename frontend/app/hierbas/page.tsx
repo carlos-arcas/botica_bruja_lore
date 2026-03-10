@@ -7,12 +7,14 @@ import {
 } from "@/componentes/herbal/EstadoListadoHerbal";
 import { ListadoHerbal } from "@/componentes/herbal/ListadoHerbal";
 import { obtenerListadoHerbal } from "@/infraestructura/api/herbal";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = construirMetadataSeo({
   title: "Línea herbal | La Botica de la Bruja Lore",
   description:
     "Listado herbal navegable con entrada por plantas e intención para el Ciclo 1 de la botica.",
-};
+  rutaCanonical: "/hierbas",
+});
 
 export default async function PaginaListadoHerbal(): Promise<JSX.Element> {
   const resultado = await obtenerListadoHerbal();

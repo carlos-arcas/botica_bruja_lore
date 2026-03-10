@@ -7,6 +7,7 @@ import { BloqueRitualesRelacionados } from "@/componentes/herbal/detalle/BloqueR
 import { CabeceraFichaHerbal } from "@/componentes/herbal/detalle/CabeceraFichaHerbal";
 import { EstadoErrorFichaHerbal } from "@/componentes/herbal/detalle/EstadoFichaHerbal";
 import { obtenerFichaHerbalConectada } from "@/infraestructura/api/herbal";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 type Props = {
   params: { slug: string };
@@ -14,11 +15,12 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const slugLegible = params.slug.replace(/-/g, " ");
-  return {
+  return construirMetadataSeo({
     title: `${slugLegible} | Ficha herbal | La Botica de la Bruja Lore`,
     description:
       "Ficha herbal conectada del Ciclo 1: contexto editorial de planta más resolución comercial mínima asociada.",
-  };
+    rutaCanonical: `/hierbas/${params.slug}`,
+  });
 }
 
 export default async function PaginaDetalleHerbal({ params }: Props): Promise<JSX.Element> {

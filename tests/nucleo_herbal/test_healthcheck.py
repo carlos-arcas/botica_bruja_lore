@@ -153,6 +153,7 @@ class TestSitemapXml(DjangoTestCase):
 
         self.assertNotIn("/admin/", contenido)
         self.assertNotIn("/api/", contenido)
+        self.assertNotIn("/encargo</loc>", contenido)
         self.assertNotIn("planta-oculta-sitemap", contenido)
         self.assertNotIn("ritual-oculto-sitemap", contenido)
         self.assertNotIn("producto-oculto-sitemap", contenido)

@@ -3,12 +3,14 @@ import Link from "next/link";
 
 import { CatalogoColecciones } from "@/componentes/catalogo/CatalogoColecciones";
 import { IndicadorCestaRitual } from "@/componentes/catalogo/cesta/IndicadorCestaRitual";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = construirMetadataSeo({
   title: "Colecciones rituales | La Botica de la Bruja Lore",
   description:
     "Catálogo navegable de colecciones rituales con filtros por intención y formato dentro de La Botica de la Bruja Lore.",
-};
+  rutaCanonical: "/colecciones",
+});
 
 type Props = {
   searchParams?: { q?: string; in?: string; cat?: string; ord?: string };
