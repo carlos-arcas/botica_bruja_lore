@@ -29,16 +29,16 @@ Los estados oficiales de proyecto y capacidad son:
 
 ## 4. Estado global actual del proyecto
 - Estado de definición estratégica/documental: **alto y consistente**.
-- Estado de implementación funcional de producto: **Ciclos 1 y 2 implementados en alcance comprometido**.
-- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado para alcance Ciclo 1 + rituales conectados de Ciclo 2**.
-- Frontend (home + herbal + rituales conectados): **implementado para recorrido navegable de Ciclo 2**.
-- Backoffice/admin mínimo: **implementado para operación base herbal y ritual**.
-- Checkout demo: **no implementado (fuera de alcance de Ciclo 1)**.
-- Calendario ritual: **no implementado (ciclo posterior)**.
-- Quality gate Ciclo 2 (mínimo operativo razonable): **ejecutado con evidencia reproducible en entorno actual**.
-- CI automatizada de quality gate: **DONE** con workflow canónico `Quality Gate` en GitHub Actions (`push` + `pull_request`) para checks backend/frontend y validación operativa mínima.
+- Estado de implementación funcional de producto: **Ciclos 1, 2, 3 y 4 implementados en alcance comprometido**.
+- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado hasta capacidades de cuenta demo con historial de pedidos (Ciclo 4)**.
+- Frontend (home + herbal + rituales + flujo ecommerce demo + cuenta demo): **implementado y navegable hasta cierre de Ciclo 4**.
+- Backoffice/admin mínimo: **implementado para operación base herbal/ritual + pedidos demo + cuenta demo**.
+- Checkout demo y confirmación/recibo: **implementados (Ciclo 3)**.
+- Cuenta demo con valor (registro/auth demo, perfil, historial): **implementada (Ciclo 4)**.
+- Calendario ritual: **no implementado (reservado para Ciclo 5)**.
+- Quality gate y CI canónica: **activos** con workflow `Quality Gate` en GitHub Actions (`push` + `pull_request`).
 
-Resumen ejecutivo de estado real: existe un recorrido funcional y defendible para rituales conectados sin romper el enfoque herbal-first. Se validó flujo directo e inverso entre home, herbal y rituales, con separación editorial/comercial preservada y checks mínimos del ciclo en verde (backend Django + frontend lint/build).
+Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta pedido demo y continuidad en cuenta demo, con trazabilidad de prompts 1–4 del Ciclo 4 y sin apertura funcional de Ciclo 5.
 
 ## 5. Estado por capacidades
 | Capacidad | Estado actual | Ciclo asociado | Evidencia / referencia | Notas operativas |
@@ -78,22 +78,22 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - quality gate mínimo ejecutado con checks backend/frontend en verde.
 
 ## 7. Ciclo actual
-- **Ciclo actual operativo**: cierre técnico de Ciclo 2 completado.
-- **Estado**: ciclo listo para transición a planificación/arranque de Ciclo 3, sin sobrealcance introducido en esta tarea de cierre.
+- **Ciclo operativo vigente**: Ciclo 4 completado en sus prompts oficiales 1–4.
+- **Estado**: **DONE (cierre oficial de ciclo declarado)**.
 - **Condición de salida aplicada**:
-  1. validación del contrato funcional del ciclo (rituales conectados) completada,
-  2. checks mínimos backend/frontend ejecutados en entorno actual,
-  3. documentación de estado sincronizada con evidencia real.
+  1. validación del contrato funcional de cuenta con valor completada (registro/auth demo, perfil e historial),
+  2. evidencia de no-regresión del flujo ecommerce demo del Ciclo 3,
+  3. documentación de estado sincronizada con cierre oficial y apertura controlada del siguiente ciclo.
 
 ## 8. Deuda y bloqueos conocidos
-1. El comando genérico `pytest -q` no debe tomarse como gate único para tests Django con acceso a BD en este repositorio; el runner contractual para ese alcance es `python manage.py test`.
-2. No se identificaron defectos bloqueantes de producto en rutas, wiring o contratos del alcance congelado de Ciclo 2.
-3. Queda pendiente, como mejora futura (no bloqueante para cierre de Ciclo 2), formalizar una estrategia única de ejecución de tests para evitar ambigüedad entre `pytest` y test runner de Django.
+1. El calendario ritual y su capa editorial diferencial siguen pendientes por diseño y se mantienen fuera de Ciclo 4.
+2. No se detectan bloqueos técnicos/documentales que impidan declarar DONE el Ciclo 4 en su contrato oficial.
+3. La activación de nuevas capacidades debe entrar exclusivamente por roadmap oficial de Ciclo 5, evitando frentes paralelos.
 
 ## 9. Próximos movimientos recomendados
-1. Abrir formalmente Ciclo 3 con alcance congelado de roadmap, sin adelantar checkout/login/calendario ritual.
-2. Mantener el gate mínimo operativo ya ejecutado como baseline y endurecerlo progresivamente según `docs/13_testing_ci_y_quality_gate.md`.
-3. Si se desea eliminar fricción de ejecución de tests, acordar y documentar en ciclo futuro un comando canónico de suite backend.
+1. Ejecutar únicamente el Prompt 1 oficial del Ciclo 5 cuando se abra implementación, sin mezclar prompts posteriores.
+2. Mantener `python scripts/check_release_gate.py` como verificación de no-regresión por cada incremento de ciclo.
+3. Preservar trazabilidad estado↔roadmap para evitar reabrir capacidades ya cerradas de Ciclos 3 y 4.
 
 ## 10. Reencauce de control por ciclos (actualización de gobierno)
 - Diagnóstico oficial: **C (deriva detectada)**.
@@ -388,18 +388,18 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Nota de trazabilidad histórica:
   - las secciones iniciales de este documento conservan contexto heredado de cierre de Ciclo 2; para gobierno operativo del estado actual prevalece la secuencia consolidada de secciones 17–25 (Ciclo 3 oficial).
 
-## 26. Apertura controlada de Ciclo 4 (gobernanza)
+## 26. Apertura controlada de Ciclo 4 (gobernanza, histórico)
 - Estado del ciclo: **PLANIFICADO**.
 - Foco único habilitado: **Cuenta de usuario con valor real**, sin reabrir alcance de ecommerce demo ya cerrado.
 - Documentación oficial de apertura:
   - `docs/ciclos/ciclo_04_cuenta_valor.md` (contrato de alcance de ciclo);
   - `docs/ciclos/ciclo_04_roadmap_prompts.md` (secuencia oficial de prompts del ciclo).
-- Siguiente paso oficial permitido:
+- Siguiente paso oficial permitido (histórico en ese momento):
   - ejecutar **Prompt 1 del Ciclo 4** definido en el roadmap, sin implementar todavía prompts siguientes ni abrir frentes paralelos.
 
 ## 27. Base dominio/aplicación de cuenta con valor (Prompt 1 oficial Ciclo 4)
 - Capacidad: **Núcleo mínimo de cuenta demo útil (autenticación demo, perfil mínimo e historial de `PedidoDemo` asociado)**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE**.
 - Implementación activa:
   - agregado y validaciones mínimas de cuenta demo en `backend/nucleo_herbal/dominio/cuentas_demo.py`;
   - casos de uso de cuenta en `backend/nucleo_herbal/aplicacion/casos_de_uso_cuentas_demo.py`;
@@ -415,7 +415,7 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - `tests/nucleo_herbal/test_casos_de_uso_cuentas_demo.py`.
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 1 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
-  - queda pendiente Prompt 2 (persistencia/infraestructura de cuenta), sin adelantar API/backoffice/frontend de cuenta.
+  - este bloque quedó posteriormente completado por prompts 2–4 dentro del mismo Ciclo 4.
 
 ## 28. Persistencia e infraestructura de cuenta demo (Prompt 2 oficial Ciclo 4)
 - Capacidad: **Persistencia mínima de cuenta demo y proveedor de historial de `PedidoDemo` asociado por vínculo de cuenta**.
@@ -485,4 +485,14 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   4. `python scripts/check_release_gate.py`.
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 4 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
-  - con prompts 1–4 trazados, el **Ciclo 4 queda cerrable** sujeto a validación final de release gate en entorno objetivo.
+  - con prompts 1–4 trazados y evidencia consolidada, el **Ciclo 4 queda oficialmente cerrado**; la continuidad permitida es apertura controlada de Ciclo 5.
+
+
+## 31. Cierre oficial de Ciclo 4 y apertura controlada de Ciclo 5 (gobernanza)
+- Diagnóstico oficial: **A (Ciclo 4 DONE cerrable sin bloqueos)**.
+- Decisión de gobierno:
+  1. se declara **Ciclo 4 oficialmente cerrado** con trazabilidad en `docs/ciclos/ciclo_04_cierre_oficial.md`;
+  2. se habilita apertura documental de **Ciclo 5** con foco único en calendario ritual + capa editorial diferencial;
+  3. no se implementa ningún prompt de Ciclo 5 dentro de esta actualización.
+- Prompt 1 oficial permitido para el siguiente incremento:
+  - implementar base de dominio/aplicación de `ReglaCalendario` y casos de uso mínimos de calendario ritual conectados a `Ritual`, con tests unitarios y sin tocar checkout/cuenta.
