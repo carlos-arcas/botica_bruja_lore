@@ -29,6 +29,11 @@ export type PaginaLegalComercial = {
     title: string;
     description: string;
   };
+  seo: {
+    indexable: boolean;
+    incluirEnSitemap: boolean;
+    esEstrategica: boolean;
+  };
 };
 
 export const ENLACES_LEGALES_FOOTER: EnlaceLegalComercial[] = [
@@ -81,6 +86,11 @@ export const PAGINAS_LEGALES_COMERCIALES: PaginaLegalComercial[] = [
       description:
         "Guía mínima y honesta de cómo se gestiona un encargo artesanal: solicitud, confirmación manual y límites de esta demo comercial.",
     },
+    seo: {
+      indexable: false,
+      incluirEnSitemap: false,
+      esEstrategica: false,
+    },
   },
   {
     ruta: "/envios-y-preparacion",
@@ -124,6 +134,11 @@ export const PAGINAS_LEGALES_COMERCIALES: PaginaLegalComercial[] = [
       description:
         "Explicación honesta sobre tiempos de preparación, confirmación manual e incidencias en una operativa artesanal sin checkout automático.",
     },
+    seo: {
+      indexable: true,
+      incluirEnSitemap: true,
+      esEstrategica: true,
+    },
   },
   {
     ruta: "/privacidad",
@@ -162,6 +177,11 @@ export const PAGINAS_LEGALES_COMERCIALES: PaginaLegalComercial[] = [
       title: "Privacidad y contacto | La Botica de la Bruja Lore",
       description:
         "Resumen claro sobre uso básico de datos en solicitudes de encargo y disponibilidad real de canales de contacto públicos.",
+    },
+    seo: {
+      indexable: false,
+      incluirEnSitemap: false,
+      esEstrategica: false,
     },
   },
 ];

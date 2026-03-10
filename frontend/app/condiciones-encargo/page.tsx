@@ -10,6 +10,7 @@ export const metadata: Metadata = construirMetadataSeo({
   title: CONTENIDO.metadata.title,
   description: CONTENIDO.metadata.description,
   rutaCanonical: "/condiciones-encargo",
+  indexable: CONTENIDO.seo.indexable,
 });
 
 export default function PaginaCondicionesEncargo(): JSX.Element {

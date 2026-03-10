@@ -18,6 +18,9 @@ test("páginas legales/comerciales mantienen estructura mínima tipada", () => {
     assert.ok(pagina.secciones.length >= 3);
     assert.ok(pagina.metadata.title);
     assert.ok(pagina.metadata.description);
+    assert.equal(typeof pagina.seo.indexable, "boolean");
+    assert.equal(typeof pagina.seo.incluirEnSitemap, "boolean");
+    assert.equal(typeof pagina.seo.esEstrategica, "boolean");
   });
 });
 
@@ -46,4 +49,13 @@ test("describirCanalPublico comunica fallback honesto cuando no hay configuraci�
   const conCanal = describirCanalPublico({ email: "equipo@botica.es", whatsapp: "34600123123" });
   assert.match(conCanal, /email \(equipo@botica.es\)/);
   assert.match(conCanal, /WhatsApp \(34600123123\)/);
+});
+
+
+test("solo envíos y preparación queda como página legal estratégica", () => {
+  const indexables = PAGINAS_LEGALES_COMERCIALES.filter((pagina) => pagina.seo.indexable);
+
+  assert.equal(indexables.length, 1);
+  assert.equal(indexables[0]?.ruta, "/envios-y-preparacion");
+  assert.equal(indexables[0]?.seo.incluirEnSitemap, true);
 });
