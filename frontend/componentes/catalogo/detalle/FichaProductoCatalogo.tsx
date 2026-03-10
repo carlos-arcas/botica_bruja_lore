@@ -67,11 +67,10 @@ export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
         </ol>
         <div className={estilos.accionesFicha}>
           <BotonAnadirCestaRitual slugProducto={producto.slug} />
-          <Link href={`/encargo?producto=${producto.slug}`} className="boton boton--principal">
-            Encargar o consultar esta pieza
-          </Link>
+          <Link href="/colecciones" className="boton boton--secundario">Volver al listado de colecciones rituales</Link>
+          <Link href="/rituales" className="boton boton--secundario">Explorar rituales relacionados por intención</Link>
           <Link href="/cesta" className="boton boton--secundario">Ver cesta ritual</Link>
-          <Link href="/colecciones" className="boton boton--secundario">Seguir explorando colecciones</Link>
+          <Link href={`/encargo?producto=${producto.slug}`} className="boton boton--secundario">Consultar encargo para esta pieza</Link>
         </div>
       </section>
 
@@ -89,7 +88,7 @@ export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
               <p>{relacionado.subtitulo}</p>
               <p><strong>{relacionado.precioVisible}</strong></p>
               <Link href={`/colecciones/${relacionado.slug}`} className="boton boton--secundario">
-                Ver ficha
+                {`Ver ficha de ${relacionado.nombre}`}
               </Link>
             </li>
           ))}

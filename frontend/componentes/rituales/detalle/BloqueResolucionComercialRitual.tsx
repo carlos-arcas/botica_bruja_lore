@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ProductoRelacionadoRitual } from "@/infraestructura/api/rituales";
 
 type Props = {
@@ -11,6 +13,10 @@ export function BloqueResolucionComercialRitual({ productos }: Props): JSX.Eleme
       <p>
         La ficha ritual sugiere una salida de catálogo básica sin convertirse en checkout ni en
         ficha de producto completa.
+      </p>
+
+      <p>
+        Si quieres comparar formatos antes de consultar, visita el <Link href="/colecciones">listado de colecciones rituales</Link>.
       </p>
 
       {productos.length > 0 ? (

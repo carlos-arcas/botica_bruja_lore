@@ -52,9 +52,9 @@ export const INTRO_LISTADO_RITUALES: IntroduccionLandingCatalogo = {
     "Cada ficha conecta con plantas relacionadas y te permite pasar a la zona comercial cuando necesites preparar una selección concreta.",
   ],
   enlacesInternos: [
-    { href: "/hierbas", etiqueta: "Entrar por hierbas" },
-    { href: "/colecciones", etiqueta: "Ir a colecciones rituales" },
-    { href: "/encargo", etiqueta: "Solicitar preparación guiada" },
+    { href: "/hierbas", etiqueta: "Ver fichas de hierbas relacionadas" },
+    { href: "/colecciones", etiqueta: "Explorar colecciones rituales curadas" },
+    { href: "/la-botica", etiqueta: "Revisar la curaduría editorial de la botica" },
   ],
 };
 
@@ -73,8 +73,8 @@ export const INTRO_LISTADO_COLECCIONES: IntroduccionLandingCatalogo = {
     "Puedes revisar fichas de producto desde la rejilla y complementar tu decisión volviendo a hierbas o rituales según el tipo de recorrido que prefieras.",
   ],
   enlacesInternos: [
-    { href: "/hierbas", etiqueta: "Revisar hierbas publicadas" },
-    { href: "/rituales", etiqueta: "Consultar rituales conectados" },
-    { href: "/encargo", etiqueta: "Preparar un encargo de referencia" },
+    { href: "/hierbas", etiqueta: "Revisar hierbas publicadas por intención" },
+    { href: "/rituales", etiqueta: "Consultar rituales conectados por intención" },
+    { href: "/la-botica", etiqueta: "Entender el criterio editorial de la botica" },
   ],
 };

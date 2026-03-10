@@ -26,7 +26,7 @@ export function TarjetaRitual({ ritual }: Props): JSX.Element {
       <p className="meta-intencion">
         Intención: <strong>{resumenIntencion(ritual)}</strong>
       </p>
-      <Link href={ritual.urlDetalle}>Abrir ficha ritual conectada</Link>
+      <Link href={ritual.urlDetalle}>Ver ficha ritual de {ritual.nombre}</Link>
     </li>
   );
 }
