@@ -12,6 +12,8 @@ import {
 } from "@/contenido/catalogo/seoLandingsCatalogo";
 import { obtenerListadoRituales } from "@/infraestructura/api/rituales";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
+import { JsonLd } from "@/componentes/seo/JsonLd";
+import { construirSchemasLandingCatalogo } from "@/infraestructura/seo/structuredData";
 
 export const metadata: Metadata = construirMetadataSeo({
   title: METADATA_LISTADO_RITUALES.title,
@@ -21,9 +23,16 @@ export const metadata: Metadata = construirMetadataSeo({
 
 export default async function PaginaListadoRituales(): Promise<JSX.Element> {
   const resultado = await obtenerListadoRituales();
+  const schemasLanding = construirSchemasLandingCatalogo({
+    ruta: METADATA_LISTADO_RITUALES.rutaCanonical,
+    titulo: METADATA_LISTADO_RITUALES.title,
+    descripcion: METADATA_LISTADO_RITUALES.description,
+    nombreListado: "Rituales",
+  });
 
   return (
     <main className="contenedor-home">
+      {schemasLanding.length > 0 ? <JsonLd id="schema-pagina" data={schemasLanding} /> : null}
       <section className="bloque-home">
         <p className="hero-portada__eyebrow">{INTRO_LISTADO_RITUALES.eyebrow}</p>
         <h1>{INTRO_LISTADO_RITUALES.h1}</h1>

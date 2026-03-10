@@ -12,6 +12,8 @@ import {
 } from "@/contenido/catalogo/seoLandingsCatalogo";
 import { obtenerListadoHerbal } from "@/infraestructura/api/herbal";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
+import { JsonLd } from "@/componentes/seo/JsonLd";
+import { construirSchemasLandingCatalogo } from "@/infraestructura/seo/structuredData";
 
 export const metadata: Metadata = construirMetadataSeo({
   title: METADATA_LISTADO_HIERBAS.title,
@@ -21,9 +23,16 @@ export const metadata: Metadata = construirMetadataSeo({
 
 export default async function PaginaListadoHerbal(): Promise<JSX.Element> {
   const resultado = await obtenerListadoHerbal();
+  const schemasLanding = construirSchemasLandingCatalogo({
+    ruta: METADATA_LISTADO_HIERBAS.rutaCanonical,
+    titulo: METADATA_LISTADO_HIERBAS.title,
+    descripcion: METADATA_LISTADO_HIERBAS.description,
+    nombreListado: "Hierbas",
+  });
 
   return (
     <main className="contenedor-home">
+      {schemasLanding.length > 0 ? <JsonLd id="schema-pagina" data={schemasLanding} /> : null}
       <section className="bloque-home">
         <p className="hero-portada__eyebrow">{INTRO_LISTADO_HIERBAS.eyebrow}</p>
         <h1>{INTRO_LISTADO_HIERBAS.h1}</h1>

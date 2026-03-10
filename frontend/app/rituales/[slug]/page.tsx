@@ -5,12 +5,14 @@ import { BloquePlantasRelacionadas } from "@/componentes/rituales/detalle/Bloque
 import { BloqueResolucionComercialRitual } from "@/componentes/rituales/detalle/BloqueResolucionComercialRitual";
 import { CabeceraFichaRitual } from "@/componentes/rituales/detalle/CabeceraFichaRitual";
 import { EstadoErrorFichaRitual } from "@/componentes/rituales/detalle/EstadoFichaRitual";
+import { JsonLd } from "@/componentes/seo/JsonLd";
 import { obtenerFichaRitualConectada } from "@/infraestructura/api/rituales";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import {
   construirDescriptionFichaPublica,
   construirTitleFichaPublica,
 } from "@/infraestructura/seo/seoFichasPublicas";
+import { construirSchemasFichaRitual } from "@/infraestructura/seo/structuredData";
 
 type Props = {
   params: { slug: string };
@@ -60,9 +62,11 @@ export default async function PaginaDetalleRitual({ params }: Props): Promise<JS
   }
 
   const { ritual, plantas, productos } = resultado.ficha;
+  const schemasFicha = construirSchemasFichaRitual(ritual);
 
   return (
     <main className="contenedor-home">
+      {schemasFicha.length > 0 ? <JsonLd id="schema-ficha-ritual" data={schemasFicha} /> : null}
       <CabeceraFichaRitual ritual={ritual} />
       <BloquePlantasRelacionadas plantas={plantas} />
       <BloqueResolucionComercialRitual productos={productos} />

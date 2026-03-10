@@ -30,7 +30,7 @@ export function resolverBaseSitioPublico(
   return null;
 }
 
-function normalizarRutaCanonical(ruta: string): string {
+export function normalizarRutaCanonical(ruta: string): string {
   const rutaSinQuery = ruta.split("?")[0]?.split("#")[0] ?? "/";
   const conPrefijo = rutaSinQuery.startsWith("/") ? rutaSinQuery : `/${rutaSinQuery}`;
 
@@ -39,6 +39,19 @@ function normalizarRutaCanonical(ruta: string): string {
   }
 
   return conPrefijo.replace(/\/+$/, "");
+}
+
+export function resolverUrlCanonicalAbsoluta(
+  rutaCanonical: string,
+  entorno: NodeJS.ProcessEnv = process.env,
+): string | null {
+  const baseSitio = resolverBaseSitioPublico(entorno);
+
+  if (!baseSitio) {
+    return null;
+  }
+
+  return `${baseSitio}${normalizarRutaCanonical(rutaCanonical)}`;
 }
 
 export function construirMetadataSeo({
