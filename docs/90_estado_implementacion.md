@@ -35,7 +35,7 @@ Los estados oficiales de proyecto y capacidad son:
 - Backoffice/admin mínimo: **implementado para operación base herbal/ritual + pedidos demo + cuenta demo**.
 - Checkout demo y confirmación/recibo: **implementados (Ciclo 3)**.
 - Cuenta demo con valor (registro/auth demo, perfil, historial): **implementada (Ciclo 4)**.
-- Calendario ritual: **dominio/aplicación + persistencia/API mínima implementadas (Ciclo 5 Prompts 1 y 2), integración frontend pendiente**.
+- Calendario ritual: **Prompts 1–3 implementados (dominio/aplicación + persistencia/API + frontend editorial mínimo con gate)**.
 - Quality gate y CI canónica: **activos** con workflow `Quality Gate` en GitHub Actions (`push` + `pull_request`).
 
 Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta pedido demo y continuidad en cuenta demo, con trazabilidad de prompts 1–4 del Ciclo 4 y ejecución de Prompts 1–2 del Ciclo 5 para calendario ritual (dominio/aplicación + persistencia/API mínima).
@@ -65,7 +65,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 | Historial de pedidos demo | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Favoritos | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Recordatorios | PLANIFICADO | Ciclo 4–5 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
-| Calendario ritual | EN_PROGRESO | Ciclo 5 | `backend/nucleo_herbal/dominio/calendario_ritual.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_calendario_ritual.py`, `tests/nucleo_herbal/test_entidades_calendario_ritual.py`, `tests/nucleo_herbal/test_casos_de_uso_calendario_ritual.py`, `docs/ciclos/ciclo_05_calendario_editorial.md` | Prompts 1 y 2 oficiales cubiertos (dominio/aplicación + persistencia/API mínima); Prompt 3 (frontend/gate) pendiente. |
+| Calendario ritual | DONE | Ciclo 5 | `backend/nucleo_herbal/dominio/calendario_ritual.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_calendario_ritual.py`, `backend/nucleo_herbal/presentacion/publica/views.py`, `frontend/app/calendario-ritual/page.tsx`, `frontend/infraestructura/api/calendarioRitual.ts`, `frontend/tests/calendario-ritual.test.ts`, `docs/ciclos/ciclo_05_calendario_editorial.md` | Prompts 1–3 oficiales cubiertos (dominio/aplicación + persistencia/API + frontend/gate mínimo). |
 
 ## 6. Último ciclo cerrado
 - **Ciclo cerrado formalmente**: Ciclo 2 (rituales conectados).
@@ -78,22 +78,21 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - quality gate mínimo ejecutado con checks backend/frontend en verde.
 
 ## 7. Ciclo actual
-- **Ciclo operativo vigente**: Ciclo 5 (Prompts 1 y 2 ejecutados).
+- **Ciclo operativo vigente**: Ciclo 5 (Prompts 1–3 ejecutados).
 - **Estado**: **EN_PROGRESO**.
 - **Condición de continuidad aplicada**:
-  1. Prompts 1 y 2 de Ciclo 5 implementados con separación limpia de capas;
+  1. Prompts 1–3 de Ciclo 5 implementados con separación limpia de capas;
   2. Ciclos 3 y 4 permanecen cerrados sin reapertura de alcance;
-  3. siguiente paso limitado a Prompt 3 (frontend + gate).
+  3. ciclo técnicamente cerrable sin adelantar capacidades de ciclo siguiente.
 
 ## 8. Deuda y bloqueos conocidos
-1. La integración frontend del calendario ritual sigue pendiente por diseño y se mantiene fuera de Prompts 1–2.
-2. No se detectan bloqueos técnicos/documentales para continuar con Prompt 3 oficial del Ciclo 5.
-3. La activación de nuevas capacidades debe entrar exclusivamente por roadmap oficial de Ciclo 5, evitando frentes paralelos.
+1. No se detectan bloqueos técnicos/documentales para declarar Ciclo 5 cerrable tras Prompt 3.
+2. La activación de nuevas capacidades debe entrar exclusivamente por roadmap oficial siguiente, evitando frentes paralelos.
 
 ## 9. Próximos movimientos recomendados
-1. Ejecutar el Prompt 3 oficial del Ciclo 5 (integración frontend editorial mínima + gate), sin abrir frentes paralelos.
-2. Mantener `python scripts/check_release_gate.py` como verificación de no-regresión por cada incremento de ciclo.
-3. Preservar trazabilidad estado↔roadmap para evitar reabrir capacidades ya cerradas de Ciclos 3 y 4.
+1. Ejecutar validación de cierre técnico de Ciclo 5 con `python scripts/check_release_gate.py` en cada incremento posterior.
+2. Preservar trazabilidad estado↔roadmap para evitar reabrir capacidades ya cerradas de Ciclos 3 y 4.
+3. No abrir nuevas capacidades sin contrato explícito del siguiente ciclo.
 
 ## 10. Reencauce de control por ciclos (actualización de gobierno)
 - Diagnóstico oficial: **C (deriva detectada)**.
@@ -538,3 +537,25 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 2 del Ciclo 5** (`docs/ciclos/ciclo_05_calendario_editorial.md`);
   - queda pendiente Prompt 3 (integración frontend editorial mínima + gate de ciclo).
+
+## 34. Ciclo 5 — Prompt 3 oficial (frontend editorial mínimo + gate de ciclo)
+- Capacidad: **Superficie frontend mínima de calendario ritual por fecha + no-regresión técnica del ciclo**.
+- Estado: **DONE (Prompt 3)**.
+- Implementación activa:
+  - ruta pública `frontend/app/calendario-ritual/page.tsx` con entrada editorial mínima y navegación coherente con shell existente;
+  - cliente API desacoplado `frontend/infraestructura/api/calendarioRitual.ts` para consulta `GET /api/v1/calendario-ritual/?fecha=YYYY-MM-DD`, validación básica de fecha y mapeo hacia `Ritual`;
+  - componente de consulta temporal `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx` cubriendo carga, error, estado vacío y listado con enlace a ficha ritual;
+  - shell global actualizada con acceso navegable a calendario ritual en `frontend/contenido/shell/navegacionGlobal.ts`.
+- No-regresión y gate:
+  - tests frontend de contrato calendario en `frontend/tests/calendario-ritual.test.ts`;
+  - ajuste de regresión shell por nueva ruta en `frontend/tests/shell-global.test.ts`;
+  - gate canónico reforzado con `npm run test:calendario-ritual` en `scripts/check_release_gate.py`;
+  - documentación de gate alineada en `docs/13_testing_ci_y_quality_gate.md`.
+- Evidencia reproducible:
+  1. `npm --prefix frontend run test:calendario-ritual`;
+  2. `npm --prefix frontend run test:shell`;
+  3. `npm --prefix frontend run build`;
+  4. `python scripts/check_release_gate.py`.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 3 del Ciclo 5** (`docs/ciclos/ciclo_05_calendario_editorial.md`);
+  - con Prompts 1–3 trazados y evidencia de no-regresión, el **Ciclo 5 queda técnicamente cerrable** (sin abrir capacidades de ciclo siguiente).
