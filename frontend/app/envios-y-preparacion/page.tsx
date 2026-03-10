@@ -25,7 +25,7 @@ export default function PaginaEnviosPreparacion(): JSX.Element {
 
   return (
     <>
-      <JsonLd data={schemas} />
+      <JsonLd id="schema-envios-preparacion" data={schemas} />
       <PaginaLegalComercialVista contenido={CONTENIDO} />
     </>
   );
