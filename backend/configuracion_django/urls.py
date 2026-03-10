@@ -3,8 +3,30 @@
 from django.contrib import admin
 from django.db import connections
 from django.db.utils import DatabaseError
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.urls import include, path
+from django.conf import settings
+
+
+def _resolver_url_publica_sitio(request) -> str:
+    public_site_url = getattr(settings, "PUBLIC_SITE_URL", "").strip().rstrip("/")
+    if public_site_url:
+        return public_site_url
+    return request.build_absolute_uri("/").rstrip("/")
+
+
+def robots_txt(request):
+    base_url = _resolver_url_publica_sitio(request)
+    contenido = "\n".join(
+        (
+            "User-agent: *",
+            "Allow: /",
+            "Disallow: /admin/",
+            "Disallow: /api/",
+            f"Sitemap: {base_url}/sitemap.xml",
+        )
+    )
+    return HttpResponse(f"{contenido}\n", content_type="text/plain; charset=utf-8")
 
 
 def healthcheck(_request):
@@ -18,6 +40,7 @@ def healthcheck(_request):
 
 
 urlpatterns = [
+    path("robots.txt", robots_txt, name="robots-txt"),
     path("healthz", healthcheck, name="healthcheck"),
     path("admin/", admin.site.urls),
     path("api/v1/herbal/", include("backend.nucleo_herbal.presentacion.publica.urls")),
