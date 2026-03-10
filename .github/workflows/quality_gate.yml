@@ -5,8 +5,8 @@ on:
   pull_request:
 
 jobs:
-  backend:
-    name: Backend readiness + checks
+  release_gate:
+    name: Canonical release gate validation
     runs-on: ubuntu-latest
 
     steps:
@@ -21,6 +21,17 @@ jobs:
 
       - name: Install backend dependencies
         run: python -m pip install -r requirements.txt
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
 
       - name: Validate Railway TOML files
         run: |
@@ -38,42 +49,35 @@ jobs:
               print(f'OK TOML: {file}')
           PY
 
-      - name: Django structural check
-        run: python manage.py check
+      - name: Run canonical release gate command
+        run: python scripts/check_release_gate.py
 
-      - name: Backend readiness smoke check
-        run: python scripts/check_backend_readiness.py
-
-      - name: Critical backend tests (healthcheck)
-        run: python manage.py test tests.nucleo_herbal.test_healthcheck
-
-      - name: Critical backend tests (seed demo command)
-        run: python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command
-
-  frontend:
-    name: Frontend lint + build
+  bootstrap_demo_validation:
+    name: Bootstrap demo validation (isolated sqlite)
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: frontend
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          python-version: '3.12'
+          cache: 'pip'
 
-      - name: Install frontend dependencies
-        run: npm ci
+      - name: Install backend dependencies
+        run: python -m pip install -r requirements.txt
 
-      - name: Frontend lint
-        run: npm run lint
+      - name: Run bootstrap demo script in isolated database
+        env:
+          DATABASE_URL: sqlite:///${{ runner.temp }}/bootstrap_demo_ci.sqlite3
+          SECRET_KEY: ci-bootstrap-secret
+        run: python scripts/bootstrap_demo_release.py
 
-      - name: Frontend build
-        run: npm run build
+      - name: Assert bootstrap demo expected public counts
+        env:
+          DATABASE_URL: sqlite:///${{ runner.temp }}/bootstrap_demo_ci.sqlite3
+          SECRET_KEY: ci-bootstrap-secret
+        run: |
+          python manage.py shell -c "from backend.nucleo_herbal.infraestructura.persistencia_django.models import IntencionModelo, PlantaModelo, ProductoModelo, RitualModelo; assert IntencionModelo.objects.filter(es_publica=True).count() == 2; assert PlantaModelo.objects.filter(publicada=True).count() == 2; assert ProductoModelo.objects.filter(publicado=True).count() == 2; assert RitualModelo.objects.filter(publicado=True).count() == 1; print('Conteos esperados OK: 2/2/2/1')"

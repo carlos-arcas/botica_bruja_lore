@@ -134,6 +134,11 @@ Esta operación **sí muta estado** (esquema y datos):
 - segunda ejecución de `seed_demo_publico` para comprobar idempotencia (opcional con `--skip-second-seed`),
 - resumen final de conteos públicos.
 
+Nota de CI/auditoría:
+
+- GitHub Actions valida este bootstrap en un job separado (`bootstrap_demo_validation`) usando SQLite temporal aislada.
+- Esa validación automática **no** ejecuta bootstrap en Railway ni sustituye la operación manual/controlada en Railway UI.
+
 ## 7) Síntomas de configuración antigua en Railway UI
 
 Si aparece alguno de estos síntomas, Railway sigue usando configuración residual:
