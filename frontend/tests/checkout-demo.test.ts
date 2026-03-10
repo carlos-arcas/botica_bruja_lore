@@ -7,7 +7,8 @@ import {
   resolverCantidadCheckout,
   validarCheckoutDemo,
 } from "../contenido/catalogo/checkoutDemo";
-import { crearPedidoDemoPublico } from "../infraestructura/api/pedidosDemo";
+import { construirRutaReciboPedidoDemo, resolverIdPedidoDesdeRuta } from "../contenido/catalogo/postCheckoutDemo";
+import { crearPedidoDemoPublico, obtenerPedidoDemoPublico } from "../infraestructura/api/pedidosDemo";
 
 test("construirLineasPedidoDemo usa selección múltiple de cesta cuando existe", () => {
   const lineas = construirLineasPedidoDemo(
@@ -58,6 +59,14 @@ test("construirPayloadPedidoDemo añade id_usuario en autenticado", () => {
 
 test("resolverCantidadCheckout aplica fallback seguro", () => {
   assert.equal(resolverCantidadCheckout("sin número"), 1);
+});
+
+test("construirRutaReciboPedidoDemo genera ruta estable por URL", () => {
+  assert.equal(construirRutaReciboPedidoDemo("PD-123"), "/pedido-demo/PD-123");
+});
+
+test("resolverIdPedidoDesdeRuta retorna null en vacío", () => {
+  assert.equal(resolverIdPedidoDesdeRuta("   "), null);
 });
 
 test("crearPedidoDemoPublico devuelve éxito con respuesta API", async () => {
@@ -115,6 +124,55 @@ test("crearPedidoDemoPublico devuelve error cuando API responde validación", as
   if (resultado.estado === "error") {
     assert.match(resultado.mensaje, /lineas/i);
   }
+
+  global.fetch = originalFetch;
+});
+
+test("obtenerPedidoDemoPublico devuelve éxito para detalle existente", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async () => {
+    return {
+      ok: true,
+      json: async () => ({
+        pedido: {
+          id_pedido: "PD-200",
+          estado: "creado",
+          canal: "invitado",
+          email: "demo@botica.test",
+          resumen: { cantidad_total_items: 1, subtotal_demo: "14.90" },
+          lineas: [
+            {
+              id_producto: "rit-001",
+              slug_producto: "infusion-bruma-lavanda",
+              nombre_producto: "Bruma de Lavanda Serena",
+              cantidad: 1,
+              precio_unitario_demo: "14.90",
+              subtotal_demo: "14.90",
+            },
+          ],
+        },
+      }),
+    } as Response;
+  }) as typeof fetch;
+
+  const resultado = await obtenerPedidoDemoPublico("PD-200");
+  assert.equal(resultado.estado, "ok");
+
+  global.fetch = originalFetch;
+});
+
+test("obtenerPedidoDemoPublico gestiona pedido inexistente", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async () => {
+    return {
+      ok: false,
+      status: 404,
+      json: async () => ({ detalle: "Pedido demo no encontrado" }),
+    } as Response;
+  }) as typeof fetch;
+
+  const resultado = await obtenerPedidoDemoPublico("PD-nope");
+  assert.equal(resultado.estado, "error");
 
   global.fetch = originalFetch;
 });

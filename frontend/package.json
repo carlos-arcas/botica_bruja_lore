@@ -15,7 +15,7 @@
     "test:shell": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/shell-global.test.ts contenido/shell/navegacionGlobal.ts && node .tmp-tests/tests/shell-global.test.js",
     "test:marca": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/marca-contenido.test.ts contenido/marca/contenidoMarca.ts && node .tmp-tests/tests/marca-contenido.test.js",
     "test:legal": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/legal-comercial.test.ts contenido/legal/paginasLegalesComerciales.ts contenido/catalogo/canalContactoPublico.ts && node .tmp-tests/tests/legal-comercial.test.js",
-    "test:checkout-demo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/checkout-demo.test.ts contenido/catalogo/catalogo.ts contenido/catalogo/cestaRitual.ts contenido/catalogo/checkoutDemo.ts infraestructura/api/pedidosDemo.ts && node .tmp-tests/tests/checkout-demo.test.js"
+    "test:checkout-demo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/checkout-demo.test.ts contenido/catalogo/catalogo.ts contenido/catalogo/cestaRitual.ts contenido/catalogo/checkoutDemo.ts contenido/catalogo/postCheckoutDemo.ts infraestructura/api/pedidosDemo.ts && node .tmp-tests/tests/checkout-demo.test.js"
   },
   "dependencies": {
     "next": "^14.2.35",
