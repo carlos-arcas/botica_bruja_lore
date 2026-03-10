@@ -8,6 +8,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from ..dominio.pedidos_demo import LineaPedido, PedidoDemo, normalizar_lineas
+from .casos_de_uso import ErrorAplicacionLookup
 from .dto import LineaPedidoDTO, PedidoDemoDTO, ResumenPedidoDemoDTO
 from .puertos.repositorios_pedidos_demo import RepositorioPedidosDemo
 
@@ -67,6 +68,19 @@ class RecalcularResumenPedidoDemo:
             cantidad_total_items=sum(linea.cantidad for linea in pedido.lineas),
             subtotal_demo=pedido.subtotal_demo,
         )
+
+
+@dataclass(slots=True)
+class ObtenerPedidoDemoPorId:
+    """Recupera un pedido demo persistido y lo expone como DTO."""
+
+    repositorio_pedidos_demo: RepositorioPedidosDemo
+
+    def ejecutar(self, id_pedido: str) -> PedidoDemoDTO:
+        pedido = self.repositorio_pedidos_demo.obtener_por_id(id_pedido)
+        if pedido is None:
+            raise ErrorAplicacionLookup(f"Pedido demo no encontrado: {id_pedido}")
+        return _a_pedido_dto(pedido)
 
 
 def _generar_id_pedido_demo() -> str:
