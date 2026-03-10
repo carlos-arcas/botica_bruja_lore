@@ -3,13 +3,16 @@ import Link from "next/link";
 
 import { CatalogoColecciones } from "@/componentes/catalogo/CatalogoColecciones";
 import { IndicadorCestaRitual } from "@/componentes/catalogo/cesta/IndicadorCestaRitual";
+import {
+  INTRO_LISTADO_COLECCIONES,
+  METADATA_LISTADO_COLECCIONES,
+} from "@/contenido/catalogo/seoLandingsCatalogo";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 export const metadata: Metadata = construirMetadataSeo({
-  title: "Colecciones rituales | La Botica de la Bruja Lore",
-  description:
-    "Catálogo navegable de colecciones rituales con filtros por intención y formato dentro de La Botica de la Bruja Lore.",
-  rutaCanonical: "/colecciones",
+  title: METADATA_LISTADO_COLECCIONES.title,
+  description: METADATA_LISTADO_COLECCIONES.description,
+  rutaCanonical: METADATA_LISTADO_COLECCIONES.rutaCanonical,
 });
 
 type Props = {
@@ -20,17 +23,29 @@ export default function PaginaColecciones({ searchParams }: Props): JSX.Element 
   return (
     <main className="contenedor-home">
       <section className="bloque-home">
+        <p className="hero-portada__eyebrow">{INTRO_LISTADO_COLECCIONES.eyebrow}</p>
+        {INTRO_LISTADO_COLECCIONES.parrafos.map((parrafo) => (
+          <p key={parrafo}>{parrafo}</p>
+        ))}
+      </section>
+
+      <section className="bloque-home">
         <h2>Tu selección ritual</h2>
         <p>Guarda piezas de interés y prepara una consulta con varias referencias en un solo paso.</p>
         <IndicadorCestaRitual />
       </section>
+
       <CatalogoColecciones searchParamsIniciales={searchParams} />
+
       <section className="bloque-home">
         <h2>Exploración conectada</h2>
-        <p>Si prefieres una entrada por contenido vivo, puedes recorrer la línea herbal o la sección de rituales publicados.</p>
+        <p>Accede a otras rutas clave del catálogo para complementar la decisión de compra con contexto editorial.</p>
         <div className="hero-portada__acciones">
-          <Link href="/hierbas" className="boton boton--secundario">Explorar hierbas</Link>
-          <Link href="/rituales" className="boton boton--secundario">Ver rituales conectados</Link>
+          {INTRO_LISTADO_COLECCIONES.enlacesInternos.map((enlace) => (
+            <Link key={enlace.href} href={enlace.href} className="boton boton--secundario">
+              {enlace.etiqueta}
+            </Link>
+          ))}
         </div>
       </section>
     </main>
