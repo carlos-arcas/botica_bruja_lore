@@ -3,7 +3,7 @@
 ## 1. Propósito del documento
 Este documento define la estrategia oficial de calidad para `botica_bruja_lore` y aterriza operativamente las normas ya fijadas como no negociables en el repositorio. Su función es traducir principios de calidad en criterios ejecutables por ciclo, sin confundir diseño documental con implementación técnica real.
 
-No implementa CI ni prescribe scripts cerrados en esta etapa; establece el marco que gobernará esa implementación cuando corresponda por madurez del producto.
+Define el marco de calidad y, además, documenta el workflow CI canónico que automatiza el gate mínimo defendible del repositorio.
 
 ## 2. Objetivos de testing y quality gate
 La estrategia de testing y quality gate persigue objetivos concretos de producto y de ingeniería:
@@ -247,3 +247,31 @@ Alcance y límites:
 - El gate de solo lectura **no sustituye** suites completas de regresión, pruebas E2E ni validaciones de negocio profundas.
 - El bootstrap demo **no sustituye** el gate canónico; cumple una función operativa distinta.
 - Un `SKIP` de frontend por entorno debe tratarse como señal operativa visible, no como silencio.
+
+
+## 13. Workflow CI canónico (GitHub Actions)
+
+El repositorio dispone de un workflow canónico en `.github/workflows/quality_gate.yml` ejecutado en `push` y `pull_request`.
+
+Alcance automatizado del workflow:
+
+- **Job backend**
+  - instala dependencias Python (`requirements.txt`),
+  - valida sintaxis TOML de `backend/railway.toml` y `frontend/railway.toml`,
+  - ejecuta `python manage.py check`,
+  - ejecuta `python scripts/check_backend_readiness.py`,
+  - ejecuta tests críticos:
+    - `tests.nucleo_herbal.test_healthcheck`,
+    - `tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command`.
+
+- **Job frontend**
+  - usa Node 20,
+  - instala dependencias con `npm ci` (lockfile versionado),
+  - ejecuta `npm run lint`,
+  - ejecuta `npm run build`.
+
+Límites explícitos de este workflow:
+
+- La CI **valida**, no hace bootstrap operativo mutante.
+- No ejecuta `bootstrap_demo_release.py`, `migrate` ni `seed_demo_publico` como parte del gate automático.
+- No sustituye verificaciones y responsabilidades de configuración en Railway UI (variables, wiring entre servicios y validación post-deploy).

@@ -1,0 +1,79 @@
+name: Quality Gate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend readiness + checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install backend dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate Railway TOML files
+        run: |
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          files = [
+              Path('backend/railway.toml'),
+              Path('frontend/railway.toml'),
+          ]
+          for file in files:
+              with file.open('rb') as handle:
+                  tomllib.load(handle)
+              print(f'OK TOML: {file}')
+          PY
+
+      - name: Django structural check
+        run: python manage.py check
+
+      - name: Backend readiness smoke check
+        run: python scripts/check_backend_readiness.py
+
+      - name: Critical backend tests (healthcheck)
+        run: python manage.py test tests.nucleo_herbal.test_healthcheck
+
+      - name: Critical backend tests (seed demo command)
+        run: python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command
+
+  frontend:
+    name: Frontend lint + build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Frontend lint
+        run: npm run lint
+
+      - name: Frontend build
+        run: npm run build
