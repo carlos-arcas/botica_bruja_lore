@@ -8,6 +8,8 @@ import {
   construirDescriptionFichaPublica,
   construirTitleFichaPublica,
 } from "@/infraestructura/seo/seoFichasPublicas";
+import { JsonLd } from "@/componentes/seo/JsonLd";
+import { construirSchemasFichaColeccion } from "@/infraestructura/seo/structuredData";
 
 type Props = {
   params: { slug: string };
@@ -46,8 +48,11 @@ export default function PaginaDetalleColeccion({ params }: Props): JSX.Element {
     notFound();
   }
 
+  const schemasFicha = construirSchemasFichaColeccion(producto);
+
   return (
     <main className="contenedor-home">
+      {schemasFicha.length > 0 ? <JsonLd id="schema-ficha" data={schemasFicha} /> : null}
       <FichaProductoCatalogo producto={producto} />
     </main>
   );
