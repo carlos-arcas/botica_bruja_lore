@@ -4,12 +4,14 @@ import Link from "next/link";
 import { CatalogoColecciones } from "@/componentes/catalogo/CatalogoColecciones";
 import { IndicadorCestaRitual } from "@/componentes/catalogo/cesta/IndicadorCestaRitual";
 import { JsonLd } from "@/componentes/seo/JsonLd";
+import { BloqueEnlazadoContextual } from "@/componentes/seo/BloqueEnlazadoContextual";
 import {
   INTRO_LISTADO_COLECCIONES,
   METADATA_LISTADO_COLECCIONES,
 } from "@/contenido/catalogo/seoLandingsCatalogo";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import { construirSchemasLandingCatalogo } from "@/infraestructura/seo/structuredData";
+import { BLOQUES_ENLAZADO_CATALOGO } from "@/contenido/catalogo/enlazadoInterno";
 
 export const metadata: Metadata = construirMetadataSeo({
   title: METADATA_LISTADO_COLECCIONES.title,
@@ -22,6 +24,7 @@ type Props = {
 };
 
 export default function PaginaColecciones({ searchParams }: Props): JSX.Element {
+  const bloqueEnlazado = BLOQUES_ENLAZADO_CATALOGO.colecciones;
   const schemasLanding = construirSchemasLandingCatalogo({
     ruta: METADATA_LISTADO_COLECCIONES.rutaCanonical,
     titulo: METADATA_LISTADO_COLECCIONES.title,
@@ -38,6 +41,8 @@ export default function PaginaColecciones({ searchParams }: Props): JSX.Element 
           <p key={parrafo}>{parrafo}</p>
         ))}
       </section>
+
+      <BloqueEnlazadoContextual bloque={bloqueEnlazado} />
 
       <section className="bloque-home">
         <h2>Tu selección ritual</h2>

@@ -13,7 +13,9 @@ import {
 import { obtenerListadoHerbal } from "@/infraestructura/api/herbal";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import { JsonLd } from "@/componentes/seo/JsonLd";
+import { BloqueEnlazadoContextual } from "@/componentes/seo/BloqueEnlazadoContextual";
 import { construirSchemasLandingCatalogo } from "@/infraestructura/seo/structuredData";
+import { BLOQUES_ENLAZADO_CATALOGO } from "@/contenido/catalogo/enlazadoInterno";
 
 export const metadata: Metadata = construirMetadataSeo({
   title: METADATA_LISTADO_HIERBAS.title,
@@ -23,6 +25,7 @@ export const metadata: Metadata = construirMetadataSeo({
 
 export default async function PaginaListadoHerbal(): Promise<JSX.Element> {
   const resultado = await obtenerListadoHerbal();
+  const bloqueEnlazado = BLOQUES_ENLAZADO_CATALOGO.hierbas;
   const schemasLanding = construirSchemasLandingCatalogo({
     ruta: METADATA_LISTADO_HIERBAS.rutaCanonical,
     titulo: METADATA_LISTADO_HIERBAS.title,
@@ -47,6 +50,8 @@ export default async function PaginaListadoHerbal(): Promise<JSX.Element> {
           ))}
         </div>
       </section>
+
+      <BloqueEnlazadoContextual bloque={bloqueEnlazado} />
 
       {resultado.estado === "error" ? (
         <EstadoErrorListadoHerbal mensaje={resultado.mensaje} />

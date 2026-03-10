@@ -34,7 +34,7 @@ export type PreguntaMarca = {
 export const METADATA_LA_BOTICA = {
   title: "La Botica | Filosofía artesanal y criterio editorial",
   description:
-    "Conoce cómo La Botica de la Bruja Lore selecciona colecciones y rituales: manifiesto, principios de la casa y ruta directa a catálogo y encargo.",
+    "Conoce cómo La Botica de la Bruja Lore selecciona colecciones, hierbas y rituales: manifiesto, principios de la casa y rutas editoriales al catálogo público.",
 };
 
 export const HERO_MARCA: HeroMarca = {
@@ -45,7 +45,7 @@ export const HERO_MARCA: HeroMarca = {
   nota: "Vendemos con honestidad: sin claims médicos y sin promesas imposibles.",
   acciones: [
     { texto: "Explorar colecciones", href: "/colecciones" },
-    { texto: "Preparar un encargo", href: "/encargo" },
+    { texto: "Explorar hierbas publicadas", href: "/hierbas" },
   ],
 };
 
@@ -140,18 +140,19 @@ export const FAQ_MARCA: PreguntaMarca[] = [
   {
     pregunta: "¿Cómo sé si debo ir a catálogo o solicitar encargo?",
     respuesta:
-      "Si ya identificas una intención y formato, catálogo te permite elegir rápido. Si necesitas una combinación más afinada, encargo te guía paso a paso.",
+      "Si ya identificas una intención y formato, catálogo te permite elegir rápido. Si aún dudas, recorre primero hierbas y rituales para aterrizar mejor la elección.",
   },
   {
     pregunta: "¿Puedo usar la página de marca como mapa de compra?",
     respuesta:
-      "Sí. Esta página conecta narrativa, criterios de selección y rutas directas a colecciones y encargo para que decidas con contexto.",
+      "Sí. Esta página conecta narrativa, criterios de selección y rutas directas a colecciones, hierbas y rituales para que decidas con contexto.",
   },
 ];
 
 export const CTA_MARCA = {
   titulo: "Pasa de la historia a la elección",
-  descripcion: "Recorre colecciones curadas o abre un encargo artesanal para construir tu ruta ritual con apoyo real.",
+  descripcion:
+    "Recorre colecciones curadas y conecta con hierbas o rituales para construir una ruta de compra con contexto editorial real.",
   primaria: { texto: "Ver colecciones", href: "/colecciones" },
-  secundaria: { texto: "Solicitar encargo", href: "/encargo" },
+  secundaria: { texto: "Entrar a rituales conectados", href: "/rituales" },
 };

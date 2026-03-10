@@ -21,7 +21,7 @@ export function BloqueRitualesRelacionados({ rituales }: Props): JSX.Element {
             <li key={ritual.slug}>
               <h3>{ritual.nombre}</h3>
               <p>{ritual.contexto_breve}</p>
-              <Link href={ritual.urlDetalle}>Abrir ficha ritual</Link>
+              <Link href={ritual.urlDetalle}>Ver ficha ritual de {ritual.nombre}</Link>
             </li>
           ))}
         </ul>

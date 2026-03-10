@@ -13,7 +13,9 @@ import {
 import { obtenerListadoRituales } from "@/infraestructura/api/rituales";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import { JsonLd } from "@/componentes/seo/JsonLd";
+import { BloqueEnlazadoContextual } from "@/componentes/seo/BloqueEnlazadoContextual";
 import { construirSchemasLandingCatalogo } from "@/infraestructura/seo/structuredData";
+import { BLOQUES_ENLAZADO_CATALOGO } from "@/contenido/catalogo/enlazadoInterno";
 
 export const metadata: Metadata = construirMetadataSeo({
   title: METADATA_LISTADO_RITUALES.title,
@@ -23,6 +25,7 @@ export const metadata: Metadata = construirMetadataSeo({
 
 export default async function PaginaListadoRituales(): Promise<JSX.Element> {
   const resultado = await obtenerListadoRituales();
+  const bloqueEnlazado = BLOQUES_ENLAZADO_CATALOGO.rituales;
   const schemasLanding = construirSchemasLandingCatalogo({
     ruta: METADATA_LISTADO_RITUALES.rutaCanonical,
     titulo: METADATA_LISTADO_RITUALES.title,
@@ -47,6 +50,8 @@ export default async function PaginaListadoRituales(): Promise<JSX.Element> {
           ))}
         </div>
       </section>
+
+      <BloqueEnlazadoContextual bloque={bloqueEnlazado} />
 
       {resultado.estado === "error" ? (
         <EstadoErrorListadoRituales mensaje={resultado.mensaje} />
