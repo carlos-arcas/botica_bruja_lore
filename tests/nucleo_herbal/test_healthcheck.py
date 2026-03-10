@@ -8,7 +8,7 @@ try:
         ProductoModelo,
         RitualModelo,
     )
-    from django.db.utils import DatabaseError, OperationalError
+    from django.db.utils import DatabaseError
     from django.test import TestCase as DjangoTestCase, override_settings
 
     DJANGO_DISPONIBLE = True
