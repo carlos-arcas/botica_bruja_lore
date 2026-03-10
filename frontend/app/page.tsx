@@ -11,9 +11,11 @@ import { HeroPortada } from "@/componentes/home/HeroPortada";
 import { IntencionesDestacadas } from "@/componentes/home/IntencionesDestacadas";
 import { NavegacionSecciones } from "@/componentes/home/NavegacionSecciones";
 import { PreviewLineaHerbal } from "@/componentes/home/PreviewLineaHerbal";
+import { JsonLd } from "@/componentes/seo/JsonLd";
 import { obtenerPreviewHerbal } from "@/infraestructura/api/herbal";
 import { SEO_HOME } from "@/contenido/home/seoHome";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
+import { construirSchemasHome } from "@/infraestructura/seo/structuredData";
 
 export const metadata: Metadata = construirMetadataSeo({
   title: SEO_HOME.title,
@@ -23,9 +25,11 @@ export const metadata: Metadata = construirMetadataSeo({
 
 export default async function Home(): Promise<JSX.Element> {
   const previewHerbal = await obtenerPreviewHerbal();
+  const schemasHome = construirSchemasHome(SEO_HOME.title, SEO_HOME.description);
 
   return (
     <main className="contenedor-home contenedor-home--portada">
+      {schemasHome.length > 0 ? <JsonLd id="schema-home" data={schemasHome} /> : null}
       <HeroPortada />
       <ContextoEditorialHome />
       <NavegacionSecciones />
