@@ -3,6 +3,11 @@ export type EnlaceSeccion = {
   etiqueta: string;
 };
 
+export type EnlaceInternoHome = {
+  etiqueta: string;
+  href: string;
+};
+
 export type HeroHome = {
   etiqueta: string;
   titulo: string;
@@ -24,6 +29,22 @@ export type PreguntaFaq = {
   pregunta: string;
   respuesta: string;
 };
+
+
+export const INTRO_HOME = {
+  titulo: "Qué encontrarás en La Botica de la Bruja Lore",
+  parrafos: [
+    "La Botica de la Bruja Lore une catálogo comercial y orientación editorial para ayudarte a elegir hierbas a granel, rituales y piezas esotéricas con criterio.",
+    "La home te guía por intenciones, muestra rutas de compra reales y conecta con secciones clave para pasar de la inspiración a una selección concreta sin perder contexto.",
+  ],
+};
+
+export const ENLACES_INTERNOS_HOME: EnlaceInternoHome[] = [
+  { etiqueta: "Ver hierbas a granel", href: "/hierbas" },
+  { etiqueta: "Explorar rituales", href: "/rituales" },
+  { etiqueta: "Descubrir colecciones", href: "/colecciones" },
+  { etiqueta: "Conocer la propuesta de marca", href: "/la-botica" },
+];
 
 export const ENLACES_SECCIONES: EnlaceSeccion[] = [
   { id: "alquimia-deseo", etiqueta: "Alquimia del Deseo" },
