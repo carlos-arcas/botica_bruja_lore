@@ -12,6 +12,61 @@ except ModuleNotFoundError:
 
 @unittest.skipUnless(DJANGO_DISPONIBLE, "Django no está instalado en el entorno local.")
 class TestApiPedidosDemo(DjangoTestCase):
+    def test_recorrido_integral_pedido_demo_hasta_email_demo(self) -> None:
+        response_crear = self.client.post(
+            "/api/v1/pedidos-demo/",
+            data=json.dumps(
+                {
+                    "email": "integral@lore.test",
+                    "canal": "autenticado",
+                    "id_usuario": "usr-integral",
+                    "lineas": [
+                        {
+                            "id_producto": "prod-1",
+                            "slug_producto": "melisa-a-granel-50g",
+                            "nombre_producto": "Melisa a granel 50g",
+                            "cantidad": 2,
+                            "precio_unitario_demo": "5.50",
+                        },
+                        {
+                            "id_producto": "prod-2",
+                            "slug_producto": "romero-a-granel-50g",
+                            "nombre_producto": "Romero a granel 50g",
+                            "cantidad": 1,
+                            "precio_unitario_demo": "4.00",
+                        },
+                    ],
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response_crear.status_code, 201)
+        pedido_creado = response_crear.json()["pedido"]
+        id_pedido = pedido_creado["id_pedido"]
+
+        response_detalle = self.client.get(f"/api/v1/pedidos-demo/{id_pedido}/")
+
+        self.assertEqual(response_detalle.status_code, 200)
+        pedido_detalle = response_detalle.json()["pedido"]
+        self.assertEqual(pedido_detalle["id_pedido"], id_pedido)
+        self.assertEqual(pedido_detalle["canal"], "autenticado")
+        self.assertEqual(pedido_detalle["email"], "integral@lore.test")
+        self.assertEqual(pedido_detalle["resumen"]["cantidad_total_items"], 3)
+        self.assertEqual(pedido_detalle["resumen"]["subtotal_demo"], "15.00")
+
+        response_email = self.client.get(f"/api/v1/pedidos-demo/{id_pedido}/email-demo/")
+
+        self.assertEqual(response_email.status_code, 200)
+        email_demo = response_email.json()["email_demo"]
+        self.assertEqual(email_demo["id_pedido"], id_pedido)
+        self.assertEqual(email_demo["estado"], pedido_detalle["estado"])
+        self.assertEqual(email_demo["canal"], pedido_detalle["canal"])
+        self.assertEqual(email_demo["email_destino"], pedido_detalle["email"])
+        self.assertEqual(email_demo["subtotal_demo"], pedido_detalle["resumen"]["subtotal_demo"])
+        self.assertIn(id_pedido, email_demo["asunto"])
+        self.assertIn("Aviso: entorno demo sin envío real", email_demo["cuerpo_texto"])
+
     def test_crear_pedido_demo_valido(self) -> None:
         response = self.client.post(
             "/api/v1/pedidos-demo/",

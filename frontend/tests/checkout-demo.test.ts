@@ -205,3 +205,94 @@ test("obtenerEmailDemoPedidoPublico devuelve simulación de email", async () => 
   global.fetch = originalFetch;
 });
 
+
+
+test("flujo post-checkout consume contratos mínimos de pedido y email demo", async () => {
+  const originalFetch = global.fetch;
+  const endpoints: string[] = [];
+
+  global.fetch = (async (input: RequestInfo | URL) => {
+    const url = typeof input === "string" ? input : input.toString();
+    endpoints.push(url);
+
+    if (url.endsWith("/api/v1/pedidos-demo/")) {
+      return {
+        ok: true,
+        json: async () => ({
+          pedido: {
+            id_pedido: "PD-500",
+            estado: "creado",
+            canal: "invitado",
+            email: "demo@botica.test",
+            resumen: { cantidad_total_items: 1, subtotal_demo: "14.90" },
+          },
+        }),
+      } as Response;
+    }
+
+    if (url.endsWith("/api/v1/pedidos-demo/PD-500/")) {
+      return {
+        ok: true,
+        json: async () => ({
+          pedido: {
+            id_pedido: "PD-500",
+            estado: "creado",
+            canal: "invitado",
+            email: "demo@botica.test",
+            resumen: { cantidad_total_items: 1, subtotal_demo: "14.90" },
+            lineas: [],
+          },
+        }),
+      } as Response;
+    }
+
+    return {
+      ok: true,
+      json: async () => ({
+        email_demo: {
+          id_pedido: "PD-500",
+          estado: "creado",
+          canal: "invitado",
+          email_destino: "demo@botica.test",
+          asunto: "[DEMO] Confirmación de pedido PD-500",
+          cuerpo_texto: "Aviso: entorno demo sin envío real de correo",
+          subtotal_demo: "14.90",
+          lineas: [],
+          es_simulacion: true,
+        },
+      }),
+    } as Response;
+  }) as typeof fetch;
+
+  const crear = await crearPedidoDemoPublico({
+    email: "demo@botica.test",
+    canal: "invitado",
+    lineas: [
+      {
+        id_producto: "rit-001",
+        slug_producto: "infusion-bruma-lavanda",
+        nombre_producto: "Bruma de Lavanda Serena",
+        cantidad: 1,
+        precio_unitario_demo: "14.90",
+      },
+    ],
+  });
+
+  assert.equal(crear.estado, "ok");
+  if (crear.estado !== "ok") {
+    throw new Error("El pedido demo debía crearse para validar el flujo.");
+  }
+
+  const detalle = await obtenerPedidoDemoPublico(crear.pedido.id_pedido);
+  const email = await obtenerEmailDemoPedidoPublico(crear.pedido.id_pedido);
+
+  assert.equal(detalle.estado, "ok");
+  assert.equal(email.estado, "ok");
+  assert.deepEqual(endpoints, [
+    "http://127.0.0.1:8000/api/v1/pedidos-demo/",
+    "http://127.0.0.1:8000/api/v1/pedidos-demo/PD-500/",
+    "http://127.0.0.1:8000/api/v1/pedidos-demo/PD-500/email-demo/",
+  ]);
+
+  global.fetch = originalFetch;
+});

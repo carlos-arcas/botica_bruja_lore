@@ -357,4 +357,29 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - `frontend/tests/checkout-demo.test.ts` ampliado con consumo del endpoint de email demo.
 - Trazabilidad del roadmap:
   - este cambio cubre la parte de **emisión de email/recibo demo** pendiente tras confirmación en pantalla;
-  - queda pendiente Prompt 8 (tests integrales + quality gate de cierre de ciclo).
+  - este cierre alimenta Prompt 8 con la base funcional completa, a la espera de consolidación integral de calidad/gate.
+
+
+## 24. Tests integrales y quality gate de cierre (Prompt 8 oficial Ciclo 3)
+- Capacidad: **Cierre técnico de calidad del flujo ecommerce demo (`/encargo` → `PedidoDemo` → `/pedido-demo/[id_pedido]` → email demo)**.
+- Estado: **DONE**.
+- Implementación activa:
+  - prueba integral backend del recorrido completo crear pedido → consultar detalle → consultar email demo en `tests/nucleo_herbal/test_api_pedidos_demo.py`;
+  - refuerzo de contrato frontend para secuencia post-checkout de endpoints (`POST pedido`, `GET detalle`, `GET email demo`) en `frontend/tests/checkout-demo.test.ts`;
+  - endurecimiento del gate canónico para incluir test contractual de checkout demo en `scripts/check_release_gate.py`;
+  - alineación documental del gate en `docs/13_testing_ci_y_quality_gate.md`.
+- Evidencia reproducible de cierre:
+  1. `python manage.py test tests.nucleo_herbal.test_api_pedidos_demo tests.nucleo_herbal.test_casos_de_uso_pedidos_demo tests.nucleo_herbal.infraestructura.test_admin_django`
+  2. `npm --prefix frontend run test:checkout-demo`
+  3. `python scripts/check_release_gate.py`
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 8** del roadmap de Ciclo 3 (tests integrales + quality gate).
+
+## 25. Cierre oficial de Ciclo 3 tras Prompt 8
+- Estado del ciclo: **CERRABLE técnicamente**.
+- Justificación:
+  1. Prompts 1–7 ya estaban implementados y trazados en este documento (dominio, persistencia, API, backoffice, checkout, recibo y email demo).
+  2. Prompt 8 añade evidencia integral del circuito crítico y gate canónico reproducible con checks backend/frontend alineados a documentación vigente.
+  3. No se introdujeron features comerciales nuevas ni cambios fuera del foco de cierre de calidad.
+- Nota de trazabilidad histórica:
+  - las secciones iniciales de este documento conservan contexto heredado de cierre de Ciclo 2; para gobierno operativo del estado actual prevalece la secuencia consolidada de secciones 17–25 (Ciclo 3 oficial).
