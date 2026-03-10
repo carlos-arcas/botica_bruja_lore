@@ -7,6 +7,7 @@ import { BloqueEditorialPlanta } from "@/componentes/herbal/detalle/BloqueEditor
 import { BloqueRitualesRelacionados } from "@/componentes/herbal/detalle/BloqueRitualesRelacionados";
 import { CabeceraFichaHerbal } from "@/componentes/herbal/detalle/CabeceraFichaHerbal";
 import { EstadoErrorFichaHerbal } from "@/componentes/herbal/detalle/EstadoFichaHerbal";
+import { BloqueGuiasRelacionadas } from "@/componentes/editorial/BloqueGuiasRelacionadas";
 import { JsonLd } from "@/componentes/seo/JsonLd";
 import { obtenerFichaHerbalConectada } from "@/infraestructura/api/herbal";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
@@ -15,6 +16,7 @@ import {
   construirTitleFichaPublica,
 } from "@/infraestructura/seo/seoFichasPublicas";
 import { construirSchemasFichaHerbal } from "@/infraestructura/seo/structuredData";
+import { obtenerGuiasRelacionadasPorFicha } from "@/contenido/editorial/guiasEditoriales";
 
 type Props = {
   params: { slug: string };
@@ -66,6 +68,7 @@ export default async function PaginaDetalleHerbal({ params }: Props): Promise<JS
   }
 
   const { planta, productos, rituales } = resultado.ficha;
+  const guiasRelacionadas = obtenerGuiasRelacionadasPorFicha({ tipoFicha: "hierbas", slug: planta.slug });
   const schemasFicha = construirSchemasFichaHerbal(planta);
 
   return (
@@ -75,6 +78,11 @@ export default async function PaginaDetalleHerbal({ params }: Props): Promise<JS
       <BloqueEditorialPlanta planta={planta} />
       <BloqueComercialMinimo productos={productos} />
       <BloqueRitualesRelacionados rituales={rituales} />
+      <BloqueGuiasRelacionadas
+        titulo="Guías editoriales relacionadas con esta hierba"
+        descripcion="Conecta esta ficha con rutas editoriales para seguir explorando la línea herbal y el catálogo asociado."
+        guias={guiasRelacionadas}
+      />
     </main>
   );
 }

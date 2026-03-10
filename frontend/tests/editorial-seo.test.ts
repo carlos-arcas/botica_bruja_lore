@@ -7,6 +7,8 @@ import {
   METADATA_HUB_GUIAS,
   obtenerGuiaEditorialPorSlug,
   obtenerGuiasPublicadasIndexables,
+  obtenerGuiasRelacionadasPorFicha,
+  obtenerGuiasRelacionadasPorHub,
 } from "../contenido/editorial/guiasEditoriales";
 import { construirMetadataSeo } from "../infraestructura/seo/metadataSeo";
 import {
@@ -23,12 +25,28 @@ test("hub editorial mantiene metadata indexable y canonical", () => {
 
   assert.equal((metadata.robots as { index?: boolean }).index, true);
   assert.equal(metadata.alternates?.canonical, "/guias");
+  assert.equal(METADATA_HUB_GUIAS.title.includes("La Botica de la Bruja Lore"), true);
+});
+
+test("titles SEO de guías publicadas incluyen marca", () => {
+  const guias = obtenerGuiasPublicadasIndexables();
+  assert.equal(guias.every((guia) => guia.seo.title.includes("La Botica de la Bruja Lore")), true);
 });
 
 test("fuente editorial devuelve 3 guías publicadas/indexables", () => {
   const guias = obtenerGuiasPublicadasIndexables();
   assert.equal(guias.length, 3);
   assert.equal(guias.every((guia) => guia.publicada && guia.indexable), true);
+});
+
+test("relaciones editoriales por hub y ficha solo usan guías publicadas", () => {
+  const porHub = obtenerGuiasRelacionadasPorHub("hierbas");
+  const porFicha = obtenerGuiasRelacionadasPorFicha({ tipoFicha: "hierbas", slug: "melisa" });
+
+  assert.equal(porHub.length > 0, true);
+  assert.equal(porFicha.length > 0, true);
+  assert.equal(porHub.every((guia) => !guia.slug.includes("borrador")), true);
+  assert.equal(porFicha.every((guia) => guia.anchor.length >= 20), true);
 });
 
 test("detalle editorial emite Article y BreadcrumbList sin authors inventados", () => {
@@ -69,11 +87,13 @@ test("hub editorial emite CollectionPage y breadcrumb", () => {
   assert.equal(schemas.some((schema) => schema["@type"] === "BreadcrumbList"), true);
 });
 
-test("app router editorial renderiza JsonLd y noindex en no publicados", () => {
+test("app router editorial integra bloque reutilizable y noindex en no publicados", () => {
   const sourceHub = readFileSync(join(process.cwd(), "app/guias/page.tsx"), "utf8");
   const sourceDetalle = readFileSync(join(process.cwd(), "app/guias/[slug]/page.tsx"), "utf8");
 
   assert.match(sourceHub, /JsonLd/);
   assert.match(sourceDetalle, /JsonLd/);
   assert.match(sourceDetalle, /indexable:\s*false/);
+  assert.match(sourceDetalle, /obtenerEnlacesCatalogoParaGuia/);
+  assert.match(sourceDetalle, /obtenerEnlacesFichaParaGuia/);
 });

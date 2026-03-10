@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 
 import { CatalogoColecciones } from "@/componentes/catalogo/CatalogoColecciones";
 import { JsonLd } from "@/componentes/seo/JsonLd";
+import { BloqueGuiasRelacionadas } from "@/componentes/editorial/BloqueGuiasRelacionadas";
 import { BloqueEnlazadoContextual } from "@/componentes/seo/BloqueEnlazadoContextual";
 import {
   INTRO_LISTADO_COLECCIONES,
@@ -12,6 +13,7 @@ import {
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import { construirSchemasLandingCatalogo } from "@/infraestructura/seo/structuredData";
 import { BLOQUES_ENLAZADO_CATALOGO } from "@/contenido/catalogo/enlazadoInterno";
+import { obtenerGuiasRelacionadasPorHub } from "@/contenido/editorial/guiasEditoriales";
 
 export const metadata: Metadata = construirMetadataSeo({
   title: METADATA_LISTADO_COLECCIONES.title,
@@ -37,6 +39,7 @@ const IndicadorCestaRitualDiferido = dynamic(
 
 export default function PaginaColecciones({ searchParams }: Props): JSX.Element {
   const bloqueEnlazado = BLOQUES_ENLAZADO_CATALOGO.colecciones;
+  const guiasRelacionadas = obtenerGuiasRelacionadasPorHub("colecciones");
   const schemasLanding = construirSchemasLandingCatalogo({
     ruta: METADATA_LISTADO_COLECCIONES.rutaCanonical,
     titulo: METADATA_LISTADO_COLECCIONES.title,
@@ -55,6 +58,12 @@ export default function PaginaColecciones({ searchParams }: Props): JSX.Element 
       </section>
 
       <BloqueEnlazadoContextual bloque={bloqueEnlazado} />
+
+      <BloqueGuiasRelacionadas
+        titulo="Exploración guiada desde el catálogo"
+        descripcion="Descubre guías editoriales para elegir colecciones con criterio y mantener una navegación editorial-comercial coherente."
+        guias={guiasRelacionadas}
+      />
 
       <section className="bloque-home">
         <h2>Tu selección ritual</h2>
