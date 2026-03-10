@@ -29,7 +29,7 @@ Los estados oficiales de proyecto y capacidad son:
 
 ## 4. Estado global actual del proyecto
 - Estado de definición estratégica/documental: **alto y consistente**.
-- Estado de implementación funcional de producto: **Ciclos 1, 2, 3 y 4 implementados en alcance comprometido**.
+- Estado de implementación funcional de producto: **Ciclos 1, 2, 3, 4 y 5 implementados en alcance comprometido**.
 - Backend (dominio/aplicación/infraestructura/presentación pública): **implementado hasta capacidades de cuenta demo con historial de pedidos (Ciclo 4)**.
 - Frontend (home + herbal + rituales + flujo ecommerce demo + cuenta demo): **implementado y navegable hasta cierre de Ciclo 4**.
 - Backoffice/admin mínimo: **implementado para operación base herbal/ritual + pedidos demo + cuenta demo**.
@@ -38,7 +38,7 @@ Los estados oficiales de proyecto y capacidad son:
 - Calendario ritual: **Prompts 1–3 implementados (dominio/aplicación + persistencia/API + frontend editorial mínimo con gate)**.
 - Quality gate y CI canónica: **activos** con workflow `Quality Gate` en GitHub Actions (`push` + `pull_request`).
 
-Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta pedido demo y continuidad en cuenta demo, con trazabilidad de prompts 1–4 del Ciclo 4 y ejecución de Prompts 1–2 del Ciclo 5 para calendario ritual (dominio/aplicación + persistencia/API mínima).
+Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta pedido demo y continuidad en cuenta demo, con trazabilidad de prompts 1–4 del Ciclo 4 y prompts 1–3 del Ciclo 5 para calendario ritual (dominio/aplicación + persistencia/API + frontend editorial mínimo).
 
 ## 5. Estado por capacidades
 | Capacidad | Estado actual | Ciclo asociado | Evidencia / referencia | Notas operativas |
@@ -559,3 +559,13 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 3 del Ciclo 5** (`docs/ciclos/ciclo_05_calendario_editorial.md`);
   - con Prompts 1–3 trazados y evidencia de no-regresión, el **Ciclo 5 queda técnicamente cerrable** (sin abrir capacidades de ciclo siguiente).
+
+
+## 35. Cierre oficial de Ciclo 5 y apertura controlada de Ciclo 6 (gobernanza)
+- Diagnóstico oficial: **A (Ciclo 5 DONE cerrable sin bloqueos)**.
+- Decisión de gobierno:
+  1. se declara **Ciclo 5 oficialmente cerrado** con trazabilidad en `docs/ciclos/ciclo_05_cierre_oficial.md`;
+  2. se habilita apertura documental de **Ciclo 6** con foco único en refinamiento portfolio/business-ready sin nuevas features de negocio;
+  3. no se implementa ningún prompt de Ciclo 6 dentro de esta actualización.
+- Prompt 1 oficial permitido para el siguiente incremento:
+  - ejecutar una auditoría integral de consistencia funcional/documental y registrar backlog priorizado de brechas críticas (arquitectura, UX de confianza y trazabilidad) sin abrir nuevos flujos funcionales.
