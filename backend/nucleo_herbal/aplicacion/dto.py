@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,3 +65,30 @@ class RitualDetalleDTO:
 class RelacionIntencionRitualDTO:
     intencion: IntencionDTO
     rituales: tuple[RitualResumenDTO, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class LineaPedidoDTO:
+    id_producto: str
+    slug_producto: str
+    nombre_producto: str
+    cantidad: int
+    precio_unitario_demo: Decimal
+    subtotal_demo: Decimal
+
+
+@dataclass(frozen=True, slots=True)
+class PedidoDemoDTO:
+    id_pedido: str
+    estado: str
+    canal_compra: str
+    email_contacto: str
+    subtotal_demo: Decimal
+    lineas: tuple[LineaPedidoDTO, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ResumenPedidoDemoDTO:
+    id_pedido: str
+    cantidad_total_items: int
+    subtotal_demo: Decimal

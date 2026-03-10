@@ -224,3 +224,22 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Tests añadidos:
   - `frontend/tests/legal-comercial.test.ts` (estructura mínima, metadata, rutas y fallback de contacto);
   - `frontend/tests/shell-global.test.ts` actualizado para comprobar enlaces legales en footer.
+
+## 17. Base transaccional demo de pedidos (Prompt 1 oficial Ciclo 3)
+- Capacidad: **Núcleo dominio/aplicación para `PedidoDemo` y `LineaPedido`**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - agregado y reglas de dominio en `backend/nucleo_herbal/dominio/pedidos_demo.py`;
+  - casos de uso mínimos en `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos_demo.py`;
+  - DTOs transaccionales demo en `backend/nucleo_herbal/aplicacion/dto.py`.
+- Reglas cerradas en este incremento:
+  1. `PedidoDemo` requiere identificador, email, canal válido y al menos una línea.
+  2. `LineaPedido` valida snapshot mínimo (producto, cantidad > 0, precio demo >= 0).
+  3. Normalización de líneas repetidas con rechazo de snapshot inconsistente (nombre/precio distinto para mismo producto).
+  4. Subtotal demo calculable por línea y por pedido en núcleo desacoplado de framework.
+- Tests añadidos:
+  - `tests/nucleo_herbal/test_entidades_pedidos_demo.py`;
+  - `tests/nucleo_herbal/test_casos_de_uso_pedidos_demo.py`.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance del **Prompt 1** (base dominio/aplicación transaccional demo);
+  - queda pendiente Prompt 2 (persistencia/infraestructura), sin adelantar API/backoffice/checkout UI.
