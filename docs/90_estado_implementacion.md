@@ -434,5 +434,29 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - cobertura de repositorio de cuenta demo y proveedor de historial en `tests/nucleo_herbal/infraestructura/test_repositorios_django.py`.
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 2 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
-  - queda pendiente Prompt 3 (API/backoffice mínimo de cuenta), sin adelantar frontend ni gate final del ciclo.
+  - este bloque habilita Prompt 3 (API/backoffice mínimo de cuenta) como siguiente paso oficial.
 
+
+
+## 29. API/backoffice mínimo de cuenta demo (Prompt 3 oficial Ciclo 4)
+- Capacidad: **API mínima de cuenta demo con valor (registro/autenticación demo, perfil e historial de `PedidoDemo`) + soporte admin mínimo**.
+- Estado: **DONE**.
+- Implementación activa:
+  - endpoints públicos en `backend/nucleo_herbal/presentacion/publica/urls_cuentas_demo.py` y `backend/nucleo_herbal/presentacion/publica/views_cuentas_demo.py`;
+  - serialización de contrato HTTP en `backend/nucleo_herbal/presentacion/publica/cuentas_demo_serializadores.py`;
+  - cableado de casos de uso de cuenta en `backend/nucleo_herbal/presentacion/publica/dependencias.py`;
+  - publicación de rutas en `backend/configuracion_django/urls.py`;
+  - soporte admin de cuentas demo en `backend/nucleo_herbal/infraestructura/persistencia_django/admin.py`.
+- Reglas cerradas en este incremento:
+  1. autenticación demo mínima sin sesión real, cookies ni tokens productivos;
+  2. perfil mínimo consultable por `id_usuario`;
+  3. historial de pedidos demo vinculado por `id_usuario` y/o `email_contacto`, reutilizando contratos de `PedidoDemo` de Ciclo 3 sin reabrirlos;
+  4. validación de payload en capa API, preservando invariantes de dominio/aplicación en casos de uso existentes.
+- Tests añadidos/actualizados:
+  - `tests/nucleo_herbal/test_api_cuentas_demo.py`;
+  - `tests/nucleo_herbal/infraestructura/test_admin_django.py`.
+- Evidencia reproducible:
+  1. `python manage.py test tests.nucleo_herbal.test_api_cuentas_demo tests.nucleo_herbal.test_casos_de_uso_cuentas_demo tests.nucleo_herbal.infraestructura.test_admin_django`.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 3 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
+  - queda pendiente Prompt 4 (frontend + quality gate final del ciclo).
