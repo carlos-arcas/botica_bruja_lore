@@ -255,23 +255,24 @@ El repositorio dispone de un workflow canónico en `.github/workflows/quality_ga
 
 Alcance automatizado del workflow:
 
-- **Job backend**
-  - instala dependencias Python (`requirements.txt`),
+- **Job `release_gate` (canónico de auditoría)**
+  - instala dependencias backend y frontend (Python + Node 20),
   - valida sintaxis TOML de `backend/railway.toml` y `frontend/railway.toml`,
-  - ejecuta `python manage.py check`,
-  - ejecuta `python scripts/check_backend_readiness.py`,
-  - ejecuta tests críticos:
-    - `tests.nucleo_herbal.test_healthcheck`,
-    - `tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command`.
+  - ejecuta explícitamente el comando canónico:
 
-- **Job frontend**
-  - usa Node 20,
-  - instala dependencias con `npm ci` (lockfile versionado),
-  - ejecuta `npm run lint`,
-  - ejecuta `npm run build`.
+```bash
+python scripts/check_release_gate.py
+```
+
+  - con ello, CI valida en un único paso auditable: readiness backend, `manage.py check`, tests críticos backend y lint/build frontend.
+
+- **Job `bootstrap_demo_validation` (mutante aislado)**
+  - ejecuta `python scripts/bootstrap_demo_release.py` en una base SQLite temporal aislada (`${{ runner.temp }}`),
+  - valida después los conteos públicos esperados (`2/2/2/1`) para intenciones, plantas, productos y rituales,
+  - mantiene separación conceptual: es una validación técnica de bootstrap, no el gate canónico de release.
 
 Límites explícitos de este workflow:
 
-- La CI **valida**, no hace bootstrap operativo mutante.
-- No ejecuta `bootstrap_demo_release.py`, `migrate` ni `seed_demo_publico` como parte del gate automático.
-- No sustituye verificaciones y responsabilidades de configuración en Railway UI (variables, wiring entre servicios y validación post-deploy).
+- El gate canónico de release sigue siendo `check_release_gate.py`.
+- La validación de bootstrap en CI ocurre en entorno aislado de pruebas; **no** implica ejecución automática en Railway/producción.
+- La CI no sustituye verificaciones y responsabilidades de configuración en Railway UI (variables, wiring entre servicios y validación post-deploy).
