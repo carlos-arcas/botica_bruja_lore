@@ -1,8 +1,16 @@
 """Mapeadores de ORM Django a entidades de dominio."""
 
 from ...dominio.entidades import Intencion, Planta, Producto
+from ...dominio.pedidos_demo import LineaPedido, PedidoDemo
 from ...dominio.rituales import Ritual
-from .models import IntencionModelo, PlantaModelo, ProductoModelo, RitualModelo
+from .models import (
+    IntencionModelo,
+    LineaPedidoModelo,
+    PedidoDemoModelo,
+    PlantaModelo,
+    ProductoModelo,
+    RitualModelo,
+)
 
 
 def a_intencion(modelo: IntencionModelo) -> Intencion:
@@ -60,3 +68,36 @@ def a_ritual(modelo: RitualModelo) -> Ritual:
         ids_plantas_relacionadas=ids_plantas,
         ids_productos_relacionados=ids_productos,
     )
+
+
+def a_pedido_demo(modelo: PedidoDemoModelo) -> PedidoDemo:
+    lineas = tuple(a_linea_pedido(linea) for linea in modelo.lineas.order_by("id"))
+    return PedidoDemo(
+        id_pedido=modelo.id_pedido,
+        email_contacto=modelo.email_contacto,
+        canal_compra=modelo.canal_compra,
+        lineas=lineas,
+        estado=modelo.estado,
+        fecha_creacion=modelo.fecha_creacion,
+        id_usuario=modelo.id_usuario,
+    )
+
+
+def a_linea_pedido(modelo: LineaPedidoModelo) -> LineaPedido:
+    return LineaPedido(
+        id_producto=modelo.id_producto,
+        slug_producto=modelo.slug_producto,
+        nombre_producto=modelo.nombre_producto,
+        cantidad=modelo.cantidad,
+        precio_unitario_demo=modelo.precio_unitario_demo,
+    )
+
+
+def a_datos_linea_pedido(linea: LineaPedido) -> dict[str, object]:
+    return {
+        "id_producto": linea.id_producto,
+        "slug_producto": linea.slug_producto,
+        "nombre_producto": linea.nombre_producto,
+        "cantidad": linea.cantidad,
+        "precio_unitario_demo": linea.precio_unitario_demo,
+    }

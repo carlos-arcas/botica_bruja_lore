@@ -1,11 +1,21 @@
 """Repositorios concretos Django para el núcleo herbal."""
 
+from django.db import transaction
+
 from ...aplicacion.puertos.repositorios import RepositorioPlantas, RepositorioProductos
+from ...aplicacion.puertos.repositorios_pedidos_demo import RepositorioPedidosDemo
 from ...aplicacion.puertos.repositorios_rituales import RepositorioRituales
 from ...dominio.entidades import Planta, Producto, TIPO_PRODUCTO_HERBAL
+from ...dominio.pedidos_demo import PedidoDemo
 from ...dominio.rituales import Ritual
-from .mapeadores import a_planta, a_producto, a_ritual
-from .models import PlantaModelo, ProductoModelo, RitualModelo
+from .mapeadores import a_datos_linea_pedido, a_pedido_demo, a_planta, a_producto, a_ritual
+from .models import (
+    LineaPedidoModelo,
+    PedidoDemoModelo,
+    PlantaModelo,
+    ProductoModelo,
+    RitualModelo,
+)
 
 
 class RepositorioPlantasORM(RepositorioPlantas):
@@ -104,3 +114,46 @@ class RepositorioRitualesORM(RepositorioRituales):
             "plantas_relacionadas",
             "productos_relacionados",
         )
+
+
+class RepositorioPedidosDemoORM(RepositorioPedidosDemo):
+    @transaction.atomic
+    def guardar(self, pedido: PedidoDemo) -> PedidoDemo:
+        modelo, _ = PedidoDemoModelo.objects.update_or_create(
+            id_pedido=pedido.id_pedido,
+            defaults={
+                "email_contacto": pedido.email_contacto,
+                "canal_compra": pedido.canal_compra,
+                "estado": pedido.estado,
+                "fecha_creacion": pedido.fecha_creacion,
+                "id_usuario": pedido.id_usuario,
+            },
+        )
+        modelo.lineas.all().delete()
+        LineaPedidoModelo.objects.bulk_create(
+            [
+                LineaPedidoModelo(pedido=modelo, **a_datos_linea_pedido(linea))
+                for linea in pedido.lineas
+            ]
+        )
+        return self._reconstruir(modelo.id_pedido)
+
+    def obtener_por_id(self, id_pedido: str) -> PedidoDemo | None:
+        try:
+            modelo = self._base_queryset().get(id_pedido=id_pedido)
+        except PedidoDemoModelo.DoesNotExist:
+            return None
+        return a_pedido_demo(modelo)
+
+    @transaction.atomic
+    def actualizar_estado(self, id_pedido: str, estado: str) -> PedidoDemo | None:
+        actualizados = PedidoDemoModelo.objects.filter(id_pedido=id_pedido).update(estado=estado)
+        if not actualizados:
+            return None
+        return self._reconstruir(id_pedido)
+
+    def _reconstruir(self, id_pedido: str) -> PedidoDemo:
+        return a_pedido_demo(self._base_queryset().get(id_pedido=id_pedido))
+
+    def _base_queryset(self):
+        return PedidoDemoModelo.objects.prefetch_related("lineas")

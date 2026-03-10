@@ -101,3 +101,43 @@ class RitualModelo(models.Model):
 
     def __str__(self) -> str:
         return self.nombre
+
+
+class PedidoDemoModelo(models.Model):
+    id_pedido = models.CharField(primary_key=True, max_length=64)
+    email_contacto = models.EmailField(max_length=254)
+    canal_compra = models.CharField(max_length=20)
+    estado = models.CharField(max_length=20)
+    fecha_creacion = models.DateTimeField()
+    id_usuario = models.CharField(max_length=64, null=True, blank=True)
+
+    class Meta:
+        db_table = "nucleo_pedido_demo"
+        ordering = ("-fecha_creacion",)
+        verbose_name = "pedido demo"
+        verbose_name_plural = "pedidos demo"
+
+    def __str__(self) -> str:
+        return self.id_pedido
+
+
+class LineaPedidoModelo(models.Model):
+    pedido = models.ForeignKey(
+        PedidoDemoModelo,
+        on_delete=models.CASCADE,
+        related_name="lineas",
+    )
+    id_producto = models.CharField(max_length=64)
+    slug_producto = models.SlugField(max_length=140)
+    nombre_producto = models.CharField(max_length=180)
+    cantidad = models.PositiveIntegerField()
+    precio_unitario_demo = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        db_table = "nucleo_linea_pedido_demo"
+        ordering = ("id",)
+        verbose_name = "línea de pedido demo"
+        verbose_name_plural = "líneas de pedido demo"
+
+    def __str__(self) -> str:
+        return f"{self.pedido_id} · {self.slug_producto}"

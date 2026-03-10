@@ -243,3 +243,24 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance del **Prompt 1** (base dominio/aplicación transaccional demo);
   - queda pendiente Prompt 2 (persistencia/infraestructura), sin adelantar API/backoffice/checkout UI.
+
+## 18. Persistencia e infraestructura de pedidos demo (Prompt 2 oficial Ciclo 3)
+- Capacidad: **Persistencia mínima de `PedidoDemo` y `LineaPedido` con repositorio ORM y mapeo dominio↔persistencia**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - puerto de repositorio transaccional en `backend/nucleo_herbal/aplicacion/puertos/repositorios_pedidos_demo.py`;
+  - modelos ORM y migración de esquema para pedido demo y líneas en `backend/nucleo_herbal/infraestructura/persistencia_django/models.py` y `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0003_pedidodemomodelo_lineapedidomodelo.py`;
+  - mapeo de reconstrucción de agregado y snapshot de líneas en `backend/nucleo_herbal/infraestructura/persistencia_django/mapeadores.py`;
+  - repositorio concreto en `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`.
+- Operaciones mínimas cerradas en este incremento:
+  1. guardar/actualizar agregado `PedidoDemo` con reemplazo consistente de líneas snapshot;
+  2. obtener pedido demo por identificador con reconstrucción del agregado;
+  3. actualizar estado demo y reconstruir agregado resultante.
+- Integración mínima con aplicación:
+  - nuevo caso de uso `RegistrarPedidoDemo` en `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos_demo.py` para orquestar construcción + persistencia sin acoplar dominio al ORM.
+- Tests añadidos:
+  - integración ORM en `tests/nucleo_herbal/infraestructura/test_repositorios_django.py` para guardado, reconstrucción, líneas, importes y estado/canal;
+  - integración aplicación↔puerto en `tests/nucleo_herbal/test_casos_de_uso_pedidos_demo.py`.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 2** (persistencia/infraestructura);
+  - sigue pendiente Prompt 3 (API del flujo), sin adelantar endpoints ni UI checkout.
