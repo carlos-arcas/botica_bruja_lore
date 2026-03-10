@@ -45,7 +45,7 @@ export const HERO_MARCA: HeroMarca = {
   nota: "Vendemos con honestidad: sin claims médicos y sin promesas imposibles.",
   acciones: [
     { texto: "Explorar colecciones", href: "/colecciones" },
-    { texto: "Explorar hierbas publicadas", href: "/hierbas" },
+    { texto: "Leer guías editoriales", href: "/guias" },
   ],
 };
 

@@ -40,6 +40,15 @@
         "notas": "Hub comercial indexable."
       },
       {
+        "ruta": "/guias",
+        "tipo": "estatica",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "CollectionPage+BreadcrumbList",
+        "notas": "Hub editorial indexable para captación temática no marca."
+      },
+      {
         "ruta": "/la-botica",
         "tipo": "estatica",
         "indexable": true,
@@ -85,6 +94,15 @@
         "canonical": true,
         "structured_data": "Product+BreadcrumbList+ItemPage",
         "notas": "Si el producto no existe, la metadata debe emitir noindex."
+      },
+      {
+        "familia": "/guias/{slug}",
+        "condicion_publicacion": "solo guías publicadas e indexables",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "Article+BreadcrumbList",
+        "notas": "Si la guía no está publicada/indexable, la metadata debe emitir noindex."
       }
     ],
     "publicas_no_estrategicas": [
@@ -165,7 +183,8 @@
       "/hierbas",
       "/rituales",
       "/colecciones",
-      "/la-botica"
+      "/la-botica",
+      "/guias"
     ],
     "prohibidos_como_eje_contextual": [
       "/encargo"

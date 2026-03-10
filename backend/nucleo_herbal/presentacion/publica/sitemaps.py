@@ -1,5 +1,7 @@
 """Sitemaps públicos para indexación SEO del proyecto."""
 
+import json
+from pathlib import Path
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -44,6 +46,7 @@ class SitemapPaginasPublicas(SitemapPublicoBase):
             "/hierbas",
             "/rituales",
             "/colecciones",
+            "/guias",
             "/la-botica",
             "/envios-y-preparacion",
         ]
@@ -54,7 +57,7 @@ class SitemapPaginasPublicas(SitemapPublicoBase):
     def priority(self, item: str) -> float:
         if item == "/":
             return 1.0
-        if item in {"/hierbas", "/rituales", "/colecciones"}:
+        if item in {"/hierbas", "/rituales", "/colecciones", "/guias"}:
             return 0.9
         return 0.6
 
@@ -92,9 +95,25 @@ class SitemapProductosPublicos(SitemapPublicoBase):
         return f"/colecciones/{item.slug}"
 
 
+class SitemapGuiasEditorialesPublicas(SitemapPublicoBase):
+    changefreq = "weekly"
+    priority = 0.75
+
+    def items(self) -> list[dict[str, object]]:
+        path = Path(settings.BASE_DIR) / "frontend" / "contenido" / "editorial" / "guiasEditoriales.json"
+        with path.open("r", encoding="utf-8") as handler:
+            guias = json.load(handler)
+
+        return [guia for guia in guias if guia.get("publicada") and guia.get("indexable")]
+
+    def location(self, item: dict[str, object]) -> str:
+        return f"/guias/{item['slug']}"
+
+
 SITEMAPS_PUBLICOS = {
     "paginas": SitemapPaginasPublicas,
     "plantas": SitemapPlantasPublicas,
     "rituales": SitemapRitualesPublicos,
     "productos": SitemapProductosPublicos,
+    "guias": SitemapGuiasEditorialesPublicas,
 }
