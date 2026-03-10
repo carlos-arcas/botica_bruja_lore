@@ -213,6 +213,7 @@ Este comando orquesta en un solo flujo:
 - **Check estructural Django:** `python manage.py check`.
 - **Tests backend críticos:** healthcheck y seed demo.
 - **Snapshot de datos públicos en modo lectura:** reporte de conteos existentes de intenciones, plantas, productos y rituales (sin sembrar ni migrar).
+- **Integridad operativa/documental del repositorio:** `python scripts/check_repo_operational_integrity.py` (markdown crítico, coherencia Procfile/manage.py/wsgi.py/railway.toml, `.env.railway.example` y alineación CI↔documentación).
 - **Validación frontend básica (si aplica):** `npm run lint` y `npm run build`.
 
 Regla de auditoría:
@@ -222,7 +223,7 @@ Regla de auditoría:
 
 Criterio de severidad:
 
-- **Bloqueante (ERROR):** readiness backend, `manage.py check` y tests backend críticos.
+- **Bloqueante (ERROR):** readiness backend, `manage.py check`, tests backend críticos e integridad operativa/documental del repo.
 - **Informativo (INFO):** snapshot de conteos en solo lectura.
 - **Frontend presente y ejecutable:** lint/build cuentan como bloqueantes.
 - **Frontend no aplicable por entorno:** se informa como `SKIP` con motivo explícito (por ejemplo, sin `frontend/package.json` o sin Node/npm).
@@ -264,7 +265,7 @@ Alcance automatizado del workflow:
 python scripts/check_release_gate.py
 ```
 
-  - con ello, CI valida en un único paso auditable: readiness backend, `manage.py check`, tests críticos backend y lint/build frontend.
+  - con ello, CI valida en un único paso auditable: readiness backend, `manage.py check`, tests críticos backend, integridad operativa/documental del repo y lint/build frontend.
 
 - **Job `bootstrap_demo_validation` (mutante aislado)**
   - ejecuta `python scripts/bootstrap_demo_release.py` en una base SQLite temporal aislada (`${{ runner.temp }}`),
