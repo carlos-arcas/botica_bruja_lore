@@ -317,3 +317,23 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance funcional solicitado para **checkout público demo mínimo conectado a API**;
   - sigue pendiente la fase de confirmación final/recibo/email demo del siguiente hito del ciclo.
+
+## 22. Confirmación/recibo post-checkout demo (siguiente hito oficial)
+- Capacidad: **Salida pública de confirmación/recibo demo recuperable por URL tras crear `PedidoDemo`**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - nueva ruta pública de recibo en `frontend/app/pedido-demo/[id_pedido]/page.tsx` y fallback de navegación rota en `frontend/app/pedido-demo/page.tsx`;
+  - componente de confirmación con estados de carga/error/vacío/éxito en `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`;
+  - helper de transición post-checkout en `frontend/contenido/catalogo/postCheckoutDemo.ts`;
+  - cliente API ampliado con consulta `GET /api/v1/pedidos-demo/{id_pedido}/` en `frontend/infraestructura/api/pedidosDemo.ts`;
+  - redirección estable desde `/encargo` al recibo tras `POST` exitoso usando `id_pedido`.
+- Operaciones mínimas cerradas en este incremento:
+  1. resolver traspaso checkout → confirmación con URL recuperable por `id_pedido`;
+  2. consultar pedido demo existente por API y mostrar resumen mínimo con líneas;
+  3. cubrir estados UX de carga, error de consulta y navegación sin id válido;
+  4. mostrar copy explícito de entorno demo sin cobro real y CTA de continuidad.
+- Tests añadidos:
+  - `frontend/tests/checkout-demo.test.ts` ampliado con pruebas de helper post-checkout y consulta de detalle de pedido demo.
+- Trazabilidad del roadmap:
+  - este cambio cubre la fase de **confirmación/recibo post-checkout** del hito oficial siguiente al checkout conectado a API;
+  - queda pendiente la **emisión de email/recibo demo** si se exige de forma ejecutable en el siguiente incremento operativo de ciclo.
