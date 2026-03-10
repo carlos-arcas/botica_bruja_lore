@@ -199,9 +199,9 @@ Este documento es marco operativo para trabajo futuro y debe usarse de esta mane
    - Usar este marco para evitar tanto laxitud como sobrecarga prematura.
    - Mantener trazabilidad entre estado real de implementación y exigencia de calidad activa.
 
-## 12. Comando canónico de gate técnico demo/release
+## 12. Comando canónico de gate técnico demo/release (solo lectura)
 
-Para auditoría técnica manual, operación diaria y futura automatización CI, el repositorio define un gate unificado:
+Para auditoría técnica manual, operación diaria y futura automatización CI, el repositorio define un gate unificado **no mutante por defecto**:
 
 ```bash
 python scripts/check_release_gate.py
@@ -212,17 +212,38 @@ Este comando orquesta en un solo flujo:
 - **Readiness backend:** `python scripts/check_backend_readiness.py`.
 - **Check estructural Django:** `python manage.py check`.
 - **Tests backend críticos:** healthcheck y seed demo.
-- **Seed demo pública idempotente:** ejecuta `seed_demo_publico` dos veces y reporta conteos públicos de intenciones, plantas, productos y rituales.
+- **Snapshot de datos públicos en modo lectura:** reporte de conteos existentes de intenciones, plantas, productos y rituales (sin sembrar ni migrar).
 - **Validación frontend básica (si aplica):** `npm run lint` y `npm run build`.
+
+Regla de auditoría:
+
+- El gate canónico **no debe ejecutar** `migrate` ni `seed_demo_publico` por defecto.
+- Su objetivo es validar y auditar el estado existente, no modificarlo.
 
 Criterio de severidad:
 
-- **Bloqueante (ERROR):** readiness backend, `manage.py check`, tests backend críticos y seed idempotente.
+- **Bloqueante (ERROR):** readiness backend, `manage.py check` y tests backend críticos.
+- **Informativo (INFO):** snapshot de conteos en solo lectura.
 - **Frontend presente y ejecutable:** lint/build cuentan como bloqueantes.
 - **Frontend no aplicable por entorno:** se informa como `SKIP` con motivo explícito (por ejemplo, sin `frontend/package.json` o sin Node/npm).
 
+### 12.1 Operación separada de bootstrap demo (mutante)
+
+Para preparar un entorno demo/local/staging de forma explícita, existe una operación aparte:
+
+```bash
+python scripts/bootstrap_demo_release.py
+```
+
+Esta operación **sí muta estado** y está diseñada para bootstrap controlado:
+
+- ejecuta `python manage.py migrate --noinput`,
+- ejecuta `python manage.py seed_demo_publico` (primera vez),
+- ejecuta una segunda siembra para validar idempotencia operativa (salvo `--skip-second-seed`),
+- reporta conteos públicos finales.
+
 Alcance y límites:
 
-- Este gate **no sustituye** suites completas de regresión, pruebas E2E ni validaciones de negocio profundas.
-- El objetivo del gate es un veredicto técnico mínimo y reproducible de estado demo/release.
+- El gate de solo lectura **no sustituye** suites completas de regresión, pruebas E2E ni validaciones de negocio profundas.
+- El bootstrap demo **no sustituye** el gate canónico; cumple una función operativa distinta.
 - Un `SKIP` de frontend por entorno debe tratarse como señal operativa visible, no como silencio.
