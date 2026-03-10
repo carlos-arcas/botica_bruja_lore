@@ -300,3 +300,20 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 4** (backoffice mínimo de pedidos demo);
   - sigue pendiente Prompt 5 (frontend de carrito), sin adelantar checkout público, confirmación/email ni pagos reales.
+
+## 21. Checkout público demo conectado a API (Prompt 5 oficial Ciclo 3)
+- Capacidad: **Conexión mínima del flujo público `/encargo` con la API de `PedidoDemo` para envío real de pedido demo**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - helper de checkout demo para construir payload y validación mínima en `frontend/contenido/catalogo/checkoutDemo.ts`;
+  - cliente API desacoplado para creación de pedido demo en `frontend/infraestructura/api/pedidosDemo.ts`;
+  - integración UX de envío/resultado en `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, reutilizando preselección desde ficha/cesta.
+- Operaciones mínimas cerradas en este incremento:
+  1. transformar selección de producto/cesta en `lineas` del contrato `/api/v1/pedidos-demo/`;
+  2. enviar pedido demo público con canal invitado o autenticado (demo) y tratar respuesta inmediata;
+  3. mostrar estados mínimos de carga, error y éxito inmediato en UI sin invadir confirmación final/recibo.
+- Tests añadidos:
+  - `frontend/tests/checkout-demo.test.ts` (payload, validación, éxito API y error de API/red).
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance funcional solicitado para **checkout público demo mínimo conectado a API**;
+  - sigue pendiente la fase de confirmación final/recibo/email demo del siguiente hito del ciclo.

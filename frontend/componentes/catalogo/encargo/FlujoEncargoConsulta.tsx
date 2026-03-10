@@ -17,6 +17,13 @@ import {
   resolverContextoPreseleccionado,
   validarSolicitudConsulta,
 } from "@/contenido/catalogo/encargoConsulta";
+import {
+  CanalCheckoutDemo,
+  construirLineasPedidoDemo,
+  construirPayloadPedidoDemo,
+  validarCheckoutDemo,
+} from "@/contenido/catalogo/checkoutDemo";
+import { crearPedidoDemoPublico, PedidoDemoCreado } from "@/infraestructura/api/pedidosDemo";
 
 import estilos from "./flujoEncargoConsulta.module.css";
 
@@ -32,6 +39,11 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
   const [resumen, setResumen] = useState<string>("");
   const [mensajeCopia, setMensajeCopia] = useState<string>("");
   const [mensajeCanal, setMensajeCanal] = useState<string>("");
+  const [canalCheckout, setCanalCheckout] = useState<CanalCheckoutDemo>("invitado");
+  const [idUsuarioDemo, setIdUsuarioDemo] = useState<string>("");
+  const [estadoEnvio, setEstadoEnvio] = useState<"idle" | "enviando" | "error" | "ok">("idle");
+  const [mensajeEnvio, setMensajeEnvio] = useState<string>("");
+  const [pedidoCreado, setPedidoCreado] = useState<PedidoDemoCreado | null>(null);
 
   const configuracionCanal = useMemo(() => obtenerConfiguracionContactoPublico(), []);
   const estadoCanal = useMemo(() => resolverEstadoCanalContacto(configuracionCanal), [configuracionCanal]);
@@ -45,18 +57,42 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
     setDatos((previo) => ({ ...previo, [campo]: valor }));
   };
 
-  const enviarConsulta = (event: FormEvent<HTMLFormElement>): void => {
+  const enviarConsulta = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    const nuevosErrores = validarSolicitudConsulta(datos);
+    const lineas = construirLineasPedidoDemo(
+      contextoPreseleccionado.itemsPreseleccionados,
+      datos.productoSlug,
+      datos.cantidad,
+    );
+    const nuevosErrores = {
+      ...validarSolicitudConsulta(datos),
+      ...validarCheckoutDemo(canalCheckout, idUsuarioDemo, lineas),
+    };
     setErrores(nuevosErrores);
     setMensajeCopia("");
     setMensajeCanal("");
+    setMensajeEnvio("");
+    setPedidoCreado(null);
+    setEstadoEnvio("idle");
 
     if (Object.keys(nuevosErrores).length > 0) {
       return;
     }
 
     setResumen(construirResumenConsulta(datos, productoSeleccionado));
+    setEstadoEnvio("enviando");
+
+    const payload = construirPayloadPedidoDemo(datos.email, canalCheckout, lineas, idUsuarioDemo);
+    const resultado = await crearPedidoDemoPublico(payload);
+
+    if (resultado.estado === "error") {
+      setEstadoEnvio("error");
+      setMensajeEnvio(resultado.mensaje);
+      return;
+    }
+
+    setEstadoEnvio("ok");
+    setPedidoCreado(resultado.pedido);
   };
 
   const copiarResumen = async (): Promise<void> => {
@@ -150,6 +186,32 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
         {errores.email && <p id="error-contacto" className={estilos.error}>{errores.email}</p>}
 
         <label>
+          Canal de compra demo
+          <select
+            name="canalCheckout"
+            value={canalCheckout}
+            onChange={(event) => setCanalCheckout(event.target.value as CanalCheckoutDemo)}
+          >
+            <option value="invitado">Invitado</option>
+            <option value="autenticado">Autenticado (demo)</option>
+          </select>
+        </label>
+
+        {canalCheckout === "autenticado" && (
+          <label>
+            ID de usuario demo
+            <input
+              name="idUsuarioDemo"
+              value={idUsuarioDemo}
+              onChange={(event) => setIdUsuarioDemo(event.target.value)}
+              aria-invalid={Boolean(errores.idUsuario)}
+              aria-describedby={errores.idUsuario ? "error-id-usuario" : undefined}
+            />
+          </label>
+        )}
+        {errores.idUsuario && <p id="error-id-usuario" className={estilos.error}>{errores.idUsuario}</p>}
+
+        <label>
           Producto de interés
           <select
             name="productoSlug"
@@ -165,6 +227,7 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
           </select>
         </label>
         {errores.productoSlug && <p id="error-producto" className={estilos.error}>{errores.productoSlug}</p>}
+        {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
 
         <label>
           Cantidad o formato deseado
@@ -194,12 +257,27 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
             checked={datos.consentimiento}
             onChange={(event) => actualizarCampo("consentimiento", event.target.checked)}
           />
-          Acepto compartir estos datos para preparar mi consulta de forma artesanal.
+          Acepto compartir estos datos para crear un pedido demo en esta experiencia sin cobro real.
         </label>
         {errores.consentimiento && <p className={estilos.error}>{errores.consentimiento}</p>}
 
-        <button className="boton boton--principal" type="submit">Generar resumen de solicitud</button>
+        <button className="boton boton--principal" type="submit" disabled={estadoEnvio === "enviando"}>
+          {estadoEnvio === "enviando" ? "Enviando pedido demo..." : "Enviar pedido demo"}
+        </button>
       </form>
+
+      {estadoEnvio === "error" && <p className={estilos.error}>{mensajeEnvio}</p>}
+
+      {estadoEnvio === "ok" && pedidoCreado && (
+        <article className={estilos.resumenFinal} aria-live="polite">
+          <h2>Pedido demo creado</h2>
+          <p className={estilos.estado}>ID: {pedidoCreado.id_pedido}</p>
+          <p>Estado inicial: {pedidoCreado.estado}</p>
+          <p>
+            Resumen inmediato: {pedidoCreado.resumen.cantidad_total_items} unidades · Subtotal demo {pedidoCreado.resumen.subtotal_demo} €.
+          </p>
+        </article>
+      )}
 
       {resumen && (
         <article className={estilos.resumenFinal} aria-live="polite">

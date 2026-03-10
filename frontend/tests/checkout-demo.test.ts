@@ -1,0 +1,120 @@
+import * as assert from "node:assert/strict";
+import { test } from "node:test";
+
+import {
+  construirLineasPedidoDemo,
+  construirPayloadPedidoDemo,
+  resolverCantidadCheckout,
+  validarCheckoutDemo,
+} from "../contenido/catalogo/checkoutDemo";
+import { crearPedidoDemoPublico } from "../infraestructura/api/pedidosDemo";
+
+test("construirLineasPedidoDemo usa selección múltiple de cesta cuando existe", () => {
+  const lineas = construirLineasPedidoDemo(
+    [{ slug: "infusion-bruma-lavanda", cantidad: 2 }],
+    "vela-intencion-clara",
+    "1 unidad",
+  );
+
+  assert.equal(lineas.length, 1);
+  assert.equal(lineas[0]?.slug_producto, "infusion-bruma-lavanda");
+  assert.equal(lineas[0]?.cantidad, 2);
+  assert.equal(lineas[0]?.precio_unitario_demo, "14.90");
+});
+
+test("construirLineasPedidoDemo cae a producto individual y normaliza cantidad", () => {
+  const lineas = construirLineasPedidoDemo([], "vela-intencion-clara", "3 unidades");
+
+  assert.equal(lineas.length, 1);
+  assert.equal(lineas[0]?.slug_producto, "vela-intencion-clara");
+  assert.equal(lineas[0]?.cantidad, 3);
+});
+
+test("validarCheckoutDemo exige id_usuario para canal autenticado", () => {
+  const errores = validarCheckoutDemo("autenticado", "", []);
+
+  assert.ok(errores.idUsuario);
+  assert.ok(errores.lineas);
+});
+
+test("construirPayloadPedidoDemo añade id_usuario en autenticado", () => {
+  const payload = construirPayloadPedidoDemo(
+    "demo@botica.test",
+    "autenticado",
+    [
+      {
+        id_producto: "rit-001",
+        slug_producto: "infusion-bruma-lavanda",
+        nombre_producto: "Bruma de Lavanda Serena",
+        cantidad: 1,
+        precio_unitario_demo: "14.90",
+      },
+    ],
+    "usr-100",
+  );
+
+  assert.equal(payload.id_usuario, "usr-100");
+});
+
+test("resolverCantidadCheckout aplica fallback seguro", () => {
+  assert.equal(resolverCantidadCheckout("sin número"), 1);
+});
+
+test("crearPedidoDemoPublico devuelve éxito con respuesta API", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async () => {
+    return {
+      ok: true,
+      json: async () => ({
+        pedido: {
+          id_pedido: "PD-123",
+          estado: "creado",
+          canal: "invitado",
+          email: "demo@botica.test",
+          resumen: { cantidad_total_items: 2, subtotal_demo: "29.80" },
+        },
+      }),
+    } as Response;
+  }) as typeof fetch;
+
+  const resultado = await crearPedidoDemoPublico({
+    email: "demo@botica.test",
+    canal: "invitado",
+    lineas: [
+      {
+        id_producto: "rit-001",
+        slug_producto: "infusion-bruma-lavanda",
+        nombre_producto: "Bruma de Lavanda Serena",
+        cantidad: 2,
+        precio_unitario_demo: "14.90",
+      },
+    ],
+  });
+
+  assert.equal(resultado.estado, "ok");
+
+  global.fetch = originalFetch;
+});
+
+test("crearPedidoDemoPublico devuelve error cuando API responde validación", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async () => {
+    return {
+      ok: false,
+      json: async () => ({ detalle: "El campo 'lineas' es obligatorio." }),
+    } as Response;
+  }) as typeof fetch;
+
+  const resultado = await crearPedidoDemoPublico({
+    email: "demo@botica.test",
+    canal: "invitado",
+    lineas: [],
+  });
+
+  assert.equal(resultado.estado, "error");
+  if (resultado.estado === "error") {
+    assert.match(resultado.mensaje, /lineas/i);
+  }
+
+  global.fetch = originalFetch;
+});
