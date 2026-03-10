@@ -277,3 +277,20 @@ Límites explícitos de este workflow:
 - El gate canónico de release sigue siendo `check_release_gate.py`.
 - La validación de bootstrap en CI ocurre en entorno aislado de pruebas; **no** implica ejecución automática en Railway/producción.
 - La CI no sustituye verificaciones y responsabilidades de configuración en Railway UI (variables, wiring entre servicios y validación post-deploy).
+
+## 14. Smoke check manual post-deploy (stack desplegado real)
+
+Para validar un entorno **ya desplegado** (Railway u otro) y cubrir fallos de wiring/UI/configuración que pueden no aparecer en CI, usar:
+
+```bash
+BACKEND_BASE_URL="https://TU-BACKEND.up.railway.app" FRONTEND_BASE_URL="https://TU-FRONTEND.up.railway.app" python scripts/check_deployed_stack.py
+```
+
+Notas operativas:
+
+- Es una validación **solo lectura** (no muta datos).
+- Requiere `BACKEND_BASE_URL` y `FRONTEND_BASE_URL`.
+- Opcionalmente admite:
+  - `EXPECT_NON_EMPTY_DATA=true` para exigir datos demo visibles en APIs públicas.
+  - `HERBAL_SLUG` y `RITUAL_SLUG` para revisar rutas/endpoint de detalle.
+- Este comando **no reemplaza** el gate canónico (`check_release_gate.py`) ni se integra en CI por defecto, porque depende de URLs reales desplegadas.
