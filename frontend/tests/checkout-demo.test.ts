@@ -8,7 +8,7 @@ import {
   validarCheckoutDemo,
 } from "../contenido/catalogo/checkoutDemo";
 import { construirRutaReciboPedidoDemo, resolverIdPedidoDesdeRuta } from "../contenido/catalogo/postCheckoutDemo";
-import { crearPedidoDemoPublico, obtenerPedidoDemoPublico } from "../infraestructura/api/pedidosDemo";
+import { crearPedidoDemoPublico, obtenerEmailDemoPedidoPublico, obtenerPedidoDemoPublico } from "../infraestructura/api/pedidosDemo";
 
 test("construirLineasPedidoDemo usa selección múltiple de cesta cuando existe", () => {
   const lineas = construirLineasPedidoDemo(
@@ -176,3 +176,32 @@ test("obtenerPedidoDemoPublico gestiona pedido inexistente", async () => {
 
   global.fetch = originalFetch;
 });
+
+
+test("obtenerEmailDemoPedidoPublico devuelve simulación de email", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async () => {
+    return {
+      ok: true,
+      json: async () => ({
+        email_demo: {
+          id_pedido: "PD-300",
+          estado: "creado",
+          canal: "invitado",
+          email_destino: "demo@botica.test",
+          asunto: "[DEMO] Confirmación de pedido PD-300",
+          cuerpo_texto: "Aviso: entorno demo sin envío real de correo",
+          subtotal_demo: "14.90",
+          lineas: [{ nombre_producto: "Bruma", cantidad: 1, subtotal_demo: "14.90" }],
+          es_simulacion: true,
+        },
+      }),
+    } as Response;
+  }) as typeof fetch;
+
+  const resultado = await obtenerEmailDemoPedidoPublico("PD-300");
+  assert.equal(resultado.estado, "ok");
+
+  global.fetch = originalFetch;
+});
+

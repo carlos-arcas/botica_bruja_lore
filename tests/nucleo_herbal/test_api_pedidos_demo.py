@@ -128,6 +128,42 @@ class TestApiPedidosDemo(DjangoTestCase):
         self.assertEqual(data["id_pedido"], id_pedido)
         self.assertEqual(data["canal"], "autenticado")
 
+
+    def test_obtener_email_demo_existente(self) -> None:
+        crear = self.client.post(
+            "/api/v1/pedidos-demo/",
+            data=json.dumps(
+                {
+                    "email": "demo@lore.test",
+                    "canal": "invitado",
+                    "lineas": [
+                        {
+                            "id_producto": "prod-1",
+                            "slug_producto": "melisa-a-granel-50g",
+                            "nombre_producto": "Melisa a granel 50g",
+                            "cantidad": 1,
+                            "precio_unitario_demo": "5.00",
+                        }
+                    ],
+                }
+            ),
+            content_type="application/json",
+        )
+        id_pedido = crear.json()["pedido"]["id_pedido"]
+
+        response = self.client.get(f"/api/v1/pedidos-demo/{id_pedido}/email-demo/")
+
+        self.assertEqual(response.status_code, 200)
+        email_demo = response.json()["email_demo"]
+        self.assertTrue(email_demo["es_simulacion"])
+        self.assertIn(id_pedido, email_demo["asunto"])
+
+    def test_obtener_email_demo_inexistente(self) -> None:
+        response = self.client.get("/api/v1/pedidos-demo/PD-no-existe/email-demo/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("no encontrado", response.json()["detalle"].lower())
+
     def test_obtener_pedido_demo_inexistente(self) -> None:
         response = self.client.get("/api/v1/pedidos-demo/PD-no-existe/")
 
