@@ -16,6 +16,7 @@ try:
     from django.urls import reverse
 
     from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
+        CuentaDemoModelo,
         IntencionModelo,
         LineaPedidoModelo,
         PedidoDemoModelo,
@@ -56,6 +57,7 @@ class TestAdminNucleoHerbal(TestCase):
         )
 
     def test_admin_site_registra_modelos_ciclo_1_2_y_prompt_4(self) -> None:
+        self.assertTrue(admin.site.is_registered(CuentaDemoModelo))
         self.assertTrue(admin.site.is_registered(IntencionModelo))
         self.assertTrue(admin.site.is_registered(PlantaModelo))
         self.assertTrue(admin.site.is_registered(ProductoModelo))
@@ -73,6 +75,7 @@ class TestAdminNucleoHerbal(TestCase):
         self.client.force_login(self.superusuario)
 
         vistas = [
+            reverse("admin:persistencia_django_cuentademomodelo_changelist"),
             reverse("admin:persistencia_django_intencionmodelo_changelist"),
             reverse("admin:persistencia_django_plantamodelo_changelist"),
             reverse("admin:persistencia_django_productomodelo_changelist"),
