@@ -105,6 +105,34 @@ Reemplaza `SERVICE_NAME` por el nombre real del servicio Postgres en Railway UI.
 3. Frontend consume API desde `NEXT_PUBLIC_API_BASE_URL`.
 4. Logs backend sin imports/rutas legacy.
 
+## 6.3) Smoke check manual post-deploy (entorno real)
+
+Además del gate local/CI, este repositorio incorpora un smoke check **manual, reproducible y de solo lectura** para validar el stack realmente desplegado (por ejemplo, en Railway):
+
+```bash
+BACKEND_BASE_URL="https://TU-BACKEND.up.railway.app" \
+FRONTEND_BASE_URL="https://TU-FRONTEND.up.railway.app" \
+python scripts/check_deployed_stack.py
+```
+
+Qué valida:
+
+- backend vivo (`/healthz`) y con JSON válido;
+- APIs públicas backend (`/api/v1/herbal/plantas/`, `/api/v1/rituales/`);
+- frontend público (`/`, `/hierbas`, `/rituales`) con respuesta HTML 200;
+- wiring frontend/backend (detecta caídas reales de rutas públicas aunque CI esté verde).
+
+Opcionales:
+
+- `EXPECT_NON_EMPTY_DATA=true` exige listas no vacías en APIs públicas.
+- `HERBAL_SLUG` y `RITUAL_SLUG` habilitan checks de detalle (`/hierbas/{slug}`, `/rituales/{slug}` y endpoints backend equivalentes).
+
+Límites importantes:
+
+- Este smoke check **no sustituye** CI ni `python scripts/check_release_gate.py`.
+- No se integra en CI por defecto porque depende de URLs reales desplegadas.
+- Su objetivo es detectar fallos operativos de UI/configuración/despliegue que no emergen en entornos de build/test aislados.
+
 ## 6.1) Verificación canónica previa (antes de deploy)
 
 Antes de promover cambios a Railway, ejecutar en local el gate técnico canónico de demo/release (solo lectura):
