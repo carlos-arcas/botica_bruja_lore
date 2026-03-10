@@ -64,6 +64,15 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-ma
 - Este fallo es intencionado para evitar deploys “aparentemente correctos” conectados a una base equivocada.
 
 
+
+### Logging operativo mínimo (stdout)
+
+- El backend emite logs a **stdout** (capturados por Railway automáticamente).
+- `LOG_LEVEL` es opcional (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) y por defecto usa `INFO`.
+- Formato de logs: timestamp + nivel + logger + mensaje.
+- Esto mejora diagnóstico de arranque, readiness (`/healthz`) y scripts operativos sin añadir dependencias.
+- Este logging **no sustituye** healthcheck (`/healthz`) ni el gate de CI/release.
+
 ## 3) Variables legacy que deben eliminarse en Railway UI
 
 Aunque este repo **ya fuerza por código** `backend.configuracion_django.settings` en `manage.py` y `backend/configuracion_django/wsgi.py`, hay que limpiar variables antiguas para evitar configuraciones ambiguas en Railway UI.

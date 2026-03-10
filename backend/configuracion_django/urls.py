@@ -1,5 +1,7 @@
 """Rutas raíz para administración, APIs públicas y healthcheck."""
 
+import logging
+
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.db import connections
@@ -9,6 +11,9 @@ from django.urls import include, path
 from django.conf import settings
 
 from backend.nucleo_herbal.presentacion.publica.sitemaps import SITEMAPS_PUBLICOS
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _resolver_url_publica_sitio(request) -> str:
@@ -38,6 +43,7 @@ def healthcheck(_request):
             cursor.execute("SELECT 1")
             cursor.fetchone()
     except DatabaseError:
+        LOGGER.exception("healthcheck_db_unavailable")
         return JsonResponse({"status": "error", "database": "unavailable"}, status=503)
     return JsonResponse({"status": "ok", "database": "available"})
 

@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import logging
+import os
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -11,6 +13,20 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
+
+
+def _log_level() -> str:
+    valor = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
+    return valor if valor in logging.getLevelNamesMapping() else "INFO"
+
+
+logging.basicConfig(
+    level=_log_level(),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    stream=sys.stdout,
+)
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -51,6 +67,7 @@ def _run_step(name: str, cmd: list[str]) -> StepResult:
     print("$", " ".join(cmd))
     result = _run(cmd)
     if result is None:
+        LOGGER.error("bootstrap_step_command_missing name=%s", name)
         print("[ERROR] comando no disponible")
         return StepResult(name=name, ok=False, detail="comando no disponible")
 
@@ -59,6 +76,7 @@ def _run_step(name: str, cmd: list[str]) -> StepResult:
         print("[OK] paso completado")
         return StepResult(name=name, ok=True)
 
+    LOGGER.error("bootstrap_step_failed name=%s exit=%s", name, result.returncode)
     print("[ERROR] paso fallido")
     return StepResult(name=name, ok=False, detail=f"exit={result.returncode}")
 
@@ -106,6 +124,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    LOGGER.info("bootstrap_demo_start")
     print("== Bootstrap demo release (MUTANTE) ==")
     print("Aviso: esta operación SIEMPRE muta estado (esquema y/o datos).")
     print("No usar como gate canónico de auditoría.")
@@ -121,7 +140,12 @@ def main() -> int:
         )
 
     results.append(_data_snapshot_step("C) Conteos públicos finales"))
-    return _print_summary(results)
+    code = _print_summary(results)
+    if code == 0:
+        LOGGER.info("bootstrap_demo_ok")
+    else:
+        LOGGER.error("bootstrap_demo_error")
+    return code
 
 
 if __name__ == "__main__":

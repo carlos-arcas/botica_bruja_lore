@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import logging
+import os
 import shutil
 import subprocess
 import sys
@@ -11,6 +13,20 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
+
+
+def _log_level() -> str:
+    valor = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
+    return valor if valor in logging.getLevelNamesMapping() else "INFO"
+
+
+logging.basicConfig(
+    level=_log_level(),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    stream=sys.stdout,
+)
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -65,6 +81,7 @@ def _run_block(name: str, cmd: list[str], *, blocking: bool = True, cwd: Path | 
         print("[OK] bloque completado")
         return BlockResult(name=name, status="OK", blocking=blocking)
 
+    LOGGER.error("release_gate_block_failed name=%s exit=%s", name, result.returncode)
     print("[ERROR] bloque fallido")
     return BlockResult(name=name, status="ERROR", blocking=blocking, detail=f"exit={result.returncode}")
 
@@ -160,6 +177,7 @@ def _print_summary(results: list[BlockResult]) -> int:
 
 
 def main() -> int:
+    LOGGER.info("release_gate_start")
     print("== Gate técnico canónico: demo/release (solo lectura por defecto) ==")
     print("Nota: este gate NO ejecuta migrate ni seed_demo_publico.")
     results: list[BlockResult] = []
@@ -202,7 +220,12 @@ def main() -> int:
     )
     results.extend(_frontend_block())
 
-    return _print_summary(results)
+    code = _print_summary(results)
+    if code == 0:
+        LOGGER.info("release_gate_ok")
+    else:
+        LOGGER.error("release_gate_error")
+    return code
 
 
 if __name__ == "__main__":
