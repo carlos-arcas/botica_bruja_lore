@@ -396,3 +396,23 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - `docs/ciclos/ciclo_04_roadmap_prompts.md` (secuencia oficial de prompts del ciclo).
 - Siguiente paso oficial permitido:
   - ejecutar **Prompt 1 del Ciclo 4** definido en el roadmap, sin implementar todavía prompts siguientes ni abrir frentes paralelos.
+
+## 27. Base dominio/aplicación de cuenta con valor (Prompt 1 oficial Ciclo 4)
+- Capacidad: **Núcleo mínimo de cuenta demo útil (autenticación demo, perfil mínimo e historial de `PedidoDemo` asociado)**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - agregado y validaciones mínimas de cuenta demo en `backend/nucleo_herbal/dominio/cuentas_demo.py`;
+  - casos de uso de cuenta en `backend/nucleo_herbal/aplicacion/casos_de_uso_cuentas_demo.py`;
+  - puertos de cuenta e historial en `backend/nucleo_herbal/aplicacion/puertos/repositorios_cuentas_demo.py` y `backend/nucleo_herbal/aplicacion/puertos/proveedores_historial_pedidos_demo.py`;
+  - DTOs de cuenta/perfil en `backend/nucleo_herbal/aplicacion/dto.py`.
+- Reglas cerradas en este incremento:
+  1. cuenta demo válida requiere `id_usuario`, email válido, perfil con nombre visible y credencial demo mínima;
+  2. autenticación demo valida credencial contra cuenta existente (sin sesión ni integración auth real);
+  3. perfil mínimo recuperable por `id_usuario`;
+  4. historial de cuenta se consulta por contrato de aplicación, asociando pedidos por `id_usuario` o por email de contacto de cuenta cuando aplique migración invitado→cuenta.
+- Tests añadidos:
+  - `tests/nucleo_herbal/test_entidades_cuentas_demo.py`;
+  - `tests/nucleo_herbal/test_casos_de_uso_cuentas_demo.py`.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 1 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
+  - queda pendiente Prompt 2 (persistencia/infraestructura de cuenta), sin adelantar API/backoffice/frontend de cuenta.
