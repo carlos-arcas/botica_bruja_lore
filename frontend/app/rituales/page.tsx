@@ -7,12 +7,14 @@ import {
 } from "@/componentes/rituales/EstadoListadoRituales";
 import { ListadoRituales } from "@/componentes/rituales/ListadoRituales";
 import { obtenerListadoRituales } from "@/infraestructura/api/rituales";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = construirMetadataSeo({
   title: "Rituales conectados | La Botica de la Bruja Lore",
   description:
     "Listado público de rituales conectados por intención para el Ciclo 2 de la botica.",
-};
+  rutaCanonical: "/rituales",
+});
 
 export default async function PaginaListadoRituales(): Promise<JSX.Element> {
   const resultado = await obtenerListadoRituales();

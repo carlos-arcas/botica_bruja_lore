@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { FlujoEncargoConsulta } from "@/componentes/catalogo/encargo/FlujoEncargoConsulta";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 type Props = {
   searchParams?: { producto?: string; cesta?: string };
 };
 
-export const metadata: Metadata = {
+export const metadata: Metadata = construirMetadataSeo({
   title: "Solicitud de encargo artesanal | La Botica de la Bruja Lore",
   description: "Prepara una solicitud de encargo clara y compártela por un canal real si está configurado.",
-};
+  indexable: false,
+});
 
 export default function PaginaEncargo({ searchParams }: Props): JSX.Element {
   return (

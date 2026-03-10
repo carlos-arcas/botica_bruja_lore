@@ -6,6 +6,7 @@ import { BloqueResolucionComercialRitual } from "@/componentes/rituales/detalle/
 import { CabeceraFichaRitual } from "@/componentes/rituales/detalle/CabeceraFichaRitual";
 import { EstadoErrorFichaRitual } from "@/componentes/rituales/detalle/EstadoFichaRitual";
 import { obtenerFichaRitualConectada } from "@/infraestructura/api/rituales";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 type Props = {
   params: { slug: string };
@@ -13,11 +14,12 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const slugLegible = params.slug.replace(/-/g, " ");
-  return {
+  return construirMetadataSeo({
     title: `${slugLegible} | Ficha ritual | La Botica de la Bruja Lore`,
     description:
       "Ficha ritual conectada del Ciclo 2: contexto editorial del ritual con salida herbal y resolución comercial mínima.",
-  };
+    rutaCanonical: `/rituales/${params.slug}`,
+  });
 }
 
 export default async function PaginaDetalleRitual({ params }: Props): Promise<JSX.Element> {

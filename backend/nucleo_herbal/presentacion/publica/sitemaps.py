@@ -45,7 +45,6 @@ class SitemapPaginasPublicas(SitemapPublicoBase):
             "/rituales",
             "/colecciones",
             "/la-botica",
-            "/encargo",
             "/condiciones-encargo",
             "/envios-y-preparacion",
             "/privacidad",

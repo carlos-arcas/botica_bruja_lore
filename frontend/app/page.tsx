@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { AlquimiaDeseo } from "@/componentes/home/AlquimiaDeseo";
 import { BloqueConfianza } from "@/componentes/home/BloqueConfianza";
 import { ComoFuncionaRitual } from "@/componentes/home/ComoFuncionaRitual";
@@ -9,6 +11,14 @@ import { IntencionesDestacadas } from "@/componentes/home/IntencionesDestacadas"
 import { NavegacionSecciones } from "@/componentes/home/NavegacionSecciones";
 import { PreviewLineaHerbal } from "@/componentes/home/PreviewLineaHerbal";
 import { obtenerPreviewHerbal } from "@/infraestructura/api/herbal";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
+
+export const metadata: Metadata = construirMetadataSeo({
+  title: "La Botica de la Bruja Lore | Botica artesanal y ritual",
+  description:
+    "Home editorial-comercial de La Botica de la Bruja Lore: alquimia del deseo, colecciones por intención y guía ritual accesible.",
+  rutaCanonical: "/",
+});
 
 export default async function Home(): Promise<JSX.Element> {
   const previewHerbal = await obtenerPreviewHerbal();
