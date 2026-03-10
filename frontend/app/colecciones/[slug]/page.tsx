@@ -4,6 +4,10 @@ import { notFound } from "next/navigation";
 import { FichaProductoCatalogo } from "@/componentes/catalogo/detalle/FichaProductoCatalogo";
 import { obtenerProductoPorSlug } from "@/contenido/catalogo/detalleCatalogo";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
+import {
+  construirDescriptionFichaPublica,
+  construirTitleFichaPublica,
+} from "@/infraestructura/seo/seoFichasPublicas";
 
 type Props = {
   params: { slug: string };
@@ -21,8 +25,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return construirMetadataSeo({
-    title: `${producto.nombre} | Colecciones | La Botica de la Bruja Lore`,
-    description: producto.descripcion,
+    title: construirTitleFichaPublica({
+      nombre: producto.nombre,
+      tipoFicha: "coleccion",
+    }),
+    description: construirDescriptionFichaPublica({
+      nombre: producto.nombre,
+      tipoFicha: "coleccion",
+      resumen: producto.descripcion,
+      intenciones: [producto.intencion],
+    }),
     rutaCanonical: `/colecciones/${producto.slug}`,
   });
 }

@@ -14,6 +14,9 @@ export function BloquePlantasRelacionadas({ plantas }: Props): JSX.Element {
         Este bloque conecta el ritual con el núcleo herbal navegable. Las fichas de plantas siguen
         siendo la puerta principal del conocimiento base.
       </p>
+      <p>
+        <Link href="/rituales">Volver al listado de rituales</Link> · <Link href="/hierbas">Entrar por línea herbal</Link>
+      </p>
 
       {plantas.length > 0 ? (
         <ul className="ficha-ritual__plantas" aria-label="Plantas relacionadas al ritual">

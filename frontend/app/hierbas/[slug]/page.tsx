@@ -8,17 +8,39 @@ import { CabeceraFichaHerbal } from "@/componentes/herbal/detalle/CabeceraFichaH
 import { EstadoErrorFichaHerbal } from "@/componentes/herbal/detalle/EstadoFichaHerbal";
 import { obtenerFichaHerbalConectada } from "@/infraestructura/api/herbal";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
+import {
+  construirDescriptionFichaPublica,
+  construirTitleFichaPublica,
+} from "@/infraestructura/seo/seoFichasPublicas";
 
 type Props = {
   params: { slug: string };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const slugLegible = params.slug.replace(/-/g, " ");
+  const resultado = await obtenerFichaHerbalConectada(params.slug);
+
+  if (resultado.estado !== "ok") {
+    return construirMetadataSeo({
+      title: "Ficha herbal no disponible | La Botica de la Bruja Lore",
+      description: "La ficha herbal solicitada no está publicada o no está disponible ahora mismo.",
+      indexable: false,
+    });
+  }
+
+  const { planta } = resultado.ficha;
+
   return construirMetadataSeo({
-    title: `${slugLegible} | Ficha herbal | La Botica de la Bruja Lore`,
-    description:
-      "Ficha herbal conectada del Ciclo 1: contexto editorial de planta más resolución comercial mínima asociada.",
+    title: construirTitleFichaPublica({
+      nombre: planta.nombre,
+      tipoFicha: "hierba",
+    }),
+    description: construirDescriptionFichaPublica({
+      nombre: planta.nombre,
+      tipoFicha: "hierba",
+      resumen: planta.descripcion_breve,
+      intenciones: planta.intenciones.map((intencion) => intencion.nombre),
+    }),
     rutaCanonical: `/hierbas/${params.slug}`,
   });
 }
