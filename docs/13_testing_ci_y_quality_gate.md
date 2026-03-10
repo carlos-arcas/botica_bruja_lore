@@ -249,6 +249,20 @@ Alcance y límites:
 - El bootstrap demo **no sustituye** el gate canónico; cumple una función operativa distinta.
 - Un `SKIP` de frontend por entorno debe tratarse como señal operativa visible, no como silencio.
 
+## 13.1 Estado de higiene de dependencias frontend (Prompt 22)
+
+Durante la revisión técnica focalizada de hardening frontend se confirmó que:
+
+- El gate frontend vigente permanece en verde con `npm ci`, `npm run lint`, `npm run test:checkout-demo`, `npm run test:cuenta-demo` y `npm run build`.
+- Persisten deprecaciones transitivas asociadas al stack ESLint/Next 14 actual (`inflight`, `glob`, `rimraf`, `@humanwhocodes/*`, `eslint@8.57.0`).
+- En este entorno, `npm audit` no es concluyente por restricción de acceso al endpoint oficial (`403`), por lo que la evidencia de seguridad debe apoyarse adicionalmente en trazabilidad del árbol (`npm ls`) y verificación de gate.
+
+Decisión operativa:
+
+- **No forzar** migración mayor de framework/linter dentro de una ventana de corrección puntual.
+- Tratar la limpieza completa de esas transitivas como trabajo planificado en una ventana mayor (upgrade coordinado de Next + ESLint), con validación completa de compatibilidad.
+- Mantener trazabilidad explícita entre: warnings observados, cambios aplicados y deuda técnica remanente para auditoría.
+
 
 ## 13. Workflow CI canónico (GitHub Actions)
 
@@ -302,4 +316,3 @@ Notas operativas:
 - `LOG_LEVEL` permite ajustar verbosidad por entorno sin cambiar código; default: `INFO`.
 - Se añaden trazas explícitas para errores de readiness (`/healthz`) y fallos de bloques en checks/bootstraps.
 - Esta mejora aumenta auditabilidad técnica post-deploy, pero **no sustituye** healthcheck, CI ni smoke checks manuales.
-
