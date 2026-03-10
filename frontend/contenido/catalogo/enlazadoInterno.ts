@@ -31,6 +31,11 @@ export const BLOQUES_ENLAZADO_CATALOGO: Record<"hierbas" | "rituales" | "colecci
         anchor: "Leer la filosofía editorial de La Botica",
         descripcion: "Entiende el criterio de curaduría antes de profundizar en fichas específicas.",
       },
+      {
+        href: "/guias",
+        anchor: "Abrir el hub de guías editoriales publicadas",
+        descripcion: "Encuentra recorridos temáticos para conectar plantas, rituales y colecciones.",
+      },
     ],
   },
   rituales: {
@@ -53,6 +58,11 @@ export const BLOQUES_ENLAZADO_CATALOGO: Record<"hierbas" | "rituales" | "colecci
         anchor: "Conocer el proceso de curaduría editorial",
         descripcion: "Consulta cómo se seleccionan materiales, guías y piezas de apoyo.",
       },
+      {
+        href: "/guias",
+        anchor: "Ir al hub de guías con rutas temáticas de apoyo",
+        descripcion: "Completa el contexto antes de pasar a una selección comercial final.",
+      },
     ],
   },
   colecciones: {
@@ -74,6 +84,11 @@ export const BLOQUES_ENLAZADO_CATALOGO: Record<"hierbas" | "rituales" | "colecci
         href: "/la-botica",
         anchor: "Explorar la propuesta de marca y curaduría",
         descripcion: "Revisa el marco editorial para mantener coherencia en tu recorrido.",
+      },
+      {
+        href: "/guias",
+        anchor: "Consultar guías para decidir por intención",
+        descripcion: "Aterriza dudas de elección con contenidos editoriales conectados al catálogo.",
       },
     ],
   },

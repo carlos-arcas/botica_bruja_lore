@@ -1,5 +1,6 @@
 import { resolverUrlCanonicalAbsoluta } from "./metadataSeo";
 import { ProductoCatalogo } from "../../contenido/catalogo/catalogo";
+import { GuiaEditorial } from "../../contenido/editorial/guiasEditoriales";
 import { PlantaPublica } from "../api/herbal";
 import { RitualDetallePublico } from "../api/rituales";
 
@@ -219,4 +220,55 @@ export function construirSchemasPaginaInformativa(args: {
   ]);
 
   return [pagina, ...(breadcrumb ? [breadcrumb] : [])];
+}
+
+export function construirSchemasHubEditorial(args: {
+  ruta: string;
+  titulo: string;
+  descripcion: string;
+}): ObjetoJsonLd[] {
+  const url = resolverUrlCanonicalAbsoluta(args.ruta);
+  if (!url) {
+    return [];
+  }
+
+  const breadcrumb = construirSchemaBreadcrumb([
+    { nombre: "Inicio", ruta: "/" },
+    { nombre: "Guías", ruta: args.ruta },
+  ]);
+
+  return [
+    construirSchemaPagina("CollectionPage", url, args.titulo, args.descripcion),
+    ...(breadcrumb ? [breadcrumb] : []),
+  ];
+}
+
+function construirSchemaArticleGuia(guia: GuiaEditorial): ObjetoJsonLd | null {
+  const url = resolverUrlCanonicalAbsoluta(`/guias/${guia.slug}`);
+  if (!url) {
+    return null;
+  }
+
+  return construirObjetoBase("Article", {
+    headline: guia.h1,
+    description: guia.seo.description,
+    url,
+    datePublished: guia.fecha_publicacion,
+    isPartOf: {
+      "@type": "CollectionPage",
+      name: "Guías editoriales",
+      url: resolverUrlCanonicalAbsoluta("/guias") ?? undefined,
+    },
+  });
+}
+
+export function construirSchemasDetalleGuiaEditorial(guia: GuiaEditorial): ObjetoJsonLd[] {
+  const article = construirSchemaArticleGuia(guia);
+  const breadcrumb = construirSchemaBreadcrumb([
+    { nombre: "Inicio", ruta: "/" },
+    { nombre: "Guías", ruta: "/guias" },
+    { nombre: guia.h1, ruta: `/guias/${guia.slug}` },
+  ]);
+
+  return [article, breadcrumb].filter(Boolean) as ObjetoJsonLd[];
 }

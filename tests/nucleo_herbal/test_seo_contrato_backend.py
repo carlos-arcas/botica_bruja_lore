@@ -5,6 +5,14 @@ from django.test import TestCase
 
 CONTRATO_PATH = Path(__file__).resolve().parents[2] / "docs" / "seo_contrato.json"
 
+GUIAS_EDITORIALES_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "frontend"
+    / "contenido"
+    / "editorial"
+    / "guiasEditoriales.json"
+)
+
 
 class TestSeoContratoBackend(TestCase):
     def _cargar_contrato(self) -> dict:
@@ -76,3 +84,25 @@ class TestSeoContratoBackend(TestCase):
                 contenido,
                 msg=f"Regresión sitemap: ruta no indexable '{item['ruta']}' apareció en sitemap. Corrige sitemaps.py o contrato.",
             )
+
+    def test_sitemap_guias_respeta_publicacion_e_indexacion(self) -> None:
+        with GUIAS_EDITORIALES_PATH.open("r", encoding="utf-8") as handler:
+            guias = json.load(handler)
+
+        response = self.client.get("/sitemap.xml")
+        contenido = response.content.decode("utf-8")
+
+        for guia in guias:
+            ruta = f"/guias/{guia['slug']}"
+            if guia.get("publicada") and guia.get("indexable"):
+                self.assertIn(
+                    f"<loc>http://testserver{ruta}</loc>",
+                    contenido,
+                    msg=f"Regresión sitemap: falta guía publicada/indexable '{ruta}'.",
+                )
+            else:
+                self.assertNotIn(
+                    f"{ruta}</loc>",
+                    contenido,
+                    msg=f"Regresión sitemap: guía no publicada/noindex '{ruta}' no debe exponerse.",
+                )

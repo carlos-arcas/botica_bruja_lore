@@ -15,6 +15,7 @@ export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
   { etiqueta: "Inicio", href: "/", coincidencia: "exacta" },
   { etiqueta: "Colecciones", href: "/colecciones", coincidencia: "prefijo" },
   { etiqueta: "La Botica", href: "/la-botica", coincidencia: "exacta" },
+  { etiqueta: "Guías", href: "/guias", coincidencia: "prefijo" },
   { etiqueta: "Calendario ritual", href: "/calendario-ritual", coincidencia: "exacta" },
   { etiqueta: "Cesta ritual", href: "/cesta", coincidencia: "exacta" },
   { etiqueta: "Encargo", href: "/encargo", coincidencia: "exacta" },
@@ -27,6 +28,7 @@ const ENLACES_BASE_FOOTER: EnlaceFooter[] = [
   { etiqueta: "Rituales conectados", href: "/rituales" },
   { etiqueta: "Calendario ritual", href: "/calendario-ritual" },
   { etiqueta: "La Botica", href: "/la-botica" },
+  { etiqueta: "Guías editoriales", href: "/guias" },
   { etiqueta: "Preparar encargo", href: "/encargo" },
 ];
 
