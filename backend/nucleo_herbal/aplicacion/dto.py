@@ -131,3 +131,18 @@ class CuentaDemoDTO:
 class ResultadoAutenticacionDemoDTO:
     cuenta: CuentaDemoDTO
 
+
+
+@dataclass(frozen=True, slots=True)
+class RitualCalendarioDTO:
+    slug: str
+    nombre: str
+    contexto_breve: str
+    nombre_regla: str
+    prioridad: int
+
+
+@dataclass(frozen=True, slots=True)
+class ConsultaCalendarioRitualDTO:
+    fecha_consulta: str
+    rituales: tuple[RitualCalendarioDTO, ...]
