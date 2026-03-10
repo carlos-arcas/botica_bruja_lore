@@ -88,8 +88,21 @@ def _en_entorno_railway() -> bool:
     )
 
 
-SECRET_KEY = os.getenv("SECRET_KEY", "botica-demo-dev")
 DEBUG = _leer_booleano("DEBUG", os.getenv("DATABASE_URL") is None)
+
+
+def _configurar_secret_key() -> str:
+    secret_key = os.getenv("SECRET_KEY")
+    if secret_key:
+        return secret_key
+    if _en_entorno_railway() or not DEBUG:
+        raise ImproperlyConfigured(
+            "SECRET_KEY es obligatoria cuando DEBUG=false o en Railway/producción."
+        )
+    return "botica-demo-dev"
+
+
+SECRET_KEY = _configurar_secret_key()
 
 ALLOWED_HOSTS = _leer_lista("ALLOWED_HOSTS", ["localhost", "127.0.0.1", "testserver"])
 
@@ -136,6 +149,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 if importlib.util.find_spec("whitenoise"):
@@ -179,6 +193,7 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = "same-origin"
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
