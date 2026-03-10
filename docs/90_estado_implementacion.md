@@ -264,3 +264,21 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 2** (persistencia/infraestructura);
   - sigue pendiente Prompt 3 (API del flujo), sin adelantar endpoints ni UI checkout.
+
+## 19. API del flujo de pedido demo (Prompt 3 oficial Ciclo 3)
+- Capacidad: **Exposición API mínima para crear y consultar `PedidoDemo`**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - endpoints en `backend/nucleo_herbal/presentacion/publica/urls_pedidos_demo.py` y `backend/nucleo_herbal/presentacion/publica/views_pedidos_demo.py`;
+  - serialización HTTP de pedido demo en `backend/nucleo_herbal/presentacion/publica/pedidos_demo_serializadores.py`;
+  - cableado de casos de uso para pedidos demo en `backend/nucleo_herbal/presentacion/publica/dependencias.py`;
+  - recuperación por identificador en aplicación mediante `ObtenerPedidoDemoPorId` en `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos_demo.py`.
+- Operaciones mínimas cerradas en este incremento:
+  1. crear pedido demo por API con validación de forma/tipos básicos;
+  2. recuperar pedido demo por identificador;
+  3. devolver contrato de respuesta mínimo (`id_pedido`, `estado`, `canal`, `email`, `resumen`, `lineas`).
+- Tests añadidos:
+  - `tests/nucleo_herbal/test_api_pedidos_demo.py` (creación válida, payload inválido, línea inválida, autenticado sin usuario, consulta existente e inexistente).
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 3** (API del flujo);
+  - sigue pendiente Prompt 4 (backoffice mínimo), sin adelantar frontend checkout, confirmación/email ni pagos.

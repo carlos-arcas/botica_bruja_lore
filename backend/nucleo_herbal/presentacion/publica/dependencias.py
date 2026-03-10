@@ -8,6 +8,10 @@ from ...aplicacion.casos_de_uso import (
     ObtenerRelacionesHerbalesPorIntencion,
     ObtenerResolucionComercialMinimaDePlanta,
 )
+from ...aplicacion.casos_de_uso_pedidos_demo import (
+    ObtenerPedidoDemoPorId,
+    RegistrarPedidoDemo,
+)
 from ...aplicacion.casos_de_uso_rituales import (
     ObtenerDetalleRitual,
     ObtenerListadoRitualNavegable,
@@ -19,6 +23,7 @@ from ...aplicacion.casos_de_uso_rituales import (
 from ...infraestructura.persistencia_django.repositorios import (
     RepositorioPlantasORM,
     RepositorioProductosORM,
+    RepositorioPedidosDemoORM,
     RepositorioRitualesORM,
 )
 
@@ -39,6 +44,12 @@ class ServiciosPublicosRituales:
     plantas_por_ritual: ObtenerPlantasRelacionadasDeRitual
     productos_por_ritual: ObtenerProductosRelacionadosDeRitual
     rituales_por_intencion: ObtenerRitualesRelacionadosPorIntencion
+
+
+@dataclass(frozen=True, slots=True)
+class ServiciosPublicosPedidosDemo:
+    registrar_pedido_demo: RegistrarPedidoDemo
+    obtener_pedido_demo: ObtenerPedidoDemoPorId
 
 
 def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
@@ -67,4 +78,12 @@ def construir_servicios_publicos_rituales() -> ServiciosPublicosRituales:
         plantas_por_ritual=ObtenerPlantasRelacionadasDeRitual(repositorio_rituales),
         productos_por_ritual=ObtenerProductosRelacionadosDeRitual(repositorio_rituales),
         rituales_por_intencion=ObtenerRitualesRelacionadosPorIntencion(repositorio_rituales),
+    )
+
+
+def construir_servicios_publicos_pedidos_demo() -> ServiciosPublicosPedidosDemo:
+    repositorio = RepositorioPedidosDemoORM()
+    return ServiciosPublicosPedidosDemo(
+        registrar_pedido_demo=RegistrarPedidoDemo(repositorio_pedidos_demo=repositorio),
+        obtener_pedido_demo=ObtenerPedidoDemoPorId(repositorio_pedidos_demo=repositorio),
     )
