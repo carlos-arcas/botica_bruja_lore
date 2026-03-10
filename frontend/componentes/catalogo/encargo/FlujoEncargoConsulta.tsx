@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { PRODUCTOS_CATALOGO } from "@/contenido/catalogo/catalogo";
 import {
@@ -23,6 +24,7 @@ import {
   construirPayloadPedidoDemo,
   validarCheckoutDemo,
 } from "@/contenido/catalogo/checkoutDemo";
+import { construirRutaReciboPedidoDemo } from "@/contenido/catalogo/postCheckoutDemo";
 import { crearPedidoDemoPublico, PedidoDemoCreado } from "@/infraestructura/api/pedidosDemo";
 
 import estilos from "./flujoEncargoConsulta.module.css";
@@ -45,6 +47,7 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
   const [mensajeEnvio, setMensajeEnvio] = useState<string>("");
   const [pedidoCreado, setPedidoCreado] = useState<PedidoDemoCreado | null>(null);
 
+  const router = useRouter();
   const configuracionCanal = useMemo(() => obtenerConfiguracionContactoPublico(), []);
   const estadoCanal = useMemo(() => resolverEstadoCanalContacto(configuracionCanal), [configuracionCanal]);
 
@@ -93,6 +96,7 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
 
     setEstadoEnvio("ok");
     setPedidoCreado(resultado.pedido);
+    router.push(construirRutaReciboPedidoDemo(resultado.pedido.id_pedido));
   };
 
   const copiarResumen = async (): Promise<void> => {
