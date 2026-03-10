@@ -1,5 +1,7 @@
 import os
 import unittest
+from datetime import UTC, datetime
+from decimal import Decimal
 
 try:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.configuracion_django.settings")
@@ -15,6 +17,8 @@ try:
 
     from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
         IntencionModelo,
+        LineaPedidoModelo,
+        PedidoDemoModelo,
         PlantaModelo,
         ProductoModelo,
         RitualModelo,
@@ -35,12 +39,28 @@ class TestAdminNucleoHerbal(TestCase):
             email="admin@botica.dev",
             password="demo-admin",
         )
+        cls.pedido = PedidoDemoModelo.objects.create(
+            id_pedido="PD-ADMIN-0001",
+            email_contacto="demo@lore.test",
+            canal_compra="invitado",
+            estado="creado",
+            fecha_creacion=datetime(2026, 1, 1, tzinfo=UTC),
+        )
+        LineaPedidoModelo.objects.create(
+            pedido=cls.pedido,
+            id_producto="prod-1",
+            slug_producto="melisa-a-granel-50g",
+            nombre_producto="Melisa a granel 50g",
+            cantidad=2,
+            precio_unitario_demo=Decimal("5.00"),
+        )
 
-    def test_admin_site_registra_modelos_ciclo_1_y_2(self) -> None:
+    def test_admin_site_registra_modelos_ciclo_1_2_y_prompt_4(self) -> None:
         self.assertTrue(admin.site.is_registered(IntencionModelo))
         self.assertTrue(admin.site.is_registered(PlantaModelo))
         self.assertTrue(admin.site.is_registered(ProductoModelo))
         self.assertTrue(admin.site.is_registered(RitualModelo))
+        self.assertTrue(admin.site.is_registered(PedidoDemoModelo))
 
     def test_superusuario_puede_abrir_index_admin(self) -> None:
         self.client.force_login(self.superusuario)
@@ -56,6 +76,7 @@ class TestAdminNucleoHerbal(TestCase):
             reverse("admin:persistencia_django_intencionmodelo_changelist"),
             reverse("admin:persistencia_django_plantamodelo_changelist"),
             reverse("admin:persistencia_django_productomodelo_changelist"),
+            reverse("admin:persistencia_django_pedidodemomodelo_changelist"),
         ]
 
         for vista in vistas:
@@ -69,3 +90,51 @@ class TestAdminNucleoHerbal(TestCase):
         response = self.client.get(reverse("admin:persistencia_django_ritualmodelo_changelist"))
 
         self.assertEqual(response.status_code, 200)
+
+    def test_changelist_pedidos_demo_permita_busqueda_y_filtro(self) -> None:
+        self.client.force_login(self.superusuario)
+
+        response = self.client.get(
+            reverse("admin:persistencia_django_pedidodemomodelo_changelist"),
+            {"q": "PD-ADMIN-0001", "estado": "creado", "canal_compra": "invitado"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "PD-ADMIN-0001")
+
+    def test_change_pedido_demo_muestra_lineas_y_permite_actualizar_estado(self) -> None:
+        self.client.force_login(self.superusuario)
+        url = reverse("admin:persistencia_django_pedidodemomodelo_change", args=["PD-ADMIN-0001"])
+
+        respuesta_get = self.client.get(url)
+
+        self.assertEqual(respuesta_get.status_code, 200)
+        self.assertContains(respuesta_get, "Melisa a granel 50g")
+
+        respuesta_post = self.client.post(
+            url,
+            {
+                "email_contacto": "demo@lore.test",
+                "canal_compra": "invitado",
+                "estado": "confirmado",
+                "fecha_creacion_0": "2026-01-01",
+                "fecha_creacion_1": "00:00:00",
+                "id_usuario": "",
+                "lineas-TOTAL_FORMS": "1",
+                "lineas-INITIAL_FORMS": "1",
+                "lineas-MIN_NUM_FORMS": "0",
+                "lineas-MAX_NUM_FORMS": "1000",
+                "lineas-0-id": str(self.pedido.lineas.first().id),
+                "lineas-0-pedido": "PD-ADMIN-0001",
+                "lineas-0-id_producto": "prod-1",
+                "lineas-0-slug_producto": "melisa-a-granel-50g",
+                "lineas-0-nombre_producto": "Melisa a granel 50g",
+                "lineas-0-cantidad": "2",
+                "lineas-0-precio_unitario_demo": "5.00",
+                "_save": "Guardar",
+            },
+        )
+
+        self.assertEqual(respuesta_post.status_code, 302)
+        self.pedido.refresh_from_db()
+        self.assertEqual(self.pedido.estado, "confirmado")
