@@ -1,6 +1,11 @@
 from decimal import Decimal
 import unittest
 
+from backend.nucleo_herbal.aplicacion.casos_de_uso_email_demo import (
+    ComponerEmailDemoPedido,
+    ObtenerEmailDemoPedidoPorId,
+)
+from backend.nucleo_herbal.aplicacion.casos_de_uso import ErrorAplicacionLookup
 from backend.nucleo_herbal.aplicacion.casos_de_uso_pedidos_demo import (
     CrearPedidoDemoDesdeLineas,
     RecalcularResumenPedidoDemo,
@@ -69,6 +74,30 @@ class TestCasosDeUsoPedidosDemo(unittest.TestCase):
         self.assertEqual(len(repositorio.pedidos), 1)
         self.assertEqual(pedido.subtotal_demo, Decimal("17.00"))
         self.assertEqual(pedido.canal_compra, "autenticado")
+
+
+    def test_componer_email_demo_desde_pedido(self) -> None:
+        pedido = PedidoDemo(
+            id_pedido="PD-EMAIL",
+            email_contacto="demo@lore.test",
+            canal_compra="invitado",
+            lineas=(_linea("prod-1", "melisa", 1, "5.00"),),
+        )
+
+        email_demo = ComponerEmailDemoPedido().ejecutar(pedido)
+
+        self.assertIn("PD-EMAIL", email_demo.asunto)
+        self.assertIn("entorno demo", email_demo.cuerpo_texto.lower())
+
+    def test_obtener_email_demo_por_id_inexistente(self) -> None:
+        repositorio = RepositorioPedidosDemoMemoria()
+        caso = ObtenerEmailDemoPedidoPorId(
+            repositorio_pedidos_demo=repositorio,
+            componer_email_demo=ComponerEmailDemoPedido(),
+        )
+
+        with self.assertRaisesRegex(ErrorAplicacionLookup, "no encontrado"):
+            caso.ejecutar("PD-no-existe")
 
     def test_recalcular_resumen_pedido_demo(self) -> None:
         pedido = PedidoDemo(

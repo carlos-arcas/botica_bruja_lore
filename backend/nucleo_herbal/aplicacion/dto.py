@@ -92,3 +92,22 @@ class ResumenPedidoDemoDTO:
     id_pedido: str
     cantidad_total_items: int
     subtotal_demo: Decimal
+
+
+@dataclass(frozen=True, slots=True)
+class EmailDemoLineaDTO:
+    nombre_producto: str
+    cantidad: int
+    subtotal_demo: Decimal
+
+
+@dataclass(frozen=True, slots=True)
+class EmailPedidoDemoDTO:
+    id_pedido: str
+    estado: str
+    canal_compra: str
+    email_destino: str
+    asunto: str
+    cuerpo_texto: str
+    subtotal_demo: Decimal
+    lineas: tuple[EmailDemoLineaDTO, ...]

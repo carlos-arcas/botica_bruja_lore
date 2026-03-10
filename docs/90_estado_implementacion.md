@@ -337,3 +337,24 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Trazabilidad del roadmap:
   - este cambio cubre la fase de **confirmación/recibo post-checkout** del hito oficial siguiente al checkout conectado a API;
   - queda pendiente la **emisión de email/recibo demo** si se exige de forma ejecutable en el siguiente incremento operativo de ciclo.
+
+
+## 23. Emisión de email demo post-pedido (hito oficial siguiente)
+- Capacidad: **Composición y consulta de email demo asociado a `PedidoDemo` sin integración externa de correo**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - caso de uso de composición/consulta en `backend/nucleo_herbal/aplicacion/casos_de_uso_email_demo.py`;
+  - endpoint público mínimo `GET /api/v1/pedidos-demo/{id_pedido}/email-demo/` en `backend/nucleo_herbal/presentacion/publica/views_pedidos_demo.py` + `urls_pedidos_demo.py`;
+  - serialización HTTP específica en `backend/nucleo_herbal/presentacion/publica/email_demo_serializadores.py`;
+  - consumo frontend en `frontend/infraestructura/api/pedidosDemo.ts` y render mínimo en `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`.
+- Operaciones mínimas cerradas en este incremento:
+  1. componer asunto/cuerpo de email demo desde el `PedidoDemo` persistido (id, estado, email, canal, líneas y subtotal);
+  2. recuperar email demo por `id_pedido` con 404 cuando no existe pedido;
+  3. mostrar en recibo post-checkout una vista mínima del email demo dejando explícito que es simulación sin envío real.
+- Tests añadidos:
+  - `tests/nucleo_herbal/test_casos_de_uso_pedidos_demo.py` ampliado para composición de email demo y pedido inexistente;
+  - `tests/nucleo_herbal/test_api_pedidos_demo.py` ampliado para endpoint de email demo existente/inexistente;
+  - `frontend/tests/checkout-demo.test.ts` ampliado con consumo del endpoint de email demo.
+- Trazabilidad del roadmap:
+  - este cambio cubre la parte de **emisión de email/recibo demo** pendiente tras confirmación en pantalla;
+  - queda pendiente Prompt 8 (tests integrales + quality gate de cierre de ciclo).
