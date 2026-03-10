@@ -32,3 +32,20 @@ test("landings usan el bloque reutilizable de enlazado contextual", () => {
   assert.match(paginaRituales, /BloqueEnlazadoContextual/);
   assert.match(paginaColecciones, /BloqueEnlazadoContextual/);
 });
+
+
+test("landings y fichas públicas integran bloque reusable de guías relacionadas", () => {
+  const paginaHierbas = readFileSync(join(process.cwd(), "app/hierbas/page.tsx"), "utf8");
+  const paginaRituales = readFileSync(join(process.cwd(), "app/rituales/page.tsx"), "utf8");
+  const paginaColecciones = readFileSync(join(process.cwd(), "app/colecciones/page.tsx"), "utf8");
+  const fichaHierba = readFileSync(join(process.cwd(), "app/hierbas/[slug]/page.tsx"), "utf8");
+  const fichaRitual = readFileSync(join(process.cwd(), "app/rituales/[slug]/page.tsx"), "utf8");
+  const fichaColeccion = readFileSync(join(process.cwd(), "app/colecciones/[slug]/page.tsx"), "utf8");
+
+  assert.match(paginaHierbas, /BloqueGuiasRelacionadas/);
+  assert.match(paginaRituales, /BloqueGuiasRelacionadas/);
+  assert.match(paginaColecciones, /BloqueGuiasRelacionadas/);
+  assert.match(fichaHierba, /BloqueGuiasRelacionadas/);
+  assert.match(fichaRitual, /BloqueGuiasRelacionadas/);
+  assert.match(fichaColeccion, /BloqueGuiasRelacionadas/);
+});

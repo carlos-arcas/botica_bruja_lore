@@ -6,6 +6,7 @@ import { BloquePlantasRelacionadas } from "@/componentes/rituales/detalle/Bloque
 import { BloqueResolucionComercialRitual } from "@/componentes/rituales/detalle/BloqueResolucionComercialRitual";
 import { CabeceraFichaRitual } from "@/componentes/rituales/detalle/CabeceraFichaRitual";
 import { EstadoErrorFichaRitual } from "@/componentes/rituales/detalle/EstadoFichaRitual";
+import { BloqueGuiasRelacionadas } from "@/componentes/editorial/BloqueGuiasRelacionadas";
 import { JsonLd } from "@/componentes/seo/JsonLd";
 import { obtenerFichaRitualConectada } from "@/infraestructura/api/rituales";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
@@ -14,6 +15,7 @@ import {
   construirTitleFichaPublica,
 } from "@/infraestructura/seo/seoFichasPublicas";
 import { construirSchemasFichaRitual } from "@/infraestructura/seo/structuredData";
+import { obtenerGuiasRelacionadasPorFicha } from "@/contenido/editorial/guiasEditoriales";
 
 type Props = {
   params: { slug: string };
@@ -65,6 +67,7 @@ export default async function PaginaDetalleRitual({ params }: Props): Promise<JS
   }
 
   const { ritual, plantas, productos } = resultado.ficha;
+  const guiasRelacionadas = obtenerGuiasRelacionadasPorFicha({ tipoFicha: "rituales", slug: ritual.slug });
   const schemasFicha = construirSchemasFichaRitual(ritual);
 
   return (
@@ -73,6 +76,11 @@ export default async function PaginaDetalleRitual({ params }: Props): Promise<JS
       <CabeceraFichaRitual ritual={ritual} />
       <BloquePlantasRelacionadas plantas={plantas} />
       <BloqueResolucionComercialRitual productos={productos} />
+      <BloqueGuiasRelacionadas
+        titulo="Guías editoriales relacionadas con este ritual"
+        descripcion="Amplía esta práctica con guías conectadas al hub de rituales y a rutas complementarias del catálogo."
+        guias={guiasRelacionadas}
+      />
     </main>
   );
 }

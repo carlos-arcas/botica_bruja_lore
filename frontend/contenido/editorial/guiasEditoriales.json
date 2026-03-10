@@ -9,7 +9,7 @@
     "tema": "hierbas",
     "fecha_publicacion": "2026-02-10",
     "seo": {
-      "title": "Hierbas para rituales de cierre del día | Guía editorial",
+      "title": "Hierbas para rituales de cierre del día | La Botica de la Bruja Lore",
       "description": "Descubre una secuencia editorial para cerrar la jornada con hierbas del catálogo, respiración y ritmo cotidiano sin claims médicos."
     },
     "secciones": [
@@ -35,20 +35,47 @@
         ]
       }
     ],
-    "enlaces_relacionados": [
-      {
-        "href": "/hierbas",
-        "anchor": "Explorar hierbas publicadas para cierre de jornada"
+    "relaciones": {
+      "hubs_relacionados": [
+        {
+          "href": "/hierbas",
+          "anchor": "Explorar hierbas publicadas para cierre de jornada"
+        },
+        {
+          "href": "/rituales",
+          "anchor": "Ver rituales conectados para transiciones de día"
+        },
+        {
+          "href": "/colecciones",
+          "anchor": "Comparar colecciones que acompañan un cierre sereno"
+        }
+      ],
+      "fichas_relacionadas": {
+        "hierbas": [
+          {
+            "slug": "melisa",
+            "anchor": "Revisar la ficha pública de Melisa para pausas de tarde"
+          }
+        ],
+        "rituales": [
+          {
+            "slug": "cierre-sereno",
+            "anchor": "Abrir la ficha ritual Cierre sereno para continuidad semanal"
+          }
+        ],
+        "colecciones": [
+          {
+            "slug": "infusion-bruma-lavanda",
+            "anchor": "Conocer la colección Bruma de Lavanda Serena"
+          },
+          {
+            "slug": "ritual-umbral-sereno",
+            "anchor": "Entrar al ritual guiado Umbral Sereno"
+          }
+        ]
       },
-      {
-        "href": "/rituales",
-        "anchor": "Ver rituales conectados para transiciones de día"
-      },
-      {
-        "href": "/colecciones/infusion-bruma-lavanda",
-        "anchor": "Conocer la colección Bruma de Lavanda Serena"
-      }
-    ]
+      "prioridad": 3
+    }
   },
   {
     "slug": "rituales-simples-para-ordenar-espacios",
@@ -60,7 +87,7 @@
     "tema": "rituales",
     "fecha_publicacion": "2026-02-14",
     "seo": {
-      "title": "Rituales simples para ordenar espacios | Guía editorial",
+      "title": "Rituales simples para ordenar espacios | La Botica de la Bruja Lore",
       "description": "Aprende una estructura breve para ordenar el espacio ritual con herramientas y rutas publicadas en La Botica de la Bruja Lore."
     },
     "secciones": [
@@ -86,20 +113,51 @@
         ]
       }
     ],
-    "enlaces_relacionados": [
-      {
-        "href": "/rituales",
-        "anchor": "Revisar rituales conectados por intención"
+    "relaciones": {
+      "hubs_relacionados": [
+        {
+          "href": "/rituales",
+          "anchor": "Revisar rituales conectados por intención"
+        },
+        {
+          "href": "/hierbas",
+          "anchor": "Comparar hierbas de apoyo para limpieza y orden"
+        },
+        {
+          "href": "/colecciones",
+          "anchor": "Explorar colecciones útiles para ordenar tu rincón"
+        },
+        {
+          "href": "/la-botica",
+          "anchor": "Leer los principios editoriales de La Botica"
+        }
+      ],
+      "fichas_relacionadas": {
+        "hierbas": [
+          {
+            "slug": "romero",
+            "anchor": "Consultar la ficha pública de Romero para limpieza simbólica"
+          }
+        ],
+        "rituales": [
+          {
+            "slug": "cierre-sereno",
+            "anchor": "Ver la ficha ritual Cierre sereno para rutinas de orden"
+          }
+        ],
+        "colecciones": [
+          {
+            "slug": "cuenco-laton-ritual",
+            "anchor": "Ver el cuenco de latón ritual en colecciones"
+          },
+          {
+            "slug": "ritual-luna-hogar",
+            "anchor": "Conocer la colección Ritual Luna en Casa"
+          }
+        ]
       },
-      {
-        "href": "/colecciones/cuenco-laton-ritual",
-        "anchor": "Ver el cuenco de latón ritual en colecciones"
-      },
-      {
-        "href": "/la-botica",
-        "anchor": "Leer los principios editoriales de La Botica"
-      }
-    ]
+      "prioridad": 2
+    }
   },
   {
     "slug": "como-elegir-colecciones-por-intencion",
@@ -111,7 +169,7 @@
     "tema": "colecciones",
     "fecha_publicacion": "2026-02-18",
     "seo": {
-      "title": "Cómo elegir colecciones por intención | Guía editorial",
+      "title": "Cómo elegir colecciones por intención | La Botica de la Bruja Lore",
       "description": "Convierte una intención en una selección clara usando colecciones, hierbas y rituales publicados con criterio editorial coherente."
     },
     "secciones": [
@@ -137,20 +195,51 @@
         ]
       }
     ],
-    "enlaces_relacionados": [
-      {
-        "href": "/colecciones",
-        "anchor": "Explorar colecciones por intención"
+    "relaciones": {
+      "hubs_relacionados": [
+        {
+          "href": "/colecciones",
+          "anchor": "Explorar colecciones por intención"
+        },
+        {
+          "href": "/hierbas",
+          "anchor": "Comparar hierbas antes de cerrar tu selección"
+        },
+        {
+          "href": "/rituales",
+          "anchor": "Ver rituales publicados para sostener una intención"
+        },
+        {
+          "href": "/la-botica",
+          "anchor": "Entender la curaduría editorial de La Botica"
+        }
+      ],
+      "fichas_relacionadas": {
+        "hierbas": [
+          {
+            "slug": "melisa",
+            "anchor": "Revisar la ficha de Melisa para prácticas de calma"
+          }
+        ],
+        "rituales": [
+          {
+            "slug": "cierre-sereno",
+            "anchor": "Conectar con la ficha ritual Cierre sereno"
+          }
+        ],
+        "colecciones": [
+          {
+            "slug": "pack-bosque-dorado",
+            "anchor": "Descubrir el Pack Bosque Dorado"
+          },
+          {
+            "slug": "pack-jardin-interior",
+            "anchor": "Explorar el Pack Jardín Interior"
+          }
+        ]
       },
-      {
-        "href": "/hierbas",
-        "anchor": "Comparar hierbas antes de cerrar tu selección"
-      },
-      {
-        "href": "/colecciones/pack-bosque-dorado",
-        "anchor": "Descubrir el Pack Bosque Dorado"
-      }
-    ]
+      "prioridad": 1
+    }
   },
   {
     "slug": "borrador-guia-editorial-interna",
@@ -173,11 +262,19 @@
         ]
       }
     ],
-    "enlaces_relacionados": [
-      {
-        "href": "/guias",
-        "anchor": "Volver a guías"
-      }
-    ]
+    "relaciones": {
+      "hubs_relacionados": [
+        {
+          "href": "/guias",
+          "anchor": "Volver a guías"
+        }
+      ],
+      "fichas_relacionadas": {
+        "hierbas": [],
+        "rituales": [],
+        "colecciones": []
+      },
+      "prioridad": 0
+    }
   }
 ]

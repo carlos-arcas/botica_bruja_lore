@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { FichaProductoCatalogo } from "@/componentes/catalogo/detalle/FichaProductoCatalogo";
+import { BloqueGuiasRelacionadas } from "@/componentes/editorial/BloqueGuiasRelacionadas";
 import { obtenerProductoPorSlug } from "@/contenido/catalogo/detalleCatalogo";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/infraestructura/seo/seoFichasPublicas";
 import { JsonLd } from "@/componentes/seo/JsonLd";
 import { construirSchemasFichaColeccion } from "@/infraestructura/seo/structuredData";
+import { obtenerGuiasRelacionadasPorFicha } from "@/contenido/editorial/guiasEditoriales";
 
 type Props = {
   params: { slug: string };
@@ -48,12 +50,18 @@ export default function PaginaDetalleColeccion({ params }: Props): JSX.Element {
     notFound();
   }
 
+  const guiasRelacionadas = obtenerGuiasRelacionadasPorFicha({ tipoFicha: "colecciones", slug: producto.slug });
   const schemasFicha = construirSchemasFichaColeccion(producto);
 
   return (
     <main className="contenedor-home">
       {schemasFicha.length > 0 ? <JsonLd id="schema-ficha" data={schemasFicha} /> : null}
       <FichaProductoCatalogo producto={producto} />
+      <BloqueGuiasRelacionadas
+        titulo="Guías editoriales relacionadas con esta colección"
+        descripcion="Complementa esta ficha con contexto editorial para enlazar intención, uso cotidiano y siguiente paso de navegación."
+        guias={guiasRelacionadas}
+      />
     </main>
   );
 }

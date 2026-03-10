@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 
 import { JsonLd } from "@/componentes/seo/JsonLd";
 import {
+  obtenerEnlacesCatalogoParaGuia,
+  obtenerEnlacesFichaParaGuia,
   obtenerGuiaEditorialPorSlug,
   obtenerGuiasPublicadasIndexables,
 } from "@/contenido/editorial/guiasEditoriales";
@@ -43,6 +45,8 @@ export default function PaginaDetalleGuia({ params }: Props): JSX.Element {
     notFound();
   }
 
+  const enlacesHubs = obtenerEnlacesCatalogoParaGuia(guia);
+  const enlacesFichas = obtenerEnlacesFichaParaGuia(guia);
   const schemas = construirSchemasDetalleGuiaEditorial(guia);
 
   return (
@@ -63,19 +67,34 @@ export default function PaginaDetalleGuia({ params }: Props): JSX.Element {
         </section>
       ))}
 
-      <section className="bloque-home" aria-labelledby="enlaces-relacionados-guia">
-        <h2 id="enlaces-relacionados-guia">Rutas relacionadas para profundizar</h2>
-        <ul className="lista-destacada">
-          {guia.enlaces_relacionados.map((enlace) => (
-            <li key={enlace.href}>
-              <Link href={enlace.href}>{enlace.anchor}</Link>
-            </li>
-          ))}
-        </ul>
-        <Link href="/guias" className="boton boton--secundario">
-          Volver al hub de guías
-        </Link>
-      </section>
+      {enlacesHubs.length > 0 ? (
+        <section className="bloque-home" aria-labelledby="enlaces-relacionados-guia">
+          <h2 id="enlaces-relacionados-guia">Rutas relacionadas para profundizar</h2>
+          <ul className="lista-destacada">
+            {enlacesHubs.map((enlace) => (
+              <li key={enlace.href}>
+                <Link href={enlace.href}>{enlace.anchor}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {enlacesFichas.length > 0 ? (
+        <section className="bloque-home" aria-labelledby="fichas-relacionadas-guia">
+          <h2 id="fichas-relacionadas-guia">Fichas públicas conectadas con esta guía</h2>
+          <ul className="lista-destacada">
+            {enlacesFichas.map((enlace) => (
+              <li key={enlace.href}>
+                <Link href={enlace.href}>{enlace.anchor}</Link>
+              </li>
+            ))}
+          </ul>
+          <Link href="/guias" className="boton boton--secundario">
+            Volver al hub de guías
+          </Link>
+        </section>
+      ) : null}
     </main>
   );
 }
