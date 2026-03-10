@@ -111,3 +111,23 @@ class EmailPedidoDemoDTO:
     cuerpo_texto: str
     subtotal_demo: Decimal
     lineas: tuple[EmailDemoLineaDTO, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class PerfilCuentaDemoDTO:
+    id_usuario: str
+    email: str
+    nombre_visible: str
+
+
+@dataclass(frozen=True, slots=True)
+class CuentaDemoDTO:
+    id_usuario: str
+    email: str
+    nombre_visible: str
+
+
+@dataclass(frozen=True, slots=True)
+class ResultadoAutenticacionDemoDTO:
+    cuenta: CuentaDemoDTO
+
