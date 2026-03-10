@@ -8,6 +8,7 @@ from ...aplicacion.casos_de_uso import (
     ObtenerRelacionesHerbalesPorIntencion,
     ObtenerResolucionComercialMinimaDePlanta,
 )
+from ...aplicacion.casos_de_uso_calendario_ritual import ConsultarCalendarioRitualPorFecha
 from ...aplicacion.casos_de_uso_cuentas_demo import (
     AutenticarCuentaDemo,
     ObtenerHistorialPedidosDemoCuenta,
@@ -33,6 +34,7 @@ from ...aplicacion.casos_de_uso_rituales import (
 from ...infraestructura.persistencia_django.repositorios import (
     ProveedorHistorialPedidosDemoORM,
     RepositorioCuentasDemoORM,
+    RepositorioReglasCalendarioORM,
     RepositorioPlantasORM,
     RepositorioProductosORM,
     RepositorioPedidosDemoORM,
@@ -56,6 +58,11 @@ class ServiciosPublicosRituales:
     plantas_por_ritual: ObtenerPlantasRelacionadasDeRitual
     productos_por_ritual: ObtenerProductosRelacionadosDeRitual
     rituales_por_intencion: ObtenerRitualesRelacionadosPorIntencion
+
+
+@dataclass(frozen=True, slots=True)
+class ServiciosPublicosCalendarioRitual:
+    consultar_por_fecha: ConsultarCalendarioRitualPorFecha
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,6 +106,15 @@ def construir_servicios_publicos_rituales() -> ServiciosPublicosRituales:
         plantas_por_ritual=ObtenerPlantasRelacionadasDeRitual(repositorio_rituales),
         productos_por_ritual=ObtenerProductosRelacionadosDeRitual(repositorio_rituales),
         rituales_por_intencion=ObtenerRitualesRelacionadosPorIntencion(repositorio_rituales),
+    )
+
+
+def construir_servicios_publicos_calendario_ritual() -> ServiciosPublicosCalendarioRitual:
+    return ServiciosPublicosCalendarioRitual(
+        consultar_por_fecha=ConsultarCalendarioRitualPorFecha(
+            repositorio_reglas=RepositorioReglasCalendarioORM(),
+            repositorio_rituales=RepositorioRitualesORM(),
+        )
     )
 
 

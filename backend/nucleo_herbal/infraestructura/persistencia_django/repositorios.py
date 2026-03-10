@@ -4,21 +4,27 @@ from django.db import transaction
 
 from ...aplicacion.puertos.proveedores_historial_pedidos_demo import ProveedorHistorialPedidosDemo
 from ...aplicacion.puertos.repositorios import RepositorioPlantas, RepositorioProductos
+from ...aplicacion.puertos.repositorios_calendario_ritual import RepositorioReglasCalendario
 from ...aplicacion.puertos.repositorios_cuentas_demo import RepositorioCuentasDemo
 from ...aplicacion.puertos.repositorios_pedidos_demo import RepositorioPedidosDemo
 from ...aplicacion.puertos.repositorios_rituales import RepositorioRituales
+from datetime import date
+
 from ...dominio.entidades import Planta, Producto, TIPO_PRODUCTO_HERBAL
+from ...dominio.calendario_ritual import ReglaCalendario
 from ...dominio.cuentas_demo import CuentaDemo
 from ...dominio.pedidos_demo import PedidoDemo
 from ...dominio.rituales import Ritual
 from .mapeadores import (
     a_cuenta_demo,
+    a_datos_regla_calendario,
     a_datos_cuenta_demo,
     a_datos_linea_pedido,
     a_pedido_demo,
     a_planta,
     a_producto,
     a_ritual,
+    a_regla_calendario,
 )
 from .models import (
     CuentaDemoModelo,
@@ -27,6 +33,7 @@ from .models import (
     PlantaModelo,
     ProductoModelo,
     RitualModelo,
+    ReglaCalendarioModelo,
 )
 
 
@@ -126,6 +133,25 @@ class RepositorioRitualesORM(RepositorioRituales):
             "plantas_relacionadas",
             "productos_relacionados",
         )
+
+
+class RepositorioReglasCalendarioORM(RepositorioReglasCalendario):
+    def listar_vigentes_en(self, fecha_consulta: date) -> tuple[ReglaCalendario, ...]:
+        queryset = ReglaCalendarioModelo.objects.filter(
+            activa=True,
+            fecha_inicio__lte=fecha_consulta,
+            fecha_fin__gte=fecha_consulta,
+            ritual__publicado=True,
+        ).select_related("ritual")
+        return tuple(a_regla_calendario(regla) for regla in queryset)
+
+    def guardar(self, regla: ReglaCalendario) -> ReglaCalendario:
+        ReglaCalendarioModelo.objects.update_or_create(
+            id=regla.id,
+            defaults=a_datos_regla_calendario(regla),
+        )
+        modelo = ReglaCalendarioModelo.objects.get(id=regla.id)
+        return a_regla_calendario(modelo)
 
 
 class RepositorioPedidosDemoORM(RepositorioPedidosDemo):

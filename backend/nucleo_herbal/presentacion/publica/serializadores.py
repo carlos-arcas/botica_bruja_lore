@@ -1,6 +1,7 @@
 """Serializadores HTTP para DTOs del núcleo herbal público."""
 
 from ...aplicacion.dto import (
+    ConsultaCalendarioRitualDTO,
     IntencionDTO,
     PlantaDetalleDTO,
     PlantaResumenDTO,
@@ -8,6 +9,7 @@ from ...aplicacion.dto import (
     RelacionIntencionHerbalDTO,
     RelacionIntencionRitualDTO,
     RitualDetalleDTO,
+    RitualCalendarioDTO,
     RitualResumenDTO,
 )
 
@@ -76,3 +78,20 @@ def serializar_relacion_intencion_ritual(dto: RelacionIntencionRitualDTO) -> dic
 
 def serializar_intencion(dto: IntencionDTO) -> dict:
     return {"slug": dto.slug, "nombre": dto.nombre}
+
+
+def serializar_consulta_calendario_ritual(dto: ConsultaCalendarioRitualDTO) -> dict:
+    return {
+        "fecha_consulta": dto.fecha_consulta,
+        "rituales": [serializar_ritual_calendario(item) for item in dto.rituales],
+    }
+
+
+def serializar_ritual_calendario(dto: RitualCalendarioDTO) -> dict:
+    return {
+        "slug": dto.slug,
+        "nombre": dto.nombre,
+        "contexto_breve": dto.contexto_breve,
+        "nombre_regla": dto.nombre_regla,
+        "prioridad": dto.prioridad,
+    }

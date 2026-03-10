@@ -7,6 +7,7 @@ try:
         PlantaModelo,
         ProductoModelo,
         RitualModelo,
+        ReglaCalendarioModelo,
     )
 
     DJANGO_DISPONIBLE = True
@@ -99,6 +100,25 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
             publicado=False,
         )
         cls.ritual_oculto.intenciones.set([cls.intencion_calma])
+
+        ReglaCalendarioModelo.objects.create(
+            id="reg-1",
+            ritual=cls.ritual_publico,
+            nombre="Equinoccio de calma",
+            fecha_inicio="2026-03-20",
+            fecha_fin="2026-03-25",
+            prioridad=8,
+            activa=True,
+        )
+        ReglaCalendarioModelo.objects.create(
+            id="reg-2",
+            ritual=cls.ritual_publico,
+            nombre="Ventana prioritaria",
+            fecha_inicio="2026-03-22",
+            fecha_fin="2026-03-23",
+            prioridad=1,
+            activa=True,
+        )
 
     def test_listado_herbal_publica_solo_plantas_navegables(self) -> None:
         response = self.client.get("/api/v1/herbal/plantas/")
@@ -218,3 +238,28 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertIn("Intención", response.json()["detalle"])
+
+
+    def test_calendario_ritual_por_fecha_devuelve_rituales_aplicables(self) -> None:
+        response = self.client.get("/api/v1/calendario-ritual/?fecha=2026-03-22")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["fecha_consulta"], "2026-03-22")
+        self.assertEqual(len(data["rituales"]), 1)
+        self.assertEqual(data["rituales"][0]["slug"], "cierre-sereno")
+        self.assertEqual(data["rituales"][0]["nombre_regla"], "Ventana prioritaria")
+
+    def test_calendario_ritual_por_fecha_sin_resultados(self) -> None:
+        response = self.client.get("/api/v1/calendario-ritual/?fecha=2026-04-10")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["fecha_consulta"], "2026-04-10")
+        self.assertEqual(data["rituales"], [])
+
+    def test_calendario_ritual_por_fecha_invalida_devuelve_400(self) -> None:
+        response = self.client.get("/api/v1/calendario-ritual/?fecha=10-04-2026")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Formato de fecha inválido", response.json()["detalle"])
