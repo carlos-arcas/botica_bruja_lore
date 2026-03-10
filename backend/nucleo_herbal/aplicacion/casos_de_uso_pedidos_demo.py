@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from ..dominio.pedidos_demo import LineaPedido, PedidoDemo, normalizar_lineas
 from .dto import LineaPedidoDTO, PedidoDemoDTO, ResumenPedidoDemoDTO
+from .puertos.repositorios_pedidos_demo import RepositorioPedidosDemo
 
 
 @dataclass(slots=True)
@@ -30,6 +31,30 @@ class CrearPedidoDemoDesdeLineas:
             id_usuario=id_usuario,
         )
         return _a_pedido_dto(pedido)
+
+
+@dataclass(slots=True)
+class RegistrarPedidoDemo:
+    """Construye y persiste el agregado pedido demo con repositorio desacoplado."""
+
+    repositorio_pedidos_demo: RepositorioPedidosDemo
+
+    def ejecutar(
+        self,
+        lineas: tuple[LineaPedido, ...],
+        email_contacto: str,
+        canal_compra: str,
+        id_usuario: str | None = None,
+    ) -> PedidoDemoDTO:
+        pedido = PedidoDemo(
+            id_pedido=_generar_id_pedido_demo(),
+            email_contacto=email_contacto,
+            canal_compra=canal_compra,
+            lineas=normalizar_lineas(lineas),
+            id_usuario=id_usuario,
+        )
+        pedido_persistido = self.repositorio_pedidos_demo.guardar(pedido)
+        return _a_pedido_dto(pedido_persistido)
 
 
 @dataclass(slots=True)
