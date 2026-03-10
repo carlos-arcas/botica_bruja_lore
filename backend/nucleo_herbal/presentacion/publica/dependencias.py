@@ -8,6 +8,12 @@ from ...aplicacion.casos_de_uso import (
     ObtenerRelacionesHerbalesPorIntencion,
     ObtenerResolucionComercialMinimaDePlanta,
 )
+from ...aplicacion.casos_de_uso_cuentas_demo import (
+    AutenticarCuentaDemo,
+    ObtenerHistorialPedidosDemoCuenta,
+    ObtenerPerfilCuentaDemo,
+    RegistrarCuentaDemo,
+)
 from ...aplicacion.casos_de_uso_email_demo import (
     ComponerEmailDemoPedido,
     ObtenerEmailDemoPedidoPorId,
@@ -25,9 +31,11 @@ from ...aplicacion.casos_de_uso_rituales import (
     ObtenerRitualesRelacionadosPorIntencion,
 )
 from ...infraestructura.persistencia_django.repositorios import (
+    ProveedorHistorialPedidosDemoORM,
+    RepositorioCuentasDemoORM,
+    RepositorioPedidosDemoORM,
     RepositorioPlantasORM,
     RepositorioProductosORM,
-    RepositorioPedidosDemoORM,
     RepositorioRitualesORM,
 )
 
@@ -55,6 +63,14 @@ class ServiciosPublicosPedidosDemo:
     registrar_pedido_demo: RegistrarPedidoDemo
     obtener_pedido_demo: ObtenerPedidoDemoPorId
     obtener_email_demo_pedido: ObtenerEmailDemoPedidoPorId
+
+
+@dataclass(frozen=True, slots=True)
+class ServiciosPublicosCuentaDemo:
+    registrar_cuenta_demo: RegistrarCuentaDemo
+    autenticar_cuenta_demo: AutenticarCuentaDemo
+    obtener_perfil_cuenta_demo: ObtenerPerfilCuentaDemo
+    obtener_historial_cuenta_demo: ObtenerHistorialPedidosDemoCuenta
 
 
 def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
@@ -94,5 +110,19 @@ def construir_servicios_publicos_pedidos_demo() -> ServiciosPublicosPedidosDemo:
         obtener_email_demo_pedido=ObtenerEmailDemoPedidoPorId(
             repositorio_pedidos_demo=repositorio,
             componer_email_demo=ComponerEmailDemoPedido(),
+        ),
+    )
+
+
+def construir_servicios_publicos_cuenta_demo() -> ServiciosPublicosCuentaDemo:
+    repositorio_cuentas = RepositorioCuentasDemoORM()
+    proveedor_historial = ProveedorHistorialPedidosDemoORM()
+    return ServiciosPublicosCuentaDemo(
+        registrar_cuenta_demo=RegistrarCuentaDemo(repositorio_cuentas_demo=repositorio_cuentas),
+        autenticar_cuenta_demo=AutenticarCuentaDemo(repositorio_cuentas_demo=repositorio_cuentas),
+        obtener_perfil_cuenta_demo=ObtenerPerfilCuentaDemo(repositorio_cuentas_demo=repositorio_cuentas),
+        obtener_historial_cuenta_demo=ObtenerHistorialPedidosDemoCuenta(
+            repositorio_cuentas_demo=repositorio_cuentas,
+            proveedor_historial_pedidos_demo=proveedor_historial,
         ),
     )

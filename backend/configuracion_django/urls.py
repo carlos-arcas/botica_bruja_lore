@@ -62,4 +62,8 @@ urlpatterns = [
         "api/v1/pedidos-demo/",
         include("backend.nucleo_herbal.presentacion.publica.urls_pedidos_demo"),
     ),
+    path(
+        "api/v1/cuentas-demo/",
+        include("backend.nucleo_herbal.presentacion.publica.urls_cuentas_demo"),
+    ),
 ]

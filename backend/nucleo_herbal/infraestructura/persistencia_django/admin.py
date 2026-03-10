@@ -3,6 +3,7 @@
 from django.contrib import admin
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
+    CuentaDemoModelo,
     IntencionModelo,
     LineaPedidoModelo,
     PedidoDemoModelo,
@@ -139,6 +140,14 @@ class RitualAdmin(admin.ModelAdmin):
     def mostrar_productos_relacionados(self, obj):
         nombres = obj.productos_relacionados.values_list("nombre", flat=True)
         return ", ".join(nombres)
+
+
+@admin.register(CuentaDemoModelo)
+class CuentaDemoAdmin(admin.ModelAdmin):
+    list_display = ("id_usuario", "email", "nombre_visible", "fecha_creacion")
+    search_fields = ("id_usuario", "email", "nombre_visible")
+    ordering = ("email",)
+    readonly_fields = ("fecha_creacion", "fecha_actualizacion")
 
 
 class LineaPedidoInline(admin.TabularInline):
