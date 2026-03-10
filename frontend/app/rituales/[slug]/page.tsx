@@ -7,17 +7,39 @@ import { CabeceraFichaRitual } from "@/componentes/rituales/detalle/CabeceraFich
 import { EstadoErrorFichaRitual } from "@/componentes/rituales/detalle/EstadoFichaRitual";
 import { obtenerFichaRitualConectada } from "@/infraestructura/api/rituales";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
+import {
+  construirDescriptionFichaPublica,
+  construirTitleFichaPublica,
+} from "@/infraestructura/seo/seoFichasPublicas";
 
 type Props = {
   params: { slug: string };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const slugLegible = params.slug.replace(/-/g, " ");
+  const resultado = await obtenerFichaRitualConectada(params.slug);
+
+  if (resultado.estado !== "ok") {
+    return construirMetadataSeo({
+      title: "Ficha ritual no disponible | La Botica de la Bruja Lore",
+      description: "La ficha ritual solicitada no está publicada o no está disponible ahora mismo.",
+      indexable: false,
+    });
+  }
+
+  const { ritual } = resultado.ficha;
+
   return construirMetadataSeo({
-    title: `${slugLegible} | Ficha ritual | La Botica de la Bruja Lore`,
-    description:
-      "Ficha ritual conectada del Ciclo 2: contexto editorial del ritual con salida herbal y resolución comercial mínima.",
+    title: construirTitleFichaPublica({
+      nombre: ritual.nombre,
+      tipoFicha: "ritual",
+    }),
+    description: construirDescriptionFichaPublica({
+      nombre: ritual.nombre,
+      tipoFicha: "ritual",
+      resumen: ritual.contexto_breve,
+      intenciones: ritual.intenciones.map((intencion) => intencion.nombre),
+    }),
     rutaCanonical: `/rituales/${params.slug}`,
   });
 }

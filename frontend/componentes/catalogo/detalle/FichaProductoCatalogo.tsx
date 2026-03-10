@@ -34,6 +34,10 @@ export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
         <h1>{producto.nombre}</h1>
         <p className={estilos.subtitulo}>{producto.subtitulo}</p>
         <p>{producto.descripcion}</p>
+        <p>
+          Navegación relacionada: <Link href="/colecciones">colecciones</Link>,{" "}
+          <Link href="/hierbas">fichas herbales</Link> y <Link href="/rituales">fichas rituales</Link>.
+        </p>
 
         <div className={estilos.resumenComercial}>
           <p><strong>Precio:</strong> {producto.precioVisible}</p>
