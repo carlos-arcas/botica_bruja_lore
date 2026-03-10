@@ -29,6 +29,26 @@ export type ResultadoDetallePedidoDemo =
   | { estado: "ok"; pedido: PedidoDemoCreado }
   | { estado: "error"; mensaje: string; codigo?: number };
 
+export type EmailDemoPedido = {
+  id_pedido: string;
+  estado: string;
+  canal: string;
+  email_destino: string;
+  asunto: string;
+  cuerpo_texto: string;
+  subtotal_demo: string;
+  lineas: Array<{
+    nombre_producto: string;
+    cantidad: number;
+    subtotal_demo: string;
+  }>;
+  es_simulacion: boolean;
+};
+
+export type ResultadoEmailDemoPedido =
+  | { estado: "ok"; emailDemo: EmailDemoPedido }
+  | { estado: "error"; mensaje: string; codigo?: number };
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
 
@@ -103,4 +123,30 @@ async function leerMensajeError(respuesta: Response): Promise<string> {
   }
 
   return "No se pudo crear el pedido demo por un error inesperado.";
+}
+
+
+export async function obtenerEmailDemoPedidoPublico(idPedido: string): Promise<ResultadoEmailDemoPedido> {
+  const endpoint = `${API_BASE_URL}/api/v1/pedidos-demo/${encodeURIComponent(idPedido)}/email-demo/`;
+
+  try {
+    const respuesta = await fetch(endpoint, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+
+    const payload = await respuesta.json();
+    if (!respuesta.ok) {
+      return {
+        estado: "error",
+        codigo: respuesta.status,
+        mensaje: payload?.detalle ?? "No pudimos recuperar el email demo.",
+      };
+    }
+
+    return { estado: "ok", emailDemo: payload.email_demo as EmailDemoPedido };
+  } catch (_error) {
+    return { estado: "error", mensaje: "No hay conexión con la API de email demo." };
+  }
 }

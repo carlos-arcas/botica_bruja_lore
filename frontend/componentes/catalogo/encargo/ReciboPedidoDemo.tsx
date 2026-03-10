@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { resolverIdPedidoDesdeRuta } from "@/contenido/catalogo/postCheckoutDemo";
-import { obtenerPedidoDemoPublico, PedidoDemoCreado } from "@/infraestructura/api/pedidosDemo";
+import {
+  EmailDemoPedido,
+  obtenerEmailDemoPedidoPublico,
+  obtenerPedidoDemoPublico,
+  PedidoDemoCreado,
+} from "@/infraestructura/api/pedidosDemo";
 
 import estilos from "./flujoEncargoConsulta.module.css";
 
@@ -17,6 +22,7 @@ export function ReciboPedidoDemo({ idPedidoRuta }: Props): JSX.Element {
   const [estado, setEstado] = useState<"cargando" | "error" | "ok" | "vacio">(idPedido ? "cargando" : "vacio");
   const [mensaje, setMensaje] = useState<string>("");
   const [pedido, setPedido] = useState<PedidoDemoCreado | null>(null);
+  const [emailDemo, setEmailDemo] = useState<EmailDemoPedido | null>(null);
 
   useEffect(() => {
     if (!idPedido) {
@@ -27,6 +33,7 @@ export function ReciboPedidoDemo({ idPedidoRuta }: Props): JSX.Element {
     setEstado("cargando");
     setMensaje("");
     setPedido(null);
+    setEmailDemo(null);
 
     obtenerPedidoDemoPublico(idPedido).then((resultado) => {
       if (!activo) {
@@ -41,6 +48,12 @@ export function ReciboPedidoDemo({ idPedidoRuta }: Props): JSX.Element {
 
       setEstado("ok");
       setPedido(resultado.pedido);
+      obtenerEmailDemoPedidoPublico(idPedido).then((respuestaEmail) => {
+        if (!activo || respuestaEmail.estado === "error") {
+          return;
+        }
+        setEmailDemo(respuestaEmail.emailDemo);
+      });
     });
 
     return () => {
@@ -93,6 +106,14 @@ export function ReciboPedidoDemo({ idPedidoRuta }: Props): JSX.Element {
             </ul>
           )}
           <p>Entorno demo: no se ha procesado ningún pago real.</p>
+
+          {emailDemo && (
+            <div>
+              <p><strong>Email demo:</strong> {emailDemo.asunto}</p>
+              <p>Simulación de email activa (sin envío real).</p>
+              <pre>{emailDemo.cuerpo_texto}</pre>
+            </div>
+          )}
         </article>
       )}
 

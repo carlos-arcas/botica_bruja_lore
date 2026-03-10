@@ -8,6 +8,10 @@ from ...aplicacion.casos_de_uso import (
     ObtenerRelacionesHerbalesPorIntencion,
     ObtenerResolucionComercialMinimaDePlanta,
 )
+from ...aplicacion.casos_de_uso_email_demo import (
+    ComponerEmailDemoPedido,
+    ObtenerEmailDemoPedidoPorId,
+)
 from ...aplicacion.casos_de_uso_pedidos_demo import (
     ObtenerPedidoDemoPorId,
     RegistrarPedidoDemo,
@@ -50,6 +54,7 @@ class ServiciosPublicosRituales:
 class ServiciosPublicosPedidosDemo:
     registrar_pedido_demo: RegistrarPedidoDemo
     obtener_pedido_demo: ObtenerPedidoDemoPorId
+    obtener_email_demo_pedido: ObtenerEmailDemoPedidoPorId
 
 
 def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
@@ -86,4 +91,8 @@ def construir_servicios_publicos_pedidos_demo() -> ServiciosPublicosPedidosDemo:
     return ServiciosPublicosPedidosDemo(
         registrar_pedido_demo=RegistrarPedidoDemo(repositorio_pedidos_demo=repositorio),
         obtener_pedido_demo=ObtenerPedidoDemoPorId(repositorio_pedidos_demo=repositorio),
+        obtener_email_demo_pedido=ObtenerEmailDemoPedidoPorId(
+            repositorio_pedidos_demo=repositorio,
+            componer_email_demo=ComponerEmailDemoPedido(),
+        ),
     )

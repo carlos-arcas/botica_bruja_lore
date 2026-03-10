@@ -7,4 +7,5 @@ from . import views_pedidos_demo
 urlpatterns = [
     path("", views_pedidos_demo.crear_pedido_demo, name="publico-crear-pedido-demo"),
     path("<str:id_pedido>/", views_pedidos_demo.detalle_pedido_demo, name="publico-detalle-pedido-demo"),
+    path("<str:id_pedido>/email-demo/", views_pedidos_demo.email_demo_pedido, name="publico-email-demo-pedido"),
 ]
