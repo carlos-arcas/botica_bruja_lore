@@ -19,14 +19,14 @@ test("contenido editorial de marca expone bloques mínimos del recorrido", () =>
   assert.equal(MANIFIESTO_BOTICA.length >= 3, true);
 });
 
-test("cta de marca conecta con catálogo y encargo", () => {
+test("cta de marca conecta con rutas indexables del catálogo", () => {
   assert.equal(CTA_MARCA.primaria.href, "/colecciones");
-  assert.equal(CTA_MARCA.secundaria.href, "/encargo");
+  assert.equal(CTA_MARCA.secundaria.href, "/rituales");
 });
 
 test("hero y metadata mantienen narrativa y destino comercial", () => {
   assert.equal(HERO_MARCA.acciones[0].href, "/colecciones");
-  assert.equal(HERO_MARCA.acciones[1].href, "/encargo");
+  assert.equal(HERO_MARCA.acciones[1].href, "/hierbas");
   assert.equal(METADATA_LA_BOTICA.title.includes("La Botica"), true);
   assert.equal(METADATA_LA_BOTICA.description.includes("colecciones"), true);
 });

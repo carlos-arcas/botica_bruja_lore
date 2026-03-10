@@ -18,7 +18,7 @@ export function TarjetaPlantaHerbal({ planta }: Props): JSX.Element {
           ? `Intención principal: ${intencionPrincipal}`
           : "Sin intención pública asociada todavía."}
       </p>
-      <Link href={planta.urlDetalle}>Entrar a la ficha herbal</Link>
+      <Link href={planta.urlDetalle}>Ver ficha herbal de {planta.nombre}</Link>
     </li>
   );
 }

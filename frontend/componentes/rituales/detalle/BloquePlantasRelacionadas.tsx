@@ -24,7 +24,7 @@ export function BloquePlantasRelacionadas({ plantas }: Props): JSX.Element {
             <li key={planta.slug}>
               <h3>{planta.nombre}</h3>
               <p>{planta.descripcion_breve}</p>
-              <Link href={planta.urlDetalle}>Abrir ficha herbal</Link>
+              <Link href={planta.urlDetalle}>Ver ficha herbal de {planta.nombre}</Link>
             </li>
           ))}
         </ul>

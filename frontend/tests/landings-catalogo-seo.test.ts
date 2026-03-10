@@ -61,4 +61,8 @@ test("cada landing mantiene un único H1 y copy indexable mínimo", () => {
   assert.equal(INTRO_LISTADO_HIERBAS.enlacesInternos.length >= 3, true);
   assert.equal(INTRO_LISTADO_RITUALES.enlacesInternos.length >= 3, true);
   assert.equal(INTRO_LISTADO_COLECCIONES.enlacesInternos.length >= 3, true);
+
+  assert.equal(INTRO_LISTADO_RITUALES.enlacesInternos.some((enlace) => enlace.href === "/encargo"), false);
+  assert.equal(INTRO_LISTADO_COLECCIONES.enlacesInternos.some((enlace) => enlace.href === "/encargo"), false);
+  assert.equal(INTRO_LISTADO_HIERBAS.enlacesInternos.some((enlace) => enlace.href === "/la-botica"), true);
 });
