@@ -138,6 +138,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.sitemaps",
     "django.contrib.staticfiles",
     "backend.nucleo_herbal.infraestructura.persistencia_django",
 ]

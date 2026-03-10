@@ -1,11 +1,14 @@
 """Rutas raíz para administración, APIs públicas y healthcheck."""
 
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.db import connections
 from django.db.utils import DatabaseError
 from django.http import HttpResponse, JsonResponse
 from django.urls import include, path
 from django.conf import settings
+
+from backend.nucleo_herbal.presentacion.publica.sitemaps import SITEMAPS_PUBLICOS
 
 
 def _resolver_url_publica_sitio(request) -> str:
@@ -42,6 +45,7 @@ def healthcheck(_request):
 urlpatterns = [
     path("robots.txt", robots_txt, name="robots-txt"),
     path("healthz", healthcheck, name="healthcheck"),
+    path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS_PUBLICOS}, name="sitemap-xml"),
     path("admin/", admin.site.urls),
     path("api/v1/herbal/", include("backend.nucleo_herbal.presentacion.publica.urls")),
     path(
