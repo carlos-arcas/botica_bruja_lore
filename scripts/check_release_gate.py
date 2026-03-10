@@ -158,8 +158,14 @@ def _frontend_block() -> list[BlockResult]:
         blocking=True,
         cwd=frontend_dir,
     )
+    api_base_url_env = _run_block(
+        f"{base_name} - test contrato api base url",
+        ["npm", "run", "test:api-base-url-env"],
+        blocking=True,
+        cwd=frontend_dir,
+    )
     build = _run_block(f"{base_name} - build", ["npm", "run", "build"], blocking=True, cwd=frontend_dir)
-    return [lint, checkout_demo, cuenta_demo, build]
+    return [lint, checkout_demo, cuenta_demo, api_base_url_env, build]
 
 
 def _print_summary(results: list[BlockResult]) -> int:

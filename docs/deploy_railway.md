@@ -55,6 +55,13 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-ma
 ### Frontend
 - `NEXT_PUBLIC_API_BASE_URL` con la URL pública del backend.
 
+Contrato endurecido:
+
+- En local/desarrollo (`NODE_ENV=development`, sin `CI` ni señales Railway), si falta `NEXT_PUBLIC_API_BASE_URL`, se permite fallback a `http://127.0.0.1:8000`.
+- En producción/CI/Railway (`NODE_ENV=production` o `CI=true` o `RAILWAY_PUBLIC_DOMAIN`/`RAILWAY_ENVIRONMENT_ID` presentes), `NEXT_PUBLIC_API_BASE_URL` es obligatoria.
+- En producción/CI/Railway se rechaza configuración inválida: URL mal formada, protocolo no-HTTPS o host local (`localhost`, `127.0.0.1`, `0.0.0.0`).
+- El frontend falla de forma temprana con error explícito de configuración para evitar deploys "verdes pero mal cableados".
+
 
 ## 2.1) Regla de seguridad para base de datos
 
@@ -158,6 +165,7 @@ Este comando entrega un veredicto único (`OK`/`ERROR`) y ejecuta:
 - snapshot de conteos públicos en modo lectura,
 - integridad operativa/documental del repo (`python scripts/check_repo_operational_integrity.py`),
 - validación frontend básica (`npm run lint` y `npm run build`) cuando el entorno lo permite.
+- validación automática del contrato de entorno frontend (`npm run test:api-base-url-env`).
 
 Regla clave de auditoría:
 

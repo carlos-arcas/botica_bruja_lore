@@ -1,3 +1,5 @@
+import { resolverApiBaseUrl } from "./apiBaseUrl";
+
 export type IntencionPublica = {
   slug: string;
   nombre: string;
@@ -91,8 +93,7 @@ export type ResultadoFichaRitual =
   | { estado: "no_encontrado" }
   | { estado: "error"; mensaje: string };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
+const API_BASE_URL = resolverApiBaseUrl();
 
 function mapearRitual(ritual: RitualApi): RitualPublico {
   return {
