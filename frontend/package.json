@@ -17,7 +17,8 @@
     "test:legal": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/legal-comercial.test.ts contenido/legal/paginasLegalesComerciales.ts contenido/catalogo/canalContactoPublico.ts && node .tmp-tests/tests/legal-comercial.test.js",
     "test:checkout-demo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/checkout-demo.test.ts contenido/catalogo/catalogo.ts contenido/catalogo/cestaRitual.ts contenido/catalogo/checkoutDemo.ts contenido/catalogo/postCheckoutDemo.ts infraestructura/api/pedidosDemo.ts && node .tmp-tests/tests/checkout-demo.test.js",
     "test:seo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --esModuleInterop --outDir .tmp-tests tests/seo-metadata.test.ts infraestructura/seo/metadataSeo.ts && node .tmp-tests/tests/seo-metadata.test.js",
-    "test:home-seo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --esModuleInterop --outDir .tmp-tests tests/home-seo.test.ts contenido/home/contenidoHome.ts contenido/home/seoHome.ts infraestructura/seo/metadataSeo.ts && node .tmp-tests/tests/home-seo.test.js"
+    "test:home-seo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --esModuleInterop --outDir .tmp-tests tests/home-seo.test.ts contenido/home/contenidoHome.ts contenido/home/seoHome.ts infraestructura/seo/metadataSeo.ts && node .tmp-tests/tests/home-seo.test.js",
+    "test:landings-seo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --esModuleInterop --outDir .tmp-tests tests/landings-catalogo-seo.test.ts contenido/catalogo/seoLandingsCatalogo.ts contenido/home/seoHome.ts infraestructura/seo/metadataSeo.ts && node .tmp-tests/tests/landings-catalogo-seo.test.js"
   },
   "dependencies": {
     "next": "^14.2.35",

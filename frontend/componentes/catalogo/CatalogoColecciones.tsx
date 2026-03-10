@@ -14,6 +14,9 @@ import {
   EstadoCatalogo,
   serializarEstadoCatalogo,
 } from "@/contenido/catalogo/estadoCatalogoUrl";
+import {
+  INTRO_LISTADO_COLECCIONES,
+} from "@/contenido/catalogo/seoLandingsCatalogo";
 import { OrdenCatalogo, resolverCatalogo } from "@/contenido/catalogo/filtrosCatalogo";
 
 import estilos from "./catalogo.module.css";
@@ -55,7 +58,7 @@ export function CatalogoColecciones({ searchParamsIniciales }: Props): JSX.Eleme
     <section className="bloque-home" aria-labelledby="titulo-colecciones">
       <div className={estilos.cabecera}>
         <p className={estilos.eyebrow}>Catálogo ritual · primer bloque navegable</p>
-        <h1 id="titulo-colecciones">Colecciones de la botica</h1>
+        <h1 id="titulo-colecciones">{INTRO_LISTADO_COLECCIONES.h1}</h1>
         <p>
           Selección editorial-comercial de piezas rituales para comprar con criterio y descubrir formatos por intención.
         </p>

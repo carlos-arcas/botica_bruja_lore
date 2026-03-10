@@ -6,14 +6,17 @@ import {
   EstadoVacioListadoHerbal,
 } from "@/componentes/herbal/EstadoListadoHerbal";
 import { ListadoHerbal } from "@/componentes/herbal/ListadoHerbal";
+import {
+  INTRO_LISTADO_HIERBAS,
+  METADATA_LISTADO_HIERBAS,
+} from "@/contenido/catalogo/seoLandingsCatalogo";
 import { obtenerListadoHerbal } from "@/infraestructura/api/herbal";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 export const metadata: Metadata = construirMetadataSeo({
-  title: "Línea herbal | La Botica de la Bruja Lore",
-  description:
-    "Listado herbal navegable con entrada por plantas e intención para el Ciclo 1 de la botica.",
-  rutaCanonical: "/hierbas",
+  title: METADATA_LISTADO_HIERBAS.title,
+  description: METADATA_LISTADO_HIERBAS.description,
+  rutaCanonical: METADATA_LISTADO_HIERBAS.rutaCanonical,
 });
 
 export default async function PaginaListadoHerbal(): Promise<JSX.Element> {
@@ -22,14 +25,18 @@ export default async function PaginaListadoHerbal(): Promise<JSX.Element> {
   return (
     <main className="contenedor-home">
       <section className="bloque-home">
-        <p className="hero-portada__eyebrow">Núcleo herbal navegable</p>
-        <h1>Línea herbal</h1>
-        <p>
-          Explora plantas publicadas con contexto breve e intención principal. Desde aquí puedes entrar a la ficha herbal conectada con contexto editorial y salida comercial mínima.
-        </p>
-        <Link href="/" className="boton boton--secundario">
-          Volver a portada
-        </Link>
+        <p className="hero-portada__eyebrow">{INTRO_LISTADO_HIERBAS.eyebrow}</p>
+        <h1>{INTRO_LISTADO_HIERBAS.h1}</h1>
+        {INTRO_LISTADO_HIERBAS.parrafos.map((parrafo) => (
+          <p key={parrafo}>{parrafo}</p>
+        ))}
+        <div className="hero-portada__acciones">
+          {INTRO_LISTADO_HIERBAS.enlacesInternos.map((enlace) => (
+            <Link key={enlace.href} href={enlace.href} className="boton boton--secundario">
+              {enlace.etiqueta}
+            </Link>
+          ))}
+        </div>
       </section>
 
       {resultado.estado === "error" ? (
