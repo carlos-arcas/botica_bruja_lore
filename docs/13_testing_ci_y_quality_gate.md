@@ -198,3 +198,24 @@ Este documento es marco operativo para trabajo futuro y debe usarse de esta mane
 4. **En gobierno del roadmap**
    - Usar este marco para evitar tanto laxitud como sobrecarga prematura.
    - Mantener trazabilidad entre estado real de implementación y exigencia de calidad activa.
+
+## 12. Comando canónico de readiness técnica del backend
+
+Para auditoría técnica y futura automatización CI, el repositorio define un smoke check canónico:
+
+```bash
+python scripts/check_backend_readiness.py
+```
+
+Este comando valida de forma reproducible:
+
+- **Caso A (local razonable):** sin `DATABASE_URL` ni variables Railway, el backend debe arrancar con fallback local SQLite.
+- **Caso B (Railway mal configurado):** simulando entorno Railway sin `DATABASE_URL`, el arranque debe fallar con `DATABASE_URL es obligatoria en Railway/producción.`
+- **Caso C (producción sin hardening):** con `DEBUG=false` y sin `SECRET_KEY`, el arranque debe fallar por hardening de configuración.
+- **Caso D (bootstrap canónico):** `manage.py` y `backend/configuracion_django/wsgi.py` fuerzan `backend.configuracion_django.settings`, y el WSGI del repo es importable.
+
+Alcance y límites:
+
+- Este smoke check **no sustituye** `python manage.py test` ni pruebas unitarias/integración/E2E.
+- `python manage.py test` se sigue usando para validar lógica de negocio, regresiones funcionales y contratos internos.
+- El readiness check se usa para validar configuración crítica de arranque (local/producción/Railway) y evitar errores de entorno antes de despliegue.
