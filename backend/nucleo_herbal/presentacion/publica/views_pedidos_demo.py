@@ -11,6 +11,7 @@ from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
 from ...dominio.excepciones import ErrorDominio
 from ...dominio.pedidos_demo import LineaPedido
 from .dependencias import construir_servicios_publicos_pedidos_demo
+from .email_demo_serializadores import serializar_email_demo
 from .pedidos_demo_serializadores import serializar_pedido_demo
 
 
@@ -117,3 +118,13 @@ def _validar_decimal(payload: dict, campo: str) -> Decimal:
         return Decimal(str(valor))
     except InvalidOperation as error:
         raise ValueError(f"El campo '{campo}' no tiene un decimal válido.") from error
+
+
+def email_demo_pedido(_request: HttpRequest, id_pedido: str) -> JsonResponse:
+    servicios = construir_servicios_publicos_pedidos_demo()
+    try:
+        email_demo = servicios.obtener_email_demo_pedido.ejecutar(id_pedido)
+    except ErrorAplicacionLookup as error_lookup:
+        return JsonResponse({"detalle": str(error_lookup)}, status=404)
+
+    return JsonResponse({"email_demo": serializar_email_demo(email_demo)})
