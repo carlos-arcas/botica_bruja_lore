@@ -282,3 +282,20 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 3** (API del flujo);
   - sigue pendiente Prompt 4 (backoffice mínimo), sin adelantar frontend checkout, confirmación/email ni pagos.
+
+## 20. Backoffice mínimo de pedidos demo (Prompt 4 oficial Ciclo 3)
+- Capacidad: **Backoffice/admin mínimo para consulta y gestión operativa básica de `PedidoDemo`**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - registro de `PedidoDemoModelo` en Django Admin con listado operativo en `backend/nucleo_herbal/infraestructura/persistencia_django/admin.py`;
+  - inline de `LineaPedidoModelo` en detalle de pedido demo para visualizar snapshot de líneas;
+  - filtros mínimos de backoffice por estado/canal y búsqueda por id/email de pedido demo.
+- Operaciones mínimas cerradas en este incremento:
+  1. listar pedidos demo con campos operativos (`id_pedido`, `email_contacto`, `canal_compra`, `estado`, número de líneas, fecha);
+  2. consultar detalle de pedido demo con lectura de líneas snapshot;
+  3. actualizar estado de pedido demo desde admin (edición individual de `estado`).
+- Tests añadidos:
+  - `tests/nucleo_herbal/infraestructura/test_admin_django.py` ampliado con cobertura de registro de modelo, changelist de pedidos demo, búsqueda/filtro y edición de estado desde detalle.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 4** (backoffice mínimo de pedidos demo);
+  - sigue pendiente Prompt 5 (frontend de carrito), sin adelantar checkout público, confirmación/email ni pagos reales.
