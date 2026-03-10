@@ -14,10 +14,23 @@ Este repo se despliega en Railway con **dos servicios separados** y una base de 
 - Start command correcto de este repo:
 
 ```bash
-gunicorn backend.configuracion_django.wsgi:application --bind 0.0.0.0:${PORT:-8000}
+PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} gunicorn backend.configuracion_django.wsgi:application --bind 0.0.0.0:${PORT:-8000}
 ```
 
+- `PYTHONPATH` se fija explícitamente para soportar despliegues donde el servicio ejecuta comandos con `root directory` en `backend` o en la raíz del monorepo.
+
 - Healthcheck esperado: `/healthz`
+
+- `preDeployCommand` esperado:
+
+```bash
+PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} migrate --noinput && \
+PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} collectstatic --noinput
+```
+
+- `DJANGO_MANAGE_PATH` es opcional:
+  - valor por defecto: `manage.py` (estructura actual del repo),
+  - valor alternativo: `../manage.py` si el servicio se configuró con raíz efectiva `backend`.
 
 - `/healthz` ejecuta una comprobación mínima de base de datos (`SELECT 1`).
 - Si la BBDD no responde, `/healthz` devuelve `503` con JSON de error controlado.
