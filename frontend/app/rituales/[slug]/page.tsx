@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { BloquePlantasRelacionadas } from "@/componentes/rituales/detalle/BloquePlantasRelacionadas";
 import { BloqueResolucionComercialRitual } from "@/componentes/rituales/detalle/BloqueResolucionComercialRitual";
@@ -18,8 +19,10 @@ type Props = {
   params: { slug: string };
 };
 
+const obtenerFichaRitualCacheada = cache(obtenerFichaRitualConectada);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const resultado = await obtenerFichaRitualConectada(params.slug);
+  const resultado = await obtenerFichaRitualCacheada(params.slug);
 
   if (resultado.estado !== "ok") {
     return construirMetadataSeo({
@@ -47,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PaginaDetalleRitual({ params }: Props): Promise<JSX.Element> {
-  const resultado = await obtenerFichaRitualConectada(params.slug);
+  const resultado = await obtenerFichaRitualCacheada(params.slug);
 
   if (resultado.estado === "no_encontrado") {
     notFound();
