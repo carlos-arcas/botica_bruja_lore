@@ -36,6 +36,7 @@ Los estados oficiales de proyecto y capacidad son:
 - Checkout demo: **no implementado (fuera de alcance de Ciclo 1)**.
 - Calendario ritual: **no implementado (ciclo posterior)**.
 - Quality gate Ciclo 2 (mínimo operativo razonable): **ejecutado con evidencia reproducible en entorno actual**.
+- CI automatizada de quality gate: **DONE** con workflow canónico `Quality Gate` en GitHub Actions (`push` + `pull_request`) para checks backend/frontend y validación operativa mínima.
 
 Resumen ejecutivo de estado real: existe un recorrido funcional y defendible para rituales conectados sin romper el enfoque herbal-first. Se validó flujo directo e inverso entre home, herbal y rituales, con separación editorial/comercial preservada y checks mínimos del ciclo en verde (backend Django + frontend lint/build).
 
