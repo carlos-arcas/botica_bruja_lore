@@ -211,7 +211,7 @@ Este comando orquesta en un solo flujo:
 
 - **Readiness backend:** `python scripts/check_backend_readiness.py`.
 - **Check estructural Django:** `python manage.py check`.
-- **Tests backend críticos:** healthcheck y seed demo.
+- **Tests backend críticos:** healthcheck, seed demo y guardrails de deploy/configuración (`tests.nucleo_herbal.test_deploy_guards`).
 - **Snapshot de datos públicos en modo lectura:** reporte de conteos existentes de intenciones, plantas, productos y rituales (sin sembrar ni migrar).
 - **Integridad operativa/documental del repositorio:** `python scripts/check_repo_operational_integrity.py` (markdown crítico, coherencia Procfile/manage.py/wsgi.py/railway.toml, `.env.railway.example` y alineación CI↔documentación).
 - **Validación frontend básica (si aplica):** `npm run lint`, `npm run test:checkout-demo` y `npm run build`.
