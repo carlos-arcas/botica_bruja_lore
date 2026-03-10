@@ -250,6 +250,13 @@ def main() -> int:
             blocking=True,
         )
     )
+    results.append(
+        _run_block(
+            "C5) Test crítico contratos API pública frontend",
+            [PYTHON, "manage.py", "test", "tests.nucleo_herbal.test_contratos_api_publica_frontend"],
+            blocking=True,
+        )
+    )
     results.append(_data_snapshot_block())
     results.append(
         _run_block(
