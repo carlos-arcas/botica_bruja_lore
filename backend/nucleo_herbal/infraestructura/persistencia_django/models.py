@@ -141,3 +141,21 @@ class LineaPedidoModelo(models.Model):
 
     def __str__(self) -> str:
         return f"{self.pedido_id} · {self.slug_producto}"
+
+
+class CuentaDemoModelo(models.Model):
+    id_usuario = models.CharField(primary_key=True, max_length=64)
+    email = models.EmailField(max_length=254, unique=True)
+    nombre_visible = models.CharField(max_length=120)
+    clave_acceso_demo = models.CharField(max_length=120)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_cuenta_demo"
+        ordering = ("email",)
+        verbose_name = "cuenta demo"
+        verbose_name_plural = "cuentas demo"
+
+    def __str__(self) -> str:
+        return self.email

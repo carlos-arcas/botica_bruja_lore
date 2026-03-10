@@ -2,14 +2,26 @@
 
 from django.db import transaction
 
+from ...aplicacion.puertos.proveedores_historial_pedidos_demo import ProveedorHistorialPedidosDemo
 from ...aplicacion.puertos.repositorios import RepositorioPlantas, RepositorioProductos
+from ...aplicacion.puertos.repositorios_cuentas_demo import RepositorioCuentasDemo
 from ...aplicacion.puertos.repositorios_pedidos_demo import RepositorioPedidosDemo
 from ...aplicacion.puertos.repositorios_rituales import RepositorioRituales
 from ...dominio.entidades import Planta, Producto, TIPO_PRODUCTO_HERBAL
+from ...dominio.cuentas_demo import CuentaDemo
 from ...dominio.pedidos_demo import PedidoDemo
 from ...dominio.rituales import Ritual
-from .mapeadores import a_datos_linea_pedido, a_pedido_demo, a_planta, a_producto, a_ritual
+from .mapeadores import (
+    a_cuenta_demo,
+    a_datos_cuenta_demo,
+    a_datos_linea_pedido,
+    a_pedido_demo,
+    a_planta,
+    a_producto,
+    a_ritual,
+)
 from .models import (
+    CuentaDemoModelo,
     LineaPedidoModelo,
     PedidoDemoModelo,
     PlantaModelo,
@@ -157,3 +169,43 @@ class RepositorioPedidosDemoORM(RepositorioPedidosDemo):
 
     def _base_queryset(self):
         return PedidoDemoModelo.objects.prefetch_related("lineas")
+
+
+class RepositorioCuentasDemoORM(RepositorioCuentasDemo):
+    def guardar(self, cuenta: CuentaDemo) -> CuentaDemo:
+        CuentaDemoModelo.objects.update_or_create(
+            id_usuario=cuenta.id_usuario,
+            defaults=a_datos_cuenta_demo(cuenta),
+        )
+        cuenta_reconstruida = self.obtener_por_id_usuario(cuenta.id_usuario)
+        assert cuenta_reconstruida is not None
+        return cuenta_reconstruida
+
+    def obtener_por_email(self, email: str) -> CuentaDemo | None:
+        email_normalizado = email.strip().lower()
+        try:
+            modelo = CuentaDemoModelo.objects.get(email__iexact=email_normalizado)
+        except CuentaDemoModelo.DoesNotExist:
+            return None
+        return a_cuenta_demo(modelo)
+
+    def obtener_por_id_usuario(self, id_usuario: str) -> CuentaDemo | None:
+        try:
+            modelo = CuentaDemoModelo.objects.get(id_usuario=id_usuario)
+        except CuentaDemoModelo.DoesNotExist:
+            return None
+        return a_cuenta_demo(modelo)
+
+
+class ProveedorHistorialPedidosDemoORM(ProveedorHistorialPedidosDemo):
+    def listar_por_vinculo_cuenta(
+        self,
+        *,
+        id_usuario: str,
+        email_contacto: str,
+    ) -> tuple[PedidoDemo, ...]:
+        queryset = PedidoDemoModelo.objects.filter(
+            id_usuario=id_usuario
+        ) | PedidoDemoModelo.objects.filter(email_contacto__iexact=email_contacto.strip())
+        pedidos = queryset.order_by("-fecha_creacion").prefetch_related("lineas").distinct()
+        return tuple(a_pedido_demo(modelo) for modelo in pedidos)

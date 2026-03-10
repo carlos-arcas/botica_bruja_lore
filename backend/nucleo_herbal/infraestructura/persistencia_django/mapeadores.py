@@ -1,9 +1,11 @@
 """Mapeadores de ORM Django a entidades de dominio."""
 
 from ...dominio.entidades import Intencion, Planta, Producto
+from ...dominio.cuentas_demo import CuentaDemo, CredencialCuentaDemo, PerfilCuentaDemo
 from ...dominio.pedidos_demo import LineaPedido, PedidoDemo
 from ...dominio.rituales import Ritual
 from .models import (
+    CuentaDemoModelo,
     IntencionModelo,
     LineaPedidoModelo,
     PedidoDemoModelo,
@@ -69,6 +71,24 @@ def a_ritual(modelo: RitualModelo) -> Ritual:
         ids_productos_relacionados=ids_productos,
     )
 
+
+
+
+def a_cuenta_demo(modelo: CuentaDemoModelo) -> CuentaDemo:
+    return CuentaDemo(
+        id_usuario=modelo.id_usuario,
+        email=modelo.email,
+        perfil=PerfilCuentaDemo(nombre_visible=modelo.nombre_visible),
+        credencial=CredencialCuentaDemo(clave_acceso_demo=modelo.clave_acceso_demo),
+    )
+
+
+def a_datos_cuenta_demo(cuenta: CuentaDemo) -> dict[str, object]:
+    return {
+        "email": cuenta.email,
+        "nombre_visible": cuenta.perfil.nombre_visible,
+        "clave_acceso_demo": cuenta.credencial.clave_acceso_demo,
+    }
 
 def a_pedido_demo(modelo: PedidoDemoModelo) -> PedidoDemo:
     lineas = tuple(a_linea_pedido(linea) for linea in modelo.lineas.order_by("id"))

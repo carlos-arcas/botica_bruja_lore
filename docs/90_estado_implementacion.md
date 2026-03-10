@@ -416,3 +416,23 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 1 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
   - queda pendiente Prompt 2 (persistencia/infraestructura de cuenta), sin adelantar API/backoffice/frontend de cuenta.
+
+## 28. Persistencia e infraestructura de cuenta demo (Prompt 2 oficial Ciclo 4)
+- Capacidad: **Persistencia mínima de cuenta demo y proveedor de historial de `PedidoDemo` asociado por vínculo de cuenta**.
+- Estado: **DONE**.
+- Implementación activa:
+  - modelo ORM `CuentaDemoModelo` y migración en `backend/nucleo_herbal/infraestructura/persistencia_django/models.py` y `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0004_cuentademomodelo.py`;
+  - mapeadores dominio↔persistencia de cuenta demo en `backend/nucleo_herbal/infraestructura/persistencia_django/mapeadores.py`;
+  - adaptador de repositorio de cuenta demo en `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`;
+  - adaptador proveedor de historial de pedidos demo vinculado por `id_usuario` o `email_contacto` en `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`.
+- Reglas cerradas en este incremento:
+  1. persistencia de cuenta demo con unicidad por email y claves mínimas de perfil/credencial para autenticación demo de Prompt 1;
+  2. reconstrucción de entidad de dominio `CuentaDemo` sin acoplar dominio a Django ORM;
+  3. consulta de historial combinada por `id_usuario` o `email_contacto` reutilizando `PedidoDemo` existente de Ciclo 3;
+  4. no se abren API, UI, sesión real ni integración total con `auth` de Django.
+- Tests añadidos:
+  - cobertura de repositorio de cuenta demo y proveedor de historial en `tests/nucleo_herbal/infraestructura/test_repositorios_django.py`.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 2 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
+  - queda pendiente Prompt 3 (API/backoffice mínimo de cuenta), sin adelantar frontend ni gate final del ciclo.
+

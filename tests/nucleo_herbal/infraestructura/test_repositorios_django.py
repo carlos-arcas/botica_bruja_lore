@@ -20,6 +20,7 @@ class TestRepositoriosDjango(unittest.TestCase):
         call_command("migrate", run_syncdb=True, verbosity=0)
 
         from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
+            CuentaDemoModelo,
             IntencionModelo,
             LineaPedidoModelo,
             PedidoDemoModelo,
@@ -28,6 +29,7 @@ class TestRepositoriosDjango(unittest.TestCase):
             RitualModelo,
         )
 
+        cls.CuentaDemoModelo = CuentaDemoModelo
         cls.IntencionModelo = IntencionModelo
         cls.PlantaModelo = PlantaModelo
         cls.ProductoModelo = ProductoModelo
@@ -37,12 +39,15 @@ class TestRepositoriosDjango(unittest.TestCase):
 
     def setUp(self) -> None:
         from backend.nucleo_herbal.infraestructura.persistencia_django.repositorios import (
+            ProveedorHistorialPedidosDemoORM,
+            RepositorioCuentasDemoORM,
             RepositorioPedidosDemoORM,
             RepositorioPlantasORM,
             RepositorioProductosORM,
             RepositorioRitualesORM,
         )
 
+        self.CuentaDemoModelo.objects.all().delete()
         self.LineaPedidoModelo.objects.all().delete()
         self.PedidoDemoModelo.objects.all().delete()
         self.RitualModelo.objects.all().delete()
@@ -127,6 +132,8 @@ class TestRepositoriosDjango(unittest.TestCase):
         self.repo_productos = RepositorioProductosORM()
         self.repo_rituales = RepositorioRitualesORM()
         self.repo_pedidos_demo = RepositorioPedidosDemoORM()
+        self.repo_cuentas_demo = RepositorioCuentasDemoORM()
+        self.proveedor_historial_cuentas = ProveedorHistorialPedidosDemoORM()
 
     def test_listar_navegables(self) -> None:
         plantas = self.repo_plantas.listar_navegables()
@@ -309,6 +316,123 @@ class TestRepositoriosDjango(unittest.TestCase):
 
         with self.assertRaises(ErrorDominio):
             self.repo_pedidos_demo.obtener_por_id("PD-inconsistente")
+
+
+    def test_cuentas_demo_guardar_y_buscar_por_id_y_email(self) -> None:
+        from backend.nucleo_herbal.dominio.cuentas_demo import CuentaDemo, CredencialCuentaDemo, PerfilCuentaDemo
+
+        cuenta = CuentaDemo(
+            id_usuario="USR-123",
+            email="Lore@Test.Dev",
+            perfil=PerfilCuentaDemo(nombre_visible="Lore"),
+            credencial=CredencialCuentaDemo(clave_acceso_demo="clave-demo"),
+        )
+
+        self.repo_cuentas_demo.guardar(cuenta)
+        por_id = self.repo_cuentas_demo.obtener_por_id_usuario("USR-123")
+        por_email = self.repo_cuentas_demo.obtener_por_email("lore@test.dev")
+
+        self.assertIsNotNone(por_id)
+        self.assertIsNotNone(por_email)
+        assert por_id is not None
+        assert por_email is not None
+        self.assertEqual(por_id.perfil.nombre_visible, "Lore")
+        self.assertEqual(por_email.id_usuario, "USR-123")
+
+    def test_cuentas_demo_actualiza_datos_minimos(self) -> None:
+        from backend.nucleo_herbal.dominio.cuentas_demo import CuentaDemo, CredencialCuentaDemo, PerfilCuentaDemo
+
+        original = CuentaDemo(
+            id_usuario="USR-123",
+            email="lore@test.dev",
+            perfil=PerfilCuentaDemo(nombre_visible="Lore"),
+            credencial=CredencialCuentaDemo(clave_acceso_demo="clave-demo"),
+        )
+        actualizado = CuentaDemo(
+            id_usuario="USR-123",
+            email="lore@test.dev",
+            perfil=PerfilCuentaDemo(nombre_visible="Lore Bruja"),
+            credencial=CredencialCuentaDemo(clave_acceso_demo="clave-nueva"),
+        )
+
+        self.repo_cuentas_demo.guardar(original)
+        self.repo_cuentas_demo.guardar(actualizado)
+
+        recuperado = self.repo_cuentas_demo.obtener_por_id_usuario("USR-123")
+
+        self.assertIsNotNone(recuperado)
+        assert recuperado is not None
+        self.assertEqual(recuperado.perfil.nombre_visible, "Lore Bruja")
+        self.assertTrue(recuperado.validar_credencial_demo("clave-nueva"))
+
+    def test_proveedor_historial_por_vinculo_devuelve_vacio(self) -> None:
+        pedidos = self.proveedor_historial_cuentas.listar_por_vinculo_cuenta(
+            id_usuario="USR-falta",
+            email_contacto="falta@test.dev",
+        )
+
+        self.assertEqual(pedidos, ())
+
+    def test_proveedor_historial_por_vinculo_combina_id_usuario_y_email(self) -> None:
+        from backend.nucleo_herbal.dominio.pedidos_demo import LineaPedido, PedidoDemo
+
+        self.repo_pedidos_demo.guardar(
+            PedidoDemo(
+                id_pedido="PD-H1",
+                email_contacto="otro@test.dev",
+                canal_compra="autenticado",
+                id_usuario="USR-123",
+                lineas=(
+                    LineaPedido(
+                        id_producto="prod-1",
+                        slug_producto="melisa-a-granel-50g",
+                        nombre_producto="Melisa",
+                        cantidad=1,
+                        precio_unitario_demo=Decimal("5.00"),
+                    ),
+                ),
+            )
+        )
+        self.repo_pedidos_demo.guardar(
+            PedidoDemo(
+                id_pedido="PD-H2",
+                email_contacto="lore@test.dev",
+                canal_compra="invitado",
+                lineas=(
+                    LineaPedido(
+                        id_producto="prod-1",
+                        slug_producto="melisa-a-granel-50g",
+                        nombre_producto="Melisa",
+                        cantidad=2,
+                        precio_unitario_demo=Decimal("5.00"),
+                    ),
+                ),
+            )
+        )
+        self.repo_pedidos_demo.guardar(
+            PedidoDemo(
+                id_pedido="PD-H3",
+                email_contacto="x@test.dev",
+                canal_compra="autenticado",
+                id_usuario="USR-otro",
+                lineas=(
+                    LineaPedido(
+                        id_producto="prod-1",
+                        slug_producto="melisa-a-granel-50g",
+                        nombre_producto="Melisa",
+                        cantidad=1,
+                        precio_unitario_demo=Decimal("5.00"),
+                    ),
+                ),
+            )
+        )
+
+        pedidos = self.proveedor_historial_cuentas.listar_por_vinculo_cuenta(
+            id_usuario="USR-123",
+            email_contacto="lore@test.dev",
+        )
+
+        self.assertEqual({pedido.id_pedido for pedido in pedidos}, {"PD-H1", "PD-H2"})
 
 
 if __name__ == "__main__":
