@@ -24,7 +24,8 @@
     "test:cuenta-demo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/cuenta-demo.test.ts infraestructura/api/cuentasDemo.ts contenido/cuenta_demo/estadoCuentaDemo.ts && node .tmp-tests/tests/cuenta-demo.test.js",
     "test:enlazado-seo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --esModuleInterop --outDir .tmp-tests tests/enlazado-interno-seo.test.ts contenido/catalogo/enlazadoInterno.ts && node .tmp-tests/tests/enlazado-interno-seo.test.js",
     "test:home-rendimiento-seo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/home-rendimiento-seo.test.ts componentes/home/configuracionImagenHero.ts && node .tmp-tests/tests/home-rendimiento-seo.test.js",
-    "test:search-console-seo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --esModuleInterop --outDir .tmp-tests tests/search-console-verificacion.test.ts infraestructura/seo/verificacionSearchConsole.ts infraestructura/seo/metadataRaiz.ts && node .tmp-tests/tests/search-console-verificacion.test.js"
+    "test:search-console-seo": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --esModuleInterop --outDir .tmp-tests tests/search-console-verificacion.test.ts infraestructura/seo/verificacionSearchConsole.ts infraestructura/seo/metadataRaiz.ts && node .tmp-tests/tests/search-console-verificacion.test.js",
+    "test:calendario-ritual": "rm -rf .tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/calendario-ritual.test.ts contenido/rituales/calendarioRitual.ts infraestructura/api/calendarioRitual.ts && node .tmp-tests/tests/calendario-ritual.test.js"
   },
   "dependencies": {
     "next": "14.2.35",

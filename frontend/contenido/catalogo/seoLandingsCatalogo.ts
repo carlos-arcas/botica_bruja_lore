@@ -53,6 +53,7 @@ export const INTRO_LISTADO_RITUALES: IntroduccionLandingCatalogo = {
   ],
   enlacesInternos: [
     { href: "/hierbas", etiqueta: "Ver fichas de hierbas relacionadas" },
+    { href: "/calendario-ritual", etiqueta: "Consultar calendario ritual por fecha" },
     { href: "/colecciones", etiqueta: "Explorar colecciones rituales curadas" },
     { href: "/la-botica", etiqueta: "Revisar la curaduría editorial de la botica" },
   ],

@@ -158,8 +158,14 @@ def _frontend_block() -> list[BlockResult]:
         blocking=True,
         cwd=frontend_dir,
     )
+    calendario_ritual = _run_block(
+        f"{base_name} - test calendario ritual",
+        ["npm", "run", "test:calendario-ritual"],
+        blocking=True,
+        cwd=frontend_dir,
+    )
     build = _run_block(f"{base_name} - build", ["npm", "run", "build"], blocking=True, cwd=frontend_dir)
-    return [lint, checkout_demo, cuenta_demo, build]
+    return [lint, checkout_demo, cuenta_demo, calendario_ritual, build]
 
 
 def _print_summary(results: list[BlockResult]) -> int:
