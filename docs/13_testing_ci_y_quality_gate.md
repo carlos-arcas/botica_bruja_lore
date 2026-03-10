@@ -279,7 +279,7 @@ Alcance automatizado del workflow:
 python scripts/check_release_gate.py
 ```
 
-  - con ello, CI valida en un único paso auditable: readiness backend, `manage.py check`, tests críticos backend, integridad operativa/documental del repo y lint/tests de checkout+cuenta+calendario/build frontend.
+  - con ello, CI valida en un único paso auditable: readiness backend, `manage.py check`, tests críticos backend, tests de scripts operativos (`tests.scripts`), integridad operativa/documental del repo y lint/tests de checkout+cuenta+calendario/build frontend.
 
 - **Job `bootstrap_demo_validation` (mutante aislado)**
   - ejecuta `python scripts/bootstrap_demo_release.py` en una base SQLite temporal aislada (`${{ runner.temp }}`),
@@ -307,6 +307,10 @@ Notas operativas:
 - Opcionalmente admite:
   - `EXPECT_NON_EMPTY_DATA=true` para exigir datos demo visibles en APIs públicas.
   - `HERBAL_SLUG` y `RITUAL_SLUG` para revisar rutas/endpoint de detalle.
+- Endurecimiento operativo actual:
+  - los errores de configuración (variables/URL inválida) devuelven exit code explícito `2`;
+  - fallos bloqueantes de checks remotos devuelven exit code `1`;
+  - la validación está cubierta por tests automáticos dedicados en `tests/scripts/test_check_deployed_stack.py`.
 - Este comando **no reemplaza** el gate canónico (`check_release_gate.py`) ni se integra en CI por defecto, porque depende de URLs reales desplegadas.
 
 

@@ -154,8 +154,8 @@ Este comando entrega un veredicto único (`OK`/`ERROR`) y ejecuta:
 
 - readiness backend,
 - `python manage.py check`,
-- tests backend críticos (healthcheck + seed demo),
-- snapshot de conteos públicos en modo lectura,
+- tests backend críticos (healthcheck + seed demo + guardrails deploy + scripts operativos),
+- snapshot de conteos públicos en modo lectura (con `SKIP` limpio cuando el entorno no tiene tablas o no aplica),
 - integridad operativa/documental del repo (`python scripts/check_repo_operational_integrity.py`),
 - validación frontend básica (`npm run lint` y `npm run build`) cuando el entorno lo permite.
 

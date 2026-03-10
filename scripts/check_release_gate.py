@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -90,13 +91,19 @@ def _data_snapshot_block() -> BlockResult:
     name = "D) Snapshot de datos públicos existentes (solo lectura)"
     _print_header(name)
 
-    count_code = (
-        "from backend.nucleo_herbal.infraestructura.persistencia_django.models import "
-        "IntencionModelo, PlantaModelo, ProductoModelo, RitualModelo;"
-        "print('intenciones_publicas=' + str(IntencionModelo.objects.filter(es_publica=True).count()));"
-        "print('plantas_publicadas=' + str(PlantaModelo.objects.filter(publicada=True).count()));"
-        "print('productos_publicados=' + str(ProductoModelo.objects.filter(publicado=True).count()));"
-        "print('rituales_publicados=' + str(RitualModelo.objects.filter(publicado=True).count()))"
+    count_code = "\n".join(
+        [
+            "from django.core.exceptions import ImproperlyConfigured",
+            "from django.db.utils import OperationalError, ProgrammingError",
+            "try:",
+            "    from backend.nucleo_herbal.infraestructura.persistencia_django.models import IntencionModelo, PlantaModelo, ProductoModelo, RitualModelo",
+            "    print('intenciones_publicas=' + str(IntencionModelo.objects.filter(es_publica=True).count()))",
+            "    print('plantas_publicadas=' + str(PlantaModelo.objects.filter(publicada=True).count()))",
+            "    print('productos_publicados=' + str(ProductoModelo.objects.filter(publicado=True).count()))",
+            "    print('rituales_publicados=' + str(RitualModelo.objects.filter(publicado=True).count()))",
+            "except (OperationalError, ProgrammingError, ImproperlyConfigured) as error:",
+            "    print('SNAPSHOT_SKIP: ' + str(error).splitlines()[0])",
+        ]
     )
     print("$", f"{PYTHON} manage.py shell -c '<conteos públicos solo lectura>'")
     counts = _run([PYTHON, "manage.py", "shell", "-c", count_code])
@@ -105,13 +112,20 @@ def _data_snapshot_block() -> BlockResult:
         print("[SKIP] no se pudieron consultar conteos (python no disponible)")
         return BlockResult(name=name, status="SKIP", blocking=False, detail="conteos no disponibles")
 
-    _print_process_output(counts)
-    if counts.returncode != 0:
-        print("[SKIP] no se pudieron consultar conteos en este entorno")
-        return BlockResult(name=name, status="SKIP", blocking=False, detail=f"conteos exit={counts.returncode}")
+    if counts.returncode == 0:
+        skip_match = re.search(r"SNAPSHOT_SKIP:\s*(.+)", counts.stdout)
+        if skip_match:
+            reason = skip_match.group(1).strip()
+            print(f"[SKIP] snapshot no aplicable en este entorno: {reason}")
+            return BlockResult(name=name, status="SKIP", blocking=False, detail=reason)
 
-    print("[OK] snapshot de conteos obtenido")
-    return BlockResult(name=name, status="OK", blocking=False)
+        _print_process_output(counts)
+        print("[OK] snapshot de conteos obtenido")
+        return BlockResult(name=name, status="OK", blocking=False)
+
+    short_error = counts.stderr.strip().splitlines()[-1] if counts.stderr.strip() else f"exit={counts.returncode}"
+    print(f"[SKIP] no se pudieron consultar conteos en este entorno: {short_error}")
+    return BlockResult(name=name, status="SKIP", blocking=False, detail=short_error)
 
 
 def _frontend_block() -> list[BlockResult]:
@@ -226,6 +240,13 @@ def main() -> int:
         _run_block(
             "C3) Test crítico guardrails deploy",
             [PYTHON, "manage.py", "test", "tests.nucleo_herbal.test_deploy_guards"],
+            blocking=True,
+        )
+    )
+    results.append(
+        _run_block(
+            "C4) Test scripts operativos críticos",
+            [PYTHON, "manage.py", "test", "tests.scripts"],
             blocking=True,
         )
     )
