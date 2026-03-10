@@ -199,23 +199,30 @@ Este documento es marco operativo para trabajo futuro y debe usarse de esta mane
    - Usar este marco para evitar tanto laxitud como sobrecarga prematura.
    - Mantener trazabilidad entre estado real de implementación y exigencia de calidad activa.
 
-## 12. Comando canónico de readiness técnica del backend
+## 12. Comando canónico de gate técnico demo/release
 
-Para auditoría técnica y futura automatización CI, el repositorio define un smoke check canónico:
+Para auditoría técnica manual, operación diaria y futura automatización CI, el repositorio define un gate unificado:
 
 ```bash
-python scripts/check_backend_readiness.py
+python scripts/check_release_gate.py
 ```
 
-Este comando valida de forma reproducible:
+Este comando orquesta en un solo flujo:
 
-- **Caso A (local razonable):** sin `DATABASE_URL` ni variables Railway, el backend debe arrancar con fallback local SQLite.
-- **Caso B (Railway mal configurado):** simulando entorno Railway sin `DATABASE_URL`, el arranque debe fallar con `DATABASE_URL es obligatoria en Railway/producción.`
-- **Caso C (producción sin hardening):** con `DEBUG=false` y sin `SECRET_KEY`, el arranque debe fallar por hardening de configuración.
-- **Caso D (bootstrap canónico):** `manage.py` y `backend/configuracion_django/wsgi.py` fuerzan `backend.configuracion_django.settings`, y el WSGI del repo es importable.
+- **Readiness backend:** `python scripts/check_backend_readiness.py`.
+- **Check estructural Django:** `python manage.py check`.
+- **Tests backend críticos:** healthcheck y seed demo.
+- **Seed demo pública idempotente:** ejecuta `seed_demo_publico` dos veces y reporta conteos públicos de intenciones, plantas, productos y rituales.
+- **Validación frontend básica (si aplica):** `npm run lint` y `npm run build`.
+
+Criterio de severidad:
+
+- **Bloqueante (ERROR):** readiness backend, `manage.py check`, tests backend críticos y seed idempotente.
+- **Frontend presente y ejecutable:** lint/build cuentan como bloqueantes.
+- **Frontend no aplicable por entorno:** se informa como `SKIP` con motivo explícito (por ejemplo, sin `frontend/package.json` o sin Node/npm).
 
 Alcance y límites:
 
-- Este smoke check **no sustituye** `python manage.py test` ni pruebas unitarias/integración/E2E.
-- `python manage.py test` se sigue usando para validar lógica de negocio, regresiones funcionales y contratos internos.
-- El readiness check se usa para validar configuración crítica de arranque (local/producción/Railway) y evitar errores de entorno antes de despliegue.
+- Este gate **no sustituye** suites completas de regresión, pruebas E2E ni validaciones de negocio profundas.
+- El objetivo del gate es un veredicto técnico mínimo y reproducible de estado demo/release.
+- Un `SKIP` de frontend por entorno debe tratarse como señal operativa visible, no como silencio.
