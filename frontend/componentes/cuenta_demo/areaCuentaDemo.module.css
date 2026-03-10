@@ -1,0 +1,70 @@
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.78rem;
+  color: #6d6358;
+}
+
+.aviso {
+  border-left: 4px solid #d5c4ad;
+  padding-left: 0.7rem;
+  color: #5a534c;
+}
+
+.rejilla {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.panel {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.campo {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.campo input {
+  border: 1px solid #d5ccbf;
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+}
+
+.estado {
+  color: #5f5850;
+}
+
+.error {
+  border: 1px solid #e0b7aa;
+  background: #fff5f1;
+  border-radius: 10px;
+  padding: 0.65rem;
+  color: #7a3f33;
+}
+
+.exito {
+  border: 1px solid #b9d0b6;
+  background: #f5fbf4;
+  border-radius: 10px;
+  padding: 0.65rem;
+  color: #2f5b2b;
+}
+
+.cabeceraPanel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.historial {
+  display: grid;
+  gap: 0.45rem;
+  padding-left: 1rem;
+}

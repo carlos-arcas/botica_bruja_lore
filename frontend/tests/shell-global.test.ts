@@ -12,7 +12,7 @@ import {
 test("navegación principal expone accesos comerciales clave", () => {
   const rutas = NAVEGACION_PRINCIPAL.map((enlace) => enlace.href);
 
-  assert.deepEqual(rutas, ["/", "/colecciones", "/la-botica", "/cesta", "/encargo"]);
+  assert.deepEqual(rutas, ["/", "/colecciones", "/la-botica", "/cesta", "/encargo", "/cuenta-demo"]);
 });
 
 test("esRutaActiva resuelve coincidencia exacta y por prefijo", () => {

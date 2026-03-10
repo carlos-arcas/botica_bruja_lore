@@ -459,4 +459,30 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   1. `python manage.py test tests.nucleo_herbal.test_api_cuentas_demo tests.nucleo_herbal.test_casos_de_uso_cuentas_demo tests.nucleo_herbal.infraestructura.test_admin_django`.
 - Trazabilidad del roadmap:
   - este cambio cubre el alcance oficial del **Prompt 3 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
-  - queda pendiente Prompt 4 (frontend + quality gate final del ciclo).
+  - habilita el Prompt 4 (frontend + quality gate final del ciclo) como cierre técnico del ciclo.
+
+
+## 30. Frontend de cuenta demo + cierre técnico/no-regresión (Prompt 4 oficial Ciclo 4)
+- Capacidad: **Área de cuenta demo navegable en frontend consumiendo API de cuenta + refuerzo de gate técnico de ciclo**.
+- Estado: **DONE**.
+- Implementación activa:
+  - nueva ruta `/cuenta-demo` con UI mínima de registro, autenticación, perfil e historial en `frontend/app/cuenta-demo/page.tsx` y `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx`;
+  - cliente API desacoplado para `CuentaDemo` en `frontend/infraestructura/api/cuentasDemo.ts`;
+  - persistencia local explícita de sesión demo (sin auth real) y validaciones de formulario en `frontend/contenido/cuenta_demo/estadoCuentaDemo.ts`;
+  - enlace de acceso en shell principal para navegabilidad de cuenta demo en `frontend/contenido/shell/navegacionGlobal.ts`;
+  - cobertura contractual frontend para cuenta demo en `frontend/tests/cuenta-demo.test.ts`;
+  - gate canónico actualizado para ejecutar test de cuenta demo en `scripts/check_release_gate.py`;
+  - documentación de gate alineada en `docs/13_testing_ci_y_quality_gate.md`.
+- Reglas cerradas en este incremento:
+  1. cuenta demo en frontend reutiliza contratos API cerrados en Prompt 3 sin abrir auth real, cookies ni JWT;
+  2. continuidad demo resuelta con estado local + `localStorage` mínimo para restaurar `id_usuario`;
+  3. UX mínima cubierta para carga, error, éxito de registro/autenticación, perfil e historial vacío/con pedidos;
+  4. no-regresión del foco comercial de Ciclo 3 preservada, sin cambios de contrato en `PedidoDemo`.
+- Evidencia reproducible:
+  1. `npm --prefix frontend run test:cuenta-demo`;
+  2. `npm --prefix frontend run test:shell`;
+  3. `npm --prefix frontend run build`;
+  4. `python scripts/check_release_gate.py`.
+- Trazabilidad del roadmap:
+  - este cambio cubre el alcance oficial del **Prompt 4 del Ciclo 4** (`docs/ciclos/ciclo_04_roadmap_prompts.md`);
+  - con prompts 1–4 trazados, el **Ciclo 4 queda cerrable** sujeto a validación final de release gate en entorno objetivo.

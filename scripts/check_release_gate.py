@@ -152,8 +152,14 @@ def _frontend_block() -> list[BlockResult]:
         blocking=True,
         cwd=frontend_dir,
     )
+    cuenta_demo = _run_block(
+        f"{base_name} - test cuenta demo",
+        ["npm", "run", "test:cuenta-demo"],
+        blocking=True,
+        cwd=frontend_dir,
+    )
     build = _run_block(f"{base_name} - build", ["npm", "run", "build"], blocking=True, cwd=frontend_dir)
-    return [lint, checkout_demo, build]
+    return [lint, checkout_demo, cuenta_demo, build]
 
 
 def _print_summary(results: list[BlockResult]) -> int:
