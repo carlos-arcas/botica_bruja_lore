@@ -216,6 +216,13 @@ def main() -> int:
             blocking=True,
         )
     )
+    results.append(
+        _run_block(
+            "C3) Test crítico guardrails deploy",
+            [PYTHON, "manage.py", "test", "tests.nucleo_herbal.test_deploy_guards"],
+            blocking=True,
+        )
+    )
     results.append(_data_snapshot_block())
     results.append(
         _run_block(
