@@ -92,6 +92,23 @@ Reemplaza `SERVICE_NAME` por el nombre real del servicio Postgres en Railway UI.
 3. Frontend consume API desde `NEXT_PUBLIC_API_BASE_URL`.
 4. Logs backend sin imports/rutas legacy.
 
+## 6.1) Verificación canónica previa (antes de deploy)
+
+Antes de promover cambios a Railway, ejecutar en local el check canónico de readiness técnica del backend:
+
+```bash
+python scripts/check_backend_readiness.py
+```
+
+Este comando confirma que:
+
+- la configuración local razonable arranca,
+- Railway sin `DATABASE_URL` falla de forma temprana y explícita,
+- `DEBUG=false` sin `SECRET_KEY` falla por hardening,
+- bootstrap de `manage.py`/`wsgi.py` permanece alineado con `backend.configuracion_django.settings`.
+
+Este check no reemplaza `python manage.py test`; ambos comandos son complementarios.
+
 ## 7) Síntomas de configuración antigua en Railway UI
 
 Si aparece alguno de estos síntomas, Railway sigue usando configuración residual:
