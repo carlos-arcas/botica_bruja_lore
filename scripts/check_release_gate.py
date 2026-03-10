@@ -226,6 +226,13 @@ def main() -> int:
     results.append(_data_snapshot_block())
     results.append(
         _run_block(
+            "E) Contrato SEO de regresión",
+            [PYTHON, "scripts/check_seo_contract.py"],
+            blocking=True,
+        )
+    )
+    results.append(
+        _run_block(
             "F) Integridad operativa del repo",
             [PYTHON, "scripts/check_repo_operational_integrity.py"],
             blocking=True,

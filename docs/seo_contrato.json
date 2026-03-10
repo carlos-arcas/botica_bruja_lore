@@ -1,0 +1,174 @@
+{
+  "version": "1.0.0",
+  "fuente": "Contrato SEO técnico para regresión automática",
+  "rutas": {
+    "indexables_estrategicas": [
+      {
+        "ruta": "/",
+        "tipo": "estatica",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "WebPage+Organization+WebSite",
+        "notas": "Home estratégica prioritaria."
+      },
+      {
+        "ruta": "/hierbas",
+        "tipo": "estatica",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "CollectionPage+BreadcrumbList",
+        "notas": "Hub indexable de catálogo herbal."
+      },
+      {
+        "ruta": "/rituales",
+        "tipo": "estatica",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "CollectionPage+BreadcrumbList",
+        "notas": "Hub indexable de rituales conectados."
+      },
+      {
+        "ruta": "/colecciones",
+        "tipo": "estatica",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "CollectionPage+BreadcrumbList",
+        "notas": "Hub comercial indexable."
+      },
+      {
+        "ruta": "/la-botica",
+        "tipo": "estatica",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": false,
+        "notas": "Página editorial estratégica sin schema dedicado en este ciclo."
+      },
+      {
+        "ruta": "/envios-y-preparacion",
+        "tipo": "estatica",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": false,
+        "notas": "Informativa pública estratégica indexable."
+      }
+    ],
+    "fichas_publicas_condicionadas": [
+      {
+        "familia": "/hierbas/{slug}",
+        "condicion_publicacion": "solo plantas publicadas",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "ItemPage+BreadcrumbList",
+        "notas": "Si el contenido no existe/publicado, la metadata debe emitir noindex."
+      },
+      {
+        "familia": "/rituales/{slug}",
+        "condicion_publicacion": "solo rituales publicados",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "ItemPage+BreadcrumbList",
+        "notas": "Si el contenido no existe/publicado, la metadata debe emitir noindex."
+      },
+      {
+        "familia": "/colecciones/{slug}",
+        "condicion_publicacion": "solo productos publicados/disponibles en catálogo",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "Product+BreadcrumbList+ItemPage",
+        "notas": "Si el producto no existe, la metadata debe emitir noindex."
+      }
+    ],
+    "publicas_no_estrategicas": [
+      {
+        "ruta": "/privacidad",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Página informativa pública no estratégica en este ciclo."
+      },
+      {
+        "ruta": "/condiciones-encargo",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Página informativa pública no estratégica en este ciclo."
+      }
+    ],
+    "transaccionales_noindex": [
+      {
+        "ruta": "/encargo",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Flujo transaccional de solicitud."
+      },
+      {
+        "ruta": "/cesta",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Ruta transaccional/técnica no estratégica."
+      },
+      {
+        "ruta": "/pedido-demo",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Paso técnico demo post-checkout."
+      },
+      {
+        "ruta": "/pedido-demo/{id_pedido}",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Detalle técnico de pedido demo."
+      },
+      {
+        "ruta": "/cuenta-demo",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Ruta técnica para cuenta demo."
+      }
+    ]
+  },
+  "robots": {
+    "allow_root": true,
+    "disallow": [
+      "/admin/",
+      "/api/"
+    ],
+    "sitemap": "/sitemap.xml"
+  },
+  "search_console": {
+    "verificacion_google_soportada": true,
+    "variable_entorno": "GOOGLE_SITE_VERIFICATION_TOKEN"
+  },
+  "enlazado_interno": {
+    "hubs_indexables_obligatorios": [
+      "/hierbas",
+      "/rituales",
+      "/colecciones",
+      "/la-botica"
+    ],
+    "prohibidos_como_eje_contextual": [
+      "/encargo"
+    ]
+  }
+}
