@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-import { BloqueEnlazadoContextual } from "@/contenido/catalogo/enlazadoInterno";
+import type { BloqueEnlazadoContextual as BloqueEnlazadoContextualData } from "@/contenido/catalogo/enlazadoInterno";
 
 type Props = {
-  bloque: BloqueEnlazadoContextual;
+  bloque: BloqueEnlazadoContextualData;
 };
 
 export function BloqueEnlazadoContextual({ bloque }: Props): JSX.Element {

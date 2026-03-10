@@ -22,7 +22,7 @@ export default function PaginaLaBotica(): JSX.Element {
 
   return (
     <>
-      <JsonLd data={schemas} />
+      <JsonLd id="schema-la-botica" data={schemas} />
       <PaginaEditorialBotica />
     </>
   );
