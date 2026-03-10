@@ -8,7 +8,7 @@ try:
         ProductoModelo,
         RitualModelo,
     )
-    from django.db.utils import OperationalError
+    from django.db.utils import DatabaseError, OperationalError
     from django.test import TestCase as DjangoTestCase, override_settings
 
     DJANGO_DISPONIBLE = True
@@ -17,9 +17,22 @@ except ModuleNotFoundError:
     DJANGO_DISPONIBLE = False
 
 
+class _FailingCursorContext:
+    def __enter__(self):
+        raise DatabaseError("DB caída")
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
+class _FailingConnection:
+    def cursor(self):
+        return _FailingCursorContext()
+
+
 class _FailingConnections:
     def __getitem__(self, _alias):
-        raise OperationalError("DB caída")
+        return _FailingConnection()
 
 
 @unittest.skipUnless(DJANGO_DISPONIBLE, "Django no está instalado en el entorno local.")
@@ -36,6 +49,15 @@ class TestHealthcheckReadiness(DjangoTestCase):
 
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json(), {"status": "error", "database": "unavailable"})
+
+    def test_healthcheck_loggea_error_cuando_db_falla(self) -> None:
+        with self.assertLogs("backend.configuracion_django.urls", level="ERROR") as logs:
+            with patch("backend.configuracion_django.urls.connections", new=_FailingConnections()):
+                response = self.client.get("/healthz")
+
+        self.assertEqual(response.status_code, 503)
+        mensaje = "\n".join(logs.output)
+        self.assertIn("healthcheck_db_unavailable", mensaje)
 
 
 @unittest.skipUnless(DJANGO_DISPONIBLE, "Django no está instalado en el entorno local.")

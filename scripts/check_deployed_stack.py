@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
 import urllib.error
@@ -19,6 +20,20 @@ class RequestFailure(Exception):
 
 
 TIMEOUT_SECONDS = 12
+
+
+def _log_level() -> str:
+    valor = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
+    return valor if valor in logging.getLevelNamesMapping() else "INFO"
+
+
+logging.basicConfig(
+    level=_log_level(),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    stream=sys.stdout,
+)
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -82,8 +97,10 @@ def _http_get(url: str) -> tuple[int, str, bytes]:
             body = b""
         return error.code, error.headers.get("Content-Type", ""), body
     except urllib.error.URLError as error:
+        LOGGER.error("deployed_stack_network_error url=%s reason=%s", url, error.reason)
         raise RequestFailure(f"Sin respuesta de red para {url}: {error.reason}") from error
     except TimeoutError as error:
+        LOGGER.error("deployed_stack_timeout url=%s", url)
         raise RequestFailure(f"Timeout consultando {url}: {error}") from error
 
 
@@ -208,12 +225,14 @@ def _print_result(result: CheckResult) -> None:
 
 
 def main() -> int:
+    LOGGER.info("deployed_stack_start")
     print("== Smoke check post-deploy (fullstack, solo lectura) ==")
     try:
         backend_base = _normalized_base_url("BACKEND_BASE_URL")
         frontend_base = _normalized_base_url("FRONTEND_BASE_URL")
         expect_non_empty = _env_flag("EXPECT_NON_EMPTY_DATA", default=False)
     except ValueError as error:
+        LOGGER.error("deployed_stack_bad_config error=%s", error)
         print(f"[ERROR] Configuración: {error}")
         return 2
 
@@ -331,9 +350,11 @@ def main() -> int:
     print(f"SKIP: {len(skipped)}")
 
     if blocking_failures:
+        LOGGER.error("deployed_stack_error failures=%s", len(blocking_failures))
         print("Veredicto: ERROR (fallaron checks bloqueantes del entorno desplegado).")
         return 1
 
+    LOGGER.info("deployed_stack_ok")
     print("Veredicto: OK (stack desplegado operativo para rutas públicas verificadas).")
     return 0
 

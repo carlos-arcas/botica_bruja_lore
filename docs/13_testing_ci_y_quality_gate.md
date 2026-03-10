@@ -294,3 +294,12 @@ Notas operativas:
   - `EXPECT_NON_EMPTY_DATA=true` para exigir datos demo visibles en APIs públicas.
   - `HERBAL_SLUG` y `RITUAL_SLUG` para revisar rutas/endpoint de detalle.
 - Este comando **no reemplaza** el gate canónico (`check_release_gate.py`) ni se integra en CI por defecto, porque depende de URLs reales desplegadas.
+
+
+## 15. Observabilidad mínima para diagnóstico en Railway
+
+- Backend Django y scripts operativos emiten logs estructurados simples a `stdout` (capturados por Railway).
+- `LOG_LEVEL` permite ajustar verbosidad por entorno sin cambiar código; default: `INFO`.
+- Se añaden trazas explícitas para errores de readiness (`/healthz`) y fallos de bloques en checks/bootstraps.
+- Esta mejora aumenta auditabilidad técnica post-deploy, pero **no sustituye** healthcheck, CI ni smoke checks manuales.
+

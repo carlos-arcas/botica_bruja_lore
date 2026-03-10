@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 import sys
@@ -16,6 +17,21 @@ EXPECTED_DB_ERROR = "DATABASE_URL es obligatoria en Railway/producción."
 EXPECTED_SECRET_ERROR = (
     "SECRET_KEY es obligatoria cuando DEBUG=false o en Railway/producción."
 )
+
+
+
+def _log_level() -> str:
+    valor = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
+    return valor if valor in logging.getLevelNamesMapping() else "INFO"
+
+
+logging.basicConfig(
+    level=_log_level(),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    stream=sys.stdout,
+)
+LOGGER = logging.getLogger(__name__)
 
 
 def _base_env() -> dict[str, str]:
@@ -42,6 +58,7 @@ def _assert_success(result: subprocess.CompletedProcess[str], label: str) -> Non
         print(f"[OK] {label}")
         return
 
+    LOGGER.error("backend_readiness_failure label=%s", label)
     print(f"[ERROR] {label}")
     if result.stdout.strip():
         print("--- stdout ---")
@@ -62,6 +79,7 @@ def _assert_failure_contains(
         print(f"[OK] {label}")
         return
 
+    LOGGER.error("backend_readiness_expected_failure_missing label=%s", label)
     print(f"[ERROR] {label}")
     print("--- stdout ---")
     print(result.stdout.strip())
@@ -151,11 +169,13 @@ def _case_d_repo_bootstrap_integrity() -> None:
 
 
 def main() -> None:
+    LOGGER.info("backend_readiness_start")
     print("== Backend readiness check (canónico) ==")
     _case_a_local_reasonable()
     _case_b_railway_without_database_url()
     _case_c_production_without_secret_key()
     _case_d_repo_bootstrap_integrity()
+    LOGGER.info("backend_readiness_ok")
     print("Readiness técnica validada.")
 
 

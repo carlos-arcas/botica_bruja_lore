@@ -1,6 +1,7 @@
 """Settings base para backend Django con soporte local y despliegue en Railway."""
 
 import importlib.util
+import logging
 import os
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -35,6 +36,16 @@ def _agregar_sin_duplicados(destino: list[str], valores: list[str]) -> list[str]
             destino.append(limpio)
             existentes.add(limpio)
     return destino
+
+
+def _normalizar_log_level(valor: str | None, por_defecto: str = "INFO") -> str:
+    if not valor:
+        return por_defecto
+
+    candidato = valor.strip().upper()
+    if candidato in logging.getLevelNamesMapping():
+        return candidato
+    return por_defecto
 
 
 def _configuracion_db_desde_url(database_url: str) -> dict[str, str | int]:
@@ -89,6 +100,7 @@ def _en_entorno_railway() -> bool:
 
 
 DEBUG = _leer_booleano("DEBUG", os.getenv("DATABASE_URL") is None)
+LOG_LEVEL = _normalizar_log_level(os.getenv("LOG_LEVEL"), "INFO")
 
 
 def _configurar_secret_key() -> str:
@@ -200,3 +212,38 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "railway": {
+            "format": "%(asctime)s %(levelname)s [%(name)s] %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+            "formatter": "railway",
+        }
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
+    },
+    "loggers": {
+        "django.server": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
+        "backend.configuracion_django.urls": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
+    },
+}
