@@ -376,10 +376,23 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - este cambio cubre el alcance oficial del **Prompt 8** del roadmap de Ciclo 3 (tests integrales + quality gate).
 
 ## 25. Cierre oficial de Ciclo 3 tras Prompt 8
-- Estado del ciclo: **CERRABLE técnicamente**.
+- Estado del ciclo: **DONE (cierre oficial declarado)**.
 - Justificación:
-  1. Prompts 1–7 ya estaban implementados y trazados en este documento (dominio, persistencia, API, backoffice, checkout, recibo y email demo).
-  2. Prompt 8 añade evidencia integral del circuito crítico y gate canónico reproducible con checks backend/frontend alineados a documentación vigente.
+  1. Prompts 1–8 están implementados y trazados en este documento (dominio, persistencia, API, backoffice, checkout, confirmación/recibo, email demo y quality gate).
+  2. La evidencia reproducible de cierre de Prompt 8 está en verde y valida el circuito crítico e2e del ecommerce demo.
   3. No se introdujeron features comerciales nuevas ni cambios fuera del foco de cierre de calidad.
+- Evidencia consolidada:
+  - `python manage.py test tests.nucleo_herbal.test_api_pedidos_demo tests.nucleo_herbal.test_casos_de_uso_pedidos_demo tests.nucleo_herbal.infraestructura.test_admin_django`;
+  - `npm --prefix frontend run test:checkout-demo`;
+  - `python scripts/check_release_gate.py`.
 - Nota de trazabilidad histórica:
   - las secciones iniciales de este documento conservan contexto heredado de cierre de Ciclo 2; para gobierno operativo del estado actual prevalece la secuencia consolidada de secciones 17–25 (Ciclo 3 oficial).
+
+## 26. Apertura controlada de Ciclo 4 (gobernanza)
+- Estado del ciclo: **PLANIFICADO**.
+- Foco único habilitado: **Cuenta de usuario con valor real**, sin reabrir alcance de ecommerce demo ya cerrado.
+- Documentación oficial de apertura:
+  - `docs/ciclos/ciclo_04_cuenta_valor.md` (contrato de alcance de ciclo);
+  - `docs/ciclos/ciclo_04_roadmap_prompts.md` (secuencia oficial de prompts del ciclo).
+- Siguiente paso oficial permitido:
+  - ejecutar **Prompt 1 del Ciclo 4** definido en el roadmap, sin implementar todavía prompts siguientes ni abrir frentes paralelos.
