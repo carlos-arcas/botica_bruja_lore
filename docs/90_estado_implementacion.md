@@ -94,6 +94,17 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 2. Mantener el gate mínimo operativo ya ejecutado como baseline y endurecerlo progresivamente según `docs/13_testing_ci_y_quality_gate.md`.
 3. Si se desea eliminar fricción de ejecución de tests, acordar y documentar en ciclo futuro un comando canónico de suite backend.
 
+## 10. Reencauce de control por ciclos (actualización de gobierno)
+- Diagnóstico oficial: **C (deriva detectada)**.
+- Causa de deriva: en frontend se implementaron capacidades valiosas (home comercial, catálogo/colecciones, cesta ritual local, flujo de encargo, marca y legales) que no corresponden al contrato congelado de `docs/ciclos/ciclo_03_ecommerce_demo.md` (carrito + checkout demo + pedido demo + confirmación + recibo/email).
+- Decisión operativa: **no abrir nueva feature** hasta absorber documentalmente la deriva y dejar explícito el siguiente paso único del ciclo.
+- Estado oficial tras reencauce:
+  - Ciclo 1: **DONE**.
+  - Ciclo 2: **DONE**.
+  - Ciclo 3 (ecommerce demo completo): **EN_PROGRESO**, sin cierre válido todavía.
+  - Microciclo de reencauce documental: **DONE** con trazabilidad en `docs/ciclos/ciclo_03_reencauce_control.md`.
+- Regla activa de continuidad: todo incremento nuevo debe mapearse explícitamente a un prompt del roadmap oficial de Ciclo 3 o bloquearse por sobrealcance.
+
 ---
 
 **Regla de lectura rápida del estado actual:**
@@ -101,7 +112,7 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - No se detectan bloqueos externos que impidan declarar DONE dentro del contrato de este ciclo.
 - El siguiente paso correcto es abrir Ciclo 3 respetando el alcance ya definido.
 
-## 10. Actualización incremental de home (Ciclo 3 en progreso)
+## 11. Actualización incremental de home (Ciclo 3 en progreso)
 - Capacidad: **Home comercial + narrativa + UX ligera**.
 - Estado: **EN_PROGRESO**.
 - Evidencia implementada:
@@ -111,7 +122,7 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
 - Tests añadidos para lógica de interacción de tabs/FAQ en `frontend/tests/home-interacciones.test.ts`.
 - Nota operativa: la ampliación de contenido futuro debe hacerse sobre el módulo de contenido, evitando hardcodear bloques largos dentro de componentes de presentación.
 
-## 11. Catálogo/colecciones navegables (Ciclo 3 en progreso)
+## 12. Catálogo/colecciones navegables (Ciclo 3 en progreso)
 - Capacidad: **Catálogo ritual navegable con filtros y ordenación**.
 - Estado: **EN_PROGRESO**.
 - Implementación activa:
@@ -140,7 +151,7 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   3. Para ampliar campos indexables, extender `construirIndiceBusqueda` sin mover lógica al componente `CatalogoColecciones`.
   4. Cualquier cambio en filtros/orden debe seguir resolviéndose en `resolverCatalogo` para mantener compatibilidad con tarjeta, cesta ritual y flujo `/encargo`.
 
-## 12. Flujo ligero de encargo/consulta desde ficha (Ciclo 3 en progreso)
+## 13. Flujo ligero de encargo/consulta desde ficha (Ciclo 3 en progreso)
 - Capacidad: **Conversión de ficha de colección a acción comercial sin checkout**.
 - Estado: **EN_PROGRESO**.
 - Implementación activa:
@@ -163,7 +174,7 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   4. La configuración pública vive en variables `NEXT_PUBLIC_CONTACT_EMAIL` y/o `NEXT_PUBLIC_CONTACT_WHATSAPP`; si no existen o son inválidas, no se expone canal.
   5. Si más adelante se conecta un canal real adicional, extender `canalContactoPublico.ts` sin duplicar la composición del mensaje ni mezclar reglas de validación en componentes grandes.
 
-## 9. Actualización puntual — Shell comercial global (frontend)
+## 14. Actualización puntual — Shell comercial global (frontend)
 - **Capacidad**: shell comercial global con cabecera, navegación unificada, acceso visible a cesta y footer editorial.
 - **Estado**: DONE.
 - **Ciclo asociado**: evolución ecommerce demo (frontend).
@@ -179,7 +190,7 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   - Contador de cesta integrado en navegación global sin convertir el layout entero en componente cliente.
   - Responsive base resuelta sin dependencias nuevas ni rediseño masivo.
 
-## 13. Página editorial de marca / La Botica (Ciclo 3 en progreso)
+## 15. Página editorial de marca / La Botica (Ciclo 3 en progreso)
 - Capacidad: **Capa de marca sólida conectada al flujo comercial**.
 - Estado: **EN_PROGRESO**.
 - Implementación activa:
@@ -196,7 +207,7 @@ Resumen ejecutivo de estado real: existe un recorrido funcional y defendible par
   2. Mantener composición declarativa en `PaginaEditorialBotica.tsx` evitando hardcodear texto largo en componentes de shell.
   3. Conservar CTA principales a `/colecciones` y `/encargo` para sostener continuidad narrativa → acción comercial.
 
-## 14. Páginas legales/comerciales mínimas de confianza (Ciclo 3 en progreso)
+## 16. Páginas legales/comerciales mínimas de confianza (Ciclo 3 en progreso)
 - Capacidad: **Capa mínima de confianza operativa/legal en frontend**.
 - Estado: **EN_PROGRESO**.
 - Implementación activa:
