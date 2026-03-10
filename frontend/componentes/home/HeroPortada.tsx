@@ -1,11 +1,22 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { HERO_HOME } from "@/contenido/home/contenidoHome";
 import { SEO_HOME } from "@/contenido/home/seoHome";
+import { CONFIGURACION_IMAGEN_HERO } from "@/componentes/home/configuracionImagenHero";
 
 export function HeroPortada(): JSX.Element {
   return (
     <section className="hero-portada hero-portada--con-fondo" aria-labelledby="titulo-home">
+      <Image
+        src={CONFIGURACION_IMAGEN_HERO.src}
+        alt={CONFIGURACION_IMAGEN_HERO.alt}
+        fill
+        priority
+        fetchPriority="high"
+        sizes={CONFIGURACION_IMAGEN_HERO.sizes}
+        className="hero-portada__imagen"
+      />
       <div className="hero-portada__overlay" />
       <div className="hero-portada__contenido">
         <p className="hero-portada__eyebrow">{HERO_HOME.etiqueta}</p>

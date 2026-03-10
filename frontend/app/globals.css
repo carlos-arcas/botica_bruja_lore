@@ -46,13 +46,16 @@ body {
 }
 
 .hero-portada--con-fondo {
-  background-image: url('/fondos/Fondo_Hero.webp');
-  background-size: cover;
-  background-position: center;
   min-height: 350px;
   display: flex;
   align-items: center;
   border-color: #d9cebf;
+}
+
+.hero-portada__imagen {
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
 }
 
 .hero-portada__overlay {
@@ -218,12 +221,17 @@ button:focus-visible {
 .faq-home__pregunta {
   width: 100%;
   text-align: left;
+  list-style: none;
   border: 0;
   background: transparent;
   color: #2f2a25;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.faq-home__pregunta::-webkit-details-marker {
+  display: none;
 }
 
 .faq-home__respuesta p {

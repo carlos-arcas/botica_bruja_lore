@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 
 import { CatalogoColecciones } from "@/componentes/catalogo/CatalogoColecciones";
-import { IndicadorCestaRitual } from "@/componentes/catalogo/cesta/IndicadorCestaRitual";
 import { JsonLd } from "@/componentes/seo/JsonLd";
 import { BloqueEnlazadoContextual } from "@/componentes/seo/BloqueEnlazadoContextual";
 import {
@@ -22,6 +22,18 @@ export const metadata: Metadata = construirMetadataSeo({
 type Props = {
   searchParams?: { q?: string; in?: string; cat?: string; ord?: string };
 };
+
+const IndicadorCestaRitualDiferido = dynamic(
+  () => import("@/componentes/catalogo/cesta/IndicadorCestaRitual").then((modulo) => modulo.IndicadorCestaRitual),
+  {
+    ssr: false,
+    loading: () => (
+      <Link href="/cesta" className="boton boton--secundario">
+        Cesta ritual
+      </Link>
+    ),
+  },
+);
 
 export default function PaginaColecciones({ searchParams }: Props): JSX.Element {
   const bloqueEnlazado = BLOQUES_ENLAZADO_CATALOGO.colecciones;
@@ -47,7 +59,7 @@ export default function PaginaColecciones({ searchParams }: Props): JSX.Element 
       <section className="bloque-home">
         <h2>Tu selección ritual</h2>
         <p>Guarda piezas de interés y prepara una consulta con varias referencias en un solo paso.</p>
-        <IndicadorCestaRitual />
+        <IndicadorCestaRitualDiferido />
       </section>
 
       <CatalogoColecciones searchParamsIniciales={searchParams} />

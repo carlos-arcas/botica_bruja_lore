@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { BloqueComercialMinimo } from "@/componentes/herbal/detalle/BloqueComercialMinimo";
 import { BloqueEditorialPlanta } from "@/componentes/herbal/detalle/BloqueEditorialPlanta";
@@ -19,8 +20,10 @@ type Props = {
   params: { slug: string };
 };
 
+const obtenerFichaHerbalCacheada = cache(obtenerFichaHerbalConectada);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const resultado = await obtenerFichaHerbalConectada(params.slug);
+  const resultado = await obtenerFichaHerbalCacheada(params.slug);
 
   if (resultado.estado !== "ok") {
     return construirMetadataSeo({
@@ -48,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PaginaDetalleHerbal({ params }: Props): Promise<JSX.Element> {
-  const resultado = await obtenerFichaHerbalConectada(params.slug);
+  const resultado = await obtenerFichaHerbalCacheada(params.slug);
 
   if (resultado.estado === "no_encontrado") {
     notFound();
