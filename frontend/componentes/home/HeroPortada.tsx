@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { HERO_HOME } from "@/contenido/home/contenidoHome";
+import { SEO_HOME } from "@/contenido/home/seoHome";
 
 export function HeroPortada(): JSX.Element {
   return (
@@ -8,7 +9,7 @@ export function HeroPortada(): JSX.Element {
       <div className="hero-portada__overlay" />
       <div className="hero-portada__contenido">
         <p className="hero-portada__eyebrow">{HERO_HOME.etiqueta}</p>
-        <h1 id="titulo-home">{HERO_HOME.titulo}</h1>
+        <h1 id="titulo-home">{SEO_HOME.h1}</h1>
         <p>{HERO_HOME.descripcion}</p>
         <div className="hero-portada__acciones">
           <Link href={HERO_HOME.ctaPrimaria.href} className="boton boton--principal">
