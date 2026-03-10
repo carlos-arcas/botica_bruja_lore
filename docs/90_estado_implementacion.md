@@ -569,3 +569,17 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   3. no se implementa ningún prompt de Ciclo 6 dentro de esta actualización.
 - Prompt 1 oficial permitido para el siguiente incremento:
   - ejecutar una auditoría integral de consistencia funcional/documental y registrar backlog priorizado de brechas críticas (arquitectura, UX de confianza y trazabilidad) sin abrir nuevos flujos funcionales.
+
+## 36. Ciclo 6 — Prompt 1 oficial (auditoría trazable + backlog priorizado)
+- Capacidad: **Auditoría integral de consistencia entre documentación, estado real y recorridos críticos con backlog priorizado de brechas**.
+- Estado: **DONE (Prompt 1)**.
+- Evidencia de ejecución:
+  - informe de auditoría y backlog en `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`;
+  - contraste explícito de recorridos críticos (home, catálogo, ficha, cesta/checkout demo, recibo/email demo, cuenta demo, calendario ritual y admin mínimo);
+  - identificación y priorización de brechas por criticidad/tipo sin implementar nuevas features.
+- Decisión de gobierno:
+  1. se mantiene foco exclusivo de auditoría para Prompt 1;
+  2. las correcciones quedan diferidas al Prompt 2 oficial de Ciclo 6;
+  3. no se reabren ciclos cerrados (3, 4, 5) fuera de inconsistencias objetivas documentadas.
+- Siguiente paso permitido:
+  - ejecutar Prompt 2 de Ciclo 6 con foco único en resolver brechas críticas documentadas (consistencia contractual/naming) y su evidencia de no-regresión.
