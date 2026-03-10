@@ -17,6 +17,7 @@ export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
   { etiqueta: "La Botica", href: "/la-botica", coincidencia: "exacta" },
   { etiqueta: "Cesta ritual", href: "/cesta", coincidencia: "exacta" },
   { etiqueta: "Encargo", href: "/encargo", coincidencia: "exacta" },
+  { etiqueta: "Cuenta demo", href: "/cuenta-demo", coincidencia: "exacta" },
 ];
 
 const ENLACES_BASE_FOOTER: EnlaceFooter[] = [
