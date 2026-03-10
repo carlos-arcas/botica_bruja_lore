@@ -103,6 +103,39 @@ class RitualModelo(models.Model):
         return self.nombre
 
 
+class ReglaCalendarioModelo(models.Model):
+    id = models.CharField(primary_key=True, max_length=36)
+    ritual = models.ForeignKey(
+        RitualModelo,
+        on_delete=models.PROTECT,
+        related_name="reglas_calendario",
+    )
+    nombre = models.CharField(max_length=180)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    prioridad = models.PositiveIntegerField(default=100)
+    activa = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "nucleo_regla_calendario"
+        ordering = ("prioridad", "id")
+        verbose_name = "regla de calendario"
+        verbose_name_plural = "reglas de calendario"
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(fecha_fin__gte=models.F("fecha_inicio")),
+                name="nucleo_regla_calendario_rango_valido",
+            )
+        ]
+        indexes = [
+            models.Index(fields=("activa", "fecha_inicio", "fecha_fin")),
+            models.Index(fields=("ritual", "activa", "prioridad")),
+        ]
+
+    def __str__(self) -> str:
+        return self.nombre
+
+
 class PedidoDemoModelo(models.Model):
     id_pedido = models.CharField(primary_key=True, max_length=64)
     email_contacto = models.EmailField(max_length=254)

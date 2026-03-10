@@ -66,4 +66,8 @@ urlpatterns = [
         "api/v1/cuentas-demo/",
         include("backend.nucleo_herbal.presentacion.publica.urls_cuentas_demo"),
     ),
+    path(
+        "api/v1/calendario-ritual/",
+        include("backend.nucleo_herbal.presentacion.publica.urls_calendario_ritual"),
+    ),
 ]

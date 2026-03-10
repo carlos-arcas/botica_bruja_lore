@@ -27,6 +27,7 @@ class TestRepositoriosDjango(unittest.TestCase):
             PlantaModelo,
             ProductoModelo,
             RitualModelo,
+            ReglaCalendarioModelo,
         )
 
         cls.CuentaDemoModelo = CuentaDemoModelo
@@ -36,11 +37,13 @@ class TestRepositoriosDjango(unittest.TestCase):
         cls.RitualModelo = RitualModelo
         cls.PedidoDemoModelo = PedidoDemoModelo
         cls.LineaPedidoModelo = LineaPedidoModelo
+        cls.ReglaCalendarioModelo = ReglaCalendarioModelo
 
     def setUp(self) -> None:
         from backend.nucleo_herbal.infraestructura.persistencia_django.repositorios import (
             ProveedorHistorialPedidosDemoORM,
             RepositorioCuentasDemoORM,
+            RepositorioReglasCalendarioORM,
             RepositorioPedidosDemoORM,
             RepositorioPlantasORM,
             RepositorioProductosORM,
@@ -50,6 +53,7 @@ class TestRepositoriosDjango(unittest.TestCase):
         self.CuentaDemoModelo.objects.all().delete()
         self.LineaPedidoModelo.objects.all().delete()
         self.PedidoDemoModelo.objects.all().delete()
+        self.ReglaCalendarioModelo.objects.all().delete()
         self.RitualModelo.objects.all().delete()
         self.ProductoModelo.objects.all().delete()
         self.PlantaModelo.objects.all().delete()
@@ -134,6 +138,7 @@ class TestRepositoriosDjango(unittest.TestCase):
         self.repo_pedidos_demo = RepositorioPedidosDemoORM()
         self.repo_cuentas_demo = RepositorioCuentasDemoORM()
         self.proveedor_historial_cuentas = ProveedorHistorialPedidosDemoORM()
+        self.repo_reglas_calendario = RepositorioReglasCalendarioORM()
 
     def test_listar_navegables(self) -> None:
         plantas = self.repo_plantas.listar_navegables()
@@ -434,6 +439,64 @@ class TestRepositoriosDjango(unittest.TestCase):
 
         self.assertEqual({pedido.id_pedido for pedido in pedidos}, {"PD-H1", "PD-H2"})
 
+
+    def test_reglas_calendario_listar_vigentes_filtra_activas_publicadas_y_rango(self) -> None:
+        from datetime import date
+
+        self.ReglaCalendarioModelo.objects.create(
+            id="reg-1",
+            ritual_id="rit-1",
+            nombre="Ventana activa",
+            fecha_inicio=date(2026, 3, 1),
+            fecha_fin=date(2026, 3, 31),
+            prioridad=4,
+            activa=True,
+        )
+        self.ReglaCalendarioModelo.objects.create(
+            id="reg-2",
+            ritual_id="rit-1",
+            nombre="Ventana inactiva",
+            fecha_inicio=date(2026, 3, 1),
+            fecha_fin=date(2026, 3, 31),
+            prioridad=2,
+            activa=False,
+        )
+        self.ReglaCalendarioModelo.objects.create(
+            id="reg-3",
+            ritual_id="rit-2",
+            nombre="Ritual oculto",
+            fecha_inicio=date(2026, 3, 1),
+            fecha_fin=date(2026, 3, 31),
+            prioridad=1,
+            activa=True,
+        )
+
+        reglas = self.repo_reglas_calendario.listar_vigentes_en(date(2026, 3, 15))
+
+        self.assertEqual(len(reglas), 1)
+        self.assertEqual(reglas[0].id, "reg-1")
+        self.assertEqual(reglas[0].id_ritual, "rit-1")
+
+    def test_reglas_calendario_guardar_y_reconstruir(self) -> None:
+        from datetime import date
+
+        from backend.nucleo_herbal.dominio.calendario_ritual import ReglaCalendario
+
+        regla = ReglaCalendario(
+            id="reg-guardar-1",
+            id_ritual="rit-1",
+            nombre="Equinoccio herbal",
+            fecha_inicio=date(2026, 3, 19),
+            fecha_fin=date(2026, 3, 25),
+            prioridad=3,
+            activa=True,
+        )
+
+        persistida = self.repo_reglas_calendario.guardar(regla)
+
+        self.assertEqual(persistida.id, regla.id)
+        self.assertEqual(persistida.nombre, "Equinoccio herbal")
+        self.assertEqual(persistida.prioridad, 3)
 
 if __name__ == "__main__":
     unittest.main()

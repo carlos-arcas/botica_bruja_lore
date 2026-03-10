@@ -2,6 +2,7 @@
 
 from ...dominio.entidades import Intencion, Planta, Producto
 from ...dominio.cuentas_demo import CuentaDemo, CredencialCuentaDemo, PerfilCuentaDemo
+from ...dominio.calendario_ritual import ReglaCalendario
 from ...dominio.pedidos_demo import LineaPedido, PedidoDemo
 from ...dominio.rituales import Ritual
 from .models import (
@@ -12,6 +13,7 @@ from .models import (
     PlantaModelo,
     ProductoModelo,
     RitualModelo,
+    ReglaCalendarioModelo,
 )
 
 
@@ -73,6 +75,30 @@ def a_ritual(modelo: RitualModelo) -> Ritual:
 
 
 
+
+
+
+def a_regla_calendario(modelo: ReglaCalendarioModelo) -> ReglaCalendario:
+    return ReglaCalendario(
+        id=modelo.id,
+        id_ritual=modelo.ritual_id,
+        nombre=modelo.nombre,
+        fecha_inicio=modelo.fecha_inicio,
+        fecha_fin=modelo.fecha_fin,
+        prioridad=modelo.prioridad,
+        activa=modelo.activa,
+    )
+
+
+def a_datos_regla_calendario(regla: ReglaCalendario) -> dict[str, object]:
+    return {
+        "ritual_id": regla.id_ritual,
+        "nombre": regla.nombre,
+        "fecha_inicio": regla.fecha_inicio,
+        "fecha_fin": regla.fecha_fin,
+        "prioridad": regla.prioridad,
+        "activa": regla.activa,
+    }
 
 def a_cuenta_demo(modelo: CuentaDemoModelo) -> CuentaDemo:
     return CuentaDemo(

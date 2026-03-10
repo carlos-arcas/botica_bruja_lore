@@ -1,13 +1,17 @@
 """Views HTTP mínimas para exposición pública del núcleo herbal."""
 
+from datetime import date
+
 from django.http import HttpRequest, JsonResponse
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
 from .dependencias import (
+    construir_servicios_publicos_calendario_ritual,
     construir_servicios_publicos_herbales,
     construir_servicios_publicos_rituales,
 )
 from .serializadores import (
+    serializar_consulta_calendario_ritual,
     serializar_planta_detalle,
     serializar_planta_resumen,
     serializar_producto_resumen,
@@ -120,6 +124,23 @@ def rituales_por_intencion(request: HttpRequest, slug_intencion: str) -> JsonRes
     except ErrorAplicacionLookup as error:
         return _json_no_encontrado(str(error))
     return JsonResponse(serializar_relacion_intencion_ritual(relacion))
+
+
+def calendario_ritual_por_fecha(request: HttpRequest) -> JsonResponse:
+    fecha_raw = request.GET.get("fecha", "").strip()
+    if not fecha_raw:
+        return JsonResponse({"detalle": "El parámetro 'fecha' es obligatorio (YYYY-MM-DD)."}, status=400)
+    try:
+        fecha_consulta = date.fromisoformat(fecha_raw)
+    except ValueError:
+        return JsonResponse({"detalle": "Formato de fecha inválido. Usa YYYY-MM-DD."}, status=400)
+
+    servicios = construir_servicios_publicos_calendario_ritual()
+    try:
+        consulta = servicios.consultar_por_fecha.ejecutar(fecha_consulta)
+    except ErrorAplicacionLookup as error:
+        return _json_no_encontrado(str(error))
+    return JsonResponse(serializar_consulta_calendario_ritual(consulta))
 
 
 def _json_no_encontrado(detalle: str) -> JsonResponse:
