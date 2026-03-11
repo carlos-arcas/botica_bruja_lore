@@ -103,6 +103,15 @@
         "canonical": true,
         "structured_data": "Article+BreadcrumbList",
         "notas": "Si la guía no está publicada/indexable, la metadata debe emitir noindex."
+      },
+      {
+        "familia": "/guias/temas/{slug}",
+        "condicion_publicacion": "solo subhubs editoriales publicados, indexables y con masa mínima real (>=2 guías o 1 guía + conexiones de catálogo)",
+        "indexable": true,
+        "incluir_en_sitemap": true,
+        "canonical": true,
+        "structured_data": "CollectionPage+BreadcrumbList",
+        "notas": "Si el subhub no cumple masa o está no publicado, la metadata debe emitir noindex y excluirse de sitemap."
       }
     ],
     "publicas_no_estrategicas": [

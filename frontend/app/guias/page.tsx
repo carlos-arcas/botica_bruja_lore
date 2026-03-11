@@ -6,6 +6,7 @@ import {
   INTRO_HUB_GUIAS,
   METADATA_HUB_GUIAS,
   obtenerGuiasPublicadasIndexables,
+  obtenerSubhubsEditorialesIndexables,
 } from "@/contenido/editorial/guiasEditoriales";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import { construirSchemasHubEditorial } from "@/infraestructura/seo/structuredData";
@@ -18,6 +19,7 @@ export const metadata: Metadata = construirMetadataSeo({
 
 export default function PaginaHubGuias(): JSX.Element {
   const guias = obtenerGuiasPublicadasIndexables();
+  const subhubs = obtenerSubhubsEditorialesIndexables();
   const schemas = construirSchemasHubEditorial({
     titulo: METADATA_HUB_GUIAS.title,
     descripcion: METADATA_HUB_GUIAS.description,
@@ -32,15 +34,25 @@ export default function PaginaHubGuias(): JSX.Element {
         {INTRO_HUB_GUIAS.map((parrafo) => (
           <p key={parrafo}>{parrafo}</p>
         ))}
-        <div className="hero-portada__acciones">
-          <Link href="/hierbas" className="boton boton--secundario">
-            Conectar con hierbas publicadas
-          </Link>
-          <Link href="/rituales" className="boton boton--secundario">
-            Conectar con rituales publicados
-          </Link>
-        </div>
       </section>
+
+      {subhubs.length > 0 ? (
+        <section className="bloque-home" aria-labelledby="titulo-subhubs-editoriales">
+          <h2 id="titulo-subhubs-editoriales">Subhubs temáticos para descubrir guías conectadas</h2>
+          <ul className="lista-destacada">
+            {subhubs.map((subhub) => (
+              <li key={subhub.slug}>
+                <article>
+                  <h3>
+                    <Link href={`/guias/temas/${subhub.slug}`}>{subhub.nombre}</Link>
+                  </h3>
+                  <p>{subhub.resumen}</p>
+                </article>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="bloque-home" aria-labelledby="titulo-listado-guias">
         <h2 id="titulo-listado-guias">Guías publicadas</h2>
