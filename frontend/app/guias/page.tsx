@@ -3,11 +3,11 @@ import Link from "next/link";
 
 import { JsonLd } from "@/componentes/seo/JsonLd";
 import {
-  INTRO_HUB_GUIAS,
-  METADATA_HUB_GUIAS,
-  obtenerGuiasPublicadasIndexables,
-  obtenerSubhubsEditorialesIndexables,
-} from "@/contenido/editorial/guiasEditoriales";
+  obtenerOpcionesFiltroHub,
+  obtenerOpcionesFiltroTema,
+  resolverEstadoIndiceGuias,
+} from "@/contenido/editorial/indiceGuias";
+import { INTRO_HUB_GUIAS, METADATA_HUB_GUIAS, obtenerSubhubsEditorialesIndexables } from "@/contenido/editorial/guiasEditoriales";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import { construirSchemasHubEditorial } from "@/infraestructura/seo/structuredData";
 
@@ -17,9 +17,15 @@ export const metadata: Metadata = construirMetadataSeo({
   rutaCanonical: METADATA_HUB_GUIAS.rutaCanonical,
 });
 
-export default function PaginaHubGuias(): JSX.Element {
-  const guias = obtenerGuiasPublicadasIndexables();
+type Props = {
+  searchParams: Record<string, string | string[] | undefined>;
+};
+
+export default function PaginaHubGuias({ searchParams }: Props): JSX.Element {
   const subhubs = obtenerSubhubsEditorialesIndexables();
+  const estadoIndice = resolverEstadoIndiceGuias(searchParams);
+  const filtrosTema = obtenerOpcionesFiltroTema();
+  const filtrosHub = obtenerOpcionesFiltroHub();
   const schemas = construirSchemasHubEditorial({
     titulo: METADATA_HUB_GUIAS.title,
     descripcion: METADATA_HUB_GUIAS.description,
@@ -34,6 +40,40 @@ export default function PaginaHubGuias(): JSX.Element {
         {INTRO_HUB_GUIAS.map((parrafo) => (
           <p key={parrafo}>{parrafo}</p>
         ))}
+      </section>
+
+      <section className="bloque-home" aria-labelledby="titulo-filtros-guias">
+        <h2 id="titulo-filtros-guias">Segmentar guías por tema y hub relacionado</h2>
+        <p>
+          Mostrando <strong>{estadoIndice.resultados.length}</strong> de <strong>{estadoIndice.totalPublicadas}</strong> guías
+          publicadas.
+        </p>
+        <h3>Filtrar por tema</h3>
+        <ul className="lista-destacada">
+          {filtrosTema.map((opcion) => (
+            <li key={opcion.valor}>
+              <Link
+                href={construirHrefFiltro({ tema: opcion.valor, hub: estadoIndice.filtroHubActivo })}
+                aria-current={estadoIndice.filtroTemaActivo === opcion.valor ? "page" : undefined}
+              >
+                {opcion.etiqueta} ({opcion.cantidad})
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <h3>Filtrar por hub conectado</h3>
+        <ul className="lista-destacada">
+          {filtrosHub.map((opcion) => (
+            <li key={opcion.valor}>
+              <Link
+                href={construirHrefFiltro({ tema: estadoIndice.filtroTemaActivo, hub: opcion.valor })}
+                aria-current={estadoIndice.filtroHubActivo === opcion.valor ? "page" : undefined}
+              >
+                {opcion.etiqueta} ({opcion.cantidad})
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {subhubs.length > 0 ? (
@@ -56,19 +96,38 @@ export default function PaginaHubGuias(): JSX.Element {
 
       <section className="bloque-home" aria-labelledby="titulo-listado-guias">
         <h2 id="titulo-listado-guias">Guías publicadas</h2>
-        <ul className="lista-destacada">
-          {guias.map((guia) => (
-            <li key={guia.slug}>
-              <article>
-                <h3>
-                  <Link href={`/guias/${guia.slug}`}>{guia.titulo}</Link>
-                </h3>
-                <p>{guia.resumen}</p>
-              </article>
-            </li>
-          ))}
-        </ul>
+        {estadoIndice.resultados.length === 0 ? (
+          <p>No encontramos guías para esta combinación. Prueba otro filtro para seguir navegando el índice editorial.</p>
+        ) : (
+          <ul className="lista-destacada">
+            {estadoIndice.resultados.map((guia) => (
+              <li key={guia.slug}>
+                <article>
+                  <h3>
+                    <Link href={`/guias/${guia.slug}`}>{guia.titulo}</Link>
+                  </h3>
+                  <p>{guia.resumen}</p>
+                </article>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );
+}
+
+function construirHrefFiltro(filtros: { tema: string; hub: string }): string {
+  const params = new URLSearchParams();
+
+  if (filtros.tema !== "todas") {
+    params.set("tema", filtros.tema);
+  }
+
+  if (filtros.hub !== "todos") {
+    params.set("hub", filtros.hub);
+  }
+
+  const query = params.toString();
+  return query.length > 0 ? `/guias?${query}` : "/guias";
 }

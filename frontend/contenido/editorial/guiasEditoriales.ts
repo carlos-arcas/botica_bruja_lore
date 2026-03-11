@@ -114,7 +114,7 @@ export function obtenerSubhubEditorialParaGuia(guia: GuiaEditorial): SubhubEdito
 
 export function obtenerGuiasRelacionadasPorHub(hub: HubEditorialRelacionado, limite = 3): GuiaRelacionada[] {
   return obtenerGuiasPublicadasIndexables()
-    .filter((guia) => guia.relaciones.hubs_relacionados.some((enlace) => resolverHubDesdeRuta(enlace.href) === hub))
+    .filter((guia) => guia.relaciones.hubs_relacionados.some((enlace) => obtenerHubEditorialDesdeRuta(enlace.href) === hub))
     .map((guia) => ({
       slug: guia.slug,
       titulo: guia.titulo,
@@ -204,7 +204,7 @@ function cumpleMasaMinimaSubhub(tema: TemaGuiaEditorial): boolean {
   return hubs >= 2 && fichas >= 2;
 }
 
-function resolverHubDesdeRuta(ruta: string): HubEditorialRelacionado | null {
+export function obtenerHubEditorialDesdeRuta(ruta: string): HubEditorialRelacionado | null {
   return MAPA_HUB_POR_RUTA[ruta] ?? null;
 }
 
