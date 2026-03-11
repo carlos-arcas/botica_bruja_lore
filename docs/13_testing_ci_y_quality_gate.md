@@ -216,6 +216,7 @@ Este comando orquesta en un solo flujo:
 - **Integridad operativa/documental del repositorio:** `python scripts/check_repo_operational_integrity.py` (markdown crítico, coherencia Procfile/manage.py/wsgi.py/railway.toml, `.env.railway.example` y alineación CI↔documentación).
 
 - Estos contratos validan forma mínima estable de JSON (claves obligatorias, estructura de listas/objetos y campos realmente consumidos por frontend) tanto para herbal/rituales como para pedidos demo, cuentas demo y calendario ritual, reduciendo regresiones silenciosas que no rompen build pero sí el runtime.
+- Además, endurecen explícitamente el contrato mínimo de error en APIs públicas consumidas por frontend: respuesta JSON con clave `detalle` (string), status HTTP coherente (400/401/404) y `Content-Type` JSON para evitar desvíos a HTML inesperado.
 - **Validación frontend básica (si aplica):** `npm run lint`, `npm run test:checkout-demo`, `npm run test:cuenta-demo`, `npm run test:calendario-ritual` y `npm run build`.
 
 Regla de auditoría:
