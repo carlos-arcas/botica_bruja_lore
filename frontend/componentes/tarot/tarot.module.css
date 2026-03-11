@@ -1,0 +1,91 @@
+.heroTarot {
+  background-image: linear-gradient(135deg, rgba(253, 249, 240, 0.9), rgba(249, 241, 225, 0.95)),
+    url("/fondos/fondo_pergamino.webp");
+  background-size: cover;
+  border-color: #d8c4a7;
+}
+
+.etiqueta {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: #6f5d4b;
+}
+
+.nota {
+  border-left: 4px solid #b89268;
+  padding-left: 0.8rem;
+}
+
+.rejillaArcanos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.tarjeta {
+  width: 100%;
+  border: 1px solid #d9c8b5;
+  background: #fffdf8;
+  border-radius: 12px;
+  padding: 0.7rem;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.tarjeta[data-activo="true"] {
+  border-color: #90684a;
+  box-shadow: 0 0 0 1px #90684a;
+}
+
+.imagenArcano {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #e0d2c2;
+}
+
+.numero {
+  margin: 0;
+  color: #6f5d4b;
+  font-size: 0.88rem;
+}
+
+.detalle {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(140px, 220px) 1fr;
+}
+
+.imagenDetalle {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid #d8c8b6;
+}
+
+.palabrasClave {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+.palabrasClave li {
+  border: 1px solid #d8c8b6;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  background: #fff;
+}
+
+@media (max-width: 720px) {
+  .detalle {
+    grid-template-columns: 1fr;
+  }
+}
