@@ -9,11 +9,14 @@ import {
   obtenerGuiasPublicadasIndexables,
   obtenerGuiasRelacionadasPorFicha,
   obtenerGuiasRelacionadasPorHub,
+  obtenerSubhubEditorialParaGuia,
+  obtenerSubhubsEditorialesIndexables,
 } from "../contenido/editorial/guiasEditoriales";
 import { construirMetadataSeo } from "../infraestructura/seo/metadataSeo";
 import {
   construirSchemasDetalleGuiaEditorial,
   construirSchemasHubEditorial,
+  construirSchemasSubhubEditorial,
 } from "../infraestructura/seo/structuredData";
 
 test("hub editorial mantiene metadata indexable y canonical", () => {
@@ -37,6 +40,14 @@ test("fuente editorial devuelve 3 guías publicadas/indexables", () => {
   const guias = obtenerGuiasPublicadasIndexables();
   assert.equal(guias.length, 3);
   assert.equal(guias.every((guia) => guia.publicada && guia.indexable), true);
+});
+
+test("subhubs editoriales válidos solo se publican con masa mínima", () => {
+  const subhubs = obtenerSubhubsEditorialesIndexables();
+
+  assert.equal(subhubs.length, 3);
+  assert.equal(subhubs.every((subhub) => subhub.indexable && subhub.publicada), true);
+  assert.equal(subhubs.every((subhub) => subhub.seo.title.includes("La Botica de la Bruja Lore")), true);
 });
 
 test("relaciones editoriales por hub y ficha solo usan guías publicadas", () => {
@@ -71,6 +82,19 @@ test("detalle editorial emite Article y BreadcrumbList sin authors inventados", 
   assert.equal(articleData.review, undefined);
 });
 
+test("subhub editorial emite CollectionPage y breadcrumb", () => {
+  const previo = process.env.PUBLIC_SITE_URL;
+  process.env.PUBLIC_SITE_URL = "https://laboticabrujalore.com";
+
+  const subhub = obtenerSubhubsEditorialesIndexables()[0];
+  const schemas = construirSchemasSubhubEditorial(subhub);
+
+  process.env.PUBLIC_SITE_URL = previo;
+
+  assert.equal(schemas.some((schema) => schema["@type"] === "CollectionPage"), true);
+  assert.equal(schemas.some((schema) => schema["@type"] === "BreadcrumbList"), true);
+});
+
 test("hub editorial emite CollectionPage y breadcrumb", () => {
   const previo = process.env.PUBLIC_SITE_URL;
   process.env.PUBLIC_SITE_URL = "https://laboticabrujalore.com";
@@ -87,13 +111,19 @@ test("hub editorial emite CollectionPage y breadcrumb", () => {
   assert.equal(schemas.some((schema) => schema["@type"] === "BreadcrumbList"), true);
 });
 
-test("app router editorial integra bloque reutilizable y noindex en no publicados", () => {
+test("app router editorial integra subhubs y relación guía -> subhub", () => {
   const sourceHub = readFileSync(join(process.cwd(), "app/guias/page.tsx"), "utf8");
   const sourceDetalle = readFileSync(join(process.cwd(), "app/guias/[slug]/page.tsx"), "utf8");
+  const sourceSubhub = readFileSync(join(process.cwd(), "app/guias/temas/[slug]/page.tsx"), "utf8");
 
-  assert.match(sourceHub, /JsonLd/);
-  assert.match(sourceDetalle, /JsonLd/);
-  assert.match(sourceDetalle, /indexable:\s*false/);
-  assert.match(sourceDetalle, /obtenerEnlacesCatalogoParaGuia/);
-  assert.match(sourceDetalle, /obtenerEnlacesFichaParaGuia/);
+  assert.match(sourceHub, /\/guias\/temas\//);
+  assert.match(sourceDetalle, /obtenerSubhubEditorialParaGuia/);
+  assert.match(sourceSubhub, /construirSchemasSubhubEditorial/);
+  assert.match(sourceSubhub, /rutaCanonical: `\/guias\/temas\/\$\{subhub\.slug\}`/);
+});
+
+test("cada guía publicada enlaza a un subhub temático indexable", () => {
+  const guias = obtenerGuiasPublicadasIndexables();
+
+  assert.equal(guias.every((guia) => Boolean(obtenerSubhubEditorialParaGuia(guia))), true);
 });

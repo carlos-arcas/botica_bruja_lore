@@ -110,10 +110,52 @@ class SitemapGuiasEditorialesPublicas(SitemapPublicoBase):
         return f"/guias/{item['slug']}"
 
 
+class SitemapSubhubsEditorialesPublicos(SitemapPublicoBase):
+    changefreq = "weekly"
+    priority = 0.72
+
+    def items(self) -> list[dict[str, object]]:
+        return _cargar_subhubs_editoriales_publicables()
+
+    def location(self, item: dict[str, object]) -> str:
+        return f"/guias/temas/{item['slug']}"
+
+
+def _cargar_subhubs_editoriales_publicables() -> list[dict[str, object]]:
+    base = Path(settings.BASE_DIR) / "frontend" / "contenido" / "editorial"
+    with (base / "guiasEditoriales.json").open("r", encoding="utf-8") as handler:
+        guias = json.load(handler)
+    with (base / "subhubsEditoriales.json").open("r", encoding="utf-8") as handler:
+        subhubs = json.load(handler)
+
+    guias_indexables = [guia for guia in guias if guia.get("publicada") and guia.get("indexable")]
+    return [subhub for subhub in subhubs if _es_subhub_publicable(subhub, guias_indexables)]
+
+
+def _es_subhub_publicable(subhub: dict[str, object], guias_indexables: list[dict[str, object]]) -> bool:
+    if not subhub.get("publicada") or not subhub.get("indexable"):
+        return False
+
+    tema = subhub.get("tema")
+    guias_tema = [guia for guia in guias_indexables if guia.get("tema") == tema]
+    if len(guias_tema) >= 2:
+        return True
+
+    if len(guias_tema) != 1:
+        return False
+
+    relaciones = guias_tema[0].get("relaciones", {})
+    hubs = len(relaciones.get("hubs_relacionados", []))
+    fichas_relacionadas = relaciones.get("fichas_relacionadas", {})
+    fichas = sum(len(listado) for listado in fichas_relacionadas.values())
+    return hubs >= 2 and fichas >= 2
+
+
 SITEMAPS_PUBLICOS = {
     "paginas": SitemapPaginasPublicas,
     "plantas": SitemapPlantasPublicas,
     "rituales": SitemapRitualesPublicos,
     "productos": SitemapProductosPublicos,
     "guias": SitemapGuiasEditorialesPublicas,
+    "subhubs_guias": SitemapSubhubsEditorialesPublicos,
 }

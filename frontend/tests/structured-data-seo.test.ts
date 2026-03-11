@@ -12,6 +12,7 @@ import {
   construirSchemasHome,
   construirSchemasLandingCatalogo,
   construirSchemasPaginaInformativa,
+  construirSchemasSubhubEditorial,
 } from "../infraestructura/seo/structuredData";
 
 test("resolverUrlCanonicalAbsoluta limpia query y hash", () => {
@@ -131,4 +132,31 @@ test("página informativa estratégica emite WebPage y breadcrumb opcional", () 
 
   assert.equal(schemas.some((schema) => schema["@type"] === "WebPage"), true);
   assert.equal(schemas.some((schema) => schema["@type"] === "BreadcrumbList"), true);
+});
+
+
+test("subhub editorial emite CollectionPage con breadcrumb jerárquico", () => {
+  const previo = process.env.PUBLIC_SITE_URL;
+  process.env.PUBLIC_SITE_URL = "https://laboticabrujalore.com";
+
+  const schemas = construirSchemasSubhubEditorial({
+    slug: "hierbas-rituales-cotidianos",
+    tema: "hierbas",
+    nombre: "Hierbas para rituales cotidianos",
+    h1: "Hierbas para rituales cotidianos con intención clara",
+    resumen: "Resumen",
+    seo: {
+      title: "Hierbas para rituales cotidianos | Guías conectadas | La Botica de la Bruja Lore",
+      description: "Descripción",
+    },
+    hubs_relacionados: [],
+    publicada: true,
+    indexable: true,
+  });
+
+  process.env.PUBLIC_SITE_URL = previo;
+
+  const breadcrumb = schemas.find((schema) => schema["@type"] === "BreadcrumbList");
+  assert.equal(schemas.some((schema) => schema["@type"] === "CollectionPage"), true);
+  assert.equal((breadcrumb?.itemListElement as unknown[]).length, 3);
 });

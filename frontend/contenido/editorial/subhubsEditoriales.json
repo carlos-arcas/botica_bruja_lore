@@ -1,0 +1,83 @@
+[
+  {
+    "slug": "hierbas-rituales-cotidianos",
+    "tema": "hierbas",
+    "nombre": "Hierbas para rituales cotidianos",
+    "h1": "Hierbas para rituales cotidianos con intención clara",
+    "resumen": "Subhub editorial para elegir hierbas publicadas y conectarlas con secuencias de cierre, orden y acompañamiento diario sin claims sanitarios.",
+    "seo": {
+      "title": "Hierbas para rituales cotidianos | Guías conectadas | La Botica de la Bruja Lore",
+      "description": "Descubre guías sobre hierbas para rituales cotidianos y conecta cada lectura con hubs y fichas del catálogo para sostener prácticas coherentes."
+    },
+    "hubs_relacionados": [
+      {
+        "href": "/hierbas",
+        "anchor": "Explorar el hub de hierbas publicadas para ampliar combinaciones"
+      },
+      {
+        "href": "/rituales",
+        "anchor": "Conectar con rituales publicados para aplicar estas plantas"
+      },
+      {
+        "href": "/la-botica",
+        "anchor": "Leer la filosofía editorial detrás de la curaduría herbal"
+      }
+    ],
+    "publicada": true,
+    "indexable": true
+  },
+  {
+    "slug": "rituales-para-ordenar-espacios",
+    "tema": "rituales",
+    "nombre": "Rituales para ordenar espacios",
+    "h1": "Rituales para ordenar espacios y sostener una atmósfera clara",
+    "resumen": "Subhub editorial orientado a rituales simples de orden y limpieza simbólica con continuidad hacia hierbas y colecciones relevantes.",
+    "seo": {
+      "title": "Rituales para ordenar espacios | Guías conectadas | La Botica de la Bruja Lore",
+      "description": "Reúne guías editoriales para rituales de orden espacial y enlaza con hubs y fichas de apoyo para mantener continuidad práctica."
+    },
+    "hubs_relacionados": [
+      {
+        "href": "/rituales",
+        "anchor": "Entrar al hub de rituales publicados y secuencias conectadas"
+      },
+      {
+        "href": "/hierbas",
+        "anchor": "Comparar hierbas de apoyo para limpieza simbólica y enfoque"
+      },
+      {
+        "href": "/colecciones",
+        "anchor": "Ver colecciones útiles para preparar un rincón ritual estable"
+      }
+    ],
+    "publicada": true,
+    "indexable": true
+  },
+  {
+    "slug": "colecciones-por-intencion",
+    "tema": "colecciones",
+    "nombre": "Colecciones por intención",
+    "h1": "Colecciones por intención para decidir sin ruido",
+    "resumen": "Subhub editorial para traducir una intención en selección concreta de colecciones, hierbas y rituales conectados.",
+    "seo": {
+      "title": "Colecciones por intención | Guías conectadas | La Botica de la Bruja Lore",
+      "description": "Agrupa guías para elegir colecciones por intención y mantener una ruta editorial-comercial clara entre hubs y fichas públicas."
+    },
+    "hubs_relacionados": [
+      {
+        "href": "/colecciones",
+        "anchor": "Explorar colecciones publicadas alineadas con tu intención"
+      },
+      {
+        "href": "/hierbas",
+        "anchor": "Cruzar la selección con hierbas compatibles de uso cotidiano"
+      },
+      {
+        "href": "/rituales",
+        "anchor": "Completar la práctica con rituales guiados relacionados"
+      }
+    ],
+    "publicada": true,
+    "indexable": true
+  }
+]

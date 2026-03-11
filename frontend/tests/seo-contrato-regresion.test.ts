@@ -121,6 +121,14 @@ test("contrato SEO: páginas del app router mantienen schema solo donde aplica",
   }
 });
 
+
+
+test("contrato SEO incluye familia canónica de subhubs editoriales", () => {
+  const contrato = cargarContratoSeo();
+  const familias = (contrato.rutas as { fichas_publicas_condicionadas?: Array<{ familia: string }> }).fichas_publicas_condicionadas ?? [];
+
+  assert.equal(familias.some((item) => item.familia === "/guias/temas/{slug}"), true);
+});
 test("contrato SEO: Search Console y enlazado interno siguen alineados", () => {
   const contrato = cargarContratoSeo();
   const metadataRaiz = construirMetadataRaiz({

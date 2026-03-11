@@ -1,4 +1,5 @@
 import dataGuias from "./guiasEditoriales.json";
+import dataSubhubs from "./subhubsEditoriales.json";
 
 export type TemaGuiaEditorial = "hierbas" | "rituales" | "colecciones";
 export type HubEditorialRelacionado = "hierbas" | "rituales" | "colecciones" | "la-botica";
@@ -44,6 +45,18 @@ export type GuiaEditorial = {
   relaciones: RelacionesGuiaEditorial;
 };
 
+export type SubhubEditorial = {
+  slug: string;
+  tema: TemaGuiaEditorial;
+  nombre: string;
+  h1: string;
+  resumen: string;
+  seo: SeoGuiaEditorial;
+  hubs_relacionados: EnlaceRelacionadoGuia[];
+  publicada: boolean;
+  indexable: boolean;
+};
+
 export type GuiaRelacionada = {
   slug: string;
   titulo: string;
@@ -60,6 +73,7 @@ const MAPA_HUB_POR_RUTA: Record<string, HubEditorialRelacionado> = {
 };
 
 const GUIAS_EDITORIALES = dataGuias as GuiaEditorial[];
+const SUBHUBS_EDITORIALES = dataSubhubs as SubhubEditorial[];
 
 export const METADATA_HUB_GUIAS = {
   rutaCanonical: "/guias",
@@ -80,6 +94,22 @@ export function obtenerGuiasPublicadasIndexables(): GuiaEditorial[] {
 
 export function obtenerGuiaEditorialPorSlug(slug: string): GuiaEditorial | null {
   return GUIAS_EDITORIALES.find((guia) => guia.slug === slug) ?? null;
+}
+
+export function obtenerSubhubsEditorialesIndexables(): SubhubEditorial[] {
+  return SUBHUBS_EDITORIALES.filter(esSubhubIndexable).filter((subhub) => cumpleMasaMinimaSubhub(subhub.tema));
+}
+
+export function obtenerSubhubEditorialPorSlug(slug: string): SubhubEditorial | null {
+  return obtenerSubhubsEditorialesIndexables().find((subhub) => subhub.slug === slug) ?? null;
+}
+
+export function obtenerGuiasPorTema(tema: TemaGuiaEditorial): GuiaEditorial[] {
+  return obtenerGuiasPublicadasIndexables().filter((guia) => guia.tema === tema);
+}
+
+export function obtenerSubhubEditorialParaGuia(guia: GuiaEditorial): SubhubEditorial | null {
+  return obtenerSubhubsEditorialesIndexables().find((subhub) => subhub.tema === guia.tema) ?? null;
 }
 
 export function obtenerGuiasRelacionadasPorHub(hub: HubEditorialRelacionado, limite = 3): GuiaRelacionada[] {
@@ -146,8 +176,32 @@ export function obtenerEnlacesFichaParaGuia(guia: GuiaEditorial): EnlaceRelacion
   return deduplicarEnlaces(enlaces);
 }
 
+export function obtenerEnlacesCatalogoParaSubhub(subhub: SubhubEditorial): EnlaceRelacionadoGuia[] {
+  return deduplicarEnlaces(subhub.hubs_relacionados);
+}
+
 function esGuiaPublicadaIndexable(guia: GuiaEditorial): boolean {
   return guia.publicada && guia.indexable;
+}
+
+function esSubhubIndexable(subhub: SubhubEditorial): boolean {
+  return subhub.publicada && subhub.indexable;
+}
+
+function cumpleMasaMinimaSubhub(tema: TemaGuiaEditorial): boolean {
+  const guias = obtenerGuiasPorTema(tema);
+  if (guias.length >= 2) {
+    return true;
+  }
+
+  if (guias.length !== 1) {
+    return false;
+  }
+
+  const [guia] = guias;
+  const hubs = guia.relaciones.hubs_relacionados.length;
+  const fichas = Object.values(guia.relaciones.fichas_relacionadas).flat().length;
+  return hubs >= 2 && fichas >= 2;
 }
 
 function resolverHubDesdeRuta(ruta: string): HubEditorialRelacionado | null {

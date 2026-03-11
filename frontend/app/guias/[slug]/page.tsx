@@ -8,6 +8,7 @@ import {
   obtenerEnlacesFichaParaGuia,
   obtenerGuiaEditorialPorSlug,
   obtenerGuiasPublicadasIndexables,
+  obtenerSubhubEditorialParaGuia,
 } from "@/contenido/editorial/guiasEditoriales";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import { construirSchemasDetalleGuiaEditorial } from "@/infraestructura/seo/structuredData";
@@ -47,6 +48,7 @@ export default function PaginaDetalleGuia({ params }: Props): JSX.Element {
 
   const enlacesHubs = obtenerEnlacesCatalogoParaGuia(guia);
   const enlacesFichas = obtenerEnlacesFichaParaGuia(guia);
+  const subhub = obtenerSubhubEditorialParaGuia(guia);
   const schemas = construirSchemasDetalleGuiaEditorial(guia);
 
   return (
@@ -66,6 +68,20 @@ export default function PaginaDetalleGuia({ params }: Props): JSX.Element {
           ))}
         </section>
       ))}
+
+
+      {subhub ? (
+        <section className="bloque-home" aria-labelledby="subhub-guia-relacionado">
+          <h2 id="subhub-guia-relacionado">Tema editorial conectado</h2>
+          <p>
+            Esta guía forma parte del subhub <strong>{subhub.nombre}</strong>, donde reunimos más contexto y
+            rutas de continuidad con catálogo.
+          </p>
+          <Link href={`/guias/temas/${subhub.slug}`} className="boton boton--secundario">
+            Ir al subhub temático
+          </Link>
+        </section>
+      ) : null}
 
       {enlacesHubs.length > 0 ? (
         <section className="bloque-home" aria-labelledby="enlaces-relacionados-guia">

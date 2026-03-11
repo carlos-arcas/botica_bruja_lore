@@ -1,6 +1,6 @@
 import { resolverUrlCanonicalAbsoluta } from "./metadataSeo";
 import { ProductoCatalogo } from "../../contenido/catalogo/catalogo";
-import { GuiaEditorial } from "../../contenido/editorial/guiasEditoriales";
+import { GuiaEditorial, SubhubEditorial } from "../../contenido/editorial/guiasEditoriales";
 import { PlantaPublica } from "../api/herbal";
 import { RitualDetallePublico } from "../api/rituales";
 
@@ -260,6 +260,26 @@ function construirSchemaArticleGuia(guia: GuiaEditorial): ObjetoJsonLd | null {
       url: resolverUrlCanonicalAbsoluta("/guias") ?? undefined,
     },
   });
+}
+
+
+export function construirSchemasSubhubEditorial(subhub: SubhubEditorial): ObjetoJsonLd[] {
+  const ruta = `/guias/temas/${subhub.slug}`;
+  const url = resolverUrlCanonicalAbsoluta(ruta);
+  if (!url) {
+    return [];
+  }
+
+  const breadcrumb = construirSchemaBreadcrumb([
+    { nombre: "Inicio", ruta: "/" },
+    { nombre: "Guías", ruta: "/guias" },
+    { nombre: subhub.nombre, ruta },
+  ]);
+
+  return [
+    construirSchemaPagina("CollectionPage", url, subhub.seo.title, subhub.seo.description),
+    ...(breadcrumb ? [breadcrumb] : []),
+  ];
 }
 
 export function construirSchemasDetalleGuiaEditorial(guia: GuiaEditorial): ObjetoJsonLd[] {

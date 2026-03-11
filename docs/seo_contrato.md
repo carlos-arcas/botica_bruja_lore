@@ -26,7 +26,7 @@ El contrato máquina-legible se divide en:
 
 ## Tipos de páginas actuales
 - **Estratégicas indexables:** `/`, hubs de catálogo, páginas públicas estratégicas.
-- **Fichas públicas condicionadas:** `/hierbas/{slug}`, `/rituales/{slug}`, `/colecciones/{slug}` solo cuando el contenido está publicado/disponible.
+- **Fichas públicas condicionadas:** `/hierbas/{slug}`, `/rituales/{slug}`, `/colecciones/{slug}`, `/guias/{slug}` y `/guias/temas/{slug}` solo cuando el contenido está publicado/indexable y, en subhubs, con masa mínima real.
 - **Públicas no estratégicas:** rutas legales informativas en `noindex` para este ciclo.
 - **Transaccionales/técnicas:** rutas de flujo demo y encargo en `noindex`.
 
