@@ -601,3 +601,21 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Tests añadidos/extendidos:
   - `frontend/tests/editorial-seo.test.ts` cubre filtros por tema/hub, exclusión de no indexables, combinación vacía y conteos de opciones;
   - actualización de script `frontend/package.json` (`test:editorial-seo`) para compilar el nuevo helper `contenido/editorial/indiceGuias.ts`.
+
+## 19. Página pública Tarot editorial (Feature 33)
+- Capacidad: **Sección pública `/tarot` con exploración visual de arcanos mayores**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - nueva ruta `frontend/app/tarot/page.tsx` con metadata SEO mínima;
+  - contenido reusable tipado en `frontend/contenido/tarot/arcanosTarot.ts`;
+  - componentes desacoplados para listado y detalle en `frontend/componentes/tarot/`;
+  - integración de assets existentes (`/fondos/fondo_pergamino.webp` + dibujos de arcanos en `/fondos/*.webp`).
+- Interacción cerrada en este incremento:
+  1. listado de arcanos mayores en grid responsive;
+  2. selección por tarjeta (botón) con panel de detalle inline;
+  3. fallback explícito cuando un `slug` no existe.
+- Integración con shell global:
+  - nuevo enlace "Tarot" en navegación principal y footer desde `frontend/contenido/shell/navegacionGlobal.ts`.
+- Tests añadidos/ajustados:
+  - `frontend/tests/tarot-contenido.test.ts` (estructura + helpers + metadata);
+  - `frontend/tests/shell-global.test.ts` (enlace global a `/tarot`).

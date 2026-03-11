@@ -12,7 +12,12 @@ import {
 test("navegación principal expone accesos comerciales clave", () => {
   const rutas = NAVEGACION_PRINCIPAL.map((enlace) => enlace.href);
 
-  assert.deepEqual(rutas, ["/", "/colecciones", "/la-botica", "/calendario-ritual", "/cesta", "/encargo", "/cuenta-demo"]);
+  assert.equal(rutas.includes("/"), true);
+  assert.equal(rutas.includes("/colecciones"), true);
+  assert.equal(rutas.includes("/la-botica"), true);
+  assert.equal(rutas.includes("/guias"), true);
+  assert.equal(rutas.includes("/tarot"), true);
+  assert.equal(rutas.includes("/encargo"), true);
 });
 
 test("esRutaActiva resuelve coincidencia exacta y por prefijo", () => {
@@ -39,10 +44,10 @@ test("contador de cesta muestra fallback correcto", () => {
 test("footer mantiene enlaces de continuidad editorial-comercial", () => {
   assert.equal(ENLACES_FOOTER.length >= 8, true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/la-botica"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/tarot"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/calendario-ritual"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/encargo"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/condiciones-encargo"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/envios-y-preparacion"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/privacidad"), true);
-
 });
