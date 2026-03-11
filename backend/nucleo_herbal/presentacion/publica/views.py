@@ -10,6 +10,7 @@ from .dependencias import (
     construir_servicios_publicos_herbales,
     construir_servicios_publicos_rituales,
 )
+from .respuestas_json import json_no_encontrado, json_validacion
 from .serializadores import (
     serializar_consulta_calendario_ritual,
     serializar_planta_detalle,
@@ -33,7 +34,7 @@ def detalle_planta(request: HttpRequest, slug_planta: str) -> JsonResponse:
     try:
         planta = servicios.detalle_planta.ejecutar(slug_planta)
     except ErrorAplicacionLookup as error:
-        return _json_no_encontrado(str(error))
+        return json_no_encontrado(str(error))
     return JsonResponse({"planta": serializar_planta_detalle(planta)})
 
 
@@ -42,7 +43,7 @@ def productos_por_planta(request: HttpRequest, slug_planta: str) -> JsonResponse
     try:
         productos = servicios.resolucion_comercial.ejecutar(slug_planta)
     except ErrorAplicacionLookup as error:
-        return _json_no_encontrado(str(error))
+        return json_no_encontrado(str(error))
     return JsonResponse(
         {
             "planta_slug": slug_planta,
@@ -56,7 +57,7 @@ def relaciones_por_intencion(request: HttpRequest, slug_intencion: str) -> JsonR
     try:
         relaciones = servicios.relaciones_por_intencion.ejecutar(slug_intencion)
     except ErrorAplicacionLookup as error:
-        return _json_no_encontrado(str(error))
+        return json_no_encontrado(str(error))
     return JsonResponse(serializar_relacion_intencion(relaciones))
 
 
@@ -65,7 +66,7 @@ def rituales_por_planta(request: HttpRequest, slug_planta: str) -> JsonResponse:
     try:
         rituales = servicios.rituales_por_planta.ejecutar(slug_planta)
     except ErrorAplicacionLookup as error:
-        return _json_no_encontrado(str(error))
+        return json_no_encontrado(str(error))
     return JsonResponse(
         {
             "planta_slug": slug_planta,
@@ -85,7 +86,7 @@ def detalle_ritual(request: HttpRequest, slug_ritual: str) -> JsonResponse:
     try:
         ritual = servicios.detalle_ritual.ejecutar(slug_ritual)
     except ErrorAplicacionLookup as error:
-        return _json_no_encontrado(str(error))
+        return json_no_encontrado(str(error))
     return JsonResponse({"ritual": serializar_ritual_detalle(ritual)})
 
 
@@ -94,7 +95,7 @@ def plantas_por_ritual(request: HttpRequest, slug_ritual: str) -> JsonResponse:
     try:
         plantas = servicios.plantas_por_ritual.ejecutar(slug_ritual)
     except ErrorAplicacionLookup as error:
-        return _json_no_encontrado(str(error))
+        return json_no_encontrado(str(error))
     return JsonResponse(
         {
             "ritual_slug": slug_ritual,
@@ -108,7 +109,7 @@ def productos_por_ritual(request: HttpRequest, slug_ritual: str) -> JsonResponse
     try:
         productos = servicios.productos_por_ritual.ejecutar(slug_ritual)
     except ErrorAplicacionLookup as error:
-        return _json_no_encontrado(str(error))
+        return json_no_encontrado(str(error))
     return JsonResponse(
         {
             "ritual_slug": slug_ritual,
@@ -122,26 +123,23 @@ def rituales_por_intencion(request: HttpRequest, slug_intencion: str) -> JsonRes
     try:
         relacion = servicios.rituales_por_intencion.ejecutar(slug_intencion)
     except ErrorAplicacionLookup as error:
-        return _json_no_encontrado(str(error))
+        return json_no_encontrado(str(error))
     return JsonResponse(serializar_relacion_intencion_ritual(relacion))
 
 
 def calendario_ritual_por_fecha(request: HttpRequest) -> JsonResponse:
     fecha_raw = request.GET.get("fecha", "").strip()
     if not fecha_raw:
-        return JsonResponse({"detalle": "El parámetro 'fecha' es obligatorio (YYYY-MM-DD)."}, status=400)
+        return json_validacion("El parámetro 'fecha' es obligatorio (YYYY-MM-DD).")
     try:
         fecha_consulta = date.fromisoformat(fecha_raw)
     except ValueError:
-        return JsonResponse({"detalle": "Formato de fecha inválido. Usa YYYY-MM-DD."}, status=400)
+        return json_validacion("Formato de fecha inválido. Usa YYYY-MM-DD.")
 
     servicios = construir_servicios_publicos_calendario_ritual()
     try:
         consulta = servicios.consultar_por_fecha.ejecutar(fecha_consulta)
     except ErrorAplicacionLookup as error:
-        return _json_no_encontrado(str(error))
+        return json_no_encontrado(str(error))
     return JsonResponse(serializar_consulta_calendario_ritual(consulta))
 
-
-def _json_no_encontrado(detalle: str) -> JsonResponse:
-    return JsonResponse({"detalle": detalle}, status=404)

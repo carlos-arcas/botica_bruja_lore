@@ -153,3 +153,25 @@ class TestContratosApiPublicaConsumidaFrontend(DjangoTestCase):
         self.assertTrue(
             {"sku", "slug", "nombre", "tipo_producto", "categoria_comercial"}.issubset(producto.keys())
         )
+    def test_contrato_errores_404_publicos_shape_y_content_type(self) -> None:
+        endpoints = [
+            "/api/v1/herbal/plantas/no-existe/",
+            "/api/v1/herbal/plantas/no-existe/productos/",
+            "/api/v1/herbal/plantas/no-existe/rituales/",
+            "/api/v1/herbal/intenciones/no-existe/plantas/",
+            "/api/v1/rituales/no-existe/",
+            "/api/v1/rituales/no-existe/plantas/",
+            "/api/v1/rituales/no-existe/productos/",
+            "/api/v1/rituales/intenciones/no-existe/",
+        ]
+
+        for endpoint in endpoints:
+            with self.subTest(endpoint=endpoint):
+                response = self.client.get(endpoint)
+                self.assertEqual(response.status_code, 404)
+                self.assertTrue(response["Content-Type"].startswith("application/json"))
+                payload = response.json()
+                self.assertEqual(set(payload.keys()), {"detalle"})
+                self.assertIsInstance(payload["detalle"], str)
+
+

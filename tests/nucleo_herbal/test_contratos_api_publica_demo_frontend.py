@@ -113,6 +113,7 @@ class TestContratosApiPublicaDemoConsumidaFrontend(DjangoTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+        self.assertTrue(response["Content-Type"].startswith("application/json"))
         payload = response.json()
         self.assertEqual(set(payload.keys()), {"detalle"})
         self.assertIsInstance(payload["detalle"], str)
@@ -125,6 +126,7 @@ class TestContratosApiPublicaDemoConsumidaFrontend(DjangoTestCase):
 
         response_404 = self.client.get("/api/v1/pedidos-demo/PD-NO-EXISTE/")
         self.assertEqual(response_404.status_code, 404)
+        self.assertTrue(response_404["Content-Type"].startswith("application/json"))
         self.assertEqual(set(response_404.json().keys()), {"detalle"})
 
     def test_contrato_email_demo_pedido_publico_ok_y_404(self) -> None:
@@ -147,6 +149,7 @@ class TestContratosApiPublicaDemoConsumidaFrontend(DjangoTestCase):
 
         response_404 = self.client.get("/api/v1/pedidos-demo/PD-NO-EXISTE/email-demo/")
         self.assertEqual(response_404.status_code, 404)
+        self.assertTrue(response_404["Content-Type"].startswith("application/json"))
         self.assertEqual(set(response_404.json().keys()), {"detalle"})
 
     def test_contrato_cuenta_demo_registro_y_autenticacion_ok(self) -> None:
@@ -179,10 +182,12 @@ class TestContratosApiPublicaDemoConsumidaFrontend(DjangoTestCase):
             content_type="application/json",
         )
         self.assertEqual(auth_invalida.status_code, 401)
+        self.assertTrue(auth_invalida["Content-Type"].startswith("application/json"))
         self.assertEqual(set(auth_invalida.json().keys()), {"detalle"})
 
         perfil_404 = self.client.get("/api/v1/cuentas-demo/USR-NO-EXISTE/perfil/")
         self.assertEqual(perfil_404.status_code, 404)
+        self.assertTrue(perfil_404["Content-Type"].startswith("application/json"))
         self.assertEqual(set(perfil_404.json().keys()), {"detalle"})
 
     def test_contrato_perfil_e_historial_cuenta_demo_ok(self) -> None:
@@ -211,4 +216,15 @@ class TestContratosApiPublicaDemoConsumidaFrontend(DjangoTestCase):
 
         response_error = self.client.get("/api/v1/calendario-ritual/?fecha=22-03-2026")
         self.assertEqual(response_error.status_code, 400)
+        self.assertTrue(response_error["Content-Type"].startswith("application/json"))
         self.assertEqual(set(response_error.json().keys()), {"detalle"})
+
+    def test_contrato_calendario_ritual_error_falta_fecha_json(self) -> None:
+        response = self.client.get("/api/v1/calendario-ritual/")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(response["Content-Type"].startswith("application/json"))
+        payload = response.json()
+        self.assertEqual(set(payload.keys()), {"detalle"})
+        self.assertIsInstance(payload["detalle"], str)
+

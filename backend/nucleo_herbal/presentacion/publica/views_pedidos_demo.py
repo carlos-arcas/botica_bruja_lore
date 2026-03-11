@@ -13,6 +13,7 @@ from ...dominio.pedidos_demo import LineaPedido
 from .dependencias import construir_servicios_publicos_pedidos_demo
 from .email_demo_serializadores import serializar_email_demo
 from .pedidos_demo_serializadores import serializar_pedido_demo
+from .respuestas_json import json_no_encontrado, json_validacion
 
 
 def crear_pedido_demo(request: HttpRequest) -> JsonResponse:
@@ -32,11 +33,11 @@ def crear_pedido_demo(request: HttpRequest) -> JsonResponse:
     id_usuario = payload.get("id_usuario")
 
     if not isinstance(email, str) or not email.strip():
-        return JsonResponse({"detalle": "El campo 'email' es obligatorio."}, status=400)
+        return json_validacion("El campo 'email' es obligatorio.")
     if not isinstance(canal, str) or not canal.strip():
-        return JsonResponse({"detalle": "El campo 'canal' es obligatorio."}, status=400)
+        return json_validacion("El campo 'canal' es obligatorio.")
     if id_usuario is not None and not isinstance(id_usuario, str):
-        return JsonResponse({"detalle": "El campo 'id_usuario' debe ser texto."}, status=400)
+        return json_validacion("El campo 'id_usuario' debe ser texto.")
 
     try:
         servicios = construir_servicios_publicos_pedidos_demo()
@@ -47,7 +48,7 @@ def crear_pedido_demo(request: HttpRequest) -> JsonResponse:
             id_usuario=id_usuario,
         )
     except ErrorDominio as error_dominio:
-        return JsonResponse({"detalle": str(error_dominio)}, status=400)
+        return json_validacion(str(error_dominio))
 
     return JsonResponse({"pedido": serializar_pedido_demo(pedido)}, status=201)
 
@@ -57,7 +58,7 @@ def detalle_pedido_demo(_request: HttpRequest, id_pedido: str) -> JsonResponse:
     try:
         pedido = servicios.obtener_pedido_demo.ejecutar(id_pedido)
     except ErrorAplicacionLookup as error_lookup:
-        return JsonResponse({"detalle": str(error_lookup)}, status=404)
+        return json_no_encontrado(str(error_lookup))
 
     return JsonResponse({"pedido": serializar_pedido_demo(pedido)})
 
@@ -66,21 +67,21 @@ def _leer_json(request: HttpRequest) -> tuple[dict, JsonResponse | None]:
     try:
         payload = json.loads(request.body or "{}")
     except json.JSONDecodeError:
-        return {}, JsonResponse({"detalle": "JSON inválido."}, status=400)
+        return {}, json_validacion("JSON inválido.")
     if not isinstance(payload, dict):
-        return {}, JsonResponse({"detalle": "El payload debe ser un objeto JSON."}, status=400)
+        return {}, json_validacion("El payload debe ser un objeto JSON.")
     return payload, None
 
 
 def _construir_lineas(payload: dict) -> tuple[tuple[LineaPedido, ...], JsonResponse | None]:
     lineas = payload.get("lineas")
     if not isinstance(lineas, list) or not lineas:
-        return (), JsonResponse({"detalle": "El campo 'lineas' es obligatorio."}, status=400)
+        return (), json_validacion("El campo 'lineas' es obligatorio.")
 
     lineas_dominio: list[LineaPedido] = []
     for linea in lineas:
         if not isinstance(linea, dict):
-            return (), JsonResponse({"detalle": "Cada línea debe ser un objeto."}, status=400)
+            return (), json_validacion("Cada línea debe ser un objeto.")
         try:
             linea_dominio = LineaPedido(
                 id_producto=_validar_texto(linea, "id_producto"),
@@ -90,7 +91,7 @@ def _construir_lineas(payload: dict) -> tuple[tuple[LineaPedido, ...], JsonRespo
                 precio_unitario_demo=_validar_decimal(linea, "precio_unitario_demo"),
             )
         except (ValueError, ErrorDominio) as error:
-            return (), JsonResponse({"detalle": str(error)}, status=400)
+            return (), json_validacion(str(error))
         lineas_dominio.append(linea_dominio)
 
     return tuple(lineas_dominio), None
@@ -125,6 +126,6 @@ def email_demo_pedido(_request: HttpRequest, id_pedido: str) -> JsonResponse:
     try:
         email_demo = servicios.obtener_email_demo_pedido.ejecutar(id_pedido)
     except ErrorAplicacionLookup as error_lookup:
-        return JsonResponse({"detalle": str(error_lookup)}, status=404)
+        return json_no_encontrado(str(error_lookup))
 
     return JsonResponse({"email_demo": serializar_email_demo(email_demo)})
