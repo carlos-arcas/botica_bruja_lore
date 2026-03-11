@@ -1,6 +1,7 @@
 import dataGuias from "./guiasEditoriales.json";
 
 export type TemaGuiaEditorial = "hierbas" | "rituales" | "colecciones";
+export type SegmentoGuiaEditorial = "todas" | TemaGuiaEditorial;
 export type HubEditorialRelacionado = "hierbas" | "rituales" | "colecciones" | "la-botica";
 export type TipoFichaCatalogo = "hierbas" | "rituales" | "colecciones";
 
@@ -52,6 +53,13 @@ export type GuiaRelacionada = {
   anchor: string;
 };
 
+export type SegmentoGuiasResumen = {
+  segmento: SegmentoGuiaEditorial;
+  etiqueta: string;
+  descripcion: string;
+  conteo: number;
+};
+
 const MAPA_HUB_POR_RUTA: Record<string, HubEditorialRelacionado> = {
   "/hierbas": "hierbas",
   "/rituales": "rituales",
@@ -60,6 +68,18 @@ const MAPA_HUB_POR_RUTA: Record<string, HubEditorialRelacionado> = {
 };
 
 const GUIAS_EDITORIALES = dataGuias as GuiaEditorial[];
+
+const ETIQUETAS_TEMA: Record<TemaGuiaEditorial, string> = {
+  hierbas: "Hierbas",
+  rituales: "Rituales",
+  colecciones: "Colecciones",
+};
+
+const DESCRIPCIONES_TEMA: Record<TemaGuiaEditorial, string> = {
+  hierbas: "Guías para elegir plantas y mezclas con intención editorial.",
+  rituales: "Secuencias prácticas para sostener rituales realistas.",
+  colecciones: "Recorridos para seleccionar colecciones según contexto.",
+};
 
 export const METADATA_HUB_GUIAS = {
   rutaCanonical: "/guias",
@@ -76,6 +96,60 @@ export const INTRO_HUB_GUIAS = [
 
 export function obtenerGuiasPublicadasIndexables(): GuiaEditorial[] {
   return GUIAS_EDITORIALES.filter(esGuiaPublicadaIndexable);
+}
+
+export function obtenerResumenSegmentosGuias(): SegmentoGuiasResumen[] {
+  const guias = obtenerGuiasPublicadasIndexables();
+  const resumenTemas = (Object.keys(ETIQUETAS_TEMA) as TemaGuiaEditorial[]).map((tema) => ({
+    segmento: tema,
+    etiqueta: ETIQUETAS_TEMA[tema],
+    descripcion: DESCRIPCIONES_TEMA[tema],
+    conteo: guias.filter((guia) => guia.tema === tema).length,
+  }));
+
+  return [
+    {
+      segmento: "todas",
+      etiqueta: "Todas",
+      descripcion: "Vista editorial completa de guías indexables.",
+      conteo: guias.length,
+    },
+    ...resumenTemas,
+  ];
+}
+
+export function resolverSegmentoGuias(valor: string | undefined): SegmentoGuiaEditorial {
+  if (!valor) {
+    return "todas";
+  }
+
+  return valor in ETIQUETAS_TEMA ? (valor as TemaGuiaEditorial) : "todas";
+}
+
+export function obtenerGuiasPorSegmento(segmento: SegmentoGuiaEditorial): GuiaEditorial[] {
+  const guias = obtenerGuiasPublicadasIndexables();
+
+  if (segmento === "todas") {
+    return guias;
+  }
+
+  return guias.filter((guia) => guia.tema === segmento);
+}
+
+export function obtenerGuiasAgrupadasPorTema(): Array<{
+  tema: TemaGuiaEditorial;
+  etiqueta: string;
+  descripcion: string;
+  guias: GuiaEditorial[];
+}> {
+  return (Object.keys(ETIQUETAS_TEMA) as TemaGuiaEditorial[])
+    .map((tema) => ({
+      tema,
+      etiqueta: ETIQUETAS_TEMA[tema],
+      descripcion: DESCRIPCIONES_TEMA[tema],
+      guias: obtenerGuiasPorSegmento(tema),
+    }))
+    .filter((grupo) => grupo.guias.length > 0);
 }
 
 export function obtenerGuiaEditorialPorSlug(slug: string): GuiaEditorial | null {

@@ -7,8 +7,12 @@ import {
   METADATA_HUB_GUIAS,
   obtenerGuiaEditorialPorSlug,
   obtenerGuiasPublicadasIndexables,
+  obtenerGuiasAgrupadasPorTema,
+  obtenerGuiasPorSegmento,
   obtenerGuiasRelacionadasPorFicha,
   obtenerGuiasRelacionadasPorHub,
+  obtenerResumenSegmentosGuias,
+  resolverSegmentoGuias,
 } from "../contenido/editorial/guiasEditoriales";
 import { construirMetadataSeo } from "../infraestructura/seo/metadataSeo";
 import {
@@ -37,6 +41,33 @@ test("fuente editorial devuelve 3 guías publicadas/indexables", () => {
   const guias = obtenerGuiasPublicadasIndexables();
   assert.equal(guias.length, 3);
   assert.equal(guias.every((guia) => guia.publicada && guia.indexable), true);
+});
+
+
+
+test("segmentación editorial filtra solo guías publicadas/indexables", () => {
+  const guiasHierbas = obtenerGuiasPorSegmento("hierbas");
+  const guiasRituales = obtenerGuiasPorSegmento("rituales");
+
+  assert.equal(guiasHierbas.every((guia) => guia.tema === "hierbas" && guia.publicada && guia.indexable), true);
+  assert.equal(guiasRituales.every((guia) => guia.tema === "rituales" && guia.publicada && guia.indexable), true);
+});
+
+test("resumen y agrupación editorial reflejan conteos reales de guías", () => {
+  const resumen = obtenerResumenSegmentosGuias();
+  const grupos = obtenerGuiasAgrupadasPorTema();
+
+  const total = resumen.find((item) => item.segmento === "todas");
+  assert.ok(total);
+  assert.equal(total.conteo, 3);
+  assert.equal(grupos.length >= 3, true);
+  assert.equal(grupos.every((grupo) => grupo.guias.every((guia) => guia.tema === grupo.tema)), true);
+});
+
+test("resolverSegmentoGuias protege el filtro ante valores no válidos", () => {
+  assert.equal(resolverSegmentoGuias(undefined), "todas");
+  assert.equal(resolverSegmentoGuias("hierbas"), "hierbas");
+  assert.equal(resolverSegmentoGuias("segmento-invalido"), "todas");
 });
 
 test("relaciones editoriales por hub y ficha solo usan guías publicadas", () => {
@@ -92,6 +123,9 @@ test("app router editorial integra bloque reutilizable y noindex en no publicado
   const sourceDetalle = readFileSync(join(process.cwd(), "app/guias/[slug]/page.tsx"), "utf8");
 
   assert.match(sourceHub, /JsonLd/);
+  assert.match(sourceHub, /resolverSegmentoGuias/);
+  assert.match(sourceHub, /obtenerGuiasPorSegmento/);
+  assert.match(sourceHub, /searchParams/);
   assert.match(sourceDetalle, /JsonLd/);
   assert.match(sourceDetalle, /indexable:\s*false/);
   assert.match(sourceDetalle, /obtenerEnlacesCatalogoParaGuia/);

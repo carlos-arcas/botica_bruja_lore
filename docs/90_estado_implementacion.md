@@ -583,3 +583,15 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   3. no se reabren ciclos cerrados (3, 4, 5) fuera de inconsistencias objetivas documentadas.
 - Siguiente paso permitido:
   - ejecutar Prompt 2 de Ciclo 6 con foco único en resolver brechas críticas documentadas (consistencia contractual/naming) y su evidencia de no-regresión.
+
+## 37. Índice editorial navegable en `/guias` con segmentación mínima (Features 31)
+- Capacidad: **Hub editorial `/guias` navegable con filtros mínimos por tema y agrupación escalable reutilizable**.
+- Estado: **EN_PROGRESO**.
+- Implementación activa:
+  - segmentación editorial en fuente reusable con helpers de filtro, agrupación y resumen en `frontend/contenido/editorial/guiasEditoriales.ts`;
+  - evolución del hub público `frontend/app/guias/page.tsx` con controles de segmento, estado vacío, resumen activo y navegación por grupos temáticos;
+  - cobertura de regresión en `frontend/tests/editorial-seo.test.ts` para filtrado, exclusión de no indexables, agrupación y contrato de integración del hub.
+- Reglas cerradas en este incremento:
+  1. solo se listan guías `publicada && indexable` en el índice;
+  2. los segmentos válidos son `todas`, `hierbas`, `rituales`, `colecciones` con fallback seguro a `todas`;
+  3. la navegación por grupos temáticos se renderiza desde contenido reusable, sin hardcodear taxonomías en el componente de página.
