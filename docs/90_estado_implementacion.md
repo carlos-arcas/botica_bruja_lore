@@ -583,3 +583,21 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   3. no se reabren ciclos cerrados (3, 4, 5) fuera de inconsistencias objetivas documentadas.
 - Siguiente paso permitido:
   - ejecutar Prompt 2 de Ciclo 6 con foco único en resolver brechas críticas documentadas (consistencia contractual/naming) y su evidencia de no-regresión.
+
+## 37. Índice editorial navegable de `/guias` con segmentación mínima (Feature 31)
+- Capacidad: **Evolución del hub `/guias` hacia índice editorial filtrable y escalable sin CMS**.
+- Estado: **DONE (Feature 31)**.
+- Implementación activa:
+  - helpers dedicados de índice y filtros en `frontend/contenido/editorial/indiceGuias.ts`;
+  - `frontend/app/guias/page.tsx` ahora resuelve filtros por query (`tema`, `hub`), resume resultados y maneja estado vacío limpio;
+  - reutilización de la fuente editorial existente (`guiasEditoriales`) manteniendo exclusión de borradores/no indexables.
+- Segmentación aplicada:
+  1. por tema editorial (`hierbas`, `rituales`, `colecciones`);
+  2. por hub relacionado (`hierbas`, `rituales`, `colecciones`, `la-botica`).
+- Reglas preservadas:
+  1. canonical y metadata SEO del hub sin ruptura (`/guias`);
+  2. continuidad de subhubs (`/guias/temas/[slug]`) y detalle (`/guias/[slug]`);
+  3. separación editorial/comercial sin abrir CMS/backoffice.
+- Tests añadidos/extendidos:
+  - `frontend/tests/editorial-seo.test.ts` cubre filtros por tema/hub, exclusión de no indexables, combinación vacía y conteos de opciones;
+  - actualización de script `frontend/package.json` (`test:editorial-seo`) para compilar el nuevo helper `contenido/editorial/indiceGuias.ts`.

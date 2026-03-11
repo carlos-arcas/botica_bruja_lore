@@ -4,6 +4,11 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import {
+  obtenerOpcionesFiltroHub,
+  obtenerOpcionesFiltroTema,
+  resolverEstadoIndiceGuias,
+} from "../contenido/editorial/indiceGuias";
+import {
   METADATA_HUB_GUIAS,
   obtenerGuiaEditorialPorSlug,
   obtenerGuiasPublicadasIndexables,
@@ -126,4 +131,37 @@ test("cada guía publicada enlaza a un subhub temático indexable", () => {
   const guias = obtenerGuiasPublicadasIndexables();
 
   assert.equal(guias.every((guia) => Boolean(obtenerSubhubEditorialParaGuia(guia))), true);
+});
+
+test("índice editorial filtra por tema y excluye borradores/no indexables", () => {
+  const estado = resolverEstadoIndiceGuias({ tema: "hierbas" });
+
+  assert.equal(estado.resultados.length, 1);
+  assert.equal(estado.resultados[0]?.slug, "hierbas-para-ritual-de-cierre-del-dia");
+  assert.equal(estado.resultados.every((guia) => guia.publicada && guia.indexable), true);
+});
+
+test("índice editorial permite segmentar por hub relacionado", () => {
+  const estado = resolverEstadoIndiceGuias({ hub: "la-botica" });
+
+  assert.equal(estado.resultados.length, 2);
+  assert.equal(
+    estado.resultados.every((guia) => guia.relaciones.hubs_relacionados.some((enlace) => enlace.href === "/la-botica")),
+    true,
+  );
+});
+
+test("índice editorial devuelve estado vacío limpio para combinación sin resultados", () => {
+  const estado = resolverEstadoIndiceGuias({ tema: "hierbas", hub: "la-botica" });
+
+  assert.equal(estado.resultados.length, 0);
+});
+
+test("opciones de filtro exponen conteos por tema y hub", () => {
+  const temas = obtenerOpcionesFiltroTema();
+  const hubs = obtenerOpcionesFiltroHub();
+
+  assert.equal(temas[0]?.valor, "todas");
+  assert.equal(temas[0]?.cantidad, 3);
+  assert.equal(hubs.some((hub) => hub.valor === "la-botica" && hub.cantidad === 2), true);
 });
