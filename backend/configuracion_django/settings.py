@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
+from backend.configuracion_django.sqlite_paths import resolver_ruta_sqlite
 from django.core.exceptions import ImproperlyConfigured
 
 
@@ -65,10 +66,10 @@ def _configuracion_db_desde_url(database_url: str) -> dict[str, str | int]:
         }
 
     if esquema == "sqlite":
-        ruta_sqlite = parsed.path or str(LOCAL_VAR_DIR / "dev.sqlite3")
+        ruta_sqlite = resolver_ruta_sqlite(database_url, BASE_DIR, LOCAL_VAR_DIR)
         return {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ruta_sqlite,
+            "NAME": str(ruta_sqlite),
         }
 
     raise ValueError(f"DATABASE_URL no soportada: {esquema}")
