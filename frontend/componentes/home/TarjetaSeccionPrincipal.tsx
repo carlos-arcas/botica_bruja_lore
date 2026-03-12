@@ -24,7 +24,6 @@ export function TarjetaSeccionPrincipal({ seccion }: Props): JSX.Element {
             sizes={CONFIGURACION_IMAGEN_CARD_HOME.sizes}
             className="tarjeta-seccion-principal__imagen"
           />
-          <span className="tarjeta-seccion-principal__overlay" />
         </span>
         <span className="tarjeta-seccion-principal__titulo">{titulo}</span>
       </Link>

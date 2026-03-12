@@ -25,7 +25,6 @@ export function HeroSeccionPrincipal({ idSeccion, nivelTitulo = "h1" }: Props): 
         sizes={CONFIGURACION_HERO_SECCION.sizes}
         className="hero-portada__imagen"
       />
-      <div className="hero-portada__overlay" />
       <div className="hero-portada__contenido">
         <p className="hero-portada__eyebrow">Sección principal</p>
         <TituloHero id="titulo-seccion-principal">{titulo}</TituloHero>

@@ -38,9 +38,9 @@ export const INTRO_LISTADO_HIERBAS: IntroduccionLandingCatalogo = {
 };
 
 export const METADATA_LISTADO_RITUALES: MetadataLandingCatalogo = {
-  title: "Rituales herbales por intención | La Botica de la Bruja Lore",
+  title: "Rituales por intención | La Botica de la Bruja Lore",
   description:
-    "Descubre rituales herbales publicados por intención en La Botica de la Bruja Lore y entra a cada ficha para revisar materiales y enfoque editorial.",
+    "Descubre rituales publicados por intención en La Botica de la Bruja Lore y entra a cada ficha para revisar materiales y enfoque editorial.",
   rutaCanonical: "/rituales",
 };
 

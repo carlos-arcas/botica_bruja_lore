@@ -17,7 +17,6 @@ export function HeroPortada(): JSX.Element {
         sizes={CONFIGURACION_IMAGEN_HERO.sizes}
         className="hero-portada__imagen"
       />
-      <div className="hero-portada__overlay" />
       <div className="hero-portada__contenido">
         <p className="hero-portada__eyebrow">{HERO_HOME.etiqueta}</p>
         <h1 id="titulo-home">{SEO_HOME.h1}</h1>
