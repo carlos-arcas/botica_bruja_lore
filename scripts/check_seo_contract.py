@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import platform
 import shutil
 import subprocess
 import sys
@@ -26,16 +27,20 @@ def _ejecutar(nombre: str, comando: list[str], cwd: Path = ROOT_DIR) -> Resultad
     return ResultadoPaso(nombre=nombre, retorno=proceso.returncode)
 
 
-def _asegurar_npm_disponible() -> None:
-    if shutil.which("npm"):
-        return
+
+def _resolver_ejecutable_npm() -> str:
+    candidatos = ("npm.cmd", "npm") if platform.system() == "Windows" else ("npm", "npm.cmd")
+    for candidato in candidatos:
+        if shutil.which(candidato):
+            return candidato
+
     print("[ERROR] npm no está disponible. No se puede ejecutar el bloque SEO frontend.")
     raise SystemExit(1)
 
 
 def main() -> int:
     print("== Gate SEO contractual: backend + frontend ==")
-    _asegurar_npm_disponible()
+    npm_cmd = _resolver_ejecutable_npm()
 
     resultados = [
         _ejecutar(
@@ -50,7 +55,7 @@ def main() -> int:
         ),
         _ejecutar(
             "Frontend SEO contractual",
-            ["npm", "run", "test:seo:contrato"],
+            [npm_cmd, "run", "test:seo:contrato"],
             cwd=ROOT_DIR / "frontend",
         ),
     ]
