@@ -2,7 +2,14 @@ name: Quality Gate
 
 on:
   push:
+    branches:
+      - main
+      - develop
   pull_request:
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality_gate:
