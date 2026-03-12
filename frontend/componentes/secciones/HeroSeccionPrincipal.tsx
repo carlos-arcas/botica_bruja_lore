@@ -6,11 +6,13 @@ import { obtenerSeccionPrincipalPorId, traducirSeccionPrincipal } from "@/conten
 
 type Props = {
   idSeccion: IdSeccionPrincipal;
+  nivelTitulo?: "h1" | "h2";
 };
 
-export function HeroSeccionPrincipal({ idSeccion }: Props): JSX.Element {
+export function HeroSeccionPrincipal({ idSeccion, nivelTitulo = "h1" }: Props): JSX.Element {
   const seccion = obtenerSeccionPrincipalPorId(idSeccion);
   const titulo = traducirSeccionPrincipal(seccion.claveI18nTitulo);
+  const TituloHero = nivelTitulo;
 
   return (
     <section className="hero-portada hero-portada--con-fondo" aria-labelledby="titulo-seccion-principal">
@@ -26,7 +28,7 @@ export function HeroSeccionPrincipal({ idSeccion }: Props): JSX.Element {
       <div className="hero-portada__overlay" />
       <div className="hero-portada__contenido">
         <p className="hero-portada__eyebrow">Sección principal</p>
-        <h1 id="titulo-seccion-principal">{titulo}</h1>
+        <TituloHero id="titulo-seccion-principal">{titulo}</TituloHero>
       </div>
     </section>
   );
