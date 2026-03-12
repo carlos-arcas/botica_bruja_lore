@@ -39,11 +39,11 @@ export default async function PaginaListadoRituales(): Promise<JSX.Element> {
 
   return (
     <main className="contenedor-home">
-      <HeroSeccionPrincipal idSeccion="rituales" />
+      <HeroSeccionPrincipal idSeccion="rituales" nivelTitulo="h2" />
       {schemasLanding.length > 0 ? <JsonLd id="schema-pagina" data={schemasLanding} /> : null}
       <section className="bloque-home">
         <p className="hero-portada__eyebrow">{INTRO_LISTADO_RITUALES.eyebrow}</p>
-        <h2>{INTRO_LISTADO_RITUALES.h1}</h2>
+        <h1>{INTRO_LISTADO_RITUALES.h1}</h1>
         {INTRO_LISTADO_RITUALES.parrafos.map((parrafo) => (
           <p key={parrafo}>{parrafo}</p>
         ))}
