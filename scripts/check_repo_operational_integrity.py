@@ -164,10 +164,17 @@ def _check_ci_docs_canonical_command() -> None:
     docs_gate_content = _read_text(Path("docs/13_testing_ci_y_quality_gate.md"))
 
     canonical_command = "python scripts/check_release_gate.py"
+    workflow_gate_patterns = (
+        r"(?i)python(?:3(?:\.\d+)?)?\s+scripts/check_release_gate\.py\b",
+        r'(?i)"?\$env:VENV_PYTHON"?\s+scripts/check_release_gate\.py\b',
+    )
 
     _require(
-        canonical_command in workflow_content,
-        ".github/workflows/quality_gate.yml debe ejecutar python scripts/check_release_gate.py.",
+        any(re.search(pattern, workflow_content) for pattern in workflow_gate_patterns),
+        (
+            ".github/workflows/quality_gate.yml debe ejecutar scripts/check_release_gate.py "
+            "(ya sea con python directo o con $env:VENV_PYTHON)."
+        ),
     )
     _require(
         canonical_command in docs_gate_content,
