@@ -2,12 +2,17 @@
   color-scheme: light;
   --fondo: #f8f5ef;
   --fondo-bloque: rgba(255, 253, 248, 0.88);
+  --fondo-editorial: #f2e7d2;
+  --fondo-editorial-suave: #f8f0df;
   --texto: #2e2c2a;
   --acento: #935d3b;
   --acento-secundario: #4b6848;
   --borde: #e6ddcf;
+  --borde-editorial: #d8c2a1;
   --ancho-base-card-home: 220px;
   --ancho-base-hero-seccion: 980px;
+  --tipografia-editorial-titulo: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", "Iowan Old Style", "Baskerville", "Times New Roman", serif;
+  --tipografia-editorial-cuerpo: "Segoe UI", "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
 }
 
 * {
@@ -16,7 +21,7 @@
 
 body {
   margin: 0;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--tipografia-editorial-cuerpo);
   background-color: var(--fondo);
   background-image: linear-gradient(180deg, rgba(248, 245, 239, 0.42), rgba(248, 245, 239, 0.24)), url("/fondos/Fondo_web.webp");
   background-repeat: repeat;
@@ -427,13 +432,21 @@ button:focus-visible {
 
 .tarjeta-seccion-principal {
   position: relative;
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   text-decoration: none;
-  border: 0;
-  background: transparent;
+  border: 1px solid var(--borde-editorial);
+  background: var(--fondo-editorial-suave);
+  box-shadow: 0 1px 0 rgba(93, 76, 56, 0.1);
+  transition: transform 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+
+.tarjeta-seccion-principal:hover {
+  transform: translateY(-1px);
+  border-color: #c5a57f;
+  background: #f6ebd6;
 }
 
 .tarjeta-seccion-principal__media {
@@ -450,13 +463,21 @@ button:focus-visible {
 }
 
 .tarjeta-seccion-principal__titulo {
-  color: #2e2c2a;
-  font-weight: 700;
-  padding: 0.7rem 0.9rem;
+  color: #3d3023;
+  font-family: var(--tipografia-editorial-titulo);
+  font-size: clamp(1.05rem, 1.8vw, 1.2rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant: small-caps;
+  text-align: center;
+  justify-content: center;
+  padding: 0.88rem 0.9rem 0.92rem;
   display: flex;
   align-items: center;
+  min-height: 4rem;
   line-height: 1.2;
-  background: #fffdf8;
+  background: linear-gradient(180deg, var(--fondo-editorial-suave), var(--fondo-editorial));
+  border-top: 1px solid rgba(107, 83, 55, 0.2);
 }
 
 @media (min-width: 768px) {
