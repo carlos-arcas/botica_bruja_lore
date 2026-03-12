@@ -46,7 +46,7 @@ body {
 }
 
 .hero-portada--con-fondo {
-  min-height: 350px;
+  min-height: clamp(300px, 40vw, 360px);
   display: flex;
   align-items: center;
   border-color: #d9cebf;

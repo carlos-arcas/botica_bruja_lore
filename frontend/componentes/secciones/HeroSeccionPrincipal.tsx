@@ -20,6 +20,7 @@ export function HeroSeccionPrincipal({ idSeccion }: Props): JSX.Element {
         priority
         sizes="100vw"
         className="hero-portada__imagen"
+        style={{ objectPosition: seccion.heroPosition }}
       />
       <div className="hero-portada__overlay" />
       <div className="hero-portada__contenido">

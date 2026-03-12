@@ -13,6 +13,7 @@ export type SeccionPrincipal = {
   ruta: string;
   imagenCard: string;
   imagenHero: string;
+  heroPosition: string;
   orden: number;
 };
 
@@ -33,6 +34,7 @@ export const SECCIONES_PRINCIPALES: SeccionPrincipal[] = [
     ruta: "/botica-natural",
     imagenCard: "/fondos/botica_natural_card.webp",
     imagenHero: "/fondos/botica_natural_hero.webp",
+    heroPosition: "center 42%",
     orden: 1,
   },
   {
@@ -41,6 +43,7 @@ export const SECCIONES_PRINCIPALES: SeccionPrincipal[] = [
     ruta: "/velas-e-incienso",
     imagenCard: "/fondos/velas_e_incienso_card.webp",
     imagenHero: "/fondos/velas_e_incienso_hero.webp",
+    heroPosition: "center 48%",
     orden: 2,
   },
   {
@@ -49,6 +52,7 @@ export const SECCIONES_PRINCIPALES: SeccionPrincipal[] = [
     ruta: "/minerales-y-energia",
     imagenCard: "/fondos/minerales_y_energia_card.webp",
     imagenHero: "/fondos/minerales_y_energia_hero.webp",
+    heroPosition: "center 38%",
     orden: 3,
   },
   {
@@ -57,6 +61,7 @@ export const SECCIONES_PRINCIPALES: SeccionPrincipal[] = [
     ruta: "/herramientas-esotericas",
     imagenCard: "/fondos/herramientas_esotericas_card.webp",
     imagenHero: "/fondos/herramientas_esotericas_hero.webp",
+    heroPosition: "center 50%",
     orden: 4,
   },
   {
@@ -65,6 +70,7 @@ export const SECCIONES_PRINCIPALES: SeccionPrincipal[] = [
     ruta: "/tarot",
     imagenCard: "/fondos/tarot_card.webp",
     imagenHero: "/fondos/tarot_hero.webp",
+    heroPosition: "center 26%",
     orden: 5,
   },
   {
@@ -73,6 +79,7 @@ export const SECCIONES_PRINCIPALES: SeccionPrincipal[] = [
     ruta: "/rituales",
     imagenCard: "/fondos/rituales_card.webp",
     imagenHero: "/fondos/rituales_hero.webp",
+    heroPosition: "center 55%",
     orden: 6,
   },
   {
@@ -81,6 +88,7 @@ export const SECCIONES_PRINCIPALES: SeccionPrincipal[] = [
     ruta: "/agenda-mistica",
     imagenCard: "/fondos/agenda_mistica_card.webp",
     imagenHero: "/fondos/agenda_mistica_hero.webp",
+    heroPosition: "center 44%",
     orden: 7,
   },
 ];

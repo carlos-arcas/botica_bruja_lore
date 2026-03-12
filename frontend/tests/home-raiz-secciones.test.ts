@@ -56,6 +56,13 @@ test("el contrato card -> hero está centralizado y consistente", () => {
   }
 });
 
+test("cada sección principal define posición focal del hero configurable", () => {
+  for (const seccion of SECCIONES_PRINCIPALES) {
+    assert.equal(typeof seccion.heroPosition, "string");
+    assert.equal(seccion.heroPosition.length > 0, true);
+  }
+});
+
 test("la home raíz solo compone hero principal + rejilla de secciones", () => {
   const pagina = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
 
@@ -74,4 +81,13 @@ test("las páginas de sección usan su hero correspondiente", () => {
   assert.equal(tarot.includes('idSeccion="tarot"'), true);
   assert.equal(rituales.includes('idSeccion="rituales"'), true);
   assert.equal(botica.includes('idSeccion="botica-natural"'), true);
+});
+
+test("el hero reutilizable consume la posición focal desde la configuración central", () => {
+  const componenteHero = readFileSync(
+    join(process.cwd(), "componentes/secciones/HeroSeccionPrincipal.tsx"),
+    "utf8",
+  );
+
+  assert.equal(componenteHero.includes("seccion.heroPosition"), true);
 });
