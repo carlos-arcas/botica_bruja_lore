@@ -153,6 +153,19 @@ class RepoOperationalIntegrityTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("quality_gate.yml", output)
 
+    def test_ci_docs_accepts_venv_python_command_in_workflow(self) -> None:
+        with TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            self._write_base_tree(root)
+            (root / ".github" / "workflows" / "quality_gate.yml").write_text(
+                '- run: |\n    & "$env:VENV_PYTHON" scripts/check_release_gate.py\n',
+                encoding="utf-8",
+            )
+            code, output = self._run_with_root(root)
+            self.assertEqual(code, 0)
+            self.assertIn("CI y documentación alineados", output)
+
+
     def test_railway_env_example_inconsistency_fails(self) -> None:
         with TemporaryDirectory() as tempdir:
             root = Path(tempdir)
