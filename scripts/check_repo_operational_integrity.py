@@ -159,7 +159,7 @@ def _check_railway_env_example() -> None:
 
 
 def _check_ci_docs_canonical_command() -> None:
-    print("E) Coherencia CI ↔ documentación")
+    print("E) Coherencia CI <-> documentación")
     workflow_content = _read_text(Path(".github/workflows/quality_gate.yml"))
     docs_gate_content = _read_text(Path("docs/13_testing_ci_y_quality_gate.md"))
 

@@ -58,7 +58,9 @@ class TestDeployGuards(SimpleTestCase):
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("django.db.backends.sqlite3", result.stdout)
-        self.assertIn("var/dev.sqlite3", result.stdout)
+        db_name = result.stdout.strip().splitlines()[-1]
+        db_path = Path(db_name)
+        self.assertEqual(db_path.parts[-2:], ("var", "dev.sqlite3"))
 
     def test_railway_sin_database_url_falla_con_error_canonico(self) -> None:
         env = self._base_env()
