@@ -1,18 +1,8 @@
 import type { Metadata } from "next";
 
-import { AlquimiaDeseo } from "@/componentes/home/AlquimiaDeseo";
-import { BloqueConfianza } from "@/componentes/home/BloqueConfianza";
-import { ComoFuncionaRitual } from "@/componentes/home/ComoFuncionaRitual";
-import { ContextoEditorialHome } from "@/componentes/home/ContextoEditorialHome";
-import { CtaFinalHome } from "@/componentes/home/CtaFinalHome";
-import { EstadoConexionHerbal } from "@/componentes/home/EstadoConexionHerbal";
-import { FaqHome } from "@/componentes/home/FaqHome";
 import { HeroPortada } from "@/componentes/home/HeroPortada";
-import { IntencionesDestacadas } from "@/componentes/home/IntencionesDestacadas";
-import { NavegacionSecciones } from "@/componentes/home/NavegacionSecciones";
-import { PreviewLineaHerbal } from "@/componentes/home/PreviewLineaHerbal";
+import { RejillaSeccionesPrincipales } from "@/componentes/home/RejillaSeccionesPrincipales";
 import { JsonLd } from "@/componentes/seo/JsonLd";
-import { obtenerPreviewHerbal } from "@/infraestructura/api/herbal";
 import { SEO_HOME } from "@/contenido/home/seoHome";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import { construirSchemasHome } from "@/infraestructura/seo/structuredData";
@@ -23,27 +13,14 @@ export const metadata: Metadata = construirMetadataSeo({
   rutaCanonical: "/",
 });
 
-export default async function Home(): Promise<JSX.Element> {
-  const previewHerbal = await obtenerPreviewHerbal();
+export default function Home(): JSX.Element {
   const schemasHome = construirSchemasHome(SEO_HOME.title, SEO_HOME.description);
 
   return (
     <main className="contenedor-home contenedor-home--portada">
       {schemasHome.length > 0 ? <JsonLd id="schema-home" data={schemasHome} /> : null}
       <HeroPortada />
-      <ContextoEditorialHome />
-      <NavegacionSecciones />
-      <AlquimiaDeseo />
-      <IntencionesDestacadas />
-      <ComoFuncionaRitual />
-      <BloqueConfianza />
-      {previewHerbal.estado === "ok" ? (
-        <PreviewLineaHerbal plantas={previewHerbal.plantas} />
-      ) : (
-        <EstadoConexionHerbal mensaje={previewHerbal.mensaje} />
-      )}
-      <FaqHome />
-      <CtaFinalHome />
+      <RejillaSeccionesPrincipales />
     </main>
   );
 }
