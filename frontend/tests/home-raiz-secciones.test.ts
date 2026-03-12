@@ -82,6 +82,31 @@ test("la tarjeta principal usa media uniforme y renderizado sin recorte", () => 
   assert.equal(bloqueImagen.includes("object-fit: cover;"), false);
   assert.equal(configuracionCard.includes("CONFIGURACION_IMAGEN_CARD_HOME"), true);
 });
+
+test("el hero de sección renderiza imagen en flujo sin fill ni cover", () => {
+  const heroSeccion = readFileSync(
+    join(process.cwd(), "componentes/secciones/HeroSeccionPrincipal.tsx"),
+    "utf8",
+  );
+  const configuracionHeroSeccion = readFileSync(
+    join(process.cwd(), "componentes/secciones/configuracionHeroSeccion.ts"),
+    "utf8",
+  );
+  const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+
+  assert.equal(heroSeccion.includes("fill"), false);
+  assert.equal(heroSeccion.includes("objectFit"), false);
+  assert.equal(heroSeccion.includes("width={CONFIGURACION_HERO_SECCION.width}"), true);
+  assert.equal(heroSeccion.includes("height={CONFIGURACION_HERO_SECCION.height}"), true);
+  assert.equal(estilos.includes("--ancho-base-hero-seccion"), true);
+  assert.equal(estilos.includes("max-width: var(--ancho-base-hero-seccion);"), true);
+  assert.equal(estilos.includes(".hero-portada__imagen"), true);
+  assert.equal(estilos.includes("height: auto;"), true);
+  assert.equal(estilos.includes("object-fit: cover;"), false);
+  assert.equal(estilos.includes("aspect-ratio"), false);
+  assert.equal(configuracionHeroSeccion.includes("CONFIGURACION_HERO_SECCION"), true);
+});
+
 test("la home raíz solo compone hero principal + rejilla de secciones", () => {
   const pagina = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
 
@@ -93,11 +118,18 @@ test("la home raíz solo compone hero principal + rejilla de secciones", () => {
 });
 
 test("las páginas de sección usan su hero correspondiente", () => {
-  const tarot = readFileSync(join(process.cwd(), "app/tarot/page.tsx"), "utf8");
-  const rituales = readFileSync(join(process.cwd(), "app/rituales/page.tsx"), "utf8");
-  const botica = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
+  const paginasSeccion: Array<{ ruta: string; id: string }> = [
+    { ruta: "app/botica-natural/page.tsx", id: "botica-natural" },
+    { ruta: "app/velas-e-incienso/page.tsx", id: "velas-e-incienso" },
+    { ruta: "app/minerales-y-energia/page.tsx", id: "minerales-y-energia" },
+    { ruta: "app/herramientas-esotericas/page.tsx", id: "herramientas-esotericas" },
+    { ruta: "app/tarot/page.tsx", id: "tarot" },
+    { ruta: "app/rituales/page.tsx", id: "rituales" },
+    { ruta: "app/agenda-mistica/page.tsx", id: "agenda-mistica" },
+  ];
 
-  assert.equal(tarot.includes('idSeccion="tarot"'), true);
-  assert.equal(rituales.includes('idSeccion="rituales"'), true);
-  assert.equal(botica.includes('idSeccion="botica-natural"'), true);
+  for (const paginaSeccion of paginasSeccion) {
+    const pagina = readFileSync(join(process.cwd(), paginaSeccion.ruta), "utf8");
+    assert.equal(pagina.includes(`idSeccion="${paginaSeccion.id}"`), true);
+  }
 });
