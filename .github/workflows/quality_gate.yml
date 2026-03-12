@@ -5,9 +5,9 @@ on:
   pull_request:
 
 jobs:
-  release_gate:
+  quality_gate:
     name: Canonical release gate validation
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows, X64, botica-bruja-lore]
 
     steps:
       - name: Checkout
@@ -20,6 +20,7 @@ jobs:
           cache: 'pip'
 
       - name: Install backend dependencies
+        shell: pwsh
         run: python -m pip install -r requirements.txt
 
       - name: Setup Node
@@ -30,54 +31,30 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
+        shell: pwsh
         run: npm ci
         working-directory: frontend
 
       - name: Validate Railway TOML files
+        shell: pwsh
         run: |
-          python - <<'PY'
-          import tomllib
-          from pathlib import Path
-
-          files = [
-              Path('backend/railway.toml'),
-              Path('frontend/railway.toml'),
-          ]
-          for file in files:
-              with file.open('rb') as handle:
-                  tomllib.load(handle)
-              print(f'OK TOML: {file}')
-          PY
+          python -c "import tomllib; from pathlib import Path; files = [Path('backend/railway.toml'), Path('frontend/railway.toml')]; [tomllib.load(file.open('rb')) for file in files]; [print(f'OK TOML: {file}') for file in files]"
 
       - name: Run canonical release gate command
+        shell: pwsh
         run: python scripts/check_release_gate.py
 
-  bootstrap_demo_validation:
-    name: Bootstrap demo validation (isolated sqlite)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install backend dependencies
-        run: python -m pip install -r requirements.txt
-
       - name: Run bootstrap demo script in isolated database
+        shell: pwsh
         env:
-          DATABASE_URL: sqlite:///${{ runner.temp }}/bootstrap_demo_ci.sqlite3
+          DATABASE_URL: sqlite:///bootstrap_demo_ci.sqlite3
           SECRET_KEY: ci-bootstrap-secret
         run: python scripts/bootstrap_demo_release.py
 
       - name: Assert bootstrap demo expected public counts
+        shell: pwsh
         env:
-          DATABASE_URL: sqlite:///${{ runner.temp }}/bootstrap_demo_ci.sqlite3
+          DATABASE_URL: sqlite:///bootstrap_demo_ci.sqlite3
           SECRET_KEY: ci-bootstrap-secret
         run: |
           python manage.py shell -c "from backend.nucleo_herbal.infraestructura.persistencia_django.models import IntencionModelo, PlantaModelo, ProductoModelo, RitualModelo; assert IntencionModelo.objects.filter(es_publica=True).count() == 2; assert PlantaModelo.objects.filter(publicada=True).count() == 2; assert ProductoModelo.objects.filter(publicado=True).count() == 2; assert RitualModelo.objects.filter(publicado=True).count() == 1; print('Conteos esperados OK: 2/2/2/1')"
