@@ -53,6 +53,15 @@ class ObtenerResolucionComercialMinimaDePlanta:
 
 
 @dataclass(slots=True)
+class ObtenerListadoPublicoProductosPorSeccion:
+    repositorio_productos: RepositorioProductos
+
+    def ejecutar(self, slug_seccion: str, limite: int = 5) -> tuple[ProductoResumenDTO, ...]:
+        productos = self.repositorio_productos.listar_publicos_por_seccion(slug_seccion, limite)
+        return tuple(_a_producto_resumen(producto) for producto in productos)
+
+
+@dataclass(slots=True)
 class ObtenerRelacionesHerbalesPorIntencion:
     repositorio_plantas: RepositorioPlantas
 
@@ -100,6 +109,10 @@ def _a_producto_resumen(producto: Producto) -> ProductoResumenDTO:
         nombre=producto.nombre,
         tipo_producto=producto.tipo_producto,
         categoria_comercial=producto.categoria_comercial,
+        seccion_publica=producto.seccion_publica,
+        descripcion_corta=producto.descripcion_corta,
+        precio_visible=producto.precio_visible,
+        imagen_url=producto.imagen_url,
     )
 
 

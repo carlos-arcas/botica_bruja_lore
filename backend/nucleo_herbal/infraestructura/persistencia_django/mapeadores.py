@@ -49,6 +49,10 @@ def a_producto(modelo: ProductoModelo) -> Producto:
         tipo_producto=modelo.tipo_producto,
         categoria_comercial=modelo.categoria_comercial,
         planta_id=modelo.planta_id,
+        seccion_publica=modelo.seccion_publica,
+        descripcion_corta=modelo.descripcion_corta,
+        precio_visible=modelo.precio_visible,
+        imagen_url=modelo.imagen_url,
     )
 
 

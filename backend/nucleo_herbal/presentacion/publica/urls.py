@@ -22,4 +22,9 @@ urlpatterns = [
         views.relaciones_por_intencion,
         name="publico-relaciones-por-intencion",
     ),
+    path(
+        "secciones/<slug:slug_seccion>/productos/",
+        views.listado_productos_por_seccion,
+        name="publico-listado-productos-por-seccion",
+    ),
 ]

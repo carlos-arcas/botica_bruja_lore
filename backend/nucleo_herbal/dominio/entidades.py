@@ -62,6 +62,10 @@ class Producto:
     tipo_producto: str
     categoria_comercial: str
     planta_id: str | None
+    seccion_publica: str = "catalogo-general"
+    descripcion_corta: str = ""
+    precio_visible: str = ""
+    imagen_url: str = ""
 
     def __post_init__(self) -> None:
         if not self.sku.strip():
@@ -74,6 +78,8 @@ class Producto:
             raise ErrorDominio("El producto requiere un tipo de producto válido.")
         if not self.categoria_comercial.strip():
             raise ErrorDominio("El producto requiere categoría comercial.")
+        if not self.seccion_publica.strip():
+            raise ErrorDominio("El producto requiere sección pública.")
         if self.tipo_producto == TIPO_PRODUCTO_HERBAL and not _hay_texto(self.planta_id):
             raise ErrorDominio(
                 "Un producto de tipo hierbas-a-granel debe vincularse a una planta."

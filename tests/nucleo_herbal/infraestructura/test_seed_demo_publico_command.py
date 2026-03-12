@@ -24,7 +24,7 @@ class TestSeedDemoPublicoCommand(DjangoTestCase):
 
         self.assertEqual(IntencionModelo.objects.filter(es_publica=True).count(), 2)
         self.assertEqual(PlantaModelo.objects.filter(publicada=True).count(), 2)
-        self.assertEqual(ProductoModelo.objects.filter(publicado=True).count(), 2)
+        self.assertGreaterEqual(ProductoModelo.objects.filter(publicado=True).count(), 6)
         self.assertEqual(RitualModelo.objects.filter(publicado=True).count(), 1)
 
         ritual = RitualModelo.objects.get(slug="cierre-sereno")
@@ -35,3 +35,14 @@ class TestSeedDemoPublicoCommand(DjangoTestCase):
         producto_melisa = ProductoModelo.objects.get(slug="melisa-a-granel-50g")
         self.assertIsNotNone(producto_melisa.planta)
         self.assertEqual(producto_melisa.planta.slug, "melisa")
+
+
+    def test_seed_demo_publico_garantiza_cinco_productos_botica_natural(self) -> None:
+        call_command("seed_demo_publico")
+
+        productos_botica = ProductoModelo.objects.filter(
+            publicado=True,
+            seccion_publica="botica-natural",
+        )
+
+        self.assertEqual(productos_botica.count(), 5)

@@ -4,6 +4,7 @@ from backend.nucleo_herbal.aplicacion.casos_de_uso import (
     ErrorAplicacionLookup,
     ObtenerDetallePlanta,
     ObtenerListadoHerbalNavegable,
+    ObtenerListadoPublicoProductosPorSeccion,
     ObtenerRelacionesHerbalesPorIntencion,
     ObtenerResolucionComercialMinimaDePlanta,
 )
@@ -60,6 +61,14 @@ class RepositorioProductosEnMemoria(RepositorioProductos):
             if producto.tipo_producto == "hierbas-a-granel" and producto.planta_id == id_planta
         )
 
+    def listar_publicos_por_seccion(self, slug_seccion: str, limite: int) -> tuple[Producto, ...]:
+        seleccion = [
+            producto
+            for producto in self._productos
+            if producto.seccion_publica == slug_seccion
+        ]
+        return tuple(sorted(seleccion, key=lambda item: item.slug)[:limite])
+
 
 class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
     def setUp(self) -> None:
@@ -75,6 +84,10 @@ class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
                     tipo_producto="hierbas-a-granel",
                     categoria_comercial="hierbas-a-granel",
                     planta_id="pla-1",
+                    seccion_publica="botica-natural",
+                    descripcion_corta="demo",
+                    precio_visible="10,00 €",
+                    imagen_url="",
                 ),
                 Producto(
                     id="prod-2",
@@ -84,6 +97,10 @@ class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
                     tipo_producto="herramientas-rituales",
                     categoria_comercial="herramientas-esotericas",
                     planta_id=None,
+                    seccion_publica="velas-e-incienso",
+                    descripcion_corta="demo",
+                    precio_visible="12,00 €",
+                    imagen_url="/img.webp",
                 ),
             )
         )
@@ -132,6 +149,16 @@ class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
 
         self.assertEqual(relacion.intencion.slug, "calma")
         self.assertEqual(relacion.plantas[0].slug, "melisa")
+
+
+    def test_obtener_listado_publico_productos_por_seccion(self) -> None:
+        caso = ObtenerListadoPublicoProductosPorSeccion(self.repo_productos)
+
+        resultado = caso.ejecutar("botica-natural", limite=5)
+
+        self.assertEqual(len(resultado), 1)
+        self.assertEqual(resultado[0].slug, "melisa-a-granel-50g")
+        self.assertEqual(resultado[0].seccion_publica, "botica-natural")
 
 
 if __name__ == "__main__":
