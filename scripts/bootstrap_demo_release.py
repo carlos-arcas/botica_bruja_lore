@@ -12,6 +12,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from backend.configuracion_django.sqlite_paths import resolver_ruta_sqlite
+
 PYTHON = sys.executable
 
 
@@ -34,6 +39,15 @@ class StepResult:
     name: str
     ok: bool
     detail: str = ""
+
+
+def _preparar_sqlite_para_bootstrap() -> None:
+    database_url = os.environ.get("DATABASE_URL", "").strip()
+    if not database_url.startswith("sqlite://"):
+        return
+
+    ruta = resolver_ruta_sqlite(database_url, ROOT_DIR, ROOT_DIR / "var")
+    LOGGER.info("bootstrap_demo_sqlite_ready path=%s", ruta)
 
 
 def _print_header(title: str) -> None:
@@ -125,6 +139,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     LOGGER.info("bootstrap_demo_start")
+    _preparar_sqlite_para_bootstrap()
     print("== Bootstrap demo release (MUTANTE) ==")
     print("Aviso: esta operación SIEMPRE muta estado (esquema y/o datos).")
     print("No usar como gate canónico de auditoría.")

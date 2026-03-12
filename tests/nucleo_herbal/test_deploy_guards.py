@@ -62,6 +62,47 @@ class TestDeployGuards(SimpleTestCase):
         db_path = Path(db_name)
         self.assertEqual(db_path.parts[-2:], ("var", "dev.sqlite3"))
 
+
+    def test_database_url_sqlite_relativa_se_resuelve_bajo_repo(self) -> None:
+        env = self._base_env()
+        env["DATABASE_URL"] = "sqlite:///bootstrap_demo_ci.sqlite3"
+        env["SECRET_KEY"] = "ci-bootstrap-secret"
+        for key in ("RAILWAY_PUBLIC_DOMAIN", "RAILWAY_ENVIRONMENT_ID", "RAILWAY_PROJECT_ID"):
+            env.pop(key, None)
+
+        code = (
+            f"import {SETTINGS_MODULE} as settings;"
+            "print(settings.DATABASES['default']['NAME'])"
+        )
+        result = self._run([PYTHON, "-c", code], env)
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        db_path = Path(result.stdout.strip().splitlines()[-1]).resolve()
+        self.assertEqual(db_path, (ROOT_DIR / "bootstrap_demo_ci.sqlite3").resolve())
+
+    def test_database_url_sqlite_crea_directorio_padre_si_no_existe(self) -> None:
+        env = self._base_env()
+        ruta_relativa = "var/tests/sqlite_bootstrap/subdir/ci.sqlite3"
+        env["DATABASE_URL"] = f"sqlite:///{ruta_relativa}"
+        env["SECRET_KEY"] = "ci-bootstrap-secret"
+        for key in ("RAILWAY_PUBLIC_DOMAIN", "RAILWAY_ENVIRONMENT_ID", "RAILWAY_PROJECT_ID"):
+            env.pop(key, None)
+
+        directorio_objetivo = ROOT_DIR / "var" / "tests" / "sqlite_bootstrap" / "subdir"
+        if directorio_objetivo.exists():
+            import shutil
+
+            shutil.rmtree(ROOT_DIR / "var" / "tests" / "sqlite_bootstrap")
+
+        code = (
+            f"import {SETTINGS_MODULE} as settings;"
+            "print(settings.DATABASES['default']['NAME'])"
+        )
+        result = self._run([PYTHON, "-c", code], env)
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertTrue(directorio_objetivo.exists())
+
     def test_railway_sin_database_url_falla_con_error_canonico(self) -> None:
         env = self._base_env()
         env["RAILWAY_PUBLIC_DOMAIN"] = "botica-demo.up.railway.app"
