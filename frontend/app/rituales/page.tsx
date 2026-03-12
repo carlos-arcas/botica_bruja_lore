@@ -6,6 +6,7 @@ import {
   EstadoVacioListadoRituales,
 } from "@/componentes/rituales/EstadoListadoRituales";
 import { ListadoRituales } from "@/componentes/rituales/ListadoRituales";
+import { HeroSeccionPrincipal } from "@/componentes/secciones/HeroSeccionPrincipal";
 import {
   INTRO_LISTADO_RITUALES,
   METADATA_LISTADO_RITUALES,
@@ -38,10 +39,11 @@ export default async function PaginaListadoRituales(): Promise<JSX.Element> {
 
   return (
     <main className="contenedor-home">
+      <HeroSeccionPrincipal idSeccion="rituales" />
       {schemasLanding.length > 0 ? <JsonLd id="schema-pagina" data={schemasLanding} /> : null}
       <section className="bloque-home">
         <p className="hero-portada__eyebrow">{INTRO_LISTADO_RITUALES.eyebrow}</p>
-        <h1>{INTRO_LISTADO_RITUALES.h1}</h1>
+        <h2>{INTRO_LISTADO_RITUALES.h1}</h2>
         {INTRO_LISTADO_RITUALES.parrafos.map((parrafo) => (
           <p key={parrafo}>{parrafo}</p>
         ))}
