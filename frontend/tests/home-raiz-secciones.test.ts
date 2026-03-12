@@ -56,6 +56,20 @@ test("el contrato card -> hero está centralizado y consistente", () => {
   }
 });
 
+test("la tarjeta principal usa media uniforme y renderizado sin recorte", () => {
+  const tarjeta = readFileSync(
+    join(process.cwd(), "componentes/home/TarjetaSeccionPrincipal.tsx"),
+    "utf8",
+  );
+  const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+
+  assert.equal(tarjeta.includes('className="tarjeta-seccion-principal__item"'), true);
+  assert.equal(tarjeta.includes('className="tarjeta-seccion-principal__media"'), true);
+  assert.equal(estilos.includes(".tarjeta-seccion-principal__media"), true);
+  assert.equal(estilos.includes("object-fit: contain;"), true);
+  const bloqueImagen = estilos.split(".tarjeta-seccion-principal__imagen")[1] ?? "";
+  assert.equal(bloqueImagen.includes("object-fit: contain;"), true);
+});
 test("la home raíz solo compone hero principal + rejilla de secciones", () => {
   const pagina = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
 
