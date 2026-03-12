@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import { CONFIGURACION_HERO_SECCION } from "@/componentes/secciones/configuracionHeroSeccion";
 import type { IdSeccionPrincipal } from "@/contenido/home/seccionesPrincipales";
 import { obtenerSeccionPrincipalPorId, traducirSeccionPrincipal } from "@/contenido/home/seccionesPrincipales";
 
@@ -16,9 +17,10 @@ export function HeroSeccionPrincipal({ idSeccion }: Props): JSX.Element {
       <Image
         src={seccion.imagenHero}
         alt={titulo}
-        fill
+        width={CONFIGURACION_HERO_SECCION.width}
+        height={CONFIGURACION_HERO_SECCION.height}
         priority
-        sizes="100vw"
+        sizes={CONFIGURACION_HERO_SECCION.sizes}
         className="hero-portada__imagen"
       />
       <div className="hero-portada__overlay" />
