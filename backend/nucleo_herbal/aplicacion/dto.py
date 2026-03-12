@@ -35,6 +35,10 @@ class ProductoResumenDTO:
     nombre: str
     tipo_producto: str
     categoria_comercial: str
+    seccion_publica: str
+    descripcion_corta: str
+    precio_visible: str
+    imagen_url: str
 
 
 @dataclass(frozen=True, slots=True)

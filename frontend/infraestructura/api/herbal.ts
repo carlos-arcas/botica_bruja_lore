@@ -25,7 +25,13 @@ export type ProductoHerbalMinimoPublico = {
   nombre: string;
   tipo_producto: string;
   categoria_comercial: string;
+  seccion_publica: string;
+  descripcion_corta: string;
+  precio_visible: string;
+  imagen_url: string;
 };
+
+export type ProductoSeccionPublica = ProductoHerbalMinimoPublico;
 
 export type FichaHerbalPublica = {
   planta: PlantaPublica;
@@ -53,6 +59,10 @@ type ProductoHerbalApi = {
   nombre: string;
   tipo_producto: string;
   categoria_comercial: string;
+  seccion_publica: string;
+  descripcion_corta: string;
+  precio_visible: string;
+  imagen_url: string;
 };
 
 type RespuestaListadoHerbal = {
@@ -191,4 +201,39 @@ export async function obtenerPreviewHerbal(): Promise<ResultadoListadoHerbal> {
     return resultado;
   }
   return { estado: "ok", plantas: resultado.plantas.slice(0, 6) };
+}
+
+
+type RespuestaProductosSeccion = {
+  seccion_slug: string;
+  productos: ProductoHerbalApi[];
+};
+
+export type ResultadoProductosSeccion =
+  | { estado: "ok"; productos: ProductoSeccionPublica[] }
+  | { estado: "error"; mensaje: string };
+
+export async function obtenerProductosPublicosPorSeccion(
+  slugSeccion: string,
+): Promise<ResultadoProductosSeccion> {
+  const endpoint = `${API_BASE_URL}/api/v1/herbal/secciones/${slugSeccion}/productos/`;
+  try {
+    const respuesta = await fetch(endpoint, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 120 },
+    });
+    if (!respuesta.ok) {
+      return {
+        estado: "error",
+        mensaje: "No pudimos cargar los productos de esta sección ahora mismo.",
+      };
+    }
+    const data: RespuestaProductosSeccion = await respuesta.json();
+    return { estado: "ok", productos: data.productos };
+  } catch {
+    return {
+      estado: "error",
+      mensaje: "No hay conexión con el backend para cargar Botica Natural.",
+    };
+  }
 }

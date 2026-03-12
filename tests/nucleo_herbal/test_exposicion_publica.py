@@ -154,6 +154,57 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         self.assertEqual(len(data["productos"]), 1)
         self.assertEqual(data["productos"][0]["sku"], "HERB-001")
 
+    def test_listado_productos_por_seccion_botica_natural_limita_a_cinco_publicos(self) -> None:
+        for idx in range(6):
+            ProductoModelo.objects.create(
+                id=f"pro-bn-{idx}",
+                sku=f"BN-{idx:03d}",
+                slug=f"botica-natural-demo-{idx}",
+                nombre=f"Producto Botica {idx}",
+                tipo_producto="herramientas-rituales",
+                categoria_comercial="botica",
+                seccion_publica="botica-natural",
+                descripcion_corta="demo",
+                precio_visible="10,00 €",
+                imagen_url="",
+                publicado=True,
+            )
+        ProductoModelo.objects.create(
+            id="pro-bn-oculto",
+            sku="BN-900",
+            slug="botica-natural-oculto",
+            nombre="Producto oculto",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 €",
+            imagen_url="",
+            publicado=False,
+        )
+        ProductoModelo.objects.create(
+            id="pro-otra-seccion",
+            sku="OTR-001",
+            slug="otra-seccion-demo",
+            nombre="Otra sección",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            seccion_publica="velas-e-incienso",
+            descripcion_corta="demo",
+            precio_visible="10,00 €",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seccion_slug"], "botica-natural")
+        self.assertEqual(len(data["productos"]), 5)
+        self.assertTrue(all(item["seccion_publica"] == "botica-natural" for item in data["productos"]))
+        self.assertTrue(all(item["slug"].startswith("botica-natural-demo-") for item in data["productos"]))
+
     def test_relaciones_por_intencion_expone_plantas_asociadas(self) -> None:
         response = self.client.get("/api/v1/herbal/intenciones/calma/plantas/")
 

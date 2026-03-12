@@ -52,6 +52,18 @@ def productos_por_planta(request: HttpRequest, slug_planta: str) -> JsonResponse
     )
 
 
+
+
+def listado_productos_por_seccion(request: HttpRequest, slug_seccion: str) -> JsonResponse:
+    servicios = construir_servicios_publicos_herbales()
+    productos = servicios.listado_productos_por_seccion.ejecutar(slug_seccion, limite=5)
+    return JsonResponse(
+        {
+            "seccion_slug": slug_seccion,
+            "productos": [serializar_producto_resumen(item) for item in productos],
+        }
+    )
+
 def relaciones_por_intencion(request: HttpRequest, slug_intencion: str) -> JsonResponse:
     servicios = construir_servicios_publicos_herbales()
     try:

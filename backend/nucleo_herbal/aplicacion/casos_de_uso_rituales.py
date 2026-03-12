@@ -159,6 +159,10 @@ def _a_producto_resumen(producto: Producto) -> ProductoResumenDTO:
         nombre=producto.nombre,
         tipo_producto=producto.tipo_producto,
         categoria_comercial=producto.categoria_comercial,
+        seccion_publica=producto.seccion_publica,
+        descripcion_corta=producto.descripcion_corta,
+        precio_visible=producto.precio_visible,
+        imagen_url=producto.imagen_url,
     )
 
 

@@ -25,3 +25,7 @@ class RepositorioProductos(ABC):
     @abstractmethod
     def listar_herbales_por_planta(self, id_planta: str) -> tuple[Producto, ...]:
         """Devuelve resolución comercial mínima asociada a una planta."""
+
+    @abstractmethod
+    def listar_publicos_por_seccion(self, slug_seccion: str, limite: int) -> tuple[Producto, ...]:
+        """Devuelve productos públicos de una sección comercial en orden estable."""

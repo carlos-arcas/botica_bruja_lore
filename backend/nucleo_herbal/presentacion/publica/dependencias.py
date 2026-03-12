@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from ...aplicacion.casos_de_uso import (
     ObtenerDetallePlanta,
     ObtenerListadoHerbalNavegable,
+    ObtenerListadoPublicoProductosPorSeccion,
     ObtenerRelacionesHerbalesPorIntencion,
     ObtenerResolucionComercialMinimaDePlanta,
 )
@@ -47,6 +48,7 @@ class ServiciosPublicosHerbales:
     listado_herbal: ObtenerListadoHerbalNavegable
     detalle_planta: ObtenerDetallePlanta
     resolucion_comercial: ObtenerResolucionComercialMinimaDePlanta
+    listado_productos_por_seccion: ObtenerListadoPublicoProductosPorSeccion
     relaciones_por_intencion: ObtenerRelacionesHerbalesPorIntencion
     rituales_por_planta: ObtenerRitualesRelacionadosDePlantaPorSlug
 
@@ -89,6 +91,9 @@ def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
         resolucion_comercial=ObtenerResolucionComercialMinimaDePlanta(
             repositorio_plantas,
             repositorio_productos,
+        ),
+        listado_productos_por_seccion=ObtenerListadoPublicoProductosPorSeccion(
+            repositorio_productos
         ),
         relaciones_por_intencion=ObtenerRelacionesHerbalesPorIntencion(repositorio_plantas),
         rituales_por_planta=ObtenerRitualesRelacionadosDePlantaPorSlug(

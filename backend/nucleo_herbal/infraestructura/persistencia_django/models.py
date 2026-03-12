@@ -49,6 +49,10 @@ class ProductoModelo(models.Model):
     nombre = models.CharField(max_length=180)
     tipo_producto = models.CharField(max_length=80)
     categoria_comercial = models.CharField(max_length=80)
+    seccion_publica = models.SlugField(max_length=80, default="catalogo-general")
+    descripcion_corta = models.TextField(blank=True, default="")
+    precio_visible = models.CharField(max_length=80, blank=True, default="")
+    imagen_url = models.CharField(max_length=255, blank=True, default="")
     planta = models.ForeignKey(
         PlantaModelo,
         on_delete=models.PROTECT,

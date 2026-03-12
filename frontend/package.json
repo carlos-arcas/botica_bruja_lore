@@ -31,7 +31,8 @@
     "test:editorial-seo": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --esModuleInterop --resolveJsonModule --outDir .tmp-tests tests/editorial-seo.test.ts contenido/editorial/guiasEditoriales.ts contenido/editorial/indiceGuias.ts infraestructura/seo/metadataSeo.ts infraestructura/seo/structuredData.ts && node .tmp-tests/tests/editorial-seo.test.js",
     "test:tarot": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/tarot-contenido.test.ts contenido/tarot/arcanosTarot.ts && node .tmp-tests/tests/tarot-contenido.test.js",
     "test:home-raiz": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/home-raiz-secciones.test.ts contenido/home/seccionesPrincipales.ts && node .tmp-tests/tests/home-raiz-secciones.test.js",
-    "clean:tmp-tests": "node -e \"require('fs').rmSync('.tmp-tests', { recursive: true, force: true })\""
+    "clean:tmp-tests": "node -e \"require('fs').rmSync('.tmp-tests', { recursive: true, force: true })\"",
+    "test:botica-natural": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/botica-natural.test.ts && node .tmp-tests/botica-natural.test.js"
   },
   "dependencies": {
     "next": "14.2.35",

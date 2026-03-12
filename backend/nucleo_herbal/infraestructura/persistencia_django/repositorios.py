@@ -75,6 +75,13 @@ class RepositorioProductosORM(RepositorioProductos):
         return tuple(a_producto(producto) for producto in queryset)
 
 
+    def listar_publicos_por_seccion(self, slug_seccion: str, limite: int) -> tuple[Producto, ...]:
+        queryset = ProductoModelo.objects.filter(
+            publicado=True,
+            seccion_publica=slug_seccion,
+        ).order_by("slug")[:limite]
+        return tuple(a_producto(producto) for producto in queryset)
+
 class RepositorioRitualesORM(RepositorioRituales):
     def listar_navegables(self) -> tuple[Ritual, ...]:
         queryset = self._base_queryset().filter(publicado=True)
