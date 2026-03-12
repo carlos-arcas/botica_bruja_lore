@@ -6,6 +6,7 @@
   --acento: #935d3b;
   --acento-secundario: #4b6848;
   --borde: #e6ddcf;
+  --ancho-base-card-home: 220px;
 }
 
 * {
@@ -401,11 +402,14 @@ button:focus-visible {
   padding: 0;
   display: grid;
   gap: 1rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ancho-base-card-home)), var(--ancho-base-card-home)));
+  justify-content: center;
+  align-items: start;
 }
 
 .rejilla-secciones-principales > .tarjeta-seccion-principal__item {
   min-width: 0;
+  width: min(100%, var(--ancho-base-card-home));
 }
 
 .rejilla-secciones-principales--segunda-fila {
@@ -416,25 +420,23 @@ button:focus-visible {
   position: relative;
   border-radius: 14px;
   overflow: hidden;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) 4.2rem;
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
   border: 1px solid #d9cebf;
-  min-height: 220px;
-  aspect-ratio: 4 / 3;
-  height: 100%;
   background: linear-gradient(180deg, #f6f1e8 0%, #ede4d4 100%);
 }
 
 .tarjeta-seccion-principal__media {
   position: relative;
-  min-height: 148px;
+  display: block;
   background: radial-gradient(circle at center, #f8f2e8 0%, #e4d8c7 100%);
 }
 
 .tarjeta-seccion-principal__imagen {
-  object-fit: contain;
-  object-position: center;
+  display: block;
+  width: 100%;
+  height: auto;
   z-index: 0;
   padding: 0.45rem;
 }
@@ -460,16 +462,16 @@ button:focus-visible {
 
 @media (min-width: 768px) {
   .rejilla-secciones-principales {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, var(--ancho-base-card-home));
   }
 }
 
 @media (min-width: 1024px) {
   .rejilla-secciones-principales {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, var(--ancho-base-card-home));
   }
 
   .rejilla-secciones-principales--segunda-fila {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, var(--ancho-base-card-home));
   }
 }
