@@ -61,14 +61,26 @@ test("la tarjeta principal usa media uniforme y renderizado sin recorte", () => 
     join(process.cwd(), "componentes/home/TarjetaSeccionPrincipal.tsx"),
     "utf8",
   );
+  const configuracionCard = readFileSync(
+    join(process.cwd(), "componentes/home/configuracionImagenCardHome.ts"),
+    "utf8",
+  );
   const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
 
   assert.equal(tarjeta.includes('className="tarjeta-seccion-principal__item"'), true);
   assert.equal(tarjeta.includes('className="tarjeta-seccion-principal__media"'), true);
+  assert.equal(tarjeta.includes("fill"), false);
+  assert.equal(tarjeta.includes("width={CONFIGURACION_IMAGEN_CARD_HOME.width}"), true);
+  assert.equal(tarjeta.includes("height={CONFIGURACION_IMAGEN_CARD_HOME.height}"), true);
   assert.equal(estilos.includes(".tarjeta-seccion-principal__media"), true);
-  assert.equal(estilos.includes("object-fit: contain;"), true);
+  assert.equal(estilos.includes("--ancho-base-card-home"), true);
+  assert.equal(estilos.includes("aspect-ratio"), false);
+  assert.equal(estilos.includes("height: auto;"), true);
   const bloqueImagen = estilos.split(".tarjeta-seccion-principal__imagen")[1] ?? "";
-  assert.equal(bloqueImagen.includes("object-fit: contain;"), true);
+  assert.equal(bloqueImagen.includes("width: 100%;"), true);
+  assert.equal(bloqueImagen.includes("height: auto;"), true);
+  assert.equal(bloqueImagen.includes("object-fit: cover;"), false);
+  assert.equal(configuracionCard.includes("CONFIGURACION_IMAGEN_CARD_HOME"), true);
 });
 test("la home raíz solo compone hero principal + rejilla de secciones", () => {
   const pagina = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");

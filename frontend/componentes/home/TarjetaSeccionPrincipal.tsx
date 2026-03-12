@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { CONFIGURACION_IMAGEN_CARD_HOME } from "@/componentes/home/configuracionImagenCardHome";
 import type { SeccionPrincipal } from "@/contenido/home/seccionesPrincipales";
 import { traducirSeccionPrincipal } from "@/contenido/home/seccionesPrincipales";
 
@@ -18,8 +19,9 @@ export function TarjetaSeccionPrincipal({ seccion }: Props): JSX.Element {
           <Image
             src={seccion.imagenCard}
             alt={titulo}
-            fill
-            sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 25vw"
+            width={CONFIGURACION_IMAGEN_CARD_HOME.width}
+            height={CONFIGURACION_IMAGEN_CARD_HOME.height}
+            sizes={CONFIGURACION_IMAGEN_CARD_HOME.sizes}
             className="tarjeta-seccion-principal__imagen"
           />
           <span className="tarjeta-seccion-principal__overlay" />
