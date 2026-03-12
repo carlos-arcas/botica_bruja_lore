@@ -8,53 +8,65 @@ jobs:
   quality_gate:
     name: Canonical release gate validation
     runs-on: [self-hosted, Windows, X64, botica-bruja-lore]
+    defaults:
+      run:
+        shell: powershell
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
+      - name: Verify runner Python is 3.13
+        run: |
+          $pyMinor = python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+          Write-Host "Runner Python detected: $pyMinor"
+          if ($pyMinor -ne '3.13') {
+            Write-Error "This workflow requires runner Python 3.13, but found $pyMinor. Fix the runner Python installation or PATH."
+            exit 1
+          }
+
+      - name: Create local virtual environment
+        run: |
+          python -m venv .venv
+          "$PWD\.venv\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "VENV_PYTHON=$PWD\.venv\Scripts\python.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install backend dependencies
-        shell: pwsh
-        run: python -m pip install -r requirements.txt
+        run: |
+          & "$env:VENV_PYTHON" -m pip install --upgrade pip
+          & "$env:VENV_PYTHON" -m pip install -r requirements.txt
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
-        shell: pwsh
         run: npm ci
         working-directory: frontend
 
       - name: Validate Railway TOML files
-        shell: pwsh
         run: |
-          python -c "import tomllib; from pathlib import Path; files = [Path('backend/railway.toml'), Path('frontend/railway.toml')]; [tomllib.load(file.open('rb')) for file in files]; [print(f'OK TOML: {file}') for file in files]"
+          & "$env:VENV_PYTHON" -c "import tomllib; from pathlib import Path; files = [Path('backend/railway.toml'), Path('frontend/railway.toml')]; [tomllib.load(file.open('rb')) for file in files]; [print(f'OK TOML: {file}') for file in files]"
 
       - name: Run canonical release gate command
-        shell: pwsh
-        run: python scripts/check_release_gate.py
+        run: |
+          & "$env:VENV_PYTHON" scripts/check_release_gate.py
 
       - name: Run bootstrap demo script in isolated database
-        shell: pwsh
-        env:
-          DATABASE_URL: sqlite:///bootstrap_demo_ci.sqlite3
-          SECRET_KEY: ci-bootstrap-secret
-        run: python scripts/bootstrap_demo_release.py
-
-      - name: Assert bootstrap demo expected public counts
-        shell: pwsh
         env:
           DATABASE_URL: sqlite:///bootstrap_demo_ci.sqlite3
           SECRET_KEY: ci-bootstrap-secret
         run: |
-          python manage.py shell -c "from backend.nucleo_herbal.infraestructura.persistencia_django.models import IntencionModelo, PlantaModelo, ProductoModelo, RitualModelo; assert IntencionModelo.objects.filter(es_publica=True).count() == 2; assert PlantaModelo.objects.filter(publicada=True).count() == 2; assert ProductoModelo.objects.filter(publicado=True).count() == 2; assert RitualModelo.objects.filter(publicado=True).count() == 1; print('Conteos esperados OK: 2/2/2/1')"
+          & "$env:VENV_PYTHON" scripts/bootstrap_demo_release.py
+
+      - name: Assert bootstrap demo expected public counts
+        env:
+          DATABASE_URL: sqlite:///bootstrap_demo_ci.sqlite3
+          SECRET_KEY: ci-bootstrap-secret
+        run: |
+          & "$env:VENV_PYTHON" manage.py shell -c "from backend.nucleo_herbal.infraestructura.persistencia_django.models import IntencionModelo, PlantaModelo, ProductoModelo, RitualModelo; assert IntencionModelo.objects.filter(es_publica=True).count() == 2; assert PlantaModelo.objects.filter(publicada=True).count() == 2; assert ProductoModelo.objects.filter(publicado=True).count() == 2; assert RitualModelo.objects.filter(publicado=True).count() == 1; print('Conteos esperados OK: 2/2/2/1')"
