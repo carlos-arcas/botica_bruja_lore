@@ -1,77 +1,76 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
 
 {% block content %}
-<h1>Importación masiva CSV/XLSX</h1>
-<p>Sube un archivo CSV o XLSX. Puedes arrastrar el archivo principal y también imágenes adjuntas para resolver <code>imagen_ref</code>.</p>
-
-<form method="post" enctype="multipart/form-data" style="max-width: 1000px;">
+<h1>Importación masiva CSV/XLSX (staging)</h1>
+<form method="post" enctype="multipart/form-data" style="max-width:1200px;">
   {% csrf_token %}
   <fieldset class="module aligned">
     {{ form.entidad.label_tag }} {{ form.entidad }}
     {{ form.modo.label_tag }} {{ form.modo }}
-
     <div id="drop-archivo" style="margin-top:1rem;border:2px dashed #888;padding:1rem;border-radius:6px;">
-      <strong>Arrastra aquí CSV/XLSX</strong> o usa selector clásico:<br>
-      {{ form.archivo }}
+      <strong>Arrastra CSV/XLSX</strong> · {{ form.archivo }}
     </div>
-
     <div id="drop-imagenes" style="margin-top:1rem;border:2px dashed #6a6;padding:1rem;border-radius:6px;">
-      <strong>Arrastra imágenes adjuntas</strong> (opcional, múltiples) o selección clásica:<br>
-      {{ form.imagenes }}
+      <strong>Imágenes por referencia (imagen_ref)</strong> · {{ form.imagenes }}
     </div>
-
-    <div style="margin-top:1rem;display:flex;gap:8px;">
-      <button class="button default" name="accion" value="validar" type="submit">Validar</button>
-      <button class="button" name="accion" value="importar" type="submit">Importar</button>
-    </div>
+    <button class="button default" name="accion" value="validar" type="submit" style="margin-top:1rem;">Subir + validar + crear pendientes</button>
   </fieldset>
 </form>
 
-<h2>Plantillas descargables</h2>
+<h2>Plantillas y contrato</h2>
 <ul>
-  {% for clave, esquema in esquemas.items %}
-  <li>
-    {{ clave }}:
-    <a href="{% url 'importacion-plantilla' clave 'csv' %}">Descargar plantilla CSV</a> |
-    <a href="{% url 'importacion-plantilla' clave 'xlsx' %}">Descargar plantilla XLSX</a>
-  </li>
-  {% endfor %}
-</ul>
-
-<h2>Ayuda de columnas y reglas</h2>
 {% for clave, esquema in esquemas.items %}
-  <h3>{{ clave }}</h3>
-  <p><strong>Obligatorias:</strong> {{ esquema.columnas_obligatorias|join:", " }}</p>
-  <p><strong>Opcionales:</strong> {{ esquema.columnas_opcionales|join:", " }}</p>
-  <p><strong>Orden recomendado:</strong> {{ esquema.todas_columnas|join:", " }}</p>
-  <p><strong>Reglas de slug:</strong> minúsculas, guiones medios, único por entidad.</p>
-  <p><strong>Reglas de publicación:</strong> usar true/false.</p>
-  <p><strong>Reglas de imágenes:</strong> usa <code>imagen_url</code> externa o <code>imagen_ref</code> igual al nombre del archivo adjunto.</p>
-  {% if esquema.regla_relaciones %}<p><strong>Relaciones:</strong> {{ esquema.regla_relaciones }}</p>{% endif %}
+<li>
+  <strong>{{ clave }}</strong> — <a href="{% url 'importacion-plantilla' clave 'csv' %}">Descargar plantilla CSV</a> · <a href="{% url 'importacion-plantilla' clave 'xlsx' %}">Descargar plantilla XLSX</a><br>
+  Obligatorias: {{ esquema.columnas_obligatorias|join:", " }}<br>
+  Opcionales: {{ esquema.columnas_opcionales|join:", " }}<br>
+  Orden recomendado: {{ esquema.todas_columnas|join:", " }}<br>
+  Reglas slug: minúsculas + guiones · booleanos: true/false · imágenes: imagen_url o imagen_ref (si adjuntas local, prevalece).<br>
+  {% if esquema.regla_relaciones %}Relaciones: {{ esquema.regla_relaciones }}{% endif %}
+</li>
 {% endfor %}
-
-{% if resultado %}
-<h2>Preview / resumen</h2>
-<ul>
-  <li>Tipo detectado: {{ resultado.entidad }}</li>
-  <li>Columnas encontradas: {{ resultado.columnas_detectadas|join:", " }}</li>
-  <li>Columnas faltantes: {{ resultado.columnas_faltantes|join:", "|default:"ninguna" }}</li>
-  <li>Filas procesadas: {{ resultado.filas_procesadas }}</li>
-  <li>Creadas: {{ resultado.creadas }}</li>
-  <li>Actualizadas: {{ resultado.actualizadas }}</li>
-  <li>Ignoradas: {{ resultado.ignoradas }}</li>
-  <li>Fallidas: {{ resultado.fallidas }}</li>
 </ul>
-{% if resultado.errores %}
-  <h3>Errores por fila</h3>
-  <table>
-    <tr><th>Fila</th><th>Motivo</th></tr>
-    {% for error in resultado.errores %}
-      <tr><td>{{ error.numero_fila }}</td><td>{{ error.motivo }}</td></tr>
-    {% endfor %}
+
+{% if lote %}
+<h2>Zona de pendientes por confirmar</h2>
+<p>Archivo: <strong>{{ lote.nombre_archivo }}</strong> · Modo: <strong>{{ lote.modo }}</strong> · Filas: {{ lote.total_filas }}</p>
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="lote_id" value="{{ lote.id }}">
+  <table class="adminlist" style="width:100%;">
+    <thead>
+      <tr>
+        <th>Confirmar</th><th>Fila</th><th>Estado</th><th>Datos</th><th>Errores / warnings</th><th>Imagen</th><th>Subir/Reemplazar</th><th>Resultado</th><th>Descartar</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in filas %}
+      <tr data-fila-id="{{ fila.id }}" class="fila-dropzone">
+        <td><input type="checkbox" name="fila_ids" value="{{ fila.id }}" {% if fila.seleccionado %}checked{% endif %}></td>
+        <td>{{ fila.numero_fila_original }}</td>
+        <td>{{ fila.get_estado_display }}</td>
+        <td><code style="white-space:pre-wrap;">{{ fila.datos }}</code></td>
+        <td>
+          {% for e in fila.errores %}<div style="color:#b00;">{{ e }}</div>{% endfor %}
+          {% for w in fila.warnings %}<div style="color:#995700;">{{ w }}</div>{% endfor %}
+        </td>
+        <td>{% if fila.imagen %}<img src="{{ fila.imagen }}" alt="preview" style="width:56px;height:56px;object-fit:cover;border-radius:6px;">{% else %}-{% endif %}</td>
+        <td>
+          <input type="file" name="imagen_fila_{{ fila.id }}" class="input-imagen-fila" data-fila-id="{{ fila.id }}" accept="image/*">
+          <button type="button" class="button btn-subir-fila" data-fila-id="{{ fila.id }}">Adjuntar</button>
+        </td>
+        <td>{{ fila.resultado_confirmacion }}</td>
+        <td><input type="checkbox" name="descartar_ids" value="{{ fila.id }}"></td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
-{% endif %}
+  <div style="margin-top:1rem;display:flex;gap:10px;">
+    <button class="button default" name="accion" value="confirmar_seleccionadas" type="submit">Confirmar seleccionadas</button>
+    <button class="button" name="accion" value="confirmar_validas" type="submit">Confirmar válidas</button>
+    <button class="button" name="accion" value="descartar_filas" type="submit">Descartar seleccionadas</button>
+  </div>
+</form>
 {% endif %}
 
 <script>
@@ -79,14 +78,42 @@ function enableDropzone(zoneId, inputSelector) {
   const zone = document.getElementById(zoneId);
   const input = document.querySelector(inputSelector);
   if (!zone || !input) return;
-  ["dragenter", "dragover", "dragleave", "drop"].forEach(evt => {
-    zone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
-  });
-  zone.addEventListener("drop", e => {
-    input.files = e.dataTransfer.files;
-  });
+  ["dragenter","dragover","dragleave","drop"].forEach(evt => zone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }));
+  zone.addEventListener("drop", e => { input.files = e.dataTransfer.files; });
 }
 enableDropzone("drop-archivo", "#id_archivo");
 enableDropzone("drop-imagenes", "#id_imagenes");
+
+function csrftoken() { return document.querySelector('[name=csrfmiddlewaretoken]').value; }
+document.querySelectorAll('.btn-subir-fila').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = btn.dataset.filaId;
+    const input = document.querySelector(`.input-imagen-fila[data-fila-id='${id}']`);
+    if (!input.files.length) return;
+    const fd = new FormData();
+    fd.append('accion', 'adjuntar_imagen');
+    fd.append('fila_id', id);
+    fd.append('imagen_fila', input.files[0]);
+    fd.append('csrfmiddlewaretoken', csrftoken());
+    await fetch('', { method: 'POST', body: fd });
+    window.location.reload();
+  });
+});
+
+document.querySelectorAll('.fila-dropzone').forEach(row => {
+  ["dragenter","dragover","dragleave","drop"].forEach(evt => row.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }));
+  row.addEventListener('drop', async e => {
+    const id = row.dataset.filaId;
+    const f = e.dataTransfer.files[0];
+    if (!f) return;
+    const fd = new FormData();
+    fd.append('accion', 'adjuntar_imagen');
+    fd.append('fila_id', id);
+    fd.append('imagen_fila', f);
+    fd.append('csrfmiddlewaretoken', csrftoken());
+    await fetch('', { method: 'POST', body: fd });
+    window.location.reload();
+  });
+});
 </script>
 {% endblock %}
