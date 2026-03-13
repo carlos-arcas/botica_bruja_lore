@@ -58,6 +58,7 @@ urlpatterns = [
     path("admin/importacion-masiva/", importacion_masiva_view, name="importacion-masiva"),
     path("admin/importacion-masiva/plantilla/<str:entidad>/<str:formato>/", descargar_plantilla_view, name="importacion-plantilla"),
     path("admin/", admin.site.urls),
+    path("api/backoffice/auth/", include("backend.nucleo_herbal.presentacion.backoffice_auth_urls")),
     path("api/v1/herbal/", include("backend.nucleo_herbal.presentacion.publica.urls")),
     path(
         "api/v1/rituales/",
