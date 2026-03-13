@@ -3,6 +3,7 @@
 from datetime import date
 
 from django.http import HttpRequest, JsonResponse
+import logging
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
 from .dependencias import (
@@ -21,6 +22,9 @@ from .serializadores import (
     serializar_ritual_detalle,
     serializar_ritual_resumen,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def listado_herbal(request: HttpRequest) -> JsonResponse:
@@ -57,6 +61,10 @@ def productos_por_planta(request: HttpRequest, slug_planta: str) -> JsonResponse
 def listado_productos_por_seccion(request: HttpRequest, slug_seccion: str) -> JsonResponse:
     servicios = construir_servicios_publicos_herbales()
     productos = servicios.listado_productos_por_seccion.ejecutar(slug_seccion, limite=5)
+    logger.info(
+        "listado_productos_por_seccion generado",
+        extra={"seccion_slug": slug_seccion, "total_productos": len(productos)},
+    )
     return JsonResponse(
         {
             "seccion_slug": slug_seccion,
@@ -154,4 +162,3 @@ def calendario_ritual_por_fecha(request: HttpRequest) -> JsonResponse:
     except ErrorAplicacionLookup as error:
         return json_no_encontrado(str(error))
     return JsonResponse(serializar_consulta_calendario_ritual(consulta))
-
