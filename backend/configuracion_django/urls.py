@@ -11,7 +11,10 @@ from django.urls import include, path
 from django.conf import settings
 
 from backend.nucleo_herbal.presentacion.publica.sitemaps import SITEMAPS_PUBLICOS
-
+from backend.nucleo_herbal.infraestructura.persistencia_django.views_importacion import (
+    descargar_plantilla_view,
+    importacion_masiva_view,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +55,8 @@ urlpatterns = [
     path("robots.txt", robots_txt, name="robots-txt"),
     path("healthz", healthcheck, name="healthcheck"),
     path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS_PUBLICOS}, name="sitemap-xml"),
+    path("admin/importacion-masiva/", importacion_masiva_view, name="importacion-masiva"),
+    path("admin/importacion-masiva/plantilla/<str:entidad>/<str:formato>/", descargar_plantilla_view, name="importacion-plantilla"),
     path("admin/", admin.site.urls),
     path("api/v1/herbal/", include("backend.nucleo_herbal.presentacion.publica.urls")),
     path(

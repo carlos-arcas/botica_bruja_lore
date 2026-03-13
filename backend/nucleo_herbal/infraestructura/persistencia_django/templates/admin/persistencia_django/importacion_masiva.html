@@ -1,0 +1,92 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Importación masiva CSV/XLSX</h1>
+<p>Sube un archivo CSV o XLSX. Puedes arrastrar el archivo principal y también imágenes adjuntas para resolver <code>imagen_ref</code>.</p>
+
+<form method="post" enctype="multipart/form-data" style="max-width: 1000px;">
+  {% csrf_token %}
+  <fieldset class="module aligned">
+    {{ form.entidad.label_tag }} {{ form.entidad }}
+    {{ form.modo.label_tag }} {{ form.modo }}
+
+    <div id="drop-archivo" style="margin-top:1rem;border:2px dashed #888;padding:1rem;border-radius:6px;">
+      <strong>Arrastra aquí CSV/XLSX</strong> o usa selector clásico:<br>
+      {{ form.archivo }}
+    </div>
+
+    <div id="drop-imagenes" style="margin-top:1rem;border:2px dashed #6a6;padding:1rem;border-radius:6px;">
+      <strong>Arrastra imágenes adjuntas</strong> (opcional, múltiples) o selección clásica:<br>
+      {{ form.imagenes }}
+    </div>
+
+    <div style="margin-top:1rem;display:flex;gap:8px;">
+      <button class="button default" name="accion" value="validar" type="submit">Validar</button>
+      <button class="button" name="accion" value="importar" type="submit">Importar</button>
+    </div>
+  </fieldset>
+</form>
+
+<h2>Plantillas descargables</h2>
+<ul>
+  {% for clave, esquema in esquemas.items %}
+  <li>
+    {{ clave }}:
+    <a href="{% url 'importacion-plantilla' clave 'csv' %}">Descargar plantilla CSV</a> |
+    <a href="{% url 'importacion-plantilla' clave 'xlsx' %}">Descargar plantilla XLSX</a>
+  </li>
+  {% endfor %}
+</ul>
+
+<h2>Ayuda de columnas y reglas</h2>
+{% for clave, esquema in esquemas.items %}
+  <h3>{{ clave }}</h3>
+  <p><strong>Obligatorias:</strong> {{ esquema.columnas_obligatorias|join:", " }}</p>
+  <p><strong>Opcionales:</strong> {{ esquema.columnas_opcionales|join:", " }}</p>
+  <p><strong>Orden recomendado:</strong> {{ esquema.todas_columnas|join:", " }}</p>
+  <p><strong>Reglas de slug:</strong> minúsculas, guiones medios, único por entidad.</p>
+  <p><strong>Reglas de publicación:</strong> usar true/false.</p>
+  <p><strong>Reglas de imágenes:</strong> usa <code>imagen_url</code> externa o <code>imagen_ref</code> igual al nombre del archivo adjunto.</p>
+  {% if esquema.regla_relaciones %}<p><strong>Relaciones:</strong> {{ esquema.regla_relaciones }}</p>{% endif %}
+{% endfor %}
+
+{% if resultado %}
+<h2>Preview / resumen</h2>
+<ul>
+  <li>Tipo detectado: {{ resultado.entidad }}</li>
+  <li>Columnas encontradas: {{ resultado.columnas_detectadas|join:", " }}</li>
+  <li>Columnas faltantes: {{ resultado.columnas_faltantes|join:", "|default:"ninguna" }}</li>
+  <li>Filas procesadas: {{ resultado.filas_procesadas }}</li>
+  <li>Creadas: {{ resultado.creadas }}</li>
+  <li>Actualizadas: {{ resultado.actualizadas }}</li>
+  <li>Ignoradas: {{ resultado.ignoradas }}</li>
+  <li>Fallidas: {{ resultado.fallidas }}</li>
+</ul>
+{% if resultado.errores %}
+  <h3>Errores por fila</h3>
+  <table>
+    <tr><th>Fila</th><th>Motivo</th></tr>
+    {% for error in resultado.errores %}
+      <tr><td>{{ error.numero_fila }}</td><td>{{ error.motivo }}</td></tr>
+    {% endfor %}
+  </table>
+{% endif %}
+{% endif %}
+
+<script>
+function enableDropzone(zoneId, inputSelector) {
+  const zone = document.getElementById(zoneId);
+  const input = document.querySelector(inputSelector);
+  if (!zone || !input) return;
+  ["dragenter", "dragover", "dragleave", "drop"].forEach(evt => {
+    zone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
+  });
+  zone.addEventListener("drop", e => {
+    input.files = e.dataTransfer.files;
+  });
+}
+enableDropzone("drop-archivo", "#id_archivo");
+enableDropzone("drop-imagenes", "#id_imagenes");
+</script>
+{% endblock %}
