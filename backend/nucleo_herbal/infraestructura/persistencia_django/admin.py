@@ -1,8 +1,9 @@
-"""Backoffice mínimo útil del Ciclo 1 y Ciclo 2 sobre Django Admin."""
+"""Backoffice operativo sobre Django Admin para catálogo y contenido editorial."""
 
 from django.contrib import admin
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
+    ArticuloEditorialModelo,
     CuentaDemoModelo,
     IntencionModelo,
     LineaPedidoModelo,
@@ -10,6 +11,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
     PlantaModelo,
     ProductoModelo,
     RitualModelo,
+    SeccionPublicaModelo,
 )
 
 
@@ -30,6 +32,7 @@ class IntencionAdmin(admin.ModelAdmin):
     list_filter = ("es_publica",)
     ordering = ("nombre",)
     list_editable = ("es_publica",)
+    prepopulated_fields = {"slug": ("nombre",)}
     actions = (publicar_intenciones, ocultar_intenciones)
 
 
@@ -50,6 +53,7 @@ class PlantaAdmin(admin.ModelAdmin):
     list_filter = ("publicada", "intenciones")
     ordering = ("nombre",)
     list_editable = ("publicada",)
+    prepopulated_fields = {"slug": ("nombre",)}
     filter_horizontal = ("intenciones",)
     actions = (publicar_plantas, despublicar_plantas)
 
@@ -57,6 +61,16 @@ class PlantaAdmin(admin.ModelAdmin):
     def mostrar_intenciones(self, obj):
         nombres = obj.intenciones.values_list("nombre", flat=True)
         return ", ".join(nombres)
+
+
+@admin.register(SeccionPublicaModelo)
+class SeccionPublicaAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "slug", "orden", "publicada")
+    search_fields = ("nombre", "slug", "descripcion")
+    list_filter = ("publicada",)
+    list_editable = ("orden", "publicada")
+    ordering = ("orden", "nombre")
+    prepopulated_fields = {"slug": ("nombre",)}
 
 
 @admin.action(description="Publicar productos")
@@ -74,17 +88,42 @@ class ProductoAdmin(admin.ModelAdmin):
     list_display = (
         "nombre",
         "sku",
+        "slug",
         "tipo_producto",
         "categoria_comercial",
-        "planta",
+        "seccion_publica",
+        "orden_publicacion",
         "publicado",
     )
-    search_fields = ("nombre", "sku", "slug")
-    list_filter = ("publicado", "tipo_producto", "categoria_comercial")
-    ordering = ("nombre",)
-    list_editable = ("publicado",)
+    search_fields = ("nombre", "sku", "slug", "categoria_comercial", "seccion_publica")
+    list_filter = ("publicado", "tipo_producto", "categoria_comercial", "seccion_publica")
+    ordering = ("orden_publicacion", "nombre")
+    list_editable = ("orden_publicacion", "publicado")
+    prepopulated_fields = {"slug": ("nombre",)}
     autocomplete_fields = ("planta",)
     actions = (publicar_productos, despublicar_productos)
+    fieldsets = (
+        (
+            "Datos comerciales",
+            {
+                "fields": (
+                    "sku",
+                    "slug",
+                    "nombre",
+                    "tipo_producto",
+                    "categoria_comercial",
+                    "seccion_publica",
+                    "orden_publicacion",
+                    "publicado",
+                )
+            },
+        ),
+        (
+            "Contenido público",
+            {"fields": ("descripcion_corta", "precio_visible", "imagen_url")},
+        ),
+        ("Relaciones", {"fields": ("planta",)}),
+    )
 
 
 @admin.action(description="Publicar rituales")
@@ -111,6 +150,7 @@ class RitualAdmin(admin.ModelAdmin):
         "nombre",
         "slug",
         "contexto_breve",
+        "contenido",
         "intenciones__nombre",
         "plantas_relacionadas__nombre",
         "productos_relacionados__nombre",
@@ -123,8 +163,19 @@ class RitualAdmin(admin.ModelAdmin):
     )
     ordering = ("nombre",)
     list_editable = ("publicado",)
+    prepopulated_fields = {"slug": ("nombre",)}
     filter_horizontal = ("intenciones", "plantas_relacionadas", "productos_relacionados")
     actions = (publicar_rituales, despublicar_rituales)
+    fieldsets = (
+        (
+            "Contenido editorial",
+            {"fields": ("slug", "nombre", "contexto_breve", "contenido", "imagen_url", "publicado")},
+        ),
+        (
+            "Relaciones",
+            {"fields": ("intenciones", "plantas_relacionadas", "productos_relacionados")},
+        ),
+    )
 
     @admin.display(description="Intenciones")
     def mostrar_intenciones(self, obj):
@@ -142,13 +193,72 @@ class RitualAdmin(admin.ModelAdmin):
         return ", ".join(nombres)
 
 
+@admin.action(description="Publicar artículos")
+def publicar_articulos(modeladmin, request, queryset):
+    queryset.update(publicado=True)
+
+
+@admin.action(description="Despublicar artículos")
+def despublicar_articulos(modeladmin, request, queryset):
+    queryset.update(publicado=False)
+
+
+@admin.register(ArticuloEditorialModelo)
+class ArticuloEditorialAdmin(admin.ModelAdmin):
+    list_display = (
+        "titulo",
+        "slug",
+        "tema",
+        "hub",
+        "subhub",
+        "seccion_publica",
+        "indexable",
+        "publicado",
+        "fecha_publicacion",
+        "fecha_actualizacion",
+    )
+    search_fields = ("titulo", "slug", "resumen", "contenido", "tema", "hub", "subhub")
+    list_filter = ("publicado", "indexable", "tema", "hub", "subhub", "seccion_publica")
+    ordering = ("-fecha_actualizacion", "titulo")
+    list_editable = ("indexable", "publicado")
+    prepopulated_fields = {"slug": ("titulo",)}
+    autocomplete_fields = ("seccion_publica",)
+    readonly_fields = ("fecha_creacion", "fecha_actualizacion")
+    actions = (publicar_articulos, despublicar_articulos)
+    fieldsets = (
+        (
+            "Contenido",
+            {
+                "fields": (
+                    "slug",
+                    "titulo",
+                    "resumen",
+                    "contenido",
+                    "imagen_url",
+                )
+            },
+        ),
+        (
+            "Clasificación",
+            {"fields": ("tema", "hub", "subhub", "seccion_publica")},
+        ),
+        (
+            "Publicación",
+            {"fields": ("indexable", "publicado", "fecha_publicacion")},
+        ),
+        (
+            "Trazabilidad",
+            {"fields": ("fecha_creacion", "fecha_actualizacion")},
+        ),
+    )
+
+
 @admin.register(CuentaDemoModelo)
 class CuentaDemoAdmin(admin.ModelAdmin):
     list_display = ("id_usuario", "email", "nombre_visible", "fecha_creacion")
     search_fields = ("id_usuario", "email", "nombre_visible")
     ordering = ("email",)
     readonly_fields = ("id_usuario", "email", "fecha_creacion", "fecha_actualizacion")
-
 
 
 class LineaPedidoInline(admin.TabularInline):
