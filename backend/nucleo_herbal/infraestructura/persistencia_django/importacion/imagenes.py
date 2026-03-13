@@ -1,8 +1,8 @@
 """Gestión y optimización de imágenes adjuntas para importación."""
 
+import re
 from io import BytesIO
 from pathlib import Path
-import re
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -17,6 +17,10 @@ MAX_CARD_SIZE = (640, 640)
 WEBP_QUALITY = 82
 
 
+class ErrorImagenWebP(ValueError):
+    """Error controlado cuando no es posible guardar una imagen como WebP."""
+
+
 def _slugify_nombre(nombre: str) -> str:
     base = Path(nombre).stem.lower()
     limpio = re.sub(r"[^a-z0-9]+", "-", base).strip("-")
@@ -25,8 +29,7 @@ def _slugify_nombre(nombre: str) -> str:
 
 def _guardar_como_webp(archivo, prefijo: str) -> str:
     if Image is None:
-        ruta = default_storage.save(f"{prefijo}/{Path(archivo.name).name}", archivo)
-        return default_storage.url(ruta)
+        raise ErrorImagenWebP("Conversión WebP no disponible en el servidor.")
     try:
         archivo.seek(0)
         imagen = Image.open(archivo)
@@ -37,9 +40,8 @@ def _guardar_como_webp(archivo, prefijo: str) -> str:
         output = BytesIO()
         imagen.save(output, format="WEBP", quality=WEBP_QUALITY, method=6)
         ruta = default_storage.save(f"{prefijo}/{nombre}", ContentFile(output.getvalue()))
-    except Exception:  # pragma: no cover - fallback defensivo para archivos corruptos
-        archivo.seek(0)
-        ruta = default_storage.save(f"{prefijo}/{Path(archivo.name).name}", archivo)
+    except Exception as error:
+        raise ErrorImagenWebP("No fue posible convertir la imagen a WebP.") from error
     return default_storage.url(ruta)
 
 

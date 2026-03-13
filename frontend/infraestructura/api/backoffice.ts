@@ -1,6 +1,22 @@
 import { API_BACKEND_BASE, NOMBRE_COOKIE_BACKOFFICE } from "../auth/configuracion";
 
 export type ModuloAdmin = "productos" | "rituales" | "editorial" | "secciones";
+export type EstadoImagenImportacion = "optimizada" | "pendiente" | "ausente";
+
+export type FilaImportacion = {
+  id: number;
+  numero: number;
+  datos: Record<string, string>;
+  errores: string[];
+  warnings: string[];
+  estado: string;
+  seleccionado: boolean;
+  imagen: string;
+  estado_imagen: EstadoImagenImportacion;
+  resultado_confirmacion: string;
+};
+
+export type DetalleImportacion = { lote: Record<string, unknown>; filas: FilaImportacion[] };
 
 export type EstadoAccesoBackoffice =
   | { estado: "autorizado"; usuario: { username: string; is_staff: boolean; is_superuser: boolean } }
@@ -69,10 +85,10 @@ export async function crearLoteImportacion(formData: FormData, token?: string): 
   return data.lote_id;
 }
 
-export async function obtenerLoteImportacion(loteId: number, token?: string): Promise<{ lote: Record<string, unknown>; filas: Record<string, unknown>[] }> {
+export async function obtenerLoteImportacion(loteId: number, token?: string): Promise<DetalleImportacion> {
   const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/importacion/lotes/${loteId}/`, { headers: cabecerasConToken(token, false), cache: "no-store" });
   if (!r.ok) throw new Error("Error consultando lote");
-  return (await r.json()) as { lote: Record<string, unknown>; filas: Record<string, unknown>[] };
+  return (await r.json()) as DetalleImportacion;
 }
 
 export async function confirmarLoteImportacion(loteId: number, filasIds: number[], token?: string): Promise<number> {
@@ -80,6 +96,42 @@ export async function confirmarLoteImportacion(loteId: number, filasIds: number[
   if (!r.ok) throw new Error("Error confirmando lote");
   const data = (await r.json()) as { confirmadas: number };
   return data.confirmadas;
+}
+
+export async function revalidarLoteImportacion(loteId: number, token?: string): Promise<void> {
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/importacion/lotes/${loteId}/revalidar/`, { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
+  if (!r.ok) throw new Error("Error revalidando lote");
+}
+
+export async function cambiarSeleccionFilaImportacion(loteId: number, filaId: number, seleccionado: boolean, token?: string): Promise<FilaImportacion> {
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/seleccion/`, { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ seleccionado }) });
+  if (!r.ok) throw new Error("Error cambiando selección");
+  const data = (await r.json()) as { fila: FilaImportacion };
+  return data.fila;
+}
+
+export async function descartarFilaImportacion(loteId: number, filaId: number, token?: string): Promise<FilaImportacion> {
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/descartar/`, { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
+  if (!r.ok) throw new Error("Error descartando fila");
+  const data = (await r.json()) as { fila: FilaImportacion };
+  return data.fila;
+}
+
+export async function adjuntarImagenFilaImportacion(loteId: number, filaId: number, imagen: File, token?: string): Promise<FilaImportacion> {
+  const formData = new FormData();
+  formData.set("imagen", imagen);
+  const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/imagen/`, { method: "POST", headers, body: formData });
+  if (!r.ok) throw new Error((await r.json()).detalle || "Error adjuntando imagen");
+  const data = (await r.json()) as { fila: FilaImportacion };
+  return data.fila;
+}
+
+export async function eliminarImagenFilaImportacion(loteId: number, filaId: number, token?: string): Promise<FilaImportacion> {
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/imagen/eliminar/`, { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
+  if (!r.ok) throw new Error("Error eliminando imagen");
+  const data = (await r.json()) as { fila: FilaImportacion };
+  return data.fila;
 }
 
 export async function descargarExportacionAdmin(modulo: ModuloAdmin, tipo: "plantilla" | "inventario", formato: "csv" | "xlsx", token?: string, seccion = ""): Promise<Blob> {

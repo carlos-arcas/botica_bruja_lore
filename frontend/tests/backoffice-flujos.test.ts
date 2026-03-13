@@ -3,12 +3,17 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import {
+  adjuntarImagenFilaImportacion,
   cambiarPublicacionAdmin,
+  cambiarSeleccionFilaImportacion,
   confirmarLoteImportacion,
   crearLoteImportacion,
+  descartarFilaImportacion,
   descargarExportacionAdmin,
+  eliminarImagenFilaImportacion,
   guardarRegistroAdmin,
   obtenerLoteImportacion,
+  revalidarLoteImportacion,
 } from "../infraestructura/api/backoffice";
 
 test("submit real de alta usa endpoint guardar y devuelve item", async () => {
@@ -67,6 +72,33 @@ test("flujo de importación confirmada: crear lote, consultar y confirmar", asyn
   assert.equal(detalle.lote.id, 22);
   assert.equal(confirmadas, 1);
   assert.equal(llamadas.length, 3);
+});
+
+test("importación permite revalidar, seleccionar, descartar y gestionar imagen por fila", async () => {
+  const llamadas: string[] = [];
+  globalThis.fetch = (async (input, init) => {
+    const url = String(input);
+    llamadas.push(url);
+    const method = String(init?.method ?? "GET");
+    if (url.includes("/revalidar/")) return { ok: true, json: async () => ({ revalidado: true }) } as Response;
+    if (url.includes("/seleccion/")) return { ok: true, json: async () => ({ fila: { id: 9, seleccionado: true } }) } as Response;
+    if (url.includes("/descartar/")) return { ok: true, json: async () => ({ fila: { id: 9, estado: "descartada" } }) } as Response;
+    if (url.includes("/imagen/eliminar/")) return { ok: true, json: async () => ({ fila: { id: 9, imagen: "" } }) } as Response;
+    if (url.endsWith("/imagen/")) return { ok: true, json: async () => ({ fila: { id: 9, imagen: "https://cdn.test/ok.webp" } }) } as Response;
+    return { ok: method === "POST", json: async () => ({}) } as Response;
+  }) as unknown as typeof fetch;
+
+  await revalidarLoteImportacion(10, "token");
+  await cambiarSeleccionFilaImportacion(10, 9, true, "token");
+  await descartarFilaImportacion(10, 9, "token");
+  await adjuntarImagenFilaImportacion(10, 9, new File(["x"], "foto.png", { type: "image/png" }), "token");
+  await eliminarImagenFilaImportacion(10, 9, "token");
+
+  assert.equal(llamadas.length, 5);
+  assert.match(llamadas.join("\n"), /\/revalidar\//);
+  assert.match(llamadas.join("\n"), /\/seleccion\//);
+  assert.match(llamadas.join("\n"), /\/descartar\//);
+  assert.match(llamadas.join("\n"), /\/imagen\//);
 });
 
 test("exportación por módulo usa endpoint contextual", async () => {
