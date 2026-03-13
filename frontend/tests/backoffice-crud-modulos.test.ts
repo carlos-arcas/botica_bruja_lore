@@ -18,7 +18,12 @@ test("módulos admin integran alta manual + importación + exportación contextu
   assert.match(componente, /Exportar inventario XLSX/);
 });
 
-test("pantalla /admin/importacion redirige al flujo contextual", () => {
+test("pantalla /admin/importacion usa el módulo real de importación", () => {
   const pagina = readFileSync("app/admin/(panel)/importacion/page.tsx", "utf8");
-  assert.match(pagina, /redirect\("\/admin\/productos"\)/);
+  const componente = readFileSync("componentes/admin/ModuloImportacionAdmin.tsx", "utf8");
+  assert.match(pagina, /ModuloImportacionAdmin/);
+  assert.match(componente, /Confirmar filas seleccionadas/);
+  assert.match(componente, /Revalidar lote/);
+  assert.match(componente, /Arrastra imagen o selecciona/);
+  assert.match(componente, /Exportar inventario XLSX/);
 });

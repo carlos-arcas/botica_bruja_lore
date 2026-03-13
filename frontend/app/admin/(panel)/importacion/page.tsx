@@ -1,5 +1,9 @@
-import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+
+import { ModuloImportacionAdmin } from "@/componentes/admin/ModuloImportacionAdmin";
+import { NOMBRE_COOKIE_BACKOFFICE } from "@/infraestructura/auth/configuracion";
 
 export default function AdminImportacionPage(): JSX.Element {
-  redirect("/admin/productos");
+  const token = cookies().get(NOMBRE_COOKIE_BACKOFFICE)?.value;
+  return <ModuloImportacionAdmin token={token} />;
 }
