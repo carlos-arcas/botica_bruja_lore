@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, SeccionPublicaModelo
 
 from .auth import usuario_staff
+from .identificadores import generar_slug_unico
 from .shared import json_no_autorizado, json_payload, to_bool
 
 LOGGER = logging.getLogger(__name__)
@@ -53,14 +54,14 @@ def guardar_editorial_backoffice(request: HttpRequest) -> JsonResponse:
         return json_no_autorizado()
     try:
         data = json_payload(request)
-        slug = data.get("slug", "").strip()
-        if not slug:
-            raise ValueError("Editorial requiere slug.")
         seccion = _resolver_seccion_publica(data)
         existente = ArticuloEditorialModelo.objects.filter(id=data.get("id")).first() if data.get("id") else None
+        titulo = data.get("titulo", "").strip()
+        if not titulo:
+            raise ValueError("Editorial requiere título.")
         obj = existente or ArticuloEditorialModelo()
-        obj.slug = slug
-        obj.titulo = data.get("titulo", "").strip()
+        obj.slug = generar_slug_unico(ArticuloEditorialModelo, data.get("slug", "").strip() or titulo, obj.id)
+        obj.titulo = titulo
         obj.resumen = data.get("resumen", "").strip()
         obj.contenido = data.get("contenido", "").strip()
         obj.tema = data.get("tema", "").strip()

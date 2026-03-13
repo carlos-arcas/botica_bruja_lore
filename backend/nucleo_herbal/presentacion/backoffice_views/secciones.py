@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import SeccionPublicaModelo
 
 from .auth import usuario_staff
+from .identificadores import generar_slug_unico
 from .shared import json_no_autorizado, json_payload, to_bool, to_int
 
 LOGGER = logging.getLogger(__name__)
@@ -46,12 +47,12 @@ def guardar_seccion_backoffice(request: HttpRequest) -> JsonResponse:
         return json_no_autorizado()
     try:
         data = json_payload(request)
-        slug = data.get("slug", "").strip()
-        if not slug:
-            raise ValueError("Sección requiere slug.")
         seccion = SeccionPublicaModelo.objects.filter(id=data.get("id")).first() if data.get("id") else SeccionPublicaModelo()
-        seccion.slug = slug
-        seccion.nombre = data.get("nombre", "").strip()
+        nombre = data.get("nombre", "").strip()
+        if not nombre:
+            raise ValueError("Sección requiere nombre.")
+        seccion.slug = generar_slug_unico(SeccionPublicaModelo, data.get("slug", "").strip() or nombre, seccion.id)
+        seccion.nombre = nombre
         seccion.descripcion = data.get("descripcion", "").strip()
         seccion.orden = to_int(data, "orden", 100)
         seccion.publicada = to_bool(data, "publicada")

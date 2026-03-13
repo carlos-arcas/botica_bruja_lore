@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import uuid
 
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
@@ -10,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import IntencionModelo, RitualModelo
 
 from .auth import usuario_staff
+from .identificadores import generar_id_si_falta, generar_slug_unico
 from .shared import json_no_autorizado, json_payload, to_bool
 
 LOGGER = logging.getLogger(__name__)
@@ -49,21 +49,17 @@ def guardar_ritual_backoffice(request: HttpRequest) -> JsonResponse:
         return json_no_autorizado()
     try:
         data = json_payload(request)
-        slug = data.get("slug", "").strip()
-        if not slug:
-            raise ValueError("Ritual requiere slug.")
         existente = RitualModelo.objects.filter(id=data.get("id")).first() if data.get("id") else None
-        defaults = {
-            "nombre": data.get("nombre", "").strip(),
-            "contexto_breve": data.get("contexto_breve", "").strip(),
-            "contenido": data.get("contenido", "").strip(),
-            "imagen_url": data.get("imagen_url", "").strip(),
-            "publicado": to_bool(data, "publicado"),
-        }
-        obj = existente or RitualModelo(id=str(uuid.uuid4()))
-        obj.slug = slug
-        for k, v in defaults.items():
-            setattr(obj, k, v)
+        nombre = data.get("nombre", "").strip()
+        if not nombre:
+            raise ValueError("Ritual requiere nombre.")
+        obj = existente or RitualModelo(id=generar_id_si_falta(None))
+        obj.slug = generar_slug_unico(RitualModelo, data.get("slug", "").strip() or nombre, obj.id)
+        obj.nombre = nombre
+        obj.contexto_breve = data.get("contexto_breve", "").strip()
+        obj.contenido = data.get("contenido", "").strip()
+        obj.imagen_url = data.get("imagen_url", "").strip()
+        obj.publicado = to_bool(data, "publicado")
         obj.save()
         _actualizar_intenciones(obj, data)
         LOGGER.info("backoffice_ritual_guardado", extra={"usuario": usuario.username, "ritual": obj.id})
@@ -79,6 +75,7 @@ def _actualizar_intenciones(ritual: RitualModelo, data: dict) -> None:
     if not isinstance(slugs, list):
         raise ValueError("intenciones_relacionadas debe ser lista o csv.")
     if not slugs:
+        ritual.intenciones.clear()
         return
     intenciones = list(IntencionModelo.objects.filter(slug__in=slugs))
     if len(intenciones) != len(set(slugs)):

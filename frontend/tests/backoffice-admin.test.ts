@@ -9,7 +9,7 @@ test("renderiza rutas principales del backoffice en App Router", () => {
   const productos = readFileSync("app/admin/(panel)/productos/page.tsx", "utf8");
 
   assert.match(dashboard, /Admin \/ Dashboard/);
-  assert.match(productos, /Admin \/ Productos/);
+  assert.match(productos, /ModuloProductosAdmin/);
 });
 
 test("/admin sin cookie redirige automáticamente a /admin/login con next", () => {

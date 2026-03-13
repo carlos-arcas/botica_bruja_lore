@@ -19,7 +19,6 @@ ESQUEMAS_IMPORTACION: dict[str, EsquemaEntidad] = {
     "productos": EsquemaEntidad(
         columnas_obligatorias=(
             "sku",
-            "slug",
             "nombre",
             "tipo_producto",
             "categoria_comercial",
@@ -38,7 +37,7 @@ ESQUEMAS_IMPORTACION: dict[str, EsquemaEntidad] = {
         },
     ),
     "rituales": EsquemaEntidad(
-        columnas_obligatorias=("slug", "nombre", "contexto_breve", "contenido", "publicado"),
+        columnas_obligatorias=("nombre", "contexto_breve", "contenido", "publicado"),
         columnas_opcionales=(
             "imagen_url",
             "imagen_ref",
@@ -57,7 +56,7 @@ ESQUEMAS_IMPORTACION: dict[str, EsquemaEntidad] = {
         regla_relaciones="intenciones_relacionadas y productos_relacionados aceptan slugs separados por coma.",
     ),
     "articulos_editoriales": EsquemaEntidad(
-        columnas_obligatorias=("slug", "titulo", "resumen", "contenido", "publicado", "indexable"),
+        columnas_obligatorias=("titulo", "resumen", "contenido", "publicado", "indexable"),
         columnas_opcionales=("tema", "hub", "subhub", "seccion_publica", "imagen_url", "imagen_ref"),
         ejemplo={
             "slug": "guia-melisa-rituales",
@@ -67,7 +66,7 @@ ESQUEMAS_IMPORTACION: dict[str, EsquemaEntidad] = {
         },
     ),
     "secciones_publicas": EsquemaEntidad(
-        columnas_obligatorias=("slug", "nombre", "publicada"),
+        columnas_obligatorias=("nombre", "publicada"),
         columnas_opcionales=("descripcion", "orden"),
         ejemplo={"slug": "rituales", "nombre": "Rituales", "publicada": "true"},
     ),

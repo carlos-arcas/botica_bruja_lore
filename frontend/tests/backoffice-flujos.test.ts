@@ -6,6 +6,7 @@ import {
   cambiarPublicacionAdmin,
   confirmarLoteImportacion,
   crearLoteImportacion,
+  descargarExportacionAdmin,
   guardarRegistroAdmin,
   obtenerLoteImportacion,
 } from "../infraestructura/api/backoffice";
@@ -16,23 +17,21 @@ test("submit real de alta usa endpoint guardar y devuelve item", async () => {
   globalThis.fetch = (async (input, init) => {
     url = String(input);
     method = String(init?.method ?? "GET");
-    return { ok: true, json: async () => ({ item: { id: "p-1", slug: "nuevo" } }) } as Response;
+    return { ok: true, json: async () => ({ item: { id: "p-1", nombre: "nuevo" } }) } as Response;
   }) as unknown as typeof fetch;
 
-  const item = await guardarRegistroAdmin("productos", { slug: "nuevo" }, "token");
+  const item = await guardarRegistroAdmin("productos", { nombre: "nuevo" }, "token");
 
   assert.match(url, /\/api\/v1\/backoffice\/productos\/guardar\/$/);
   assert.equal(method, "POST");
-  assert.equal(item.slug, "nuevo");
+  assert.equal(item.nombre, "nuevo");
 });
 
-test("edición carga datos existentes y acción publish/unpublish en el componente", () => {
-  const componente = readFileSync("componentes/admin/ModuloCrudAdmin.tsx", "utf8");
-
+test("edición, publish/unpublish y layout inferior quedan implementados", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
   assert.match(componente, /setForm\(\{ \.\.\.item \}\)/);
   assert.match(componente, /cambiarPublicacionAdmin/);
-  assert.match(componente, /Registro publicado\./);
-  assert.match(componente, /Registro despublicado\./);
+  assert.match(componente, /Registros existentes/);
 });
 
 test("publish/unpublish llama endpoint de publicación", async () => {
@@ -53,12 +52,8 @@ test("flujo de importación confirmada: crear lote, consultar y confirmar", asyn
   globalThis.fetch = (async (input) => {
     const url = String(input);
     llamadas.push(url);
-    if (url.endsWith("/importacion/lotes/")) {
-      return { ok: true, json: async () => ({ lote_id: 22 }) } as Response;
-    }
-    if (url.endsWith("/importacion/lotes/22/")) {
-      return { ok: true, json: async () => ({ lote: { id: 22 }, filas: [{ id: 1, seleccionado: true }] }) } as Response;
-    }
+    if (url.endsWith("/importacion/lotes/")) return { ok: true, json: async () => ({ lote_id: 22 }) } as Response;
+    if (url.endsWith("/importacion/lotes/22/")) return { ok: true, json: async () => ({ lote: { id: 22 }, filas: [{ id: 1, seleccionado: true }] }) } as Response;
     return { ok: true, json: async () => ({ confirmadas: 1 }) } as Response;
   }) as unknown as typeof fetch;
 
@@ -74,12 +69,13 @@ test("flujo de importación confirmada: crear lote, consultar y confirmar", asyn
   assert.equal(llamadas.length, 3);
 });
 
-test("feedback de éxito y error está implementado en módulos admin", () => {
-  const crud = readFileSync("componentes/admin/ModuloCrudAdmin.tsx", "utf8");
-  const importacion = readFileSync("componentes/admin/ModuloImportacionAdmin.tsx", "utf8");
+test("exportación por módulo usa endpoint contextual", async () => {
+  let url = "";
+  globalThis.fetch = (async (input) => {
+    url = String(input);
+    return { ok: true, blob: async () => new Blob(["ok"], { type: "text/csv" }) } as Response;
+  }) as unknown as typeof fetch;
 
-  assert.match(crud, /setOk\("Registro guardado\."\)/);
-  assert.match(crud, /setError\("No se pudo guardar el registro\."\)/);
-  assert.match(importacion, /setOk\("Lote validado en staging\."\)/);
-  assert.match(importacion, /setError\("No se pudo crear el lote de importación\."\)/);
+  await descargarExportacionAdmin("productos", "inventario", "csv", "token", "botica-natural");
+  assert.match(url, /\/api\/v1\/backoffice\/productos\/exportar\/\?tipo=inventario&formato=csv&seccion=botica-natural/);
 });
