@@ -1,92 +1,14 @@
-import Link from "next/link";
+// Admin / Productos
 import { cookies } from "next/headers";
+
+import { ModuloCrudAdmin } from "@/componentes/admin/ModuloCrudAdmin";
 import { NOMBRE_COOKIE_BACKOFFICE } from "@/infraestructura/auth/configuracion";
-import { obtenerProductosAdmin } from "@/infraestructura/api/backoffice";
+import { obtenerListadoAdmin } from "@/infraestructura/api/backoffice";
 
-type Props = { searchParams?: { [key: string]: string | string[] | undefined } };
-
-function valorParam(valor: string | string[] | undefined): string {
-  return Array.isArray(valor) ? valor[0] ?? "" : valor ?? "";
-}
-
-export default async function AdminProductosPage({ searchParams }: Props): Promise<JSX.Element> {
-  const query = new URLSearchParams({
-    q: valorParam(searchParams?.q),
-    publicado: valorParam(searchParams?.publicado),
-    seccion: valorParam(searchParams?.seccion),
-    tipo: valorParam(searchParams?.tipo),
-  });
-
+export default async function AdminProductosPage(): Promise<JSX.Element> {
   const token = cookies().get(NOMBRE_COOKIE_BACKOFFICE)?.value;
-  const resultado = await obtenerProductosAdmin(query, token);
+  const resultado = await obtenerListadoAdmin("productos", new URLSearchParams(), token);
+  const items = resultado.estado === "ok" ? resultado.items : [];
 
-  return (
-    <section className="admin-contenido">
-      <p className="admin-breadcrumb">Admin / Productos</p>
-      <div className="admin-resumen">
-        <h2>Gestión de productos</h2>
-        <form className="admin-filtros" method="get">
-          <input name="q" placeholder="Buscar por nombre" defaultValue={query.get("q") ?? ""} />
-          <input name="seccion" placeholder="Sección pública" defaultValue={query.get("seccion") ?? ""} />
-          <input name="tipo" placeholder="Tipo de producto" defaultValue={query.get("tipo") ?? ""} />
-          <select name="publicado" defaultValue={query.get("publicado") ?? ""}>
-            <option value="">Todos</option>
-            <option value="true">Publicados</option>
-            <option value="false">Borrador</option>
-          </select>
-          <button type="submit">Filtrar</button>
-          <a href="http://127.0.0.1:8000/admin/persistencia_django/productomodelo/add/">Crear producto</a>
-        </form>
-      </div>
-
-      {resultado.estado === "error" && <p className="admin-estado admin-estado--error">{resultado.detalle}</p>}
-      {resultado.estado === "denegado" && <p className="admin-estado admin-estado--error">{resultado.detalle}</p>}
-
-      {resultado.estado === "ok" && (
-        <>
-          <p className="admin-kpi">
-            Total: {resultado.metricas.total} · Publicados: {resultado.metricas.publicados} · Borrador: {resultado.metricas.borrador}
-          </p>
-          {resultado.productos.length === 0 ? (
-            <p className="admin-estado">No hay productos con los filtros actuales.</p>
-          ) : (
-            <table className="admin-tabla">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Sección</th>
-                  <th>Tipo</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {resultado.productos.map((producto) => (
-                  <tr key={producto.id}>
-                    <td>
-                      <strong>{producto.nombre}</strong>
-                      <br />
-                      <small>{producto.sku}</small>
-                    </td>
-                    <td>{producto.seccion_publica}</td>
-                    <td>{producto.tipo_producto}</td>
-                    <td>{producto.publicado ? "Publicado" : "Borrador"}</td>
-                    <td>
-                      <Link href={`http://127.0.0.1:8000/admin/persistencia_django/productomodelo/${producto.id}/change/`}>
-                        Editar
-                      </Link>
-                      {" · "}
-                      <Link href={`http://127.0.0.1:8000/admin/persistencia_django/productomodelo/${producto.id}/change/`}>
-                        {producto.publicado ? "Despublicar" : "Publicar"}
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </>
-      )}
-    </section>
-  );
+  return <ModuloCrudAdmin modulo="productos" titulo="Productos" token={token} itemsIniciales={items} campoEstado="publicado" plantilla={{ id: "", sku: "", slug: "", nombre: "", tipo_producto: "", categoria_comercial: "", seccion_publica: "", descripcion_corta: "", precio_visible: "", imagen_url: "", orden_publicacion: 100, publicado: false }} />;
 }
