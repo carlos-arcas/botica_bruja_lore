@@ -11,6 +11,7 @@ const MODULOS_ADMIN = [
   { href: "/admin/rituales", etiqueta: "Rituales" },
   { href: "/admin/editorial", etiqueta: "Editorial" },
   { href: "/admin/importacion", etiqueta: "Importación" },
+  { href: "/admin/secciones", etiqueta: "Secciones" },
   { href: "/admin/imagenes", etiqueta: "Imágenes" },
   { href: "/admin/ajustes", etiqueta: "Ajustes" },
 ];

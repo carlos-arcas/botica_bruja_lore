@@ -5,32 +5,13 @@ export type EstadoAccesoBackoffice =
   | { estado: "denegado"; detalle: string }
   | { estado: "error"; detalle: string };
 
-export type ProductoAdmin = {
-  id: string;
-  sku: string;
-  slug: string;
-  nombre: string;
-  tipo_producto: string;
-  categoria_comercial: string;
-  seccion_publica: string;
-  precio_visible: string;
-  publicado: boolean;
-};
+export type ResultadoListado = { estado: "ok"; items: Record<string, unknown>[] } | { estado: "denegado"; detalle: string } | { estado: "error"; detalle: string };
 
-export type ResultadoListadoProductosAdmin =
-  | {
-      estado: "ok";
-      productos: ProductoAdmin[];
-      metricas: { total: number; publicados: number; borrador: number };
-    }
-  | { estado: "denegado"; detalle: string }
-  | { estado: "error"; detalle: string };
-
-function cabecerasConToken(token?: string): HeadersInit {
-  if (!token) {
-    return { Accept: "application/json" };
-  }
-  return { Accept: "application/json", Authorization: `Bearer ${token}` };
+function cabecerasConToken(token?: string, json = true): HeadersInit {
+  const base: Record<string, string> = { Accept: "application/json" };
+  if (json) base["Content-Type"] = "application/json";
+  if (token) base.Authorization = `Bearer ${token}`;
+  return base;
 }
 
 export function extraerTokenBackoffice(cookieHeader: string): string | null {
@@ -41,21 +22,11 @@ export function extraerTokenBackoffice(cookieHeader: string): string | null {
   return entrada ? entrada.split("=")[1] ?? null : null;
 }
 
-
 export async function obtenerEstadoBackoffice(token?: string): Promise<EstadoAccesoBackoffice> {
   try {
-    const respuesta = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/estado/`, {
-      headers: cabecerasConToken(token),
-      cache: "no-store",
-    });
-
-    if (respuesta.status === 401 || respuesta.status === 403) {
-      return { estado: "denegado", detalle: "Debes iniciar sesión como staff para acceder al backoffice." };
-    }
-    if (!respuesta.ok) {
-      return { estado: "error", detalle: "No pudimos validar la sesión administrativa en backend." };
-    }
-
+    const respuesta = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/estado/`, { headers: cabecerasConToken(token, false), cache: "no-store" });
+    if (respuesta.status === 401 || respuesta.status === 403) return { estado: "denegado", detalle: "Debes iniciar sesión como staff para acceder al backoffice." };
+    if (!respuesta.ok) return { estado: "error", detalle: "No pudimos validar la sesión administrativa en backend." };
     const data = (await respuesta.json()) as { usuario: { username: string; is_staff: boolean; is_superuser: boolean } };
     return { estado: "autorizado", usuario: data.usuario };
   } catch {
@@ -63,29 +34,55 @@ export async function obtenerEstadoBackoffice(token?: string): Promise<EstadoAcc
   }
 }
 
-export async function obtenerProductosAdmin(query: URLSearchParams, token?: string): Promise<ResultadoListadoProductosAdmin> {
-  const endpoint = `${API_BACKEND_BASE}/api/v1/backoffice/productos/?${query.toString()}`;
-
+export async function obtenerListadoAdmin(modulo: "productos" | "rituales" | "editorial" | "secciones", query: URLSearchParams, token?: string): Promise<ResultadoListado> {
   try {
-    const respuesta = await fetch(endpoint, {
-      headers: cabecerasConToken(token),
-      cache: "no-store",
-    });
-
-    if (respuesta.status === 401 || respuesta.status === 403) {
-      return { estado: "denegado", detalle: "Tu sesión no tiene permisos staff para gestionar productos." };
-    }
-    if (!respuesta.ok) {
-      return { estado: "error", detalle: "No se pudo cargar el listado administrativo de productos." };
-    }
-
-    const data = (await respuesta.json()) as {
-      productos: ProductoAdmin[];
-      metricas: { total: number; publicados: number; borrador: number };
-    };
-
-    return { estado: "ok", productos: data.productos, metricas: data.metricas };
+    const respuesta = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/${modulo}/?${query.toString()}`, { headers: cabecerasConToken(token, false), cache: "no-store" });
+    if (respuesta.status === 401 || respuesta.status === 403) return { estado: "denegado", detalle: "Sin permisos staff." };
+    if (!respuesta.ok) return { estado: "error", detalle: "No se pudo cargar el módulo." };
+    const data = (await respuesta.json()) as { items: Record<string, unknown>[] };
+    return { estado: "ok", items: data.items ?? [] };
   } catch {
-    return { estado: "error", detalle: "Error de red al consultar productos en backoffice." };
+    return { estado: "error", detalle: "Error de red." };
   }
+}
+
+export async function guardarRegistroAdmin(modulo: "productos" | "rituales" | "editorial" | "secciones", payload: Record<string, unknown>, token?: string): Promise<Record<string, unknown>> {
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/${modulo}/guardar/`, { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify(payload) });
+  if (!r.ok) throw new Error("No se pudo guardar");
+  const data = (await r.json()) as { item: Record<string, unknown> };
+  return data.item;
+}
+
+export async function cambiarPublicacionAdmin(modulo: "productos" | "rituales" | "editorial" | "secciones", id: string | number, publicado: boolean, token?: string): Promise<Record<string, unknown>> {
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/${modulo}/${id}/publicacion/`, { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ publicado }) });
+  if (!r.ok) throw new Error("No se pudo actualizar publicación");
+  const data = (await r.json()) as { item: Record<string, unknown> };
+  return data.item;
+}
+
+export async function crearLoteImportacion(formData: FormData, token?: string): Promise<number> {
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/importacion/lotes/`, { method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : undefined, body: formData });
+  if (!r.ok) throw new Error("Error creando lote");
+  const data = (await r.json()) as { lote_id: number };
+  return data.lote_id;
+}
+
+export async function obtenerLoteImportacion(loteId: number, token?: string): Promise<{ lote: Record<string, unknown>; filas: Record<string, unknown>[] }> {
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/importacion/lotes/${loteId}/`, { headers: cabecerasConToken(token, false), cache: "no-store" });
+  if (!r.ok) throw new Error("Error consultando lote");
+  return (await r.json()) as { lote: Record<string, unknown>; filas: Record<string, unknown>[] };
+}
+
+export async function confirmarLoteImportacion(loteId: number, filasIds: number[], token?: string): Promise<number> {
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/importacion/lotes/${loteId}/confirmar/`, { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ filas_ids: filasIds }) });
+  if (!r.ok) throw new Error("Error confirmando lote");
+  const data = (await r.json()) as { confirmadas: number };
+  return data.confirmadas;
+}
+
+export async function obtenerProductosAdmin(query: URLSearchParams, token?: string): Promise<{ estado: "ok"; productos: Record<string, unknown>[]; metricas: { total: number; publicados: number; borrador: number } } | { estado: "denegado"; detalle: string } | { estado: "error"; detalle: string }> {
+  const resultado = await obtenerListadoAdmin("productos", query, token);
+  if (resultado.estado !== "ok") return resultado;
+  const productos = resultado.items;
+  return { estado: "ok", productos, metricas: { total: productos.length, publicados: productos.filter((p) => p.publicado).length, borrador: productos.filter((p) => !p.publicado).length } };
 }

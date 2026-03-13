@@ -5,6 +5,7 @@ const BLOQUES = [
   { href: "/admin/rituales", titulo: "Rituales", descripcion: "Rutas rituales y relaciones con plantas." },
   { href: "/admin/editorial", titulo: "Editorial", descripcion: "Artículos, hubs y contenidos públicos." },
   { href: "/admin/importacion", titulo: "Importación masiva", descripcion: "Entrada operativa para cargas bulk." },
+  { href: "/admin/secciones", titulo: "Secciones públicas", descripcion: "Gestión de secciones visibles del sitio." },
   { href: "/admin/imagenes", titulo: "Imágenes pendientes", descripcion: "Control de activos visuales pendientes." },
   { href: "/admin/ajustes", titulo: "Ajustes", descripcion: "Parámetros de operación y accesos." },
 ];

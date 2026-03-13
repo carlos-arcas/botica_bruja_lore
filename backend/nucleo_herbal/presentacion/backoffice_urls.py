@@ -3,17 +3,39 @@
 from django.urls import path
 
 from .backoffice_views import (
+    cambiar_publicacion_editorial_backoffice,
     cambiar_publicacion_producto_backoffice,
+    cambiar_publicacion_ritual_backoffice,
+    cambiar_publicacion_seccion_backoffice,
+    confirmar_lote_importacion_backoffice,
+    crear_lote_importacion_backoffice,
+    detalle_lote_importacion_backoffice,
     estado_backoffice,
+    guardar_editorial_backoffice,
+    guardar_producto_backoffice,
+    guardar_ritual_backoffice,
+    guardar_seccion_backoffice,
+    listado_editorial_backoffice,
     listado_productos_backoffice,
+    listado_rituales_backoffice,
+    listado_secciones_backoffice,
 )
 
 urlpatterns = [
     path("estado/", estado_backoffice, name="backoffice-estado"),
     path("productos/", listado_productos_backoffice, name="backoffice-productos"),
-    path(
-        "productos/<str:producto_id>/publicacion/",
-        cambiar_publicacion_producto_backoffice,
-        name="backoffice-producto-publicacion",
-    ),
+    path("productos/guardar/", guardar_producto_backoffice, name="backoffice-producto-guardar"),
+    path("productos/<str:producto_id>/publicacion/", cambiar_publicacion_producto_backoffice, name="backoffice-producto-publicacion"),
+    path("rituales/", listado_rituales_backoffice, name="backoffice-rituales"),
+    path("rituales/guardar/", guardar_ritual_backoffice, name="backoffice-ritual-guardar"),
+    path("rituales/<str:ritual_id>/publicacion/", cambiar_publicacion_ritual_backoffice, name="backoffice-ritual-publicacion"),
+    path("editorial/", listado_editorial_backoffice, name="backoffice-editorial"),
+    path("editorial/guardar/", guardar_editorial_backoffice, name="backoffice-editorial-guardar"),
+    path("editorial/<int:articulo_id>/publicacion/", cambiar_publicacion_editorial_backoffice, name="backoffice-editorial-publicacion"),
+    path("secciones/", listado_secciones_backoffice, name="backoffice-secciones"),
+    path("secciones/guardar/", guardar_seccion_backoffice, name="backoffice-seccion-guardar"),
+    path("secciones/<int:seccion_id>/publicacion/", cambiar_publicacion_seccion_backoffice, name="backoffice-seccion-publicacion"),
+    path("importacion/lotes/", crear_lote_importacion_backoffice, name="backoffice-importacion-crear-lote"),
+    path("importacion/lotes/<int:lote_id>/", detalle_lote_importacion_backoffice, name="backoffice-importacion-detalle-lote"),
+    path("importacion/lotes/<int:lote_id>/confirmar/", confirmar_lote_importacion_backoffice, name="backoffice-importacion-confirmar-lote"),
 ]
