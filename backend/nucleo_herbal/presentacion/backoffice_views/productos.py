@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import uuid
 
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
@@ -10,9 +9,18 @@ from django.views.decorators.csrf import csrf_exempt
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
 
 from .auth import usuario_staff
+from .identificadores import generar_id_si_falta, generar_slug_unico
 from .shared import json_no_autorizado, json_payload, to_bool, to_int
 
 LOGGER = logging.getLogger(__name__)
+
+
+SECCIONES_PRODUCTOS = {
+    "botica-natural": "Botica Natural",
+    "velas-e-incienso": "Velas e Incienso",
+    "minerales-y-energia": "Minerales y Energía",
+    "herramientas-esotericas": "Herramientas Esotéricas",
+}
 
 
 def producto_dict(obj: ProductoModelo) -> dict:
@@ -46,9 +54,13 @@ def listado_productos_backoffice(request: HttpRequest) -> JsonResponse:
         queryset = queryset.filter(publicado=(publicado == "true"))
     if request.GET.get("seccion", ""):
         queryset = queryset.filter(seccion_publica=request.GET["seccion"])
-    if request.GET.get("tipo", ""):
-        queryset = queryset.filter(tipo_producto=request.GET["tipo"])
-    return JsonResponse({"items": [producto_dict(it) for it in queryset[:120]], "metricas": {"total": queryset.count()}})
+    return JsonResponse(
+        {
+            "items": [producto_dict(it) for it in queryset[:120]],
+            "metricas": {"total": queryset.count()},
+            "secciones": [{"slug": slug, "etiqueta": etiqueta} for slug, etiqueta in SECCIONES_PRODUCTOS.items()],
+        }
+    )
 
 
 @csrf_exempt
@@ -60,17 +72,22 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
         return json_no_autorizado()
     try:
         data = json_payload(request)
-        slug = data.get("slug", "").strip()
-        sku = data.get("sku", "").strip()
-        if not slug or not sku:
-            raise ValueError("Producto requiere slug y sku.")
         existente = ProductoModelo.objects.filter(id=data.get("id")).first() if data.get("id") else None
+        nombre = data.get("nombre", "").strip()
+        if not nombre:
+            raise ValueError("Producto requiere nombre.")
+        seccion = data.get("seccion_publica", "").strip()
+        if seccion not in SECCIONES_PRODUCTOS:
+            raise ValueError("Sección de producto inválida.")
+        sku = (data.get("sku", "").strip() or f"SKU-{nombre[:16].upper().replace(' ', '-')}")[:40]
+        slug_base = data.get("slug", "").strip() or nombre
+        slug = generar_slug_unico(ProductoModelo, slug_base, existente.id if existente else None)
         defaults = {
             "sku": sku,
-            "nombre": data.get("nombre", "").strip(),
+            "nombre": nombre,
             "tipo_producto": data.get("tipo_producto", "").strip(),
             "categoria_comercial": data.get("categoria_comercial", "").strip(),
-            "seccion_publica": data.get("seccion_publica", "").strip(),
+            "seccion_publica": seccion,
             "descripcion_corta": data.get("descripcion_corta", "").strip(),
             "precio_visible": data.get("precio_visible", "").strip(),
             "imagen_url": data.get("imagen_url", "").strip(),
@@ -84,7 +101,7 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
             existente.save()
             obj = existente
         else:
-            obj = ProductoModelo.objects.create(id=str(uuid.uuid4()), slug=slug, **defaults)
+            obj = ProductoModelo.objects.create(id=generar_id_si_falta(None), slug=slug, **defaults)
         LOGGER.info("backoffice_producto_guardado", extra={"usuario": usuario.username, "producto": obj.id})
         return JsonResponse({"item": producto_dict(obj)})
     except ValueError as exc:

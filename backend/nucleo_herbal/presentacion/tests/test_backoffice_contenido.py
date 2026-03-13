@@ -25,7 +25,7 @@ class BackofficeContenidoTests(TestCase):
         r = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps({}), content_type="application/json", **self._auth(staff=False))
         self.assertEqual(r.status_code, 403)
 
-        payload = {"sku": "SKU-1", "slug": "prod-1", "nombre": "Producto 1", "tipo_producto": "te", "categoria_comercial": "herbal", "seccion_publica": "botica-natural", "descripcion_corta": "x", "precio_visible": "9.99", "imagen_url": "", "orden_publicacion": 2, "publicado": False}
+        payload = {"sku": "SKU-1", "nombre": "Producto 1", "tipo_producto": "te", "categoria_comercial": "herbal", "seccion_publica": "botica-natural", "descripcion_corta": "x", "precio_visible": "9.99", "imagen_url": "", "orden_publicacion": 2, "publicado": False}
         r = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
         self.assertEqual(r.status_code, 200)
         pid = r.json()["item"]["id"]
@@ -43,20 +43,35 @@ class BackofficeContenidoTests(TestCase):
     def test_ritual_editorial_seccion_publish(self):
         seccion = SeccionPublicaModelo.objects.create(slug="guias", nombre="Guías", publicada=True)
 
-        rr = self.client.post("/api/v1/backoffice/rituales/guardar/", data=json.dumps({"slug": "rit-1", "nombre": "Ritual", "contexto_breve": "c", "contenido": "d", "imagen_url": "", "publicado": False}), content_type="application/json", **self._auth())
+        rr = self.client.post("/api/v1/backoffice/rituales/guardar/", data=json.dumps({"nombre": "Ritual", "contexto_breve": "c", "contenido": "d", "imagen_url": "", "publicado": False}), content_type="application/json", **self._auth())
         rid = rr.json()["item"]["id"]
         self.client.post(f"/api/v1/backoffice/rituales/{rid}/publicacion/", data=json.dumps({"publicado": True}), content_type="application/json", **self._auth())
         self.assertTrue(RitualModelo.objects.get(id=rid).publicado)
 
-        ra = self.client.post("/api/v1/backoffice/editorial/guardar/", data=json.dumps({"slug": "art-1", "titulo": "Articulo", "resumen": "r", "contenido": "c", "tema": "t", "hub": "h", "subhub": "s", "imagen_url": "", "indexable": True, "publicado": False, "seccion_publica": "guias"}), content_type="application/json", **self._auth())
+        ra = self.client.post("/api/v1/backoffice/editorial/guardar/", data=json.dumps({"titulo": "Articulo", "resumen": "r", "contenido": "c", "tema": "t", "hub": "h", "subhub": "s", "imagen_url": "", "indexable": True, "publicado": False, "seccion_publica": "guias"}), content_type="application/json", **self._auth())
         aid = ra.json()["item"]["id"]
         self.client.post(f"/api/v1/backoffice/editorial/{aid}/publicacion/", data=json.dumps({"publicado": True}), content_type="application/json", **self._auth())
         self.assertTrue(ArticuloEditorialModelo.objects.get(id=aid).publicado)
 
-        rs = self.client.post("/api/v1/backoffice/secciones/guardar/", data=json.dumps({"id": seccion.id, "slug": "guias", "nombre": "Guías nuevas", "descripcion": "", "orden": 1, "publicada": True}), content_type="application/json", **self._auth())
+        rs = self.client.post("/api/v1/backoffice/secciones/guardar/", data=json.dumps({"id": seccion.id, "nombre": "Guías nuevas", "descripcion": "", "orden": 1, "publicada": True}), content_type="application/json", **self._auth())
         sid = rs.json()["item"]["id"]
         self.client.post(f"/api/v1/backoffice/secciones/{sid}/publicacion/", data=json.dumps({"publicado": False}), content_type="application/json", **self._auth())
         self.assertFalse(SeccionPublicaModelo.objects.get(id=sid).publicada)
+
+
+    def test_slug_e_id_automaticos(self):
+        payload = {"sku": "SKU-AUTO", "nombre": "Producto Auto", "tipo_producto": "te", "categoria_comercial": "herbal", "seccion_publica": "botica-natural", "descripcion_corta": "x", "precio_visible": "9.99", "publicado": False}
+        r = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+        self.assertEqual(r.status_code, 200)
+        item = r.json()["item"]
+        self.assertTrue(item["id"])
+        self.assertEqual(item["slug"], "producto-auto")
+
+    def test_exportacion_modulos(self):
+        ProductoModelo.objects.create(id="p-exp", sku="SKU-EXP", slug="prod-exp", nombre="Producto Export", tipo_producto="te", categoria_comercial="cat", seccion_publica="botica-natural", descripcion_corta="", precio_visible="1", imagen_url="", orden_publicacion=1, publicado=True)
+        r = self.client.get("/api/v1/backoffice/productos/exportar/?tipo=inventario&formato=csv", **self._auth())
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("sku", r.content.decode("utf-8"))
 
     def test_import_create_only_and_upsert(self):
         ProductoModelo.objects.create(id="p1", sku="SKU-EXIST", slug="existente", nombre="Exist", tipo_producto="te", categoria_comercial="cat", seccion_publica="botica-natural", descripcion_corta="", precio_visible="1", imagen_url="", orden_publicacion=1, publicado=True)

@@ -4,6 +4,7 @@ from .editorial import (
     guardar_editorial_backoffice,
     listado_editorial_backoffice,
 )
+from .exportacion import exportar_backoffice
 from .importacion import (
     confirmar_lote_importacion_backoffice,
     crear_lote_importacion_backoffice,
@@ -39,6 +40,7 @@ __all__ = [
     "listado_secciones_backoffice",
     "guardar_seccion_backoffice",
     "cambiar_publicacion_seccion_backoffice",
+    "exportar_backoffice",
     "crear_lote_importacion_backoffice",
     "detalle_lote_importacion_backoffice",
     "confirmar_lote_importacion_backoffice",

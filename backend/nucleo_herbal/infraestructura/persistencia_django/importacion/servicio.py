@@ -20,6 +20,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
 )
 
 
+
 LOGGER = logging.getLogger(__name__)
 MODO_SOLO_CREAR = "solo_crear"
 MODO_UPSERT = "crear_actualizar"
@@ -72,6 +73,22 @@ def procesar_importacion(
     return resultado
 
 
+def generar_slug_unico(modelo, base: str, actual_id=None) -> str:
+    from django.utils.text import slugify
+
+    semilla = slugify(base or "") or "registro"
+    slug = semilla
+    secuencia = 2
+    while True:
+        consulta = modelo.objects.filter(slug=slug)
+        if actual_id is not None:
+            consulta = consulta.exclude(pk=actual_id)
+        if not consulta.exists():
+            return slug
+        slug = f"{semilla}-{secuencia}"
+        secuencia += 1
+
+
 def _parse_bool(valor: str, campo: str) -> bool:
     normalizado = valor.strip().lower()
     if normalizado in {"true", "1", "si", "sí", "yes"}:
@@ -98,10 +115,12 @@ def _procesar_fila(entidad, row, modo, persistir, resultado, imagenes_por_refere
 
 
 def _upsert_producto(row, modo, persistir, resultado, imagenes):
-    slug = row.get("slug", "").strip()
     sku = row.get("sku", "").strip()
-    if not slug or not sku:
-        raise ValueError("Producto requiere slug y sku.")
+    nombre = row.get("nombre", "").strip()
+    if not sku or not nombre:
+        raise ValueError("Producto requiere sku y nombre.")
+    slug_entrada = row.get("slug", "").strip()
+    slug = slug_entrada or nombre
     defaults = {
         "nombre": row.get("nombre", "").strip(),
         "tipo_producto": row.get("tipo_producto", "").strip(),
@@ -113,7 +132,8 @@ def _upsert_producto(row, modo, persistir, resultado, imagenes):
         "orden_publicacion": int(row.get("orden_publicacion", "100") or 100),
         "imagen_url": resolver_imagen(row, imagenes),
     }
-    existente = ProductoModelo.objects.filter(slug=slug).first()
+    existente = ProductoModelo.objects.filter(slug=slug_entrada).first() if slug_entrada else None
+    slug = generar_slug_unico(ProductoModelo, slug, existente.id if existente else None)
     if existente and existente.sku != sku:
         raise ValueError(f"Conflicto: slug {slug} ya existe con otro sku.")
     if modo == MODO_SOLO_CREAR and (existente or ProductoModelo.objects.filter(sku=sku).exists()):
@@ -135,16 +155,19 @@ def _upsert_producto(row, modo, persistir, resultado, imagenes):
 
 
 def _upsert_seccion(row, modo, persistir, resultado):
-    slug = row.get("slug", "").strip()
-    if not slug:
-        raise ValueError("Sección requiere slug.")
+    nombre = row.get("nombre", "").strip()
+    if not nombre:
+        raise ValueError("Sección requiere nombre.")
+    slug_entrada = row.get("slug", "").strip()
+    slug = slug_entrada or nombre
     defaults = {
         "nombre": row.get("nombre", "").strip(),
         "descripcion": row.get("descripcion", "").strip(),
         "orden": int(row.get("orden", "100") or 100),
         "publicada": _parse_bool(row.get("publicada", ""), "publicada"),
     }
-    existente = SeccionPublicaModelo.objects.filter(slug=slug).first()
+    existente = SeccionPublicaModelo.objects.filter(slug=slug_entrada).first() if slug_entrada else None
+    slug = generar_slug_unico(SeccionPublicaModelo, slug, existente.id if existente else None)
     if modo == MODO_SOLO_CREAR and existente:
         resultado.ignoradas += 1
         return
@@ -162,9 +185,11 @@ def _resolver_relacion_slugs(texto: str) -> list[str]:
 
 
 def _upsert_ritual(row, modo, persistir, resultado, imagenes):
-    slug = row.get("slug", "").strip()
-    if not slug:
-        raise ValueError("Ritual requiere slug.")
+    nombre = row.get("nombre", "").strip()
+    if not nombre:
+        raise ValueError("Ritual requiere nombre.")
+    slug_entrada = row.get("slug", "").strip()
+    slug = slug_entrada or nombre
     intenciones_slugs = _resolver_relacion_slugs(row.get("intenciones_relacionadas", ""))
     productos_slugs = _resolver_relacion_slugs(row.get("productos_relacionados", ""))
     intenciones = list(IntencionModelo.objects.filter(slug__in=intenciones_slugs))
@@ -182,7 +207,8 @@ def _upsert_ritual(row, modo, persistir, resultado, imagenes):
         "publicado": _parse_bool(row.get("publicado", ""), "publicado"),
         "imagen_url": resolver_imagen(row, imagenes),
     }
-    existente = RitualModelo.objects.filter(slug=slug).first()
+    existente = RitualModelo.objects.filter(slug=slug_entrada).first() if slug_entrada else None
+    slug = generar_slug_unico(RitualModelo, slug, existente.id if existente else None)
     if modo == MODO_SOLO_CREAR and existente:
         resultado.ignoradas += 1
         return
@@ -201,9 +227,11 @@ def _upsert_ritual(row, modo, persistir, resultado, imagenes):
 
 
 def _upsert_articulo(row, modo, persistir, resultado, imagenes):
-    slug = row.get("slug", "").strip()
-    if not slug:
-        raise ValueError("Artículo requiere slug.")
+    titulo = row.get("titulo", "").strip()
+    if not titulo:
+        raise ValueError("Artículo requiere título.")
+    slug_entrada = row.get("slug", "").strip()
+    slug = slug_entrada or titulo
     seccion_slug = row.get("seccion_publica", "").strip()
     seccion = None
     if seccion_slug:
@@ -222,7 +250,8 @@ def _upsert_articulo(row, modo, persistir, resultado, imagenes):
         "seccion_publica": seccion,
         "imagen_url": resolver_imagen(row, imagenes),
     }
-    existente = ArticuloEditorialModelo.objects.filter(slug=slug).first()
+    existente = ArticuloEditorialModelo.objects.filter(slug=slug_entrada).first() if slug_entrada else None
+    slug = generar_slug_unico(ArticuloEditorialModelo, slug, existente.id if existente else None)
     if modo == MODO_SOLO_CREAR and existente:
         resultado.ignoradas += 1
         return

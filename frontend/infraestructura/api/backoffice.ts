@@ -1,5 +1,7 @@
 import { API_BACKEND_BASE, NOMBRE_COOKIE_BACKOFFICE } from "../auth/configuracion";
 
+export type ModuloAdmin = "productos" | "rituales" | "editorial" | "secciones";
+
 export type EstadoAccesoBackoffice =
   | { estado: "autorizado"; usuario: { username: string; is_staff: boolean; is_superuser: boolean } }
   | { estado: "denegado"; detalle: string }
@@ -34,7 +36,7 @@ export async function obtenerEstadoBackoffice(token?: string): Promise<EstadoAcc
   }
 }
 
-export async function obtenerListadoAdmin(modulo: "productos" | "rituales" | "editorial" | "secciones", query: URLSearchParams, token?: string): Promise<ResultadoListado> {
+export async function obtenerListadoAdmin(modulo: ModuloAdmin, query: URLSearchParams, token?: string): Promise<ResultadoListado> {
   try {
     const respuesta = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/${modulo}/?${query.toString()}`, { headers: cabecerasConToken(token, false), cache: "no-store" });
     if (respuesta.status === 401 || respuesta.status === 403) return { estado: "denegado", detalle: "Sin permisos staff." };
@@ -46,14 +48,14 @@ export async function obtenerListadoAdmin(modulo: "productos" | "rituales" | "ed
   }
 }
 
-export async function guardarRegistroAdmin(modulo: "productos" | "rituales" | "editorial" | "secciones", payload: Record<string, unknown>, token?: string): Promise<Record<string, unknown>> {
+export async function guardarRegistroAdmin(modulo: ModuloAdmin, payload: Record<string, unknown>, token?: string): Promise<Record<string, unknown>> {
   const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/${modulo}/guardar/`, { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify(payload) });
   if (!r.ok) throw new Error("No se pudo guardar");
   const data = (await r.json()) as { item: Record<string, unknown> };
   return data.item;
 }
 
-export async function cambiarPublicacionAdmin(modulo: "productos" | "rituales" | "editorial" | "secciones", id: string | number, publicado: boolean, token?: string): Promise<Record<string, unknown>> {
+export async function cambiarPublicacionAdmin(modulo: ModuloAdmin, id: string | number, publicado: boolean, token?: string): Promise<Record<string, unknown>> {
   const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/${modulo}/${id}/publicacion/`, { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ publicado }) });
   if (!r.ok) throw new Error("No se pudo actualizar publicación");
   const data = (await r.json()) as { item: Record<string, unknown> };
@@ -78,6 +80,14 @@ export async function confirmarLoteImportacion(loteId: number, filasIds: number[
   if (!r.ok) throw new Error("Error confirmando lote");
   const data = (await r.json()) as { confirmadas: number };
   return data.confirmadas;
+}
+
+export async function descargarExportacionAdmin(modulo: ModuloAdmin, tipo: "plantilla" | "inventario", formato: "csv" | "xlsx", token?: string, seccion = ""): Promise<Blob> {
+  const query = new URLSearchParams({ tipo, formato });
+  if (seccion) query.set("seccion", seccion);
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/${modulo}/exportar/?${query.toString()}`, { headers: cabecerasConToken(token, false) });
+  if (!r.ok) throw new Error("Error exportando módulo");
+  return r.blob();
 }
 
 export async function obtenerProductosAdmin(query: URLSearchParams, token?: string): Promise<{ estado: "ok"; productos: Record<string, unknown>[]; metricas: { total: number; publicados: number; borrador: number } } | { estado: "denegado"; detalle: string } | { estado: "error"; detalle: string }> {
