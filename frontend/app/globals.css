@@ -551,3 +551,118 @@ button:focus-visible {
 .botica-natural__estado-vacio {
   margin-top: 1rem;
 }
+
+.admin-shell {
+  width: min(1200px, 94vw);
+  margin: 2rem auto 3rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-cabecera,
+.admin-bloque,
+.admin-nav,
+.admin-resumen,
+.admin-card,
+.admin-tabla {
+  border: 1px solid var(--borde-editorial);
+  background: rgba(255, 251, 244, 0.95);
+  border-radius: 14px;
+}
+
+.admin-cabecera,
+.admin-bloque,
+.admin-resumen,
+.admin-card,
+.admin-tabla {
+  padding: 1rem 1.2rem;
+}
+
+.admin-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #74563e;
+  font-size: 0.78rem;
+}
+
+.admin-cabecera h1,
+.admin-resumen h2,
+.admin-card h3,
+.admin-bloque h1 {
+  font-family: var(--tipografia-editorial-titulo);
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1rem;
+}
+
+.admin-nav {
+  padding: 0.75rem;
+}
+
+.admin-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.admin-nav a {
+  display: block;
+  text-decoration: none;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  color: #43382f;
+  background: #fff;
+}
+
+.admin-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-tabla th,
+.admin-tabla td {
+  border-top: 1px solid var(--borde);
+  text-align: left;
+  padding: 0.55rem;
+}
+
+.admin-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.admin-filtros input,
+.admin-filtros select,
+.admin-filtros button,
+.admin-filtros a {
+  border: 1px solid var(--borde-editorial);
+  border-radius: 10px;
+  padding: 0.45rem 0.6rem;
+  text-decoration: none;
+  background: #fff;
+  color: #352f29;
+}
+
+.admin-estado--error {
+  color: #8b3a30;
+}
+
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
