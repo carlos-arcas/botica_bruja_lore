@@ -125,6 +125,15 @@ Este hardening reduce el riesgo de que Railway arranque otro proyecto/settings p
 NEXT_PUBLIC_API_BASE_URL=https://TU-BACKEND.up.railway.app
 ```
 
+Para el acceso real al Django Admin desde el header público:
+
+- `NEXT_PUBLIC_ADMIN_BASE_URL` es opcional y permite separar el origen del admin.
+- Si no se define, el frontend deriva el admin desde `NEXT_PUBLIC_API_BASE_URL`.
+
+```env
+NEXT_PUBLIC_ADMIN_BASE_URL=https://TU-BACKEND.up.railway.app
+```
+
 ## 5) Cómo configurar `DATABASE_URL`
 
 En Railway, `DATABASE_URL` debe referenciar el servicio PostgreSQL real del proyecto.

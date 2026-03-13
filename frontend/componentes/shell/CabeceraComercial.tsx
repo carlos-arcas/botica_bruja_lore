@@ -1,9 +1,12 @@
 import Link from "next/link";
 
-import { ENLACE_ADMIN_CABECERA } from "@/contenido/shell/navegacionGlobal";
+import { ETIQUETA_ENLACE_ADMIN_CABECERA } from "@/contenido/shell/navegacionGlobal";
+import { construirUrlAdmin } from "@/infraestructura/configuracion/adminUrl";
 
 import { NavegacionPrincipal } from "./NavegacionPrincipal";
 import estilos from "./shellComercial.module.css";
+
+const URL_ACCESO_ADMIN = construirUrlAdmin("/admin/");
 
 export function CabeceraComercial(): JSX.Element {
   return (
@@ -16,11 +19,11 @@ export function CabeceraComercial(): JSX.Element {
         <div className={estilos.accionesCabecera}>
           <NavegacionPrincipal />
           <Link
-            href={ENLACE_ADMIN_CABECERA.href}
+            href={URL_ACCESO_ADMIN}
             className={estilos.enlaceAdmin}
             aria-label="Abrir acceso a administración de Django"
           >
-            {ENLACE_ADMIN_CABECERA.etiqueta}
+            {ETIQUETA_ENLACE_ADMIN_CABECERA}
           </Link>
         </div>
       </div>
