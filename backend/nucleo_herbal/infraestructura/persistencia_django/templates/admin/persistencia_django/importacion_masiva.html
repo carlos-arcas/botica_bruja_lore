@@ -117,14 +117,14 @@ tr[data-estado='valida'] .estado-chip{border-style:solid}.estado-valida::before{
               <td>{{ fila.resumen_datos }}</td>
               <td>
                 {% if fila.obj.imagen %}<img src="{{ fila.obj.imagen }}" alt="Vista previa fila {{ fila.obj.numero_fila_original }}" class="preview-img">{% else %}<span>Sin imagen</span>{% endif %}
-                <div><small data-img-estado>{% if fila.obj.imagen %}Optimizada{% else %}Pendiente{% endif %}</small></div>
+                <div><small data-img-estado>{% if "optimizada" in fila.obj.resultado_confirmacion %}Optimizada{% elif "pendiente" in fila.obj.resultado_confirmacion %}Pendiente{% else %}Ausente{% endif %}</small></div>
               </td>
               <td>
                 {% if fila.obj.errores or fila.obj.warnings %}<ul class="errores">{% for e in fila.obj.errores %}<li><strong>Error:</strong> {{ e }}</li>{% endfor %}{% for w in fila.obj.warnings %}<li><strong>Warning:</strong> {{ w }}</li>{% endfor %}</ul>{% else %}<span>Sin incidencias</span>{% endif %}
               </td>
               <td>
                 <input type="file" name="imagen_fila_{{ fila.obj.id }}" class="input-imagen-fila" data-fila-id="{{ fila.obj.id }}" accept="image/*">
-                <button type="button" class="button btn-subir-fila" data-fila-id="{{ fila.obj.id }}">Seleccionar</button>
+                <button type="button" class="button btn-subir-fila" data-fila-id="{{ fila.obj.id }}">Reemplazar</button>
                 <button type="button" class="button btn-eliminar-imagen" data-fila-id="{{ fila.obj.id }}">Eliminar</button>
               </td>
             </tr>
@@ -170,8 +170,10 @@ function subirImagenFila(id, file){
   return fetch('',{method:'POST',body:fd}).then(()=>window.location.reload());
 }
 document.querySelectorAll('.btn-subir-fila').forEach(btn=>btn.addEventListener('click',()=>{
-  const input=document.querySelector(`.input-imagen-fila[data-fila-id='${btn.dataset.filaId}']`);subirImagenFila(btn.dataset.filaId,input.files[0]);
+  const input=document.querySelector(`.input-imagen-fila[data-fila-id='${btn.dataset.filaId}']`);
+  if(input){input.click();}
 }));
+document.querySelectorAll('.input-imagen-fila').forEach(input=>input.addEventListener('change',()=>subirImagenFila(input.dataset.filaId,input.files[0])));
 
 document.querySelectorAll('.btn-eliminar-imagen').forEach(btn=>btn.addEventListener('click',()=>{
   const fd = new FormData();

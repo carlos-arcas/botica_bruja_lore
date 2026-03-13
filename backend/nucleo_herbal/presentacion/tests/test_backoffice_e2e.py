@@ -35,7 +35,7 @@ class BackofficeE2ETests(TestCase):
             "seccion_publica": "botica-natural",
             "descripcion_corta": "desc",
             "precio_visible": "9.90",
-            "imagen_url": "",
+            "imagen_url": "https://cdn.test/producto.webp",
             "orden_publicacion": 1,
             "publicado": False,
         }
@@ -45,8 +45,11 @@ class BackofficeE2ETests(TestCase):
 
         crear["id"] = producto_id
         crear["nombre"] = "Producto E2E editado"
+        crear["imagen_url"] = "https://cdn.test/producto-editado.webp"
         self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(crear), content_type="application/json", **self._auth())
-        self.assertEqual(ProductoModelo.objects.get(id=producto_id).nombre, "Producto E2E editado")
+        producto_editado = ProductoModelo.objects.get(id=producto_id)
+        self.assertEqual(producto_editado.nombre, "Producto E2E editado")
+        self.assertEqual(producto_editado.imagen_url, "https://cdn.test/producto-editado.webp")
 
         self.client.post(f"/api/v1/backoffice/productos/{producto_id}/publicacion/", data=json.dumps({"publicado": True}), content_type="application/json", **self._auth())
         publico = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/")
@@ -57,14 +60,17 @@ class BackofficeE2ETests(TestCase):
         self.assertNotIn("producto-e2e", [p["slug"] for p in publico2.json()["productos"]])
 
     def test_ritual_e2e_create_edit_publish_unpublish_y_reflejo_publico(self):
-        crear = {"slug": "ritual-e2e", "nombre": "Ritual E2E", "contexto_breve": "ctx", "contenido": "contenido", "imagen_url": "", "intenciones_relacionadas": ["proteccion"], "publicado": False}
+        crear = {"slug": "ritual-e2e", "nombre": "Ritual E2E", "contexto_breve": "ctx", "contenido": "contenido", "imagen_url": "https://cdn.test/producto.webp", "intenciones_relacionadas": ["proteccion"], "publicado": False}
         r = self.client.post("/api/v1/backoffice/rituales/guardar/", data=json.dumps(crear), content_type="application/json", **self._auth())
         ritual_id = r.json()["item"]["id"]
 
         crear["id"] = ritual_id
         crear["nombre"] = "Ritual E2E editado"
+        crear["imagen_url"] = "https://cdn.test/ritual-editado.webp"
         self.client.post("/api/v1/backoffice/rituales/guardar/", data=json.dumps(crear), content_type="application/json", **self._auth())
-        self.assertEqual(RitualModelo.objects.get(id=ritual_id).nombre, "Ritual E2E editado")
+        ritual_editado = RitualModelo.objects.get(id=ritual_id)
+        self.assertEqual(ritual_editado.nombre, "Ritual E2E editado")
+        self.assertEqual(ritual_editado.imagen_url, "https://cdn.test/ritual-editado.webp")
 
         self.client.post(f"/api/v1/backoffice/rituales/{ritual_id}/publicacion/", data=json.dumps({"publicado": True}), content_type="application/json", **self._auth())
         listado = self.client.get("/api/v1/rituales/")
@@ -75,14 +81,17 @@ class BackofficeE2ETests(TestCase):
         self.assertNotIn("ritual-e2e", [r["slug"] for r in listado2.json()["rituales"]])
 
     def test_editorial_e2e_create_edit_publish_unpublish_y_reflejo_publico(self):
-        crear = {"slug": "art-e2e", "titulo": "Artículo E2E", "resumen": "r", "contenido": "c", "tema": "t", "hub": "h", "subhub": "s", "imagen_url": "", "indexable": True, "publicado": False, "seccion_publica": "guias"}
+        crear = {"slug": "art-e2e", "titulo": "Artículo E2E", "resumen": "r", "contenido": "c", "tema": "t", "hub": "h", "subhub": "s", "imagen_url": "https://cdn.test/producto.webp", "indexable": True, "publicado": False, "seccion_publica": "guias"}
         r = self.client.post("/api/v1/backoffice/editorial/guardar/", data=json.dumps(crear), content_type="application/json", **self._auth())
         articulo_id = r.json()["item"]["id"]
 
         crear["id"] = articulo_id
         crear["titulo"] = "Artículo E2E editado"
+        crear["imagen_url"] = "https://cdn.test/editorial-editado.webp"
         self.client.post("/api/v1/backoffice/editorial/guardar/", data=json.dumps(crear), content_type="application/json", **self._auth())
-        self.assertEqual(ArticuloEditorialModelo.objects.get(id=articulo_id).titulo, "Artículo E2E editado")
+        articulo_editado = ArticuloEditorialModelo.objects.get(id=articulo_id)
+        self.assertEqual(articulo_editado.titulo, "Artículo E2E editado")
+        self.assertEqual(articulo_editado.imagen_url, "https://cdn.test/editorial-editado.webp")
 
         self.client.post(f"/api/v1/backoffice/editorial/{articulo_id}/publicacion/", data=json.dumps({"publicado": True}), content_type="application/json", **self._auth())
         listado = self.client.get("/api/v1/herbal/editorial/")
@@ -96,8 +105,8 @@ class BackofficeE2ETests(TestCase):
         ProductoModelo.objects.create(id="p-base", sku="SKU-DUPE", slug="prod-base", nombre="Base", tipo_producto="inciensos-y-sahumerios", categoria_comercial="botica", seccion_publica="botica-natural", descripcion_corta="", precio_visible="1", imagen_url="", publicado=True)
 
         csv_file = self._csv_file([
-            {"sku": "SKU-DUPE", "slug": "prod-base", "nombre": "No debe duplicar", "tipo_producto": "inciensos-y-sahumerios", "categoria_comercial": "botica", "seccion_publica": "botica-natural", "descripcion_corta": "d", "precio_visible": "2", "imagen_url": "", "publicado": "true", "orden_publicacion": "2"},
-            {"sku": "SKU-NEW", "slug": "prod-new", "nombre": "Nuevo", "tipo_producto": "inciensos-y-sahumerios", "categoria_comercial": "botica", "seccion_publica": "botica-natural", "descripcion_corta": "d", "precio_visible": "3", "imagen_url": "", "publicado": "true", "orden_publicacion": "2"},
+            {"sku": "SKU-DUPE", "slug": "prod-base", "nombre": "No debe duplicar", "tipo_producto": "inciensos-y-sahumerios", "categoria_comercial": "botica", "seccion_publica": "botica-natural", "descripcion_corta": "d", "precio_visible": "2", "imagen_url": "https://cdn.test/producto.webp", "publicado": "true", "orden_publicacion": "2"},
+            {"sku": "SKU-NEW", "slug": "prod-new", "nombre": "Nuevo", "tipo_producto": "inciensos-y-sahumerios", "categoria_comercial": "botica", "seccion_publica": "botica-natural", "descripcion_corta": "d", "precio_visible": "3", "imagen_url": "https://cdn.test/producto.webp", "publicado": "true", "orden_publicacion": "2"},
         ])
         lote1 = self.client.post("/api/v1/backoffice/importacion/lotes/", data={"entidad": "productos", "modo": "solo_crear", "archivo": csv_file}, **self._auth()).json()["lote_id"]
         self.client.post(f"/api/v1/backoffice/importacion/lotes/{lote1}/confirmar/", data=json.dumps({}), content_type="application/json", **self._auth())
