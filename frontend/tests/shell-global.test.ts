@@ -1,7 +1,10 @@
 import * as assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { readFileSync } from "node:fs";
+
 import {
+  ENLACE_ADMIN_CABECERA,
   ENLACES_FOOTER,
   NAVEGACION_PRINCIPAL,
   construirTextoContadorCesta,
@@ -50,4 +53,15 @@ test("footer mantiene enlaces de continuidad editorial-comercial", () => {
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/condiciones-encargo"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/envios-y-preparacion"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/privacidad"), true);
+});
+
+
+test("cabecera comercial incluye acceso admin sin romper navegación principal", () => {
+  const cabecera = readFileSync("componentes/shell/CabeceraComercial.tsx", "utf-8");
+
+  assert.match(cabecera, /<NavegacionPrincipal\s*\/>/);
+  assert.match(cabecera, /ENLACE_ADMIN_CABECERA\.href/);
+  assert.match(cabecera, /className=\{estilos\.enlaceAdmin\}/);
+  assert.equal(ENLACE_ADMIN_CABECERA.href, "/admin/");
+  assert.equal(ENLACE_ADMIN_CABECERA.etiqueta.length > 0, true);
 });
