@@ -60,3 +60,25 @@ Se mantiene **`imagen_url` (URL manual)** en lugar de `ImageField`:
 - La persistencia se realiza en la base configurada en `DATABASE_URL`.
 - En Railway debe apuntar a PostgreSQL.
 - Flujo editorial principal: alta/edición desde `/admin/`, no edición manual SQL.
+
+
+## Acceso provisional seguro para admin (`karkas`)
+
+El acceso visual desde el header debe seguir apuntando a `/admin/`.
+Ese botón **no implementa seguridad** ni autenticación propia: la seguridad real sigue siendo la autenticación de Django Admin.
+
+Comando provisional (idempotente):
+
+```bash
+ADMIN_USUARIO_PROVISIONAL=karkas ADMIN_PASSWORD_PROVISIONAL='<tu_password_segura>' python manage.py asegurar_admin_provisional
+```
+
+Comportamiento:
+- crea el usuario si no existe;
+- si ya existe, asegura `is_staff=True` e `is_superuser=True`;
+- actualiza password desde entorno sin mostrarla en logs/salida.
+
+Variables de entorno recomendadas:
+- `ADMIN_USUARIO_PROVISIONAL` (valor esperado para este ciclo: `karkas`)
+- `ADMIN_PASSWORD_PROVISIONAL`
+- `CREAR_ADMIN_PROVISIONAL=true` (solo si se desea ejecución automática en predeploy)
