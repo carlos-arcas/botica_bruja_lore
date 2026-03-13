@@ -11,7 +11,6 @@ import {
   debeMostrarContadorCesta,
   esRutaActiva,
 } from "../contenido/shell/navegacionGlobal";
-import { construirUrlAdmin } from "../infraestructura/configuracion/adminUrl";
 
 test("navegación principal expone accesos comerciales clave", () => {
   const rutas = NAVEGACION_PRINCIPAL.map((enlace) => enlace.href);
@@ -56,16 +55,9 @@ test("footer mantiene enlaces de continuidad editorial-comercial", () => {
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/privacidad"), true);
 });
 
-test("cabecera comercial mantiene enlace admin real de backend", () => {
+test("cabecera comercial apunta al backoffice interno /admin", () => {
   const cabecera = readFileSync("componentes/shell/CabeceraComercial.tsx", "utf-8");
 
-  assert.match(cabecera, /const URL_ACCESO_ADMIN = construirUrlAdmin\("\/admin\/"\);/);
-  assert.match(cabecera, /href=\{URL_ACCESO_ADMIN\}/);
+  assert.match(cabecera, /href="\/admin"/);
   assert.equal(ETIQUETA_ENLACE_ADMIN_CABECERA.length > 0, true);
-
-  const urlAdminResuelta = construirUrlAdmin("/admin/", {
-    NEXT_PUBLIC_API_BASE_URL: "https://boticabrujalore-production.up.railway.app",
-  });
-
-  assert.equal(urlAdminResuelta, "https://boticabrujalore-production.up.railway.app/admin/");
 });
