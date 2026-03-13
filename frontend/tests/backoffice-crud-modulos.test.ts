@@ -15,26 +15,26 @@ test("cada pestaña admin monta CRUD contextual con importación y exportación"
   assert.match(secciones, /ModuloCrudContextualAdmin/);
 
   assert.match(componente, /Importación contextual/);
-  assert.match(componente, /Importar CSV · Importar XLSX/);
+  assert.match(componente, /Columnas obligatorias/);
   assert.match(componente, /Staging por filas/);
   assert.match(componente, /Confirmar/);
   assert.match(componente, /Revalidar/);
   assert.match(componente, /Adjuntar\/Reemplazar imagen/);
   assert.match(componente, /Eliminar imagen/);
   assert.match(componente, /Descartar/);
-  assert.match(componente, /Exportar plantilla CSV/);
-  assert.match(componente, /Exportar plantilla XLSX/);
+  assert.match(componente, /Descargar plantilla CSV/);
+  assert.match(componente, /Descargar plantilla XLSX/);
   assert.match(componente, /Exportar inventario CSV/);
   assert.match(componente, /Exportar inventario XLSX/);
 });
 
-test("listado de registros mantiene edición y publicar\/despublicar", () => {
+test("listado de registros mantiene edición por diálogo y publicar/despublicar", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
 
-  assert.match(componente, /Edición cargada\./);
-  assert.match(componente, /Registro publicado\./);
-  assert.match(componente, /Registro despublicado\./);
-  assert.match(componente, /onClick=\{\(\) => editar\(item\)\}/);
+  assert.match(componente, /setRegistroEdicion\(\{ \.\.\.item \}\)/);
+  assert.match(componente, /role="dialog"/);
+  assert.match(componente, /Cerrar/);
+  assert.match(componente, /cambiarPublicacionAdmin/);
   assert.match(componente, /\? "Despublicar" : "Publicar"/);
 });
 
@@ -46,4 +46,9 @@ test("pantalla /admin/importacion usa el módulo real de importación", () => {
   assert.match(componente, /Revalidar lote/);
   assert.match(componente, /Arrastra imagen o selecciona/);
   assert.match(componente, /Exportar inventario XLSX/);
+});
+
+test("regresión: módulo contextual no contiene JSX inválido en staging", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.doesNotMatch(componente, /<\/td>\s*<\/td>/);
 });

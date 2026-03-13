@@ -30,7 +30,7 @@ test("/admin/login renderiza formulario real", () => {
 
 test("cliente de productos usa Bearer token y no depende de cookie backend", async () => {
   let headersRecibidos: HeadersInit | undefined;
-  globalThis.fetch = (async (_input, init) => {
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
     headersRecibidos = init?.headers;
     return {
       status: 200,
