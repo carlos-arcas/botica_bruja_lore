@@ -11,6 +11,11 @@ export type EnlaceFooter = {
   href: string;
 };
 
+export const ENLACE_ADMIN_CABECERA: EnlaceFooter = {
+  etiqueta: "Acceso admin",
+  href: "/admin/",
+};
+
 export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
   { etiqueta: "Inicio", href: "/", coincidencia: "exacta" },
   { etiqueta: "Colecciones", href: "/colecciones", coincidencia: "prefijo" },
