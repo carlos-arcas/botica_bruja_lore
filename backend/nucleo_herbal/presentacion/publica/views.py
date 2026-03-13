@@ -6,6 +6,7 @@ from django.http import HttpRequest, JsonResponse
 import logging
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
+from ...infraestructura.persistencia_django.models import ArticuloEditorialModelo
 from .dependencias import (
     construir_servicios_publicos_calendario_ritual,
     construir_servicios_publicos_herbales,
@@ -162,3 +163,29 @@ def calendario_ritual_por_fecha(request: HttpRequest) -> JsonResponse:
     except ErrorAplicacionLookup as error:
         return json_no_encontrado(str(error))
     return JsonResponse(serializar_consulta_calendario_ritual(consulta))
+
+
+def listado_editorial_publico(request: HttpRequest) -> JsonResponse:
+    articulos = ArticuloEditorialModelo.objects.filter(publicado=True).order_by("-fecha_publicacion", "-id")[:80]
+    return JsonResponse({"articulos": [_serializar_articulo_publico(it) for it in articulos]})
+
+
+def detalle_editorial_publico(request: HttpRequest, slug_articulo: str) -> JsonResponse:
+    articulo = ArticuloEditorialModelo.objects.filter(slug=slug_articulo, publicado=True).first()
+    if articulo is None:
+        return json_no_encontrado("Artículo editorial no encontrado.")
+    return JsonResponse({"articulo": _serializar_articulo_publico(articulo)})
+
+
+def _serializar_articulo_publico(articulo: ArticuloEditorialModelo) -> dict:
+    return {
+        "slug": articulo.slug,
+        "titulo": articulo.titulo,
+        "resumen": articulo.resumen,
+        "contenido": articulo.contenido,
+        "tema": articulo.tema,
+        "hub": articulo.hub,
+        "subhub": articulo.subhub,
+        "indexable": articulo.indexable,
+        "fecha_publicacion": articulo.fecha_publicacion.isoformat() if articulo.fecha_publicacion else None,
+    }

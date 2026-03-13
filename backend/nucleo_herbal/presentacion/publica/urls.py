@@ -27,4 +27,14 @@ urlpatterns = [
         views.listado_productos_por_seccion,
         name="publico-listado-productos-por-seccion",
     ),
+    path(
+        "editorial/",
+        views.listado_editorial_publico,
+        name="publico-listado-editorial",
+    ),
+    path(
+        "editorial/<slug:slug_articulo>/",
+        views.detalle_editorial_publico,
+        name="publico-detalle-editorial",
+    ),
 ]
