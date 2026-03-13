@@ -199,6 +199,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "var" / "staticfiles"
 STATIC_ROOT.mkdir(parents=True, exist_ok=True)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "var" / "media"
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 
 if importlib.util.find_spec("whitenoise"):
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
