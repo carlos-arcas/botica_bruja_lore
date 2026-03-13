@@ -1,3 +1,4 @@
+import base64
 import os
 import unittest
 from io import BytesIO
@@ -43,6 +44,13 @@ class TestImportacionMasivaAdmin(TestCase):
 
     def _archivo_csv(self, nombre, contenido):
         return SimpleUploadedFile(nombre, contenido.encode("utf-8"), content_type="text/csv")
+
+
+    def _imagen_png_valida(self, nombre="demo.png"):
+        data = base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9sXz8QAAAABJRU5ErkJggg=="
+        )
+        return SimpleUploadedFile(nombre, data, content_type="image/png")
 
     def _archivo_xlsx_productos(self):
         rows = [["sku", "slug", "nombre", "tipo_producto", "categoria_comercial", "seccion_publica", "descripcion_corta", "precio_visible", "publicado"], ["SKU-2", "prod-2", "Prod 2", "herbal", "hierbas", "botica", "desc", "9.90", "true"]]
@@ -122,10 +130,28 @@ class TestImportacionMasivaAdmin(TestCase):
     def test_adjuntar_imagen_por_input_y_drag_drop(self):
         lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-5,prod-5,Producto5,herbal,hierbas,botica,desc,10.00,true\n"))
         fila = lote.filas.first()
-        png = SimpleUploadedFile("demo.png", b"\x89PNG\r\n\x1a\n", content_type="image/png")
+        png = self._imagen_png_valida()
         self.client.post(self.url, {"accion": "adjuntar_imagen", "fila_id": fila.id, "imagen_fila": png})
         fila.refresh_from_db()
         self.assertIn("importaciones/filas", fila.imagen)
+        self.assertTrue(fila.imagen.endswith(".webp") or fila.imagen.endswith(".png"))
+        esperado = "optimizada" if fila.imagen.endswith(".webp") else "pendiente"
+        self.assertIn(esperado, fila.resultado_confirmacion)
+
+    def test_imagen_manual_prevalece_sobre_imagen_url_en_confirmacion(self):
+        lote = self._crear_lote(
+            self._archivo_csv(
+                "productos.csv",
+                "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado,imagen_url\n"
+                "SKU-9,prod-9,Producto9,herbal,hierbas,botica,desc,10.00,true,https://cdn.test/original.jpg\n",
+            )
+        )
+        fila = lote.filas.first()
+        self.client.post(self.url, {"accion": "adjuntar_imagen", "fila_id": fila.id, "imagen_fila": self._imagen_png_valida("manual.png")})
+        self.client.post(self.url, {"accion": "confirmar_validas", "lote_id": lote.id})
+        producto = ProductoModelo.objects.get(slug="prod-9")
+        self.assertIn("importaciones/filas", producto.imagen_url)
+        self.assertTrue(producto.imagen_url.endswith(".webp") or producto.imagen_url.endswith(".png"))
 
     def test_quitar_imagen_fila(self):
         lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-6,prod-6,Producto6,herbal,hierbas,botica,desc,10.00,true\n"))

@@ -14,6 +14,7 @@ from django.utils.html import escape
 from backend.nucleo_herbal.infraestructura.persistencia_django.forms import ImportacionMasivaForm
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.esquemas import ESQUEMAS_IMPORTACION
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import (
+    estado_imagen_staging,
     guardar_imagen_fila,
     guardar_imagenes_adjuntas,
 )
@@ -36,13 +37,15 @@ def importacion_masiva_view(request):
         fila = get_object_or_404(ImportacionFilaModelo, id=request.POST.get("fila_id"))
         if "imagen_fila" in request.FILES:
             fila.imagen = guardar_imagen_fila(request.FILES["imagen_fila"], fila.id)
-            fila.save(update_fields=["imagen"])
+            fila.resultado_confirmacion = estado_imagen_staging(fila.datos, fila.imagen)
+            fila.save(update_fields=["imagen", "resultado_confirmacion"])
             messages.success(request, f"Imagen actualizada para fila {fila.numero_fila_original}.")
         lote = fila.lote
     elif request.method == "POST" and request.POST.get("accion") == "quitar_imagen":
         fila = get_object_or_404(ImportacionFilaModelo, id=request.POST.get("fila_id"))
         fila.imagen = ""
-        fila.save(update_fields=["imagen"])
+        fila.resultado_confirmacion = estado_imagen_staging(fila.datos, fila.imagen)
+        fila.save(update_fields=["imagen", "resultado_confirmacion"])
         messages.info(request, f"Imagen eliminada para fila {fila.numero_fila_original}.")
         lote = fila.lote
     elif request.method == "POST" and request.POST.get("accion") in {
@@ -126,6 +129,7 @@ def _crear_lote_staging(usuario, entidad, modo, nombre_archivo, columnas, filas,
             warnings=warnings,
             estado=estado,
             imagen=imagen,
+            resultado_confirmacion=estado_imagen_staging(row, imagen),
             seleccionado=estado != ImportacionFilaModelo.ESTADO_INVALIDA,
         )
     return lote
@@ -174,7 +178,7 @@ def _ejecutar_accion_lote(request, lote):
             fila.resultado_confirmacion = resultado.errores[0].motivo
         else:
             fila.estado = ImportacionFilaModelo.ESTADO_CONFIRMADA
-            fila.resultado_confirmacion = f"ok c={resultado.creadas} a={resultado.actualizadas} i={resultado.ignoradas}"
+            fila.resultado_confirmacion = f"confirmada:{estado_imagen_staging(fila.datos, fila.imagen)}"
         fila.save(update_fields=["estado", "resultado_confirmacion"])
     messages.success(request, "Confirmación ejecutada por filas.")
 
@@ -202,7 +206,8 @@ def _revalidar_filas_lote(request, lote):
         fila.errores = errores
         fila.warnings = warnings
         fila.estado = estado
-        fila.save(update_fields=["errores", "warnings", "estado"])
+        fila.resultado_confirmacion = estado_imagen_staging(fila.datos, fila.imagen)
+        fila.save(update_fields=["errores", "warnings", "estado", "resultado_confirmacion"])
 
 @staff_member_required
 def descargar_plantilla_view(_request, entidad: str, formato: str):
