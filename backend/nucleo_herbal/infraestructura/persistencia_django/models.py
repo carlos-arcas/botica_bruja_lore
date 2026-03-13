@@ -53,6 +53,7 @@ class ProductoModelo(models.Model):
     descripcion_corta = models.TextField(blank=True, default="")
     precio_visible = models.CharField(max_length=80, blank=True, default="")
     imagen_url = models.CharField(max_length=255, blank=True, default="")
+    orden_publicacion = models.PositiveIntegerField(default=100)
     planta = models.ForeignKey(
         PlantaModelo,
         on_delete=models.PROTECT,
@@ -65,9 +66,12 @@ class ProductoModelo(models.Model):
 
     class Meta:
         db_table = "nucleo_producto"
-        ordering = ("nombre",)
+        ordering = ("orden_publicacion", "nombre")
         verbose_name = "producto"
         verbose_name_plural = "productos"
+        indexes = [
+            models.Index(fields=("seccion_publica", "publicado", "slug"), name="nucleo_prod_seccion_public_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.nombre} [{self.sku}]"
@@ -78,6 +82,8 @@ class RitualModelo(models.Model):
     slug = models.SlugField(unique=True, max_length=120)
     nombre = models.CharField(max_length=180)
     contexto_breve = models.TextField()
+    contenido = models.TextField(blank=True, default="")
+    imagen_url = models.CharField(max_length=255, blank=True, default="")
     publicado = models.BooleanField(default=True)
     intenciones = models.ManyToManyField(
         IntencionModelo,
@@ -132,12 +138,65 @@ class ReglaCalendarioModelo(models.Model):
             )
         ]
         indexes = [
-            models.Index(fields=("activa", "fecha_inicio", "fecha_fin")),
-            models.Index(fields=("ritual", "activa", "prioridad")),
+            models.Index(fields=("activa", "fecha_inicio", "fecha_fin"), name="nucleo_regl_activa_c83a4f_idx"),
+            models.Index(fields=("ritual", "activa", "prioridad"), name="nucleo_regl_ritual__1999ce_idx"),
         ]
 
     def __str__(self) -> str:
         return self.nombre
+
+
+class SeccionPublicaModelo(models.Model):
+    slug = models.SlugField(unique=True, max_length=80)
+    nombre = models.CharField(max_length=120)
+    descripcion = models.TextField(blank=True, default="")
+    orden = models.PositiveIntegerField(default=100)
+    publicada = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "nucleo_seccion_publica"
+        ordering = ("orden", "nombre")
+        verbose_name = "sección pública"
+        verbose_name_plural = "secciones públicas"
+
+    def __str__(self) -> str:
+        return self.nombre
+
+
+class ArticuloEditorialModelo(models.Model):
+    slug = models.SlugField(unique=True, max_length=140)
+    titulo = models.CharField(max_length=200)
+    resumen = models.TextField(blank=True, default="")
+    contenido = models.TextField()
+    tema = models.CharField(max_length=120, blank=True, default="")
+    hub = models.CharField(max_length=120, blank=True, default="")
+    subhub = models.CharField(max_length=120, blank=True, default="")
+    imagen_url = models.CharField(max_length=255, blank=True, default="")
+    indexable = models.BooleanField(default=True)
+    publicado = models.BooleanField(default=False)
+    seccion_publica = models.ForeignKey(
+        SeccionPublicaModelo,
+        on_delete=models.PROTECT,
+        related_name="articulos",
+        null=True,
+        blank=True,
+    )
+    fecha_publicacion = models.DateTimeField(null=True, blank=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_articulo_editorial"
+        ordering = ("-fecha_actualizacion", "titulo")
+        verbose_name = "artículo editorial"
+        verbose_name_plural = "artículos editoriales"
+        indexes = [
+            models.Index(fields=("publicado", "indexable", "slug")),
+            models.Index(fields=("tema", "hub", "subhub")),
+        ]
+
+    def __str__(self) -> str:
+        return self.titulo
 
 
 class PedidoDemoModelo(models.Model):
