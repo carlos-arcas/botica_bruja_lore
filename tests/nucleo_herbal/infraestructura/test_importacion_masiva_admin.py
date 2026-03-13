@@ -80,6 +80,12 @@ class TestImportacionMasivaAdmin(TestCase):
         self.assertEqual(lote.filas.count(), 1)
         self.assertEqual(ProductoModelo.objects.count(), 0)
 
+    def test_estado_vacio_muestra_guia(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(self.url)
+        self.assertContains(response, "Sin importación activa")
+        self.assertContains(response, "Plantilla CSV")
+
     def test_subida_xlsx_valida_genera_pendientes(self):
         lote = self._crear_lote(self._archivo_xlsx_productos())
         self.assertEqual(lote.filas.count(), 1)
@@ -120,6 +126,29 @@ class TestImportacionMasivaAdmin(TestCase):
         self.client.post(self.url, {"accion": "adjuntar_imagen", "fila_id": fila.id, "imagen_fila": png})
         fila.refresh_from_db()
         self.assertIn("importaciones/filas", fila.imagen)
+
+    def test_quitar_imagen_fila(self):
+        lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-6,prod-6,Producto6,herbal,hierbas,botica,desc,10.00,true\n"))
+        fila = lote.filas.first()
+        fila.imagen = "https://cdn.test/demo.webp"
+        fila.save(update_fields=["imagen"])
+        self.client.post(self.url, {"accion": "quitar_imagen", "fila_id": fila.id})
+        fila.refresh_from_db()
+        self.assertEqual(fila.imagen, "")
+
+    def test_revalidar_y_cancelar_lote(self):
+        lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-7,prod-7,Producto7,herbal,hierbas,botica,desc,10.00,true\n"))
+        self.client.post(self.url, {"accion": "revalidar_lote", "lote_id": lote.id, "fila_ids": [lote.filas.first().id]})
+        self.assertTrue(ImportacionLoteModelo.objects.filter(id=lote.id).exists())
+        self.client.post(self.url, {"accion": "cancelar_importacion", "lote_id": lote.id})
+        self.assertFalse(ImportacionLoteModelo.objects.filter(id=lote.id).exists())
+
+    def test_interfaz_muestra_filtros_y_resumen(self):
+        lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-8,prod-8,Producto8,herbal,hierbas,botica,desc,10.00,true\n"))
+        response = self.client.get(f"{self.url}?lote={lote.id}")
+        self.assertContains(response, "Filtros rápidos")
+        self.assertContains(response, "Confirmar seleccionadas")
+        self.assertContains(response, "Resumen antes de confirmar")
 
     def test_plantillas_descargables_y_permisos(self):
         self.client.force_login(self.staff)
