@@ -54,15 +54,15 @@ type RitualApi = {
 };
 
 type ProductoHerbalApi = {
-  sku: string;
-  slug: string;
-  nombre: string;
-  tipo_producto: string;
-  categoria_comercial: string;
-  seccion_publica: string;
-  descripcion_corta: string;
-  precio_visible: string;
-  imagen_url: string;
+  sku?: string;
+  slug?: string;
+  nombre?: string;
+  tipo_producto?: string;
+  categoria_comercial?: string;
+  seccion_publica?: string;
+  descripcion_corta?: string;
+  precio_visible?: string;
+  imagen_url?: string;
 };
 
 type RespuestaListadoHerbal = {
@@ -107,6 +107,28 @@ function mapearRitual(ritual: RitualApi): RitualRelacionadoHerbal {
     ...ritual,
     urlDetalle: `/rituales/${ritual.slug}`,
   };
+}
+
+function normalizarProductoApi(producto: ProductoHerbalApi): ProductoHerbalMinimoPublico | null {
+  if (!producto.sku || !producto.slug || !producto.nombre) {
+    return null;
+  }
+
+  return {
+    sku: producto.sku,
+    slug: producto.slug,
+    nombre: producto.nombre,
+    tipo_producto: producto.tipo_producto ?? "",
+    categoria_comercial: producto.categoria_comercial ?? "",
+    seccion_publica: producto.seccion_publica ?? "",
+    descripcion_corta: producto.descripcion_corta ?? "",
+    precio_visible: producto.precio_visible ?? "",
+    imagen_url: producto.imagen_url ?? "",
+  };
+}
+
+function construirMensajeErrorSeccion(slugSeccion: string): string {
+  return `No pudimos cargar los productos de la sección ${slugSeccion}. Revisa la conexión frontend-backend.`;
 }
 
 export async function obtenerListadoHerbal(): Promise<ResultadoListadoHerbal> {
@@ -182,7 +204,9 @@ export async function obtenerFichaHerbalConectada(slugPlanta: string): Promise<R
       estado: "ok",
       ficha: {
         planta: mapearPlanta(detalle.planta),
-        productos: resolucionComercial.productos,
+        productos: resolucionComercial.productos
+          .map(normalizarProductoApi)
+          .filter((item): item is ProductoHerbalMinimoPublico => item !== null),
         rituales: ritualesRelacionados.rituales.map(mapearRitual),
       },
     };
@@ -203,37 +227,81 @@ export async function obtenerPreviewHerbal(): Promise<ResultadoListadoHerbal> {
   return { estado: "ok", plantas: resultado.plantas.slice(0, 6) };
 }
 
-
 type RespuestaProductosSeccion = {
-  seccion_slug: string;
-  productos: ProductoHerbalApi[];
+  seccion_slug?: string;
+  productos?: ProductoHerbalApi[];
 };
 
+export type ErrorProductosSeccion = "fetch_error" | "http_error" | "respuesta_invalida";
+
 export type ResultadoProductosSeccion =
-  | { estado: "ok"; productos: ProductoSeccionPublica[] }
-  | { estado: "error"; mensaje: string };
+  | {
+      estado: "ok";
+      productos: ProductoSeccionPublica[];
+      diagnostico: { endpoint: string; totalProductos: number };
+    }
+  | {
+      estado: "error";
+      tipoError: ErrorProductosSeccion;
+      mensaje: string;
+      diagnostico: { endpoint: string; status?: number };
+    };
 
 export async function obtenerProductosPublicosPorSeccion(
   slugSeccion: string,
 ): Promise<ResultadoProductosSeccion> {
   const endpoint = `${API_BASE_URL}/api/v1/herbal/secciones/${slugSeccion}/productos/`;
+
   try {
     const respuesta = await fetch(endpoint, {
       headers: { Accept: "application/json" },
       next: { revalidate: 120 },
     });
+
     if (!respuesta.ok) {
+      console.error("[botica-natural] fallo HTTP en listado por sección", {
+        endpoint,
+        status: respuesta.status,
+      });
       return {
         estado: "error",
-        mensaje: "No pudimos cargar los productos de esta sección ahora mismo.",
+        tipoError: "http_error",
+        mensaje: construirMensajeErrorSeccion(slugSeccion),
+        diagnostico: { endpoint, status: respuesta.status },
       };
     }
+
     const data: RespuestaProductosSeccion = await respuesta.json();
-    return { estado: "ok", productos: data.productos };
+    if (!Array.isArray(data.productos)) {
+      console.error("[botica-natural] respuesta inválida en listado por sección", { endpoint, data });
+      return {
+        estado: "error",
+        tipoError: "respuesta_invalida",
+        mensaje: "El backend devolvió una respuesta inválida para Botica Natural.",
+        diagnostico: { endpoint },
+      };
+    }
+
+    const productos = data.productos
+      .map(normalizarProductoApi)
+      .filter((item): item is ProductoSeccionPublica => item !== null);
+    console.info("[botica-natural] listado por sección obtenido", {
+      endpoint,
+      totalProductos: productos.length,
+    });
+
+    return {
+      estado: "ok",
+      productos,
+      diagnostico: { endpoint, totalProductos: productos.length },
+    };
   } catch {
+    console.error("[botica-natural] excepción en listado por sección", { endpoint });
     return {
       estado: "error",
+      tipoError: "fetch_error",
       mensaje: "No hay conexión con el backend para cargar Botica Natural.",
+      diagnostico: { endpoint },
     };
   }
 }

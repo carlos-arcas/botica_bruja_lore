@@ -76,9 +76,17 @@ class RepositorioProductosORM(RepositorioProductos):
 
 
     def listar_publicos_por_seccion(self, slug_seccion: str, limite: int) -> tuple[Producto, ...]:
+        seccion_normalizada = slug_seccion.strip().lower()
         queryset = ProductoModelo.objects.filter(
             publicado=True,
-            seccion_publica=slug_seccion,
+            seccion_publica__iexact=seccion_normalizada,
+        ).order_by("slug")[:limite]
+        if queryset:
+            return tuple(a_producto(producto) for producto in queryset)
+
+        queryset = ProductoModelo.objects.filter(
+            publicado=True,
+            tipo_producto=TIPO_PRODUCTO_HERBAL,
         ).order_by("slug")[:limite]
         return tuple(a_producto(producto) for producto in queryset)
 

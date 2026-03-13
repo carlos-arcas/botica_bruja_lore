@@ -197,6 +197,49 @@ class TestRepositoriosDjango(unittest.TestCase):
         self.assertEqual(slugs, sorted(slugs))
         self.assertTrue(all(slug.startswith("botica-") for slug in slugs))
 
+
+    def test_listar_publicos_por_seccion_acepta_mayusculas_en_seccion(self) -> None:
+        self.ProductoModelo.objects.create(
+            id="id-bn-mayus",
+            sku="SKU-bn-mayus",
+            slug="botica-mayus",
+            nombre="Producto sección mayúsculas",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            seccion_publica="Botica-Natural",
+            publicado=True,
+        )
+
+        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", limite=5)
+
+        slugs = [producto.slug for producto in productos]
+        self.assertIn("botica-mayus", slugs)
+
+    def test_listar_publicos_por_seccion_usa_fallback_herbal_si_seccion_vacia(self) -> None:
+        planta = self.PlantaModelo.objects.create(
+            id="pla-fallback",
+            slug="planta-fallback",
+            nombre="Planta fallback",
+            descripcion_breve="demo",
+            publicada=True,
+        )
+        self.ProductoModelo.objects.create(
+            id="id-herbal-fallback",
+            sku="SKU-herbal-fallback",
+            slug="fallback-herbal",
+            nombre="Producto herbal fallback",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="botica",
+            seccion_publica="catalogo-general",
+            planta=planta,
+            publicado=True,
+        )
+
+        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", limite=5)
+
+        slugs = [producto.slug for producto in productos]
+        self.assertIn("fallback-herbal", slugs)
+
     def test_rituales_listar_navegables(self) -> None:
         rituales = self.repo_rituales.listar_navegables()
 
