@@ -496,6 +496,23 @@ button:focus-visible {
   }
 }
 
+
+.botica-natural__bloque {
+  border: 1px solid var(--borde);
+  background: var(--fondo-bloque);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.botica-natural__cabecera h1 {
+  margin: 0;
+  font-family: var(--tipografia-editorial-titulo);
+}
+
+.botica-natural__cabecera p {
+  margin: 0.4rem 0 0;
+}
+
 .botica-natural__rejilla {
   display: grid;
   gap: 1rem;

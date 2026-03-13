@@ -204,6 +204,8 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         self.assertEqual(len(data["productos"]), 5)
         self.assertTrue(all(item["seccion_publica"] == "botica-natural" for item in data["productos"]))
         self.assertTrue(all(item["slug"].startswith("botica-natural-demo-") for item in data["productos"]))
+        slugs = [item["slug"] for item in data["productos"]]
+        self.assertEqual(slugs, sorted(slugs))
 
     def test_relaciones_por_intencion_expone_plantas_asociadas(self) -> None:
         response = self.client.get("/api/v1/herbal/intenciones/calma/plantas/")

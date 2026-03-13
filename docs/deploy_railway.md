@@ -25,8 +25,15 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} gunicorn backend.configuracion_
 
 ```bash
 PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} migrate --noinput && \
+PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} seed_demo_publico && \
 PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} collectstatic --noinput
 ```
+
+
+- Este `preDeployCommand` deja el entorno listo para `/botica-natural` en cada release:
+  - aplica migraciones,
+  - asegura los 5 productos públicos de la sección `botica-natural` con `seed_demo_publico` (idempotente),
+  - recopila estáticos.
 
 - `DJANGO_MANAGE_PATH` es opcional:
   - valor por defecto: `manage.py` (estructura actual del repo),
@@ -61,6 +68,7 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-ma
 - En local/desarrollo, si `DATABASE_URL` no existe, el backend usa fallback a SQLite en `var/dev.sqlite3`.
 - En Railway/producción, `DATABASE_URL` es obligatoria y no existe fallback a SQLite.
 - Si falta `DATABASE_URL` en Railway, Django aborta arranque con: `DATABASE_URL es obligatoria en Railway/producción.`
+- Si en Railway `DATABASE_URL` apunta a SQLite, Django aborta arranque con: `SQLite no está permitida en Railway/producción. Configura PostgreSQL en DATABASE_URL.`
 - Este fallo es intencionado para evitar deploys “aparentemente correctos” conectados a una base equivocada.
 
 
@@ -223,3 +231,23 @@ Notas operativas:
 - el comando es idempotente: puede ejecutarse más de una vez sin duplicar registros,
 - está diseñado para demo/staging y validación visual inicial,
 - no sustituye la carga curada definitiva del catálogo real de producción.
+
+
+## 9) Verificación operacional específica de Botica Natural (PostgreSQL real)
+
+Con backend y frontend desplegados, valida de forma reproducible:
+
+```bash
+DATABASE_URL="${{SERVICIO_POSTGRES.DATABASE_URL}}" \
+SECRET_KEY="<secret-backend>" \
+BACKEND_BASE_URL="https://TU-BACKEND.up.railway.app" \
+FRONTEND_BASE_URL="https://TU-FRONTEND.up.railway.app" \
+python scripts/validate_botica_natural_postgres_e2e.py
+```
+
+Este script comprueba:
+- `migrate` contra PostgreSQL,
+- `seed_demo_publico` idempotente en PostgreSQL,
+- conteo ORM exacto de 5 productos públicos en `botica-natural`,
+- endpoint `/api/v1/herbal/secciones/botica-natural/productos/` devolviendo 5 y solo esa sección,
+- render HTML de `/botica-natural` con cards visibles.

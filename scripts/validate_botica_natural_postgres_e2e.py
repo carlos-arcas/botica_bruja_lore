@@ -99,8 +99,38 @@ def _step_endpoint_verification() -> StepResult:
     print(f"productos_count={len(productos)}")
     if len(productos) != EXPECTED_COUNT:
         return StepResult(name="verificacion_endpoint", ok=False, detail="conteo de endpoint inesperado")
+
+    secciones = {item.get("seccion_publica") for item in productos if isinstance(item, dict)}
+    if secciones != {EXPECTED_SECTION}:
+        return StepResult(name="verificacion_endpoint", ok=False, detail="sección pública mezclada")
+
+    slugs = [item.get("slug") for item in productos if isinstance(item, dict)]
+    if slugs != sorted(slugs):
+        return StepResult(name="verificacion_endpoint", ok=False, detail="orden de slugs no estable")
+
     return StepResult(name="verificacion_endpoint", ok=True)
 
+
+
+def _step_frontend_verification() -> StepResult:
+    print("\n=== Verificación frontend /botica-natural ===")
+    frontend_base = os.environ.get("FRONTEND_BASE_URL", "http://127.0.0.1:3000").rstrip("/")
+    url = f"{frontend_base}/botica-natural"
+    print(f"$ GET {url}")
+    request = urllib.request.Request(url, headers={"Accept": "text/html"}, method="GET")
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            body = response.read().decode("utf-8")
+    except urllib.error.URLError as error:
+        return StepResult(name="verificacion_frontend", ok=False, detail=f"sin conexión: {error.reason}")
+    except (TimeoutError, UnicodeDecodeError) as error:
+        return StepResult(name="verificacion_frontend", ok=False, detail=str(error))
+
+    cards = body.count("botica-natural__card")
+    print(f"cards_en_html={cards}")
+    if cards < EXPECTED_COUNT:
+        return StepResult(name="verificacion_frontend", ok=False, detail="cards insuficientes en HTML")
+    return StepResult(name="verificacion_frontend", ok=True)
 
 def _summary(results: list[StepResult]) -> int:
     print("\n=== Resumen validación Botica Natural ===")
@@ -133,6 +163,7 @@ def main() -> int:
         _step_command("seed_demo_publico", [PYTHON, "manage.py", "seed_demo_publico"]),
         _step_orm_verification(),
         _step_endpoint_verification(),
+        _step_frontend_verification(),
     ]
     return _summary(results)
 

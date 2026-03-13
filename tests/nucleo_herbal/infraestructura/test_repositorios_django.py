@@ -166,6 +166,37 @@ class TestRepositoriosDjango(unittest.TestCase):
         self.assertEqual(len(productos), 1)
         self.assertEqual(productos[0].sku, "HERB-001")
 
+
+    def test_listar_publicos_por_seccion_limita_y_ordena_por_slug(self) -> None:
+        for slug in ("botica-c", "botica-a", "botica-b", "botica-d", "botica-e", "botica-f"):
+            self.ProductoModelo.objects.create(
+                id=f"id-{slug}",
+                sku=f"SKU-{slug}",
+                slug=slug,
+                nombre=f"Producto {slug}",
+                tipo_producto="herramientas-rituales",
+                categoria_comercial="botica",
+                seccion_publica="botica-natural",
+                publicado=True,
+            )
+        self.ProductoModelo.objects.create(
+            id="id-otra-seccion",
+            sku="SKU-otra-seccion",
+            slug="otra-seccion",
+            nombre="Producto otra sección",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            seccion_publica="velas-e-incienso",
+            publicado=True,
+        )
+
+        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", limite=5)
+
+        self.assertEqual(len(productos), 5)
+        slugs = [producto.slug for producto in productos]
+        self.assertEqual(slugs, sorted(slugs))
+        self.assertTrue(all(slug.startswith("botica-") for slug in slugs))
+
     def test_rituales_listar_navegables(self) -> None:
         rituales = self.repo_rituales.listar_navegables()
 

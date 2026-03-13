@@ -9,6 +9,7 @@ test("/botica-natural usa fetch real al endpoint de secciones y renderiza cards"
 
   assert.equal(pagina.includes('obtenerProductosPublicosPorSeccion("botica-natural")'), true);
   assert.equal(pagina.includes("<ListadoProductosBoticaNatural"), true);
+  assert.equal(pagina.includes("HeroSeccionPrincipal"), false);
   assert.equal(api.includes('/api/v1/herbal/secciones/${slugSeccion}/productos/'), true);
 });
 
@@ -20,6 +21,7 @@ test("la sección Botica Natural contempla estado vacío controlado", () => {
 
   assert.equal(componente.includes("if (productos.length === 0)"), true);
   assert.equal(componente.includes("Botica Natural en preparación"), true);
+  assert.equal(componente.includes('aria-live="polite"'), true);
 });
 
 test("la card no rompe si falta imagen y usa fallback", () => {
