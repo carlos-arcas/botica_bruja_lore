@@ -114,6 +114,21 @@ class TestDeployGuards(SimpleTestCase):
 
         self._assert_failed_with(result, EXPECTED_DB_ERROR)
 
+
+    def test_railway_con_database_url_sqlite_falla_por_guardrail(self) -> None:
+        env = self._base_env()
+        env["RAILWAY_PUBLIC_DOMAIN"] = "botica-demo.up.railway.app"
+        env["SECRET_KEY"] = "test-secret"
+        env["DATABASE_URL"] = "sqlite:///var/dev.sqlite3"
+
+        code = f"import {SETTINGS_MODULE}"
+        result = self._run([PYTHON, "-c", code], env)
+
+        self._assert_failed_with(
+            result,
+            "SQLite no está permitida en Railway/producción. Configura PostgreSQL en DATABASE_URL.",
+        )
+
     def test_produccion_sin_secret_key_falla_con_error_canonico(self) -> None:
         env = self._base_env()
         env["DEBUG"] = "false"

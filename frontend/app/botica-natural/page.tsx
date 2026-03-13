@@ -1,5 +1,4 @@
 import { ListadoProductosBoticaNatural } from "@/componentes/botica-natural/ListadoProductosBoticaNatural";
-import { HeroSeccionPrincipal } from "@/componentes/secciones/HeroSeccionPrincipal";
 import { obtenerProductosPublicosPorSeccion } from "@/infraestructura/api/herbal";
 
 export default async function PaginaBoticaNatural(): Promise<JSX.Element> {
@@ -7,8 +6,11 @@ export default async function PaginaBoticaNatural(): Promise<JSX.Element> {
 
   return (
     <main className="contenedor-home">
-      <HeroSeccionPrincipal idSeccion="botica-natural" />
-      <section aria-label="Catálogo Botica Natural">
+      <section aria-label="Catálogo Botica Natural" className="botica-natural__bloque">
+        <header className="botica-natural__cabecera">
+          <h1>Botica Natural</h1>
+          <p>Selección herbal pública conectada con catálogo real en producción.</p>
+        </header>
         {resultado.estado === "ok" ? (
           <ListadoProductosBoticaNatural productos={resultado.productos} />
         ) : (

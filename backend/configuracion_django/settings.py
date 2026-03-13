@@ -53,6 +53,11 @@ def _configuracion_db_desde_url(database_url: str) -> dict[str, str | int]:
     parsed = urlparse(database_url)
     esquema = parsed.scheme
 
+    if _en_entorno_railway() and esquema == "sqlite":
+        raise ImproperlyConfigured(
+            "SQLite no está permitida en Railway/producción. Configura PostgreSQL en DATABASE_URL."
+        )
+
     if esquema in {"postgres", "postgresql", "postgresql+psycopg", "postgresql+psycopg2"}:
         return {
             "ENGINE": "django.db.backends.postgresql",
