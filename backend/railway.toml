@@ -3,7 +3,7 @@ builder = "RAILPACK"
 
 [deploy]
 startCommand = "PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} gunicorn backend.configuracion_django.wsgi:application --bind 0.0.0.0:${PORT:-8000}"
-preDeployCommand = "PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} migrate --noinput && PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} seed_demo_publico && PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} collectstatic --noinput"
+preDeployCommand = "PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} migrate --noinput && PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} seed_demo_publico && if [ \"${CREAR_ADMIN_PROVISIONAL:-false}\" = \"true\" ]; then PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} asegurar_admin_provisional; fi && PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} collectstatic --noinput"
 healthcheckPath = "/healthz"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"

@@ -26,6 +26,7 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} gunicorn backend.configuracion_
 ```bash
 PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} migrate --noinput && \
 PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} seed_demo_publico && \
+if [ "${CREAR_ADMIN_PROVISIONAL:-false}" = "true" ]; then PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} asegurar_admin_provisional; fi && \
 PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-manage.py} collectstatic --noinput
 ```
 
@@ -58,12 +59,31 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-ma
   - Si falta en Railway/producción, el backend falla por diseño con error de configuración temprano.
 - `ALLOWED_HOSTS` (CSV)
 - `CSRF_TRUSTED_ORIGINS` (CSV con URLs completas)
+- Variables opcionales para acceso admin provisional seguro:
+  - `CREAR_ADMIN_PROVISIONAL=true` (ejecución explícita durante predeploy)
+  - `ADMIN_USUARIO_PROVISIONAL=karkas`
+  - `ADMIN_PASSWORD_PROVISIONAL=<valor-seguro>`
 
 ### Frontend
 - `NEXT_PUBLIC_API_BASE_URL` con la URL pública del backend.
 
 
-## 2.1) Regla de seguridad para base de datos
+
+
+### 2.1) Admin provisional seguro (opcional y controlado)
+
+- El acceso visual en frontend se limita a enlazar `/admin/`; no contiene autenticación ni protección de seguridad por JS/templates.
+- La seguridad real está en `django.contrib.auth` dentro de Django Admin.
+- Ejecución manual en local:
+
+```bash
+ADMIN_USUARIO_PROVISIONAL=karkas ADMIN_PASSWORD_PROVISIONAL='<tu_password_segura>' python manage.py asegurar_admin_provisional
+```
+
+- En Railway, el comando solo se ejecuta si `CREAR_ADMIN_PROVISIONAL=true`.
+- Si faltan `ADMIN_USUARIO_PROVISIONAL` o `ADMIN_PASSWORD_PROVISIONAL`, el comando falla con error controlado y sin imprimir secretos.
+
+## 2.2) Regla de seguridad para base de datos
 
 - En local/desarrollo, si `DATABASE_URL` no existe, el backend usa fallback a SQLite en `var/dev.sqlite3`.
 - En Railway/producción, `DATABASE_URL` es obligatoria y no existe fallback a SQLite.
