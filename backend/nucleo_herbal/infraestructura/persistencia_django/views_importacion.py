@@ -1,4 +1,4 @@
-"""Vista custom de Django Admin para importación masiva."""
+"""Vista custom de Django Admin para importación masiva con staging."""
 
 import csv
 from io import BytesIO, StringIO
@@ -7,50 +7,142 @@ import zipfile
 from django.contrib import admin, messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.utils.html import escape
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.forms import ImportacionMasivaForm
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.esquemas import ESQUEMAS_IMPORTACION
-from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import guardar_imagenes_adjuntas
+from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import (
+    guardar_imagen_fila,
+    guardar_imagenes_adjuntas,
+)
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.lectores import leer_tabla
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.servicio import procesar_importacion
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import ImportacionFilaModelo, ImportacionLoteModelo
 
 
 @staff_member_required
 def importacion_masiva_view(request):
     form = ImportacionMasivaForm(request.POST or None, request.FILES or None)
-    resultado = None
+    lote = None
 
-    if request.method == "POST" and form.is_valid():
-        accion = request.POST.get("accion", "validar")
-        try:
-            columnas, filas = leer_tabla(form.cleaned_data["archivo"])
-            imagenes = guardar_imagenes_adjuntas(request.FILES.getlist("imagenes"))
-            modo = "solo_validar" if accion == "validar" else form.cleaned_data["modo"]
-            resultado = procesar_importacion(
-                filas=filas,
-                columnas=columnas,
-                entidad_solicitada=form.cleaned_data["entidad"],
-                modo=modo,
-                imagenes_por_referencia=imagenes,
-                usuario=request.user,
-            )
-            if accion == "importar" and resultado.fallidas == 0 and not resultado.columnas_faltantes:
-                messages.success(request, "Importación ejecutada correctamente.")
-            elif accion == "validar":
-                messages.info(request, "Validación completada. Revisa el preview antes de importar.")
-        except ValueError as exc:
-            messages.error(request, str(exc))
+    if request.method == "POST" and request.POST.get("accion") == "adjuntar_imagen":
+        fila = get_object_or_404(ImportacionFilaModelo, id=request.POST.get("fila_id"))
+        if "imagen_fila" in request.FILES:
+            fila.imagen = guardar_imagen_fila(request.FILES["imagen_fila"], fila.id)
+            fila.save(update_fields=["imagen"])
+            messages.success(request, f"Imagen actualizada para fila {fila.numero_fila_original}.")
+        lote = fila.lote
+
+    elif request.method == "POST" and request.POST.get("accion") in {"confirmar_seleccionadas", "confirmar_validas", "descartar_filas"}:
+        lote = get_object_or_404(ImportacionLoteModelo, id=request.POST.get("lote_id"), usuario=request.user)
+        _ejecutar_accion_lote(request, lote)
+
+    elif request.method == "POST" and form.is_valid():
+        columnas, filas = leer_tabla(form.cleaned_data["archivo"])
+        imagenes = guardar_imagenes_adjuntas(request.FILES.getlist("imagenes"))
+        lote = _crear_lote_staging(
+            usuario=request.user,
+            entidad=form.cleaned_data["entidad"],
+            modo=form.cleaned_data["modo"],
+            nombre_archivo=form.cleaned_data["archivo"].name,
+            columnas=columnas,
+            filas=filas,
+            imagenes=imagenes,
+        )
+        messages.info(request, "Validación completada. Revisa filas pendientes antes de confirmar.")
+    elif request.method == "POST":
+        messages.error(request, "Corrige el formulario y vuelve a intentar.")
+
+    lote_id = request.GET.get("lote")
+    if not lote and lote_id:
+        lote = ImportacionLoteModelo.objects.filter(id=lote_id, usuario=request.user).first()
 
     context = {
         **admin.site.each_context(request),
         "title": "Importación masiva",
         "form": form,
-        "resultado": resultado,
+        "lote": lote,
+        "filas": list(lote.filas.all()) if lote else [],
         "esquemas": ESQUEMAS_IMPORTACION,
     }
     return render(request, "admin/persistencia_django/importacion_masiva.html", context)
+
+
+def _crear_lote_staging(usuario, entidad, modo, nombre_archivo, columnas, filas, imagenes):
+    lote = ImportacionLoteModelo.objects.create(
+        entidad=entidad or "",
+        modo=modo,
+        nombre_archivo=nombre_archivo,
+        columnas_detectadas=columnas,
+        total_filas=len(filas),
+        usuario=usuario,
+    )
+    for indice, row in enumerate(filas, start=2):
+        evaluacion = procesar_importacion(
+            filas=[row],
+            columnas=columnas,
+            entidad_solicitada=entidad,
+            modo="solo_validar",
+            imagenes_por_referencia=imagenes,
+            usuario=usuario,
+        )
+        errores = [e.motivo for e in evaluacion.errores]
+        warnings = []
+        estado = ImportacionFilaModelo.ESTADO_INVALIDA if errores else ImportacionFilaModelo.ESTADO_VALIDA
+        if evaluacion.ignoradas:
+            warnings.append("Fila ya existente: en modo solo crear será ignorada.")
+            estado = ImportacionFilaModelo.ESTADO_WARNING
+        imagen = row.get("imagen_url", "")
+        if row.get("imagen_ref", ""):
+            imagen = imagenes.get(row.get("imagen_ref", ""), imagen)
+        ImportacionFilaModelo.objects.create(
+            lote=lote,
+            numero_fila_original=indice,
+            datos=row,
+            errores=errores,
+            warnings=warnings,
+            estado=estado,
+            imagen=imagen,
+            seleccionado=estado != ImportacionFilaModelo.ESTADO_INVALIDA,
+        )
+    return lote
+
+
+def _ejecutar_accion_lote(request, lote):
+    accion = request.POST.get("accion")
+    filas = lote.filas.all()
+    if accion == "descartar_filas":
+        ids = request.POST.getlist("fila_ids")
+        filas.filter(id__in=ids).update(estado=ImportacionFilaModelo.ESTADO_DESCARTADA, seleccionado=False)
+        messages.warning(request, f"Filas descartadas: {len(ids)}")
+        return
+
+    if accion == "confirmar_seleccionadas":
+        filas_objetivo = filas.filter(seleccionado=True).exclude(estado=ImportacionFilaModelo.ESTADO_DESCARTADA)
+    else:
+        filas_objetivo = filas.filter(estado__in=[ImportacionFilaModelo.ESTADO_VALIDA, ImportacionFilaModelo.ESTADO_WARNING])
+
+    for fila in filas_objetivo:
+        row = dict(fila.datos)
+        if fila.imagen:
+            row["imagen_url"] = fila.imagen
+        resultado = procesar_importacion(
+            filas=[row],
+            columnas=lote.columnas_detectadas,
+            entidad_solicitada=lote.entidad,
+            modo=lote.modo,
+            imagenes_por_referencia={},
+            usuario=request.user,
+        )
+        if resultado.fallidas:
+            fila.estado = ImportacionFilaModelo.ESTADO_INVALIDA
+            fila.resultado_confirmacion = resultado.errores[0].motivo
+        else:
+            fila.estado = ImportacionFilaModelo.ESTADO_CONFIRMADA
+            fila.resultado_confirmacion = f"ok c={resultado.creadas} a={resultado.actualizadas} i={resultado.ignoradas}"
+        fila.save(update_fields=["estado", "resultado_confirmacion"])
+    messages.success(request, "Confirmación ejecutada por filas.")
 
 
 @staff_member_required
@@ -139,6 +231,7 @@ def _workbook_rels() -> str:
     return (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" '
+        '<Relationship Id="rId1" '
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" '
         'Target="worksheets/sheet1.xml"/></Relationships>'
     )

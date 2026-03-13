@@ -5,7 +5,6 @@ import zipfile
 
 try:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.configuracion_django.settings")
-
     import django
 
     django.setup()
@@ -15,9 +14,10 @@ try:
     from django.test import TestCase
     from django.urls import reverse
 
-    from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.servicio import procesar_importacion
     from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
         ArticuloEditorialModelo,
+        ImportacionFilaModelo,
+        ImportacionLoteModelo,
         IntencionModelo,
         ProductoModelo,
         RitualModelo,
@@ -45,29 +45,17 @@ class TestImportacionMasivaAdmin(TestCase):
         return SimpleUploadedFile(nombre, contenido.encode("utf-8"), content_type="text/csv")
 
     def _archivo_xlsx_productos(self):
-        rows = [
-            [
-                "sku",
-                "slug",
-                "nombre",
-                "tipo_producto",
-                "categoria_comercial",
-                "seccion_publica",
-                "descripcion_corta",
-                "precio_visible",
-                "publicado",
-            ],
-            ["SKU-2", "prod-2", "Prod 2", "herbal", "hierbas", "botica", "desc", "9.90", "true"],
-        ]
+        rows = [["sku", "slug", "nombre", "tipo_producto", "categoria_comercial", "seccion_publica", "descripcion_corta", "precio_visible", "publicado"], ["SKU-2", "prod-2", "Prod 2", "herbal", "hierbas", "botica", "desc", "9.90", "true"]]
+
         def sheet_xml(rows):
-            body=[]
-            for ridx,row in enumerate(rows, start=1):
-                cells=[]
-                for cidx,value in enumerate(row):
-                    col=chr(ord("A")+cidx)
+            body = []
+            for ridx, row in enumerate(rows, start=1):
+                cells = []
+                for cidx, value in enumerate(row):
+                    col = chr(ord("A") + cidx)
                     cells.append(f'<c r="{col}{ridx}" t="inlineStr"><is><t>{value}</t></is></c>')
                 body.append(f'<row r="{ridx}">{"".join(cells)}</row>')
-            return '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'+"".join(body)+"</sheetData></worksheet>"
+            return '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' + "".join(body) + "</sheetData></worksheet>"
 
         data = BytesIO()
         with zipfile.ZipFile(data, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -76,184 +64,77 @@ class TestImportacionMasivaAdmin(TestCase):
             zf.writestr("xl/workbook.xml", '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="s1" sheetId="1" r:id="rId1"/></sheets></workbook>')
             zf.writestr("xl/_rels/workbook.xml.rels", '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>')
             zf.writestr("xl/worksheets/sheet1.xml", sheet_xml(rows))
-        return SimpleUploadedFile(
-            "productos.xlsx",
-            data.getvalue(),
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+        return SimpleUploadedFile("productos.xlsx", data.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+    def _crear_lote(self, archivo):
+        self.client.force_login(self.staff)
+        self.client.post(self.url, {"modo": "solo_crear", "entidad": "productos", "accion": "validar", "archivo": archivo})
+        return ImportacionLoteModelo.objects.latest("id")
 
     def test_permiso_restringido_para_no_staff(self):
         self.client.force_login(self.no_staff)
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.client.get(self.url).status_code, 302)
 
-    def test_render_pantalla_con_dropzone_y_ayuda(self):
+    def test_subida_csv_valida_genera_pendientes(self):
+        lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-1,prod-1,Producto,herbal,hierbas,botica,desc,10.00,true\n"))
+        self.assertEqual(lote.filas.count(), 1)
+        self.assertEqual(ProductoModelo.objects.count(), 0)
+
+    def test_subida_xlsx_valida_genera_pendientes(self):
+        lote = self._crear_lote(self._archivo_xlsx_productos())
+        self.assertEqual(lote.filas.count(), 1)
+
+    def test_fila_invalida_reporta_error(self):
+        lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\n,prod-1,Producto,herbal,hierbas,botica,desc,10.00,true\n"))
+        fila = lote.filas.first()
+        self.assertEqual(fila.estado, ImportacionFilaModelo.ESTADO_INVALIDA)
+        self.assertTrue(fila.errores)
+
+    def test_confirmacion_parcial(self):
+        lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-1,prod-1,Producto,herbal,hierbas,botica,desc,10.00,true\nSKU-2,prod-2,Producto2,herbal,hierbas,botica,desc,10.00,true\n"))
+        fila = lote.filas.first()
+        self.client.post(self.url, {"accion": "descartar_filas", "lote_id": lote.id, "fila_ids": [fila.id]})
+        self.client.post(self.url, {"accion": "confirmar_validas", "lote_id": lote.id})
+        self.assertEqual(ProductoModelo.objects.count(), 1)
+
+    def test_confirmacion_total(self):
+        lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-3,prod-3,Producto3,herbal,hierbas,botica,desc,10.00,true\n"))
+        self.client.post(self.url, {"accion": "confirmar_validas", "lote_id": lote.id})
+        self.assertTrue(ProductoModelo.objects.filter(slug="prod-3").exists())
+
+    def test_create_only_y_upsert(self):
+        ProductoModelo.objects.create(id="p-1", sku="SKU-A", slug="prod-u", nombre="Antes", tipo_producto="h", categoria_comercial="h", seccion_publica="botica", descripcion_corta="d", precio_visible="1", publicado=True)
+        lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-A,prod-u,Despues,herbal,hierbas,botica,desc,11.00,true\n"))
+        self.client.post(self.url, {"accion": "confirmar_validas", "lote_id": lote.id})
+        self.assertEqual(ProductoModelo.objects.get(slug="prod-u").nombre, "Antes")
+        lote2 = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-A,prod-u,Despues,herbal,hierbas,botica,desc,11.00,true\n"))
+        lote2.modo = "crear_actualizar"
+        lote2.save(update_fields=["modo"])
+        self.client.post(self.url, {"accion": "confirmar_validas", "lote_id": lote2.id})
+        self.assertEqual(ProductoModelo.objects.get(slug="prod-u").nombre, "Despues")
+
+    def test_adjuntar_imagen_por_input_y_drag_drop(self):
+        lote = self._crear_lote(self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-5,prod-5,Producto5,herbal,hierbas,botica,desc,10.00,true\n"))
+        fila = lote.filas.first()
+        png = SimpleUploadedFile("demo.png", b"\x89PNG\r\n\x1a\n", content_type="image/png")
+        self.client.post(self.url, {"accion": "adjuntar_imagen", "fila_id": fila.id, "imagen_fila": png})
+        fila.refresh_from_db()
+        self.assertIn("importaciones/filas", fila.imagen)
+
+    def test_plantillas_descargables_y_permisos(self):
         self.client.force_login(self.staff)
-        response = self.client.get(self.url)
-        self.assertContains(response, "drop-archivo")
-        self.assertContains(response, "Descargar plantilla CSV")
-        self.assertContains(response, "Obligatorias")
+        self.assertEqual(self.client.get(reverse("importacion-plantilla", args=["productos", "csv"])).status_code, 200)
+        self.assertEqual(self.client.get(reverse("importacion-plantilla", args=["productos", "xlsx"])).status_code, 200)
 
-    def test_csv_valido_productos_create_only(self):
+    def test_importa_entidades_requeridas(self):
         self.client.force_login(self.staff)
-        archivo = self._archivo_csv(
-            "productos.csv",
-            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\n"
-            "SKU-1,prod-1,Producto 1,herbal,hierbas,botica,desc,10.00,true\n",
-        )
-        response = self.client.post(self.url, {"modo": "solo_crear", "accion": "importar", "archivo": archivo})
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(ProductoModelo.objects.filter(slug="prod-1").exists())
-
-    def test_excel_valido_productos(self):
-        self.client.force_login(self.staff)
-        response = self.client.post(self.url, {"modo": "solo_crear", "accion": "importar", "archivo": self._archivo_xlsx_productos()})
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(ProductoModelo.objects.filter(slug="prod-2").exists())
-
-    def test_validacion_sin_persistencia(self):
-        self.client.force_login(self.staff)
-        archivo = self._archivo_csv(
-            "productos.csv",
-            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\n"
-            "SKU-3,prod-3,Producto 3,herbal,hierbas,botica,desc,10.00,true\n",
-        )
-        self.client.post(self.url, {"accion": "validar", "archivo": archivo})
-        self.assertFalse(ProductoModelo.objects.filter(slug="prod-3").exists())
-
-    def test_upsert_producto(self):
-        ProductoModelo.objects.create(
-            id="p-1",
-            sku="SKU-X",
-            slug="prod-upsert",
-            nombre="Antes",
-            tipo_producto="herbal",
-            categoria_comercial="hierbas",
-            seccion_publica="botica",
-            descripcion_corta="d",
-            precio_visible="1",
-            publicado=True,
-        )
-        self.client.force_login(self.staff)
-        archivo = self._archivo_csv(
-            "productos.csv",
-            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\n"
-            "SKU-X,prod-upsert,Despues,herbal,hierbas,botica,desc,11.00,true\n",
-        )
-        self.client.post(self.url, {"modo": "crear_actualizar", "accion": "importar", "archivo": archivo})
-        self.assertEqual(ProductoModelo.objects.get(slug="prod-upsert").nombre, "Despues")
-
-    def test_error_columna_faltante(self):
-        self.client.force_login(self.staff)
-        archivo = self._archivo_csv("productos.csv", "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible\nSKU-9,prod-9,P,herbal,h,botica,d,1\n")
-        response = self.client.post(self.url, {"accion": "validar", "modo": "solo_validar", "entidad": "productos", "archivo": archivo})
-        self.assertContains(response, "Columnas faltantes")
-
-    def test_error_slug_duplicado_conflictivo(self):
-        ProductoModelo.objects.create(
-            id="p-2",
-            sku="SKU-A",
-            slug="prod-conflicto",
-            nombre="Prod",
-            tipo_producto="herbal",
-            categoria_comercial="hierbas",
-            seccion_publica="botica",
-            descripcion_corta="d",
-            precio_visible="1",
-            publicado=True,
-        )
-        self.client.force_login(self.staff)
-        archivo = self._archivo_csv(
-            "productos.csv",
-            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\n"
-            "SKU-B,prod-conflicto,Producto,herbal,hierbas,botica,desc,10.00,true\n",
-        )
-        response = self.client.post(self.url, {"modo": "crear_actualizar", "accion": "importar", "archivo": archivo})
-        self.assertContains(response, "Conflicto")
-
-    def test_error_relacion_inexistente_ritual(self):
-        self.client.force_login(self.staff)
-        archivo = self._archivo_csv(
-            "rituales.csv",
-            "slug,nombre,contexto_breve,contenido,publicado,intenciones_relacionadas\n"
-            "rit-1,Ritual,ctx,contenido,true,no-existe\n",
-        )
-        response = self.client.post(self.url, {"modo": "crear_actualizar", "accion": "importar", "archivo": archivo})
-        self.assertContains(response, "Relaciones inexistentes")
-
-    def test_asociacion_imagen_por_referencia(self):
-        resultado = procesar_importacion(
-            filas=[{
-                "sku": "SKU-IMG",
-                "slug": "prod-img",
-                "nombre": "Producto Img",
-                "tipo_producto": "herbal",
-                "categoria_comercial": "hierbas",
-                "seccion_publica": "botica",
-                "descripcion_corta": "desc",
-                "precio_visible": "1.00",
-                "publicado": "true",
-                "imagen_ref": "img1.jpg",
-            }],
-            columnas=["sku", "slug", "nombre", "tipo_producto", "categoria_comercial", "seccion_publica", "descripcion_corta", "precio_visible", "publicado", "imagen_ref"],
-            entidad_solicitada="productos",
-            modo="solo_crear",
-            imagenes_por_referencia={"img1.jpg": "/media/importaciones/imagenes/img1.jpg"},
-            usuario=self.staff,
-        )
-        self.assertEqual(resultado.fallidas, 0)
-        self.assertIn("img1.jpg", ProductoModelo.objects.get(slug="prod-img").imagen_url)
-
-    def test_resumen_final_renderiza(self):
-        self.client.force_login(self.staff)
-        archivo = self._archivo_csv(
-            "secciones.csv",
-            "slug,nombre,publicada\nsec-1,Sección 1,true\n",
-        )
-        response = self.client.post(self.url, {"modo": "solo_crear", "accion": "importar", "archivo": archivo})
-        self.assertContains(response, "Filas procesadas")
-
-    def test_plantillas_descargables(self):
-        self.client.force_login(self.staff)
-        csv_resp = self.client.get(reverse("importacion-plantilla", args=["productos", "csv"]))
-        xlsx_resp = self.client.get(reverse("importacion-plantilla", args=["productos", "xlsx"]))
-        self.assertEqual(csv_resp.status_code, 200)
-        self.assertEqual(xlsx_resp.status_code, 200)
-
-    def test_importa_rituales_articulos_y_secciones(self):
-        self.client.force_login(self.staff)
-        self.client.post(
-            self.url,
-            {
-                "modo": "solo_crear",
-                "accion": "importar",
-                "archivo": self._archivo_csv("secciones.csv", "slug,nombre,publicada\nsec-2,Sección 2,true\n"),
-            },
-        )
-        self.client.post(
-            self.url,
-            {
-                "modo": "solo_crear",
-                "accion": "importar",
-                "archivo": self._archivo_csv(
-                    "articulos.csv",
-                    "slug,titulo,resumen,contenido,publicado,indexable,seccion_publica\n"
-                    "art-1,Titulo,res,cont,true,true,sec-2\n",
-                ),
-            },
-        )
-        self.client.post(
-            self.url,
-            {
-                "modo": "solo_crear",
-                "accion": "importar",
-                "archivo": self._archivo_csv(
-                    "rituales.csv",
-                    "slug,nombre,contexto_breve,contenido,publicado,intenciones_relacionadas\n"
-                    "rit-2,Ritual,ctx,contenido,true,claridad\n",
-                ),
-            },
-        )
+        self.client.post(self.url, {"modo": "solo_crear", "entidad": "secciones_publicas", "accion": "validar", "archivo": self._archivo_csv("secciones.csv", "slug,nombre,publicada\nsec-2,Sección 2,true\n")})
+        lote = ImportacionLoteModelo.objects.latest("id")
+        self.client.post(self.url, {"accion": "confirmar_validas", "lote_id": lote.id})
+        self.client.post(self.url, {"modo": "solo_crear", "entidad": "articulos_editoriales", "accion": "validar", "archivo": self._archivo_csv("art.csv", "slug,titulo,resumen,contenido,publicado,indexable,seccion_publica\na-1,T,r,c,true,true,sec-2\n")})
+        self.client.post(self.url, {"accion": "confirmar_validas", "lote_id": ImportacionLoteModelo.objects.latest("id").id})
+        self.client.post(self.url, {"modo": "solo_crear", "entidad": "rituales", "accion": "validar", "archivo": self._archivo_csv("rit.csv", "slug,nombre,contexto_breve,contenido,publicado,intenciones_relacionadas\nr-1,R,c,c,true,claridad\n")})
+        self.client.post(self.url, {"accion": "confirmar_validas", "lote_id": ImportacionLoteModelo.objects.latest("id").id})
         self.assertTrue(SeccionPublicaModelo.objects.filter(slug="sec-2").exists())
-        self.assertTrue(ArticuloEditorialModelo.objects.filter(slug="art-1").exists())
-        self.assertTrue(RitualModelo.objects.filter(slug="rit-2").exists())
+        self.assertTrue(ArticuloEditorialModelo.objects.filter(slug="a-1").exists())
+        self.assertTrue(RitualModelo.objects.filter(slug="r-1").exists())

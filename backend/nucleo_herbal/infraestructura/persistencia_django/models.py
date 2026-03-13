@@ -255,3 +255,51 @@ class CuentaDemoModelo(models.Model):
 
     def __str__(self) -> str:
         return self.email
+
+
+class ImportacionLoteModelo(models.Model):
+    entidad = models.CharField(max_length=64)
+    modo = models.CharField(max_length=32)
+    nombre_archivo = models.CharField(max_length=255)
+    columnas_detectadas = models.JSONField(default=list)
+    total_filas = models.PositiveIntegerField(default=0)
+    usuario = models.ForeignKey("auth.User", on_delete=models.PROTECT, related_name="lotes_importacion")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_importacion_lote"
+        ordering = ("-fecha_creacion",)
+        verbose_name = "lote de importación"
+        verbose_name_plural = "lotes de importación"
+
+
+class ImportacionFilaModelo(models.Model):
+    ESTADO_VALIDA = "valida"
+    ESTADO_WARNING = "valida_warning"
+    ESTADO_INVALIDA = "invalida"
+    ESTADO_DESCARTADA = "descartada"
+    ESTADO_CONFIRMADA = "confirmada"
+    ESTADOS = (
+        (ESTADO_VALIDA, "Válida"),
+        (ESTADO_WARNING, "Válida con warning"),
+        (ESTADO_INVALIDA, "Inválida"),
+        (ESTADO_DESCARTADA, "Descartada"),
+        (ESTADO_CONFIRMADA, "Confirmada"),
+    )
+
+    lote = models.ForeignKey(ImportacionLoteModelo, on_delete=models.CASCADE, related_name="filas")
+    numero_fila_original = models.PositiveIntegerField()
+    datos = models.JSONField(default=dict)
+    errores = models.JSONField(default=list)
+    warnings = models.JSONField(default=list)
+    estado = models.CharField(max_length=24, choices=ESTADOS, default=ESTADO_INVALIDA)
+    seleccionado = models.BooleanField(default=True)
+    imagen = models.CharField(max_length=255, blank=True, default="")
+    resultado_confirmacion = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        db_table = "nucleo_importacion_fila"
+        ordering = ("numero_fila_original", "id")
+        verbose_name = "fila de importación"
+        verbose_name_plural = "filas de importación"
