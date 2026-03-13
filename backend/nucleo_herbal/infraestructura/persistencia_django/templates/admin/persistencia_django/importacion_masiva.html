@@ -1,119 +1,204 @@
 {% extends "admin/base_site.html" %}
 
+{% block extrastyle %}
+<style>
+.importacion-layout{display:grid;gap:1rem;max-width:1400px}
+.importacion-panel{background:#fff;border:1px solid #d9d9df;border-radius:12px;padding:1rem 1.25rem}
+.importacion-cabecera h1{margin:.2rem 0}.importacion-sub{color:#4b4f58}
+.importacion-contadores{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.5rem;margin-top:.75rem}
+.kpi{border:1px solid #e3e5ea;border-radius:10px;padding:.5rem .7rem}.kpi span{display:block;color:#656b75;font-size:.8rem}.kpi strong{font-size:1.2rem}
+.dropzone{border:2px dashed #8f95a3;border-radius:10px;padding:1rem;transition:.2s;background:#fafbff}.dropzone.activo{border-color:#2e5aac;background:#eef3ff}
+.grid-dos{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.ayuda-lista{display:grid;gap:.3rem;padding-left:1rem}
+.toolbar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.estado-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .5rem;border-radius:999px;border:1px solid #bbb;font-size:.8rem}
+.estado-chip::before{content:"";width:.6rem;height:.6rem;border-radius:50%;display:inline-block;background:#666}
+tr[data-estado='valida'] .estado-chip{border-style:solid}.estado-valida::before{background:#227a39}
+.estado-warning{border-style:dashed}.estado-warning::before{background:#9b6a00}
+.estado-invalida{font-weight:700}.estado-invalida::before{background:#a12121}
+.estado-descartada{text-decoration:line-through}.estado-descartada::before{background:#636363}
+.estado-confirmada{border-width:2px}.estado-confirmada::before{background:#005e8b}
+.tabla-scroll{max-height:520px;overflow:auto;border:1px solid #e1e3e8;border-radius:10px}
+.tabla-pendientes{width:100%;border-collapse:collapse}.tabla-pendientes th,.tabla-pendientes td{padding:.55rem;border-bottom:1px solid #eceef2;vertical-align:top}
+.fila-dropzone{outline:none}.fila-dropzone.drag-sobre{background:#f1f5ff}
+.errores{margin:0;padding-left:1rem}.errores li{margin-bottom:.2rem}
+.preview-img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #ced3dc}
+.filtros button[aria-pressed='true']{background:#2e5aac;color:#fff}
+.barra-final{position:sticky;bottom:0;z-index:2;display:flex;gap:.5rem;flex-wrap:wrap;padding:.8rem;border:1px solid #d9d9df;background:#fff;border-radius:10px}
+.sr-only{position:absolute;left:-9999px}
+@media (max-width:980px){.grid-dos{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>Importación masiva CSV/XLSX (staging)</h1>
-<form method="post" enctype="multipart/form-data" style="max-width:1200px;">
-  {% csrf_token %}
-  <fieldset class="module aligned">
-    {{ form.entidad.label_tag }} {{ form.entidad }}
-    {{ form.modo.label_tag }} {{ form.modo }}
-    <div id="drop-archivo" style="margin-top:1rem;border:2px dashed #888;padding:1rem;border-radius:6px;">
-      <strong>Arrastra CSV/XLSX</strong> · {{ form.archivo }}
+<div class="importacion-layout">
+  <section class="importacion-panel importacion-cabecera">
+    <h1>Importación masiva</h1>
+    <p class="importacion-sub">Sube tu archivo, valida filas pendientes, asocia imágenes y confirma en bloque.</p>
+    <p>Estado global: <strong>{% if lote %}Lote activo #{{ lote.id }} · {{ lote.nombre_archivo }}{% else %}Sin importación cargada{% endif %}</strong></p>
+    <div class="importacion-contadores">
+      <div class="kpi"><span>Válidas</span><strong>{{ resumen.validas }}</strong></div>
+      <div class="kpi"><span>Warnings</span><strong>{{ resumen.warnings }}</strong></div>
+      <div class="kpi"><span>Inválidas</span><strong>{{ resumen.invalidas }}</strong></div>
+      <div class="kpi"><span>Descartadas</span><strong>{{ resumen.descartadas }}</strong></div>
+      <div class="kpi"><span>Confirmadas</span><strong>{{ resumen.confirmadas }}</strong></div>
+      <div class="kpi"><span>Sin imagen</span><strong>{{ resumen.sin_imagen }}</strong></div>
     </div>
-    <div id="drop-imagenes" style="margin-top:1rem;border:2px dashed #6a6;padding:1rem;border-radius:6px;">
-      <strong>Imágenes por referencia (imagen_ref)</strong> · {{ form.imagenes }}
-    </div>
-    <button class="button default" name="accion" value="validar" type="submit" style="margin-top:1rem;">Subir + validar + crear pendientes</button>
-  </fieldset>
-</form>
+  </section>
 
-<h2>Plantillas y contrato</h2>
-<ul>
-{% for clave, esquema in esquemas.items %}
-<li>
-  <strong>{{ clave }}</strong> — <a href="{% url 'importacion-plantilla' clave 'csv' %}">Descargar plantilla CSV</a> · <a href="{% url 'importacion-plantilla' clave 'xlsx' %}">Descargar plantilla XLSX</a><br>
-  Obligatorias: {{ esquema.columnas_obligatorias|join:", " }}<br>
-  Opcionales: {{ esquema.columnas_opcionales|join:", " }}<br>
-  Orden recomendado: {{ esquema.todas_columnas|join:", " }}<br>
-  Reglas slug: minúsculas + guiones · booleanos: true/false · imágenes: imagen_url o imagen_ref (si adjuntas local, prevalece).<br>
-  {% if esquema.regla_relaciones %}Relaciones: {{ esquema.regla_relaciones }}{% endif %}
-</li>
-{% endfor %}
-</ul>
-
-{% if lote %}
-<h2>Zona de pendientes por confirmar</h2>
-<p>Archivo: <strong>{{ lote.nombre_archivo }}</strong> · Modo: <strong>{{ lote.modo }}</strong> · Filas: {{ lote.total_filas }}</p>
-<form method="post">
-  {% csrf_token %}
-  <input type="hidden" name="lote_id" value="{{ lote.id }}">
-  <table class="adminlist" style="width:100%;">
-    <thead>
-      <tr>
-        <th>Confirmar</th><th>Fila</th><th>Estado</th><th>Datos</th><th>Errores / warnings</th><th>Imagen</th><th>Subir/Reemplazar</th><th>Resultado</th><th>Descartar</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for fila in filas %}
-      <tr data-fila-id="{{ fila.id }}" class="fila-dropzone">
-        <td><input type="checkbox" name="fila_ids" value="{{ fila.id }}" {% if fila.seleccionado %}checked{% endif %}></td>
-        <td>{{ fila.numero_fila_original }}</td>
-        <td>{{ fila.get_estado_display }}</td>
-        <td><code style="white-space:pre-wrap;">{{ fila.datos }}</code></td>
-        <td>
-          {% for e in fila.errores %}<div style="color:#b00;">{{ e }}</div>{% endfor %}
-          {% for w in fila.warnings %}<div style="color:#995700;">{{ w }}</div>{% endfor %}
-        </td>
-        <td>{% if fila.imagen %}<img src="{{ fila.imagen }}" alt="preview" style="width:56px;height:56px;object-fit:cover;border-radius:6px;">{% else %}-{% endif %}</td>
-        <td>
-          <input type="file" name="imagen_fila_{{ fila.id }}" class="input-imagen-fila" data-fila-id="{{ fila.id }}" accept="image/*">
-          <button type="button" class="button btn-subir-fila" data-fila-id="{{ fila.id }}">Adjuntar</button>
-        </td>
-        <td>{{ fila.resultado_confirmacion }}</td>
-        <td><input type="checkbox" name="descartar_ids" value="{{ fila.id }}"></td>
-      </tr>
+  <section class="importacion-panel grid-dos">
+    <form method="post" enctype="multipart/form-data" aria-label="Subida de archivo de importación">
+      {% csrf_token %}
+      {{ form.entidad.label_tag }} {{ form.entidad }}
+      {{ form.modo.label_tag }} {{ form.modo }}
+      <div id="drop-archivo" class="dropzone" tabindex="0" role="button" aria-label="Arrastra archivo CSV o XLSX">
+        <strong>Arrastra CSV/XLSX aquí</strong><br>
+        {{ form.archivo }}
+        <p>Formatos soportados: .csv, .xlsx · Peso máximo recomendado: 10MB.</p>
+        <button type="button" class="button" data-open-input="#id_archivo">Seleccionar archivo</button>
+      </div>
+      <div id="drop-imagenes" class="dropzone" tabindex="0" role="button" aria-label="Arrastra zip o imágenes por referencia">
+        <strong>Imágenes por referencia (imagen_ref)</strong><br>
+        {{ form.imagenes }}
+        <button type="button" class="button" data-open-input="#id_imagenes">Seleccionar imágenes</button>
+      </div>
+      <button class="button default" name="accion" value="validar" type="submit">Subir + validar + crear pendientes</button>
+    </form>
+    <aside>
+      <h2>Guía rápida y plantillas</h2>
+      {% for clave, esquema in esquemas.items %}
+      <div class="importacion-panel" style="margin-bottom:.5rem;">
+        <strong>{{ clave }}</strong>
+        <ul class="ayuda-lista">
+          <li>Obligatorias: {{ esquema.columnas_obligatorias|join:", " }}</li>
+          <li>Opcionales: {{ esquema.columnas_opcionales|join:", " }}</li>
+          <li>Orden recomendado: {{ esquema.todas_columnas|join:", " }}</li>
+          <li>Relaciones: {{ esquema.regla_relaciones|default:"sin relaciones" }}</li>
+          <li>Imágenes: imagen_url o imagen_ref (si adjuntas local, prevalece).</li>
+        </ul>
+        <a href="{% url 'importacion-plantilla' clave 'csv' %}">Plantilla CSV</a> ·
+        <a href="{% url 'importacion-plantilla' clave 'xlsx' %}">Plantilla XLSX</a>
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
-  <div style="margin-top:1rem;display:flex;gap:10px;">
-    <button class="button default" name="accion" value="confirmar_seleccionadas" type="submit">Confirmar seleccionadas</button>
-    <button class="button" name="accion" value="confirmar_validas" type="submit">Confirmar válidas</button>
-    <button class="button" name="accion" value="descartar_filas" type="submit">Descartar seleccionadas</button>
-  </div>
-</form>
-{% endif %}
+    </aside>
+  </section>
+
+  <section class="importacion-panel">
+    {% if lote %}
+    <form method="post" id="form-lote" aria-label="Tabla de pendientes de importación">
+      {% csrf_token %}
+      <input type="hidden" name="lote_id" value="{{ lote.id }}">
+      <div class="toolbar filtros" role="toolbar" aria-label="Filtros rápidos">
+        <button type="button" class="button" data-filtro="todas" aria-pressed="true">Todas ({{ resumen.total }})</button>
+        <button type="button" class="button" data-filtro="valida" aria-pressed="false">Válidas ({{ resumen.validas }})</button>
+        <button type="button" class="button" data-filtro="valida_warning" aria-pressed="false">Warnings ({{ resumen.warnings }})</button>
+        <button type="button" class="button" data-filtro="invalida" aria-pressed="false">Inválidas ({{ resumen.invalidas }})</button>
+        <button type="button" class="button" data-filtro="sin_imagen" aria-pressed="false">Sin imagen ({{ resumen.sin_imagen }})</button>
+        <button type="button" class="button" data-filtro="con_imagen" aria-pressed="false">Con imagen ({{ resumen.con_imagen }})</button>
+        <button type="button" class="button" data-filtro="descartada" aria-pressed="false">Descartadas ({{ resumen.descartadas }})</button>
+        <button type="button" class="button" data-filtro="confirmada" aria-pressed="false">Confirmadas ({{ resumen.confirmadas }})</button>
+        <label class="sr-only" for="buscador-filtrado">Buscar por SKU, slug o nombre</label>
+        <input id="buscador-filtrado" type="search" placeholder="Buscar SKU / slug / nombre" style="min-width:260px;">
+        <button type="button" class="button" id="seleccionar-visibles">Seleccionar visibles</button>
+      </div>
+
+      <div class="tabla-scroll">
+        <table class="tabla-pendientes">
+          <thead><tr><th><input type="checkbox" id="seleccionar-todo"></th><th>Fila</th><th>Estado</th><th>SKU/Slug</th><th>Título</th><th>Tipo</th><th>Datos clave</th><th>Imagen</th><th>Errores/Warnings</th><th>Acciones</th></tr></thead>
+          <tbody>
+            {% for fila in filas_presentacion %}
+            <tr class="fila-dropzone" data-fila-id="{{ fila.obj.id }}" data-estado="{{ fila.obj.estado }}" data-busqueda="{{ fila.identificador|lower }} {{ fila.titulo|lower }}">
+              <td><input type="checkbox" name="fila_ids" value="{{ fila.obj.id }}" {% if fila.obj.seleccionado %}checked{% endif %}></td>
+              <td>{{ fila.obj.numero_fila_original }}</td>
+              <td><span class="estado-chip estado-{{ fila.obj.estado|cut:'valida_' }}">{{ fila.obj.get_estado_display }}</span></td>
+              <td><code>{{ fila.identificador }}</code></td>
+              <td>{{ fila.titulo }}</td>
+              <td>{{ fila.tipo }}</td>
+              <td>{{ fila.resumen_datos }}</td>
+              <td>
+                {% if fila.obj.imagen %}<img src="{{ fila.obj.imagen }}" alt="Vista previa fila {{ fila.obj.numero_fila_original }}" class="preview-img">{% else %}<span>Sin imagen</span>{% endif %}
+                <div><small data-img-estado>{% if fila.obj.imagen %}Optimizada{% else %}Pendiente{% endif %}</small></div>
+              </td>
+              <td>
+                {% if fila.obj.errores or fila.obj.warnings %}<ul class="errores">{% for e in fila.obj.errores %}<li><strong>Error:</strong> {{ e }}</li>{% endfor %}{% for w in fila.obj.warnings %}<li><strong>Warning:</strong> {{ w }}</li>{% endfor %}</ul>{% else %}<span>Sin incidencias</span>{% endif %}
+              </td>
+              <td>
+                <input type="file" name="imagen_fila_{{ fila.obj.id }}" class="input-imagen-fila" data-fila-id="{{ fila.obj.id }}" accept="image/*">
+                <button type="button" class="button btn-subir-fila" data-fila-id="{{ fila.obj.id }}">Seleccionar</button>
+                <button type="button" class="button btn-eliminar-imagen" data-fila-id="{{ fila.obj.id }}">Eliminar</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="importacion-panel" aria-live="polite">
+        <strong>Resumen antes de confirmar:</strong>
+        Total {{ resumen.total }} · Válidas {{ resumen.validas }} · Inválidas {{ resumen.invalidas }} · Warnings {{ resumen.warnings }} · Seleccionadas {{ resumen.seleccionadas }} · Con imagen {{ resumen.con_imagen }} · Sin imagen {{ resumen.sin_imagen }}
+      </div>
+      <div class="barra-final">
+        <button class="button default" name="accion" value="confirmar_validas" type="submit">Confirmar válidas</button>
+        <button class="button default" name="accion" value="confirmar_seleccionadas" type="submit">Confirmar seleccionadas</button>
+        <button class="button" name="accion" value="descartar_filas" type="submit">Descartar seleccionadas</button>
+        <button class="button" name="accion" value="revalidar_lote" type="submit">Revalidar</button>
+        <button class="button deletelink" name="accion" value="cancelar_importacion" type="submit">Cancelar importación</button>
+      </div>
+    </form>
+    {% else %}
+      <h2>Sin importación activa</h2>
+      <p>Sube un archivo CSV/XLSX para iniciar el staging y validar filas.</p>
+      <p>Puedes descargar plantillas desde el panel de ayuda para comenzar con el formato correcto.</p>
+    {% endif %}
+  </section>
+</div>
 
 <script>
-function enableDropzone(zoneId, inputSelector) {
-  const zone = document.getElementById(zoneId);
-  const input = document.querySelector(inputSelector);
-  if (!zone || !input) return;
-  ["dragenter","dragover","dragleave","drop"].forEach(evt => zone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }));
-  zone.addEventListener("drop", e => { input.files = e.dataTransfer.files; });
+function dropzone(id, inputSelector){
+  const zone = document.getElementById(id); const input = document.querySelector(inputSelector); if(!zone||!input){return;}
+  ['dragenter','dragover'].forEach(evt=>zone.addEventListener(evt,e=>{e.preventDefault();zone.classList.add('activo');}));
+  ['dragleave','drop'].forEach(evt=>zone.addEventListener(evt,e=>{e.preventDefault();zone.classList.remove('activo');}));
+  zone.addEventListener('drop',e=>{input.files=e.dataTransfer.files;});
+  zone.addEventListener('keydown',e=>{if(e.key==='Enter'){input.click();}});
 }
-enableDropzone("drop-archivo", "#id_archivo");
-enableDropzone("drop-imagenes", "#id_imagenes");
+dropzone('drop-archivo','#id_archivo');dropzone('drop-imagenes','#id_imagenes');
+document.querySelectorAll('[data-open-input]').forEach(btn=>btn.addEventListener('click',()=>document.querySelector(btn.dataset.openInput).click()));
+function csrftoken(){ const el = document.querySelector('[name=csrfmiddlewaretoken]'); return el ? el.value : ''; }
+function subirImagenFila(id, file){
+  if(!file){return;} const fd = new FormData();
+  fd.append('accion','adjuntar_imagen'); fd.append('fila_id',id); fd.append('imagen_fila',file); fd.append('csrfmiddlewaretoken',csrftoken());
+  return fetch('',{method:'POST',body:fd}).then(()=>window.location.reload());
+}
+document.querySelectorAll('.btn-subir-fila').forEach(btn=>btn.addEventListener('click',()=>{
+  const input=document.querySelector(`.input-imagen-fila[data-fila-id='${btn.dataset.filaId}']`);subirImagenFila(btn.dataset.filaId,input.files[0]);
+}));
 
-function csrftoken() { return document.querySelector('[name=csrfmiddlewaretoken]').value; }
-document.querySelectorAll('.btn-subir-fila').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const id = btn.dataset.filaId;
-    const input = document.querySelector(`.input-imagen-fila[data-fila-id='${id}']`);
-    if (!input.files.length) return;
-    const fd = new FormData();
-    fd.append('accion', 'adjuntar_imagen');
-    fd.append('fila_id', id);
-    fd.append('imagen_fila', input.files[0]);
-    fd.append('csrfmiddlewaretoken', csrftoken());
-    await fetch('', { method: 'POST', body: fd });
-    window.location.reload();
-  });
-});
+document.querySelectorAll('.btn-eliminar-imagen').forEach(btn=>btn.addEventListener('click',()=>{
+  const fd = new FormData();
+  fd.append('accion','quitar_imagen'); fd.append('fila_id',btn.dataset.filaId); fd.append('csrfmiddlewaretoken',csrftoken());
+  fetch('',{method:'POST',body:fd}).then(()=>window.location.reload());
+}));
 
-document.querySelectorAll('.fila-dropzone').forEach(row => {
-  ["dragenter","dragover","dragleave","drop"].forEach(evt => row.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }));
-  row.addEventListener('drop', async e => {
-    const id = row.dataset.filaId;
-    const f = e.dataTransfer.files[0];
-    if (!f) return;
-    const fd = new FormData();
-    fd.append('accion', 'adjuntar_imagen');
-    fd.append('fila_id', id);
-    fd.append('imagen_fila', f);
-    fd.append('csrfmiddlewaretoken', csrftoken());
-    await fetch('', { method: 'POST', body: fd });
-    window.location.reload();
-  });
+document.querySelectorAll('.fila-dropzone').forEach(row=>{
+  ['dragover','drop'].forEach(evt=>row.addEventListener(evt,e=>{e.preventDefault();row.classList.add('drag-sobre');}));
+  ['dragleave'].forEach(evt=>row.addEventListener(evt,()=>row.classList.remove('drag-sobre')));
+  row.addEventListener('drop',e=>subirImagenFila(row.dataset.filaId,e.dataTransfer.files[0]));
 });
+const buscar=document.getElementById('buscador-filtrado');
+const filas=[...document.querySelectorAll('.fila-dropzone')];
+function filtrar(filtro='todas'){
+  const q=(buscar?.value||'').toLowerCase();
+  filas.forEach(f=>{const estado=f.dataset.estado;const conImagen=!!f.querySelector('.preview-img');const texto=f.dataset.busqueda;
+    const porEstado = filtro==='todas' || estado===filtro || (filtro==='sin_imagen'&&!conImagen) || (filtro==='con_imagen'&&conImagen);
+    f.hidden = !(porEstado && texto.includes(q));
+  });
+}
+document.querySelectorAll('[data-filtro]').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('[data-filtro]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  btn.setAttribute('aria-pressed','true'); filtrar(btn.dataset.filtro);
+}));
+buscar?.addEventListener('input',()=>{const activo=document.querySelector('[data-filtro][aria-pressed="true"]');filtrar(activo?.dataset.filtro||'todas');});
+document.getElementById('seleccionar-visibles')?.addEventListener('click',()=>filas.forEach(f=>{if(!f.hidden){const c=f.querySelector('input[name="fila_ids"]');if(c){c.checked=true;}}}));
+document.getElementById('seleccionar-todo')?.addEventListener('change',e=>filas.forEach(f=>{if(!f.hidden){const c=f.querySelector('input[name="fila_ids"]');if(c){c.checked=e.target.checked;}}}));
 </script>
 {% endblock %}
