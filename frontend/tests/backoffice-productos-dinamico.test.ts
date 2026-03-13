@@ -9,8 +9,15 @@ test("productos inicia por selección de sección y cambia formulario", () => {
   assert.match(modulo, /Velas e Incienso/);
   assert.match(modulo, /Minerales y Energía/);
   assert.match(modulo, /Herramientas Esotéricas/);
-  assert.match(modulo, /CAMPOS_POR_SECCION/);
+  assert.match(modulo, /contextoFormulario/);
   assert.match(modulo, /camposEspecificos=\{CAMPOS_POR_SECCION\[seccion\] \?\? \[\]\}/);
+});
+
+test("alta manual usa combobox humano de sección comercial", () => {
+  const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.match(modulo, /etiqueta: "Sección comercial"/);
+  assert.match(componente, /<select value=\{String\(formAlta\[contextoFormulario\.clave\]/);
 });
 
 test("flujo normal no expone campos id y slug editables", () => {
@@ -19,12 +26,14 @@ test("flujo normal no expone campos id y slug editables", () => {
   assert.doesNotMatch(modulo, /clave:\s*"id"/);
 });
 
-test("listado de productos se renderiza debajo del bloque superior", () => {
+test("listado de productos se renderiza al final y exportación encima", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
-  const indicePanel = componente.indexOf('className="admin-bloque admin-panel-superior"');
+  const indiceImportacion = componente.indexOf("Importación contextual");
+  const indiceAlta = componente.indexOf("Alta manual");
+  const indiceExportacion = componente.indexOf("Exportación contextual");
   const indiceListado = componente.indexOf("Registros existentes");
 
-  assert.notEqual(indicePanel, -1);
-  assert.notEqual(indiceListado, -1);
-  assert.ok(indiceListado > indicePanel);
+  assert.ok(indiceImportacion < indiceAlta);
+  assert.ok(indiceAlta < indiceExportacion);
+  assert.ok(indiceExportacion < indiceListado);
 });

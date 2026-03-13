@@ -38,6 +38,9 @@ const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string }[]> 
   ],
 };
 
+const COLUMNAS_OBLIGATORIAS = ["nombre", "seccion_publica", "tipo_producto", "categoria_comercial"];
+const COLUMNAS_OPCIONALES = ["descripcion_corta", "precio_visible", "imagen_url", "publicado"];
+
 export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string; itemsIniciales: Record<string, unknown>[] }): JSX.Element {
   const [seccion, setSeccion] = useState<string>(SECCIONES[0].slug);
 
@@ -65,6 +68,21 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
         camposComunes={CAMPOS_COMUNES}
         camposEspecificos={CAMPOS_POR_SECCION[seccion] ?? []}
         seccionSeleccionada={seccion}
+        columnasObligatoriasImportacion={COLUMNAS_OBLIGATORIAS}
+        columnasOpcionalesImportacion={COLUMNAS_OPCIONALES}
+        contextoFormulario={{
+          clave: "seccion_publica",
+          etiqueta: "Sección comercial",
+          ayuda: "Elige la familia comercial antes de completar los datos del producto.",
+          opciones: SECCIONES.map((it) => ({ etiqueta: it.etiqueta, valor: it.slug })),
+        }}
+        onCambioContexto={setSeccion}
+        validarFormulario={(form) => {
+          const seccionFormulario = String(form.seccion_publica ?? "");
+          const camposObligatorios = CAMPOS_POR_SECCION[seccionFormulario] ?? [];
+          const vacios = ["nombre", ...camposObligatorios.map((campo) => campo.clave)].filter((clave) => !String(form[clave] ?? "").trim());
+          return vacios.length > 0 ? `Completa los campos obligatorios para ${seccionFormulario}: ${vacios.join(", ")}.` : null;
+        }}
         construirPayload={(form) => ({ ...form, seccion_publica: seccion, orden_publicacion: 100 })}
       />
     </>

@@ -19,7 +19,7 @@ import {
 test("submit real de alta usa endpoint guardar y devuelve item", async () => {
   let url = "";
   let method = "";
-  globalThis.fetch = (async (input, init) => {
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     url = String(input);
     method = String(init?.method ?? "GET");
     return { ok: true, json: async () => ({ item: { id: "p-1", nombre: "nuevo" } }) } as Response;
@@ -34,14 +34,15 @@ test("submit real de alta usa endpoint guardar y devuelve item", async () => {
 
 test("edición, publish/unpublish y layout inferior quedan implementados", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
-  assert.match(componente, /setForm\(\{ \.\.\.item \}\)/);
+  assert.match(componente, /setRegistroEdicion\(\{ \.\.\.item \}\)/);
+  assert.match(componente, /role="dialog"/);
   assert.match(componente, /cambiarPublicacionAdmin/);
   assert.match(componente, /Registros existentes/);
 });
 
 test("publish/unpublish llama endpoint de publicación", async () => {
   let url = "";
-  globalThis.fetch = (async (input) => {
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
     url = String(input);
     return { ok: true, json: async () => ({ item: { id: "x", publicado: true } }) } as Response;
   }) as unknown as typeof fetch;
@@ -54,7 +55,7 @@ test("publish/unpublish llama endpoint de publicación", async () => {
 
 test("flujo de importación confirmada: crear lote, consultar y confirmar", async () => {
   const llamadas: string[] = [];
-  globalThis.fetch = (async (input) => {
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
     const url = String(input);
     llamadas.push(url);
     if (url.endsWith("/importacion/lotes/")) return { ok: true, json: async () => ({ lote_id: 22 }) } as Response;
@@ -76,7 +77,7 @@ test("flujo de importación confirmada: crear lote, consultar y confirmar", asyn
 
 test("importación permite revalidar, seleccionar, descartar y gestionar imagen por fila", async () => {
   const llamadas: string[] = [];
-  globalThis.fetch = (async (input, init) => {
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     llamadas.push(url);
     const method = String(init?.method ?? "GET");
@@ -103,11 +104,18 @@ test("importación permite revalidar, seleccionar, descartar y gestionar imagen 
 
 test("exportación por módulo usa endpoint contextual", async () => {
   let url = "";
-  globalThis.fetch = (async (input) => {
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
     url = String(input);
     return { ok: true, blob: async () => new Blob(["ok"], { type: "text/csv" }) } as Response;
   }) as unknown as typeof fetch;
 
   await descargarExportacionAdmin("productos", "inventario", "csv", "token", "botica-natural");
   assert.match(url, /\/api\/v1\/backoffice\/productos\/exportar\/\?tipo=inventario&formato=csv&seccion=botica-natural/);
+});
+
+
+test("ui de importación valida columnas faltantes y muestra mensaje claro", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.match(componente, /Faltan columnas obligatorias/);
+  assert.match(componente, /columnasObligatoriasImportacion/);
 });
