@@ -1,3 +1,5 @@
+import { API_BACKEND_BASE, NOMBRE_COOKIE_BACKOFFICE } from "../auth/configuracion";
+
 export type EstadoAccesoBackoffice =
   | { estado: "autorizado"; usuario: { username: string; is_staff: boolean; is_superuser: boolean } }
   | { estado: "denegado"; detalle: string }
@@ -24,16 +26,26 @@ export type ResultadoListadoProductosAdmin =
   | { estado: "denegado"; detalle: string }
   | { estado: "error"; detalle: string };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
-
-function construirCabeceras(cookieHeader?: string): HeadersInit {
-  return cookieHeader ? { Accept: "application/json", Cookie: cookieHeader } : { Accept: "application/json" };
+function cabecerasConToken(token?: string): HeadersInit {
+  if (!token) {
+    return { Accept: "application/json" };
+  }
+  return { Accept: "application/json", Authorization: `Bearer ${token}` };
 }
 
-export async function obtenerEstadoBackoffice(cookieHeader?: string): Promise<EstadoAccesoBackoffice> {
+export function extraerTokenBackoffice(cookieHeader: string): string | null {
+  const entrada = cookieHeader
+    .split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(`${NOMBRE_COOKIE_BACKOFFICE}=`));
+  return entrada ? entrada.split("=")[1] ?? null : null;
+}
+
+
+export async function obtenerEstadoBackoffice(token?: string): Promise<EstadoAccesoBackoffice> {
   try {
-    const respuesta = await fetch(`${API_BASE_URL}/api/v1/backoffice/estado/`, {
-      headers: construirCabeceras(cookieHeader),
+    const respuesta = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/estado/`, {
+      headers: cabecerasConToken(token),
       cache: "no-store",
     });
 
@@ -51,15 +63,12 @@ export async function obtenerEstadoBackoffice(cookieHeader?: string): Promise<Es
   }
 }
 
-export async function obtenerProductosAdmin(
-  query: URLSearchParams,
-  cookieHeader?: string,
-): Promise<ResultadoListadoProductosAdmin> {
-  const endpoint = `${API_BASE_URL}/api/v1/backoffice/productos/?${query.toString()}`;
+export async function obtenerProductosAdmin(query: URLSearchParams, token?: string): Promise<ResultadoListadoProductosAdmin> {
+  const endpoint = `${API_BACKEND_BASE}/api/v1/backoffice/productos/?${query.toString()}`;
 
   try {
     const respuesta = await fetch(endpoint, {
-      headers: construirCabeceras(cookieHeader),
+      headers: cabecerasConToken(token),
       cache: "no-store",
     });
 

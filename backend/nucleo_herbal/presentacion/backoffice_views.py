@@ -5,11 +5,10 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 
-from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
+from backend.nucleo_herbal.presentacion.backoffice_auth import resolver_usuario_backoffice
 
 
 @dataclass(frozen=True)
@@ -23,10 +22,6 @@ class ProductoAdminDTO:
     seccion_publica: str
     precio_visible: str
     publicado: bool
-
-
-def _es_staff(usuario) -> bool:
-    return bool(usuario.is_authenticated and (usuario.is_staff or usuario.is_superuser))
 
 
 def _json_no_autorizado() -> JsonResponse:
@@ -68,10 +63,11 @@ def _construir_queryset_productos(request: HttpRequest):
     return queryset, busqueda, publicado, seccion, tipo
 
 
-@login_required
-@user_passes_test(_es_staff, login_url="/admin/login/")
 def estado_backoffice(request: HttpRequest) -> JsonResponse:
-    usuario = request.user
+    usuario = resolver_usuario_backoffice(request)
+    if usuario is None:
+        return _json_no_autorizado()
+
     return JsonResponse(
         {
             "autorizado": True,
@@ -84,11 +80,12 @@ def estado_backoffice(request: HttpRequest) -> JsonResponse:
     )
 
 
-@login_required
-@user_passes_test(_es_staff, login_url="/admin/login/")
 def listado_productos_backoffice(request: HttpRequest) -> JsonResponse:
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
+
+    if resolver_usuario_backoffice(request) is None:
+        return _json_no_autorizado()
 
     queryset, busqueda, publicado, seccion, tipo = _construir_queryset_productos(request)
     productos = [_serializar_producto_admin(item) for item in queryset[:120]]
@@ -111,12 +108,12 @@ def listado_productos_backoffice(request: HttpRequest) -> JsonResponse:
     )
 
 
-@csrf_exempt
-@login_required
-@user_passes_test(_es_staff, login_url="/admin/login/")
 def cambiar_publicacion_producto_backoffice(request: HttpRequest, producto_id: str) -> JsonResponse:
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
+
+    if resolver_usuario_backoffice(request) is None:
+        return _json_no_autorizado()
 
     try:
         payload = json.loads(request.body.decode("utf-8") or "{}")

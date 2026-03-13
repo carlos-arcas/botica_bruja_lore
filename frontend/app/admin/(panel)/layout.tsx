@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { obtenerEstadoBackoffice } from "@/infraestructura/api/backoffice";
+import { BotonLogoutBackoffice } from "@/componentes/admin/BotonLogoutBackoffice";
+import { obtenerUsuarioBackofficeSesionActual } from "@/infraestructura/auth/sesionBackoffice";
 
 const MODULOS_ADMIN = [
   { href: "/admin", etiqueta: "Dashboard" },
@@ -15,21 +16,9 @@ const MODULOS_ADMIN = [
 ];
 
 export default async function AdminLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
-  const cookie = headers().get("cookie") ?? "";
-  const acceso = await obtenerEstadoBackoffice(cookie);
-
-  if (acceso.estado !== "autorizado") {
-    return (
-      <main className="admin-shell">
-        <section className="admin-bloque">
-          <h1>Acceso administrativo denegado</h1>
-          <p>{acceso.detalle}</p>
-          <p>
-            Inicia sesión en backend y vuelve a intentar desde <a href="http://127.0.0.1:8000/admin/login/">Django Admin</a>.
-          </p>
-        </section>
-      </main>
-    );
+  const usuario = await obtenerUsuarioBackofficeSesionActual();
+  if (!usuario) {
+    redirect("/admin/login?next=/admin");
   }
 
   return (
@@ -39,7 +28,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <p className="admin-eyebrow">Backoffice · La Botica de la Bruja Lore</p>
           <h1>Gestión editorial y comercial</h1>
         </div>
-        <p className="admin-usuario">Sesión: {acceso.usuario.username}</p>
+        <div>
+          <p className="admin-usuario">Sesión: {usuario.username}</p>
+          <BotonLogoutBackoffice />
+        </div>
       </header>
       <div className="admin-grid">
         <nav className="admin-nav" aria-label="Módulos de administración">

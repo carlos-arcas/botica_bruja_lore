@@ -657,6 +657,22 @@ button:focus-visible {
   color: #352f29;
 }
 
+
+.admin-login-form {
+  display: grid;
+  gap: 0.55rem;
+  max-width: 420px;
+}
+
+.admin-login-form input,
+.admin-login-form button {
+  border: 1px solid var(--borde-editorial);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  background: #fff;
+  color: #352f29;
+}
+
 .admin-estado--error {
   color: #8b3a30;
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { headers } from "next/headers";
-
+import { cookies } from "next/headers";
+import { NOMBRE_COOKIE_BACKOFFICE } from "@/infraestructura/auth/configuracion";
 import { obtenerProductosAdmin } from "@/infraestructura/api/backoffice";
 
 type Props = { searchParams?: { [key: string]: string | string[] | undefined } };
@@ -17,8 +17,8 @@ export default async function AdminProductosPage({ searchParams }: Props): Promi
     tipo: valorParam(searchParams?.tipo),
   });
 
-  const cookie = headers().get("cookie") ?? "";
-  const resultado = await obtenerProductosAdmin(query, cookie);
+  const token = cookies().get(NOMBRE_COOKIE_BACKOFFICE)?.value;
+  const resultado = await obtenerProductosAdmin(query, token);
 
   return (
     <section className="admin-contenido">
