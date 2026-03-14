@@ -35,9 +35,21 @@ test("submit real de alta usa endpoint guardar y devuelve item", async () => {
 test("edición, publish/unpublish y layout inferior quedan implementados", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
   assert.match(componente, /setRegistroEdicion\(\{ \.\.\.item \}\)/);
+  assert.match(componente, /value=\{String\(registroEdicion\[campo\.clave\] \?\? ""\)\}/);
   assert.match(componente, /role="dialog"/);
   assert.match(componente, /cambiarPublicacionAdmin/);
   assert.match(componente, /Registros existentes/);
+});
+
+test("feedback de éxito y error se informa en UI para alta, edición e importación", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.match(componente, /Registro guardado\./);
+  assert.match(componente, /Cambios guardados\./);
+  assert.match(componente, /Lote cargado\. Revisa filas antes de confirmar\./);
+  assert.match(componente, /Lote confirmado\. Filas aplicadas:/);
+  assert.match(componente, /No se pudo guardar el registro\./);
+  assert.match(componente, /No se pudo guardar la edición\./);
+  assert.match(componente, /No se pudo cargar el lote de importación\./);
 });
 
 test("publish/unpublish llama endpoint de publicación", async () => {
@@ -51,6 +63,11 @@ test("publish/unpublish llama endpoint de publicación", async () => {
 
   assert.match(url, /\/api\/v1\/backoffice\/editorial\/9\/publicacion\/$/);
   assert.equal(item.publicado, true);
+});
+
+test("submit de alta propaga errores backend cuando guardar falla", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 500, json: async () => ({}) }) as Response) as unknown as typeof fetch;
+  await assert.rejects(() => guardarRegistroAdmin("productos", { nombre: "fallido" }, "token"), /No se pudo guardar/);
 });
 
 test("flujo de importación confirmada: crear lote, consultar y confirmar", async () => {
