@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { MODULOS_NAVEGACION_ADMIN } from "@/infraestructura/configuracion/modulosAdmin";
+import { obtenerEnlacesAdminVisibles } from "@/componentes/admin/enlacesAdmin";
 
-const BLOQUES = MODULOS_NAVEGACION_ADMIN.filter((modulo) => modulo.clave !== "dashboard");
+const BLOQUES = obtenerEnlacesAdminVisibles("tarjetas");
 
 export default function AdminHomePage(): JSX.Element {
   return (
