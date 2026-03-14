@@ -16,6 +16,7 @@ const CAMPOS = [
 export default async function AdminRitualesPage(): Promise<JSX.Element> {
   const token = cookies().get(NOMBRE_COOKIE_BACKOFFICE)?.value;
   const resultado = await obtenerListadoAdmin("rituales", new URLSearchParams(), token);
+  const errorInicial = resultado.estado === "error" ? "No se pudieron cargar los rituales en este momento." : "";
   return (
     <ModuloCrudContextualAdmin
       modulo="rituales"
@@ -26,6 +27,7 @@ export default async function AdminRitualesPage(): Promise<JSX.Element> {
       entidadImportacion="rituales"
       camposComunes={CAMPOS}
       construirPayload={(form) => form}
+      errorInicial={errorInicial}
     />
   );
 }

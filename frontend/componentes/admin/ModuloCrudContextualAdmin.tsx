@@ -20,6 +20,7 @@ import {
 
 type ConfigCampo = { clave: string; etiqueta: string; tipo?: "text" | "textarea" | "checkbox" };
 type OpcionContexto = { etiqueta: string; valor: string };
+
 type Props = {
   modulo: ModuloAdmin;
   titulo: string;
@@ -36,6 +37,7 @@ type Props = {
   contextoFormulario?: { clave: string; etiqueta: string; ayuda: string; opciones: OpcionContexto[] };
   onCambioContexto?: (valor: string) => void;
   validarFormulario?: (form: Record<string, unknown>) => string | null;
+  errorInicial?: string;
 };
 
 type DetalleLote = { lote: Record<string, unknown>; filas: FilaImportacion[] };
@@ -68,31 +70,45 @@ export function ModuloCrudContextualAdmin({
   contextoFormulario,
   onCambioContexto,
   validarFormulario,
+  errorInicial = "",
 }: Props): JSX.Element {
   const [items, setItems] = useState(itemsIniciales);
   const [formAlta, setFormAlta] = useState<Record<string, unknown>>({ [contextoFormulario?.clave ?? ""]: seccionSeleccionada });
   const [filtro, setFiltro] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(errorInicial);
   const [ok, setOk] = useState("");
   const [detalle, setDetalle] = useState<DetalleLote | null>(null);
   const [registroEdicion, setRegistroEdicion] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => setItems(itemsIniciales), [itemsIniciales]);
+
   useEffect(() => {
     if (!contextoFormulario?.clave) return;
     setFormAlta((actual) => ({ ...actual, [contextoFormulario.clave]: seccionSeleccionada }));
   }, [contextoFormulario?.clave, seccionSeleccionada]);
 
-  const campos = useMemo(() => [...camposComunes, ...camposEspecificos], [camposComunes, camposEspecificos]);
-
   useEffect(() => {
     if (!registroEdicion) return;
-    const alTeclado = (event: KeyboardEvent) => { if (event.key === "Escape") setRegistroEdicion(null); };
+    const alTeclado = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setRegistroEdicion(null);
+    };
     window.addEventListener("keydown", alTeclado);
     return () => window.removeEventListener("keydown", alTeclado);
   }, [registroEdicion]);
+
+  const campos = useMemo(() => [...camposComunes, ...camposEspecificos], [camposComunes, camposEspecificos]);
   const filasSeleccionadas = useMemo(() => detalle?.filas.filter((fila) => fila.seleccionado).length ?? 0, [detalle]);
   const filtrados = useMemo(() => items.filter((item) => JSON.stringify(item).toLowerCase().includes(filtro.toLowerCase())), [items, filtro]);
+
+  const ejecutarAccion = async (accion: () => Promise<void>, mensajeError: string) => {
+    try {
+      await accion();
+      setError("");
+    } catch {
+      setOk("");
+      setError(mensajeError);
+    }
+  };
 
   const actualizarFila = (actualizada: FilaImportacion) => {
     if (!detalle) return;
@@ -109,7 +125,10 @@ export function ModuloCrudContextualAdmin({
     event.preventDefault();
     try {
       const errorValidacion = validarFormulario?.(formAlta);
-      if (errorValidacion) { setError(errorValidacion); return; }
+      if (errorValidacion) {
+        setError(errorValidacion);
+        return;
+      }
       await guardar(formAlta);
       setFormAlta({ [contextoFormulario?.clave ?? ""]: seccionSeleccionada });
       setOk("Registro guardado.");
@@ -124,7 +143,10 @@ export function ModuloCrudContextualAdmin({
     if (!registroEdicion) return;
     try {
       const errorValidacion = validarFormulario?.(registroEdicion);
-      if (errorValidacion) { setError(errorValidacion); return; }
+      if (errorValidacion) {
+        setError(errorValidacion);
+        return;
+      }
       await guardar(registroEdicion);
       setRegistroEdicion(null);
       setOk("Cambios guardados.");
@@ -148,49 +170,51 @@ export function ModuloCrudContextualAdmin({
     formData.set("modo", "crear_actualizar");
     if (seccionSeleccionada) formData.set("seccion", seccionSeleccionada);
     formData.set("archivo", archivo);
-    try {
-      const id = await crearLoteImportacion(formData, token);
-      setDetalle(await obtenerLoteImportacion(id, token));
-      setOk("Lote validado en staging.");
-      setError("");
-    } catch {
-      setError("No se pudo crear el lote de importación. Revisa cabeceras obligatorias para CSV/XLSX.");
-    }
+    await ejecutarAccion(async () => {
+      const loteId = await crearLoteImportacion(formData, token);
+      const lot = await obtenerLoteImportacion(loteId, token);
+      setDetalle({ lote: lot.lote, filas: lot.filas });
+      setOk("Lote cargado. Revisa filas antes de confirmar.");
+    }, "No se pudo cargar el lote de importación.");
+  };
+
+  const onConfirmarLote = async () => {
+    if (!detalle) return;
+    await ejecutarAccion(async () => {
+      const filas = detalle.filas.filter((fila) => fila.seleccionado).map((fila) => fila.id);
+      const confirmadas = await confirmarLoteImportacion(Number(detalle.lote.id), filas, token);
+      setOk(`Lote confirmado. Filas aplicadas: ${confirmadas}.`);
+    }, "No se pudo confirmar el lote.");
+  };
+
+  const onRevalidarLote = async () => {
+    if (!detalle) return;
+    await ejecutarAccion(async () => {
+      await revalidarLoteImportacion(Number(detalle.lote.id), token);
+      const lot = await obtenerLoteImportacion(Number(detalle.lote.id), token);
+      setDetalle({ lote: lot.lote, filas: lot.filas });
+      setOk("Lote revalidado.");
+    }, "No se pudo revalidar el lote.");
   };
 
   const descargar = async (tipo: "plantilla" | "inventario", formato: "csv" | "xlsx") => {
-    try {
-      const blob = await descargarExportacionAdmin(modulo, tipo, formato, token, seccionSeleccionada);
-      const url = URL.createObjectURL(blob);
-      const enlace = document.createElement("a");
-      enlace.href = url;
-      enlace.download = `${modulo}-${tipo}.${formato}`;
-      enlace.click();
-      URL.revokeObjectURL(url);
-      setOk(`Exportación ${tipo} ${formato.toUpperCase()} lista.`);
-    } catch {
-      setError("No se pudo exportar.");
-    }
+    const blob = await descargarExportacionAdmin(modulo, tipo, formato, token, seccionSeleccionada);
+    const url = URL.createObjectURL(blob);
+    const ancla = document.createElement("a");
+    ancla.href = url;
+    ancla.download = `${modulo}-${tipo}.${formato}`;
+    ancla.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <section className="admin-contenido">
-      <p className="admin-breadcrumb">Admin / {titulo}</p>
-      <div className="admin-resumen"><h2>{titulo}</h2></div>
-      {ok ? <p className="admin-estado">{ok}</p> : null}
+    <section className="admin-bloque">
+      <h2>{titulo}</h2>
       {error ? <p className="admin-estado admin-estado--error">{error}</p> : null}
+      {ok ? <p className="admin-estado admin-estado--ok">{ok}</p> : null}
 
-      <section className="admin-bloque admin-importacion-contextual">
-        <h3>Importación contextual</h3>
-        <p>Sube CSV o XLSX. Modo actual: crear o actualizar en staging con confirmación.</p>
-        <p><strong>Columnas obligatorias:</strong> {columnasObligatoriasImportacion.join(", ") || "definidas por backend"}</p>
-        <p><strong>Columnas opcionales:</strong> {columnasOpcionalesImportacion.join(", ") || "según módulo"}</p>
-        <label className="admin-dropzone"><span>Arrastra CSV/XLSX o selecciona archivo</span><input type="file" accept=".csv,.xlsx" onChange={onArchivo} /></label>
-        {detalle ? <div className="admin-filtros"><button type="button" onClick={async () => detalle && setOk(`Confirmadas: ${await confirmarLoteImportacion(Number(detalle.lote.id), detalle.filas.filter((f) => f.seleccionado).map((f) => Number(f.id)), token)}`)}>Confirmar</button><button type="button" onClick={async () => { if (!detalle) return; await revalidarLoteImportacion(Number(detalle.lote.id), token); setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token)); setOk("Lote revalidado."); }}>Revalidar</button></div> : null}
-      </section>
-
-      <section className="admin-bloque admin-alta-manual">
-        <h3>Alta manual</h3>
+      <section className="admin-bloque">
+        <h3>Alta / edición manual</h3>
         <form onSubmit={onGuardarAlta} className="admin-formulario-amplio">
           {contextoFormulario ? (
             <label>
@@ -207,16 +231,24 @@ export function ModuloCrudContextualAdmin({
       </section>
 
       <section className="admin-bloque">
-        <h3>Exportación contextual</h3>
-        <div className="admin-acciones-export"><button type="button" onClick={() => descargar("plantilla", "csv")}>Descargar plantilla CSV</button><button type="button" onClick={() => descargar("plantilla", "xlsx")}>Descargar plantilla XLSX</button><button type="button" onClick={() => descargar("inventario", "csv")}>Exportar inventario CSV</button><button type="button" onClick={() => descargar("inventario", "xlsx")}>Exportar inventario XLSX</button></div>
+        <h3>Importación</h3>
+        <input type="file" accept=".csv,.xlsx" onChange={(event) => void onArchivo(event)} />
+        <p>Columnas obligatorias: {columnasObligatoriasImportacion.length ? columnasObligatoriasImportacion.join(", ") : "(sin restricciones)"}</p>
+        <p>Columnas opcionales: {columnasOpcionalesImportacion.length ? columnasOpcionalesImportacion.join(", ") : "(sin opcionales)"}</p>
+        <div className="admin-filtros"><button type="button" onClick={() => void onConfirmarLote()}>Confirmar lote seleccionado</button><button type="button" onClick={() => void onRevalidarLote()}>Revalidar lote</button></div>
       </section>
 
-      {detalle ? <div className="admin-bloque"><h3>Staging por filas</h3><p>Lote #{String(detalle.lote.id)} · Seleccionadas: {filasSeleccionadas}</p><table className="admin-tabla"><thead><tr><th>Fila</th><th>Imagen</th><th>Estado imagen</th><th>Acciones</th></tr></thead><tbody>{detalle.filas.map((fila) => <tr key={fila.id}><td><label><input type="checkbox" checked={fila.seleccionado} onChange={async () => { if (!detalle) return; actualizarFila(await cambiarSeleccionFilaImportacion(Number(detalle.lote.id), fila.id, !fila.seleccionado, token)); }} /> #{fila.numero}</label><p>{fila.estado}</p>{fila.errores.map((e) => <p key={e} className="admin-estado admin-estado--error">{e}</p>)}</td><td>{fila.imagen ? <a href={fila.imagen} target="_blank">Preview imagen</a> : "Sin imagen"}</td><td>{fila.estado_imagen}</td><td><label className="admin-dropzone" onDragOver={(event: DragEvent<HTMLElement>) => event.preventDefault()} onDrop={(event: DragEvent<HTMLElement>) => { event.preventDefault(); void (async () => { if (!detalle || !event.dataTransfer.files?.[0]) return; actualizarFila(await adjuntarImagenFilaImportacion(Number(detalle.lote.id), fila.id, event.dataTransfer.files[0], token)); })(); }}><span>Adjuntar/Reemplazar imagen</span><input type="file" accept="image/*" onChange={(event) => void (async () => { if (!detalle || !event.target.files?.[0]) return; actualizarFila(await adjuntarImagenFilaImportacion(Number(detalle.lote.id), fila.id, event.target.files[0], token)); })()} /></label><button type="button" onClick={async () => { if (!detalle) return; actualizarFila(await eliminarImagenFilaImportacion(Number(detalle.lote.id), fila.id, token)); }}>Eliminar imagen</button> <button type="button" onClick={async () => { if (!detalle) return; actualizarFila(await descartarFilaImportacion(Number(detalle.lote.id), fila.id, token)); }}>Descartar</button></td></tr>)}</tbody></table></div> : null}
+      <section className="admin-bloque">
+        <h3>Exportación contextual</h3>
+        <div className="admin-acciones-export"><button type="button" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "csv"), "No se pudo descargar la plantilla CSV.")}>Descargar plantilla CSV</button><button type="button" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "xlsx"), "No se pudo descargar la plantilla XLSX.")}>Descargar plantilla XLSX</button><button type="button" onClick={() => void ejecutarAccion(async () => descargar("inventario", "csv"), "No se pudo exportar inventario CSV.")}>Exportar inventario CSV</button><button type="button" onClick={() => void ejecutarAccion(async () => descargar("inventario", "xlsx"), "No se pudo exportar inventario XLSX.")}>Exportar inventario XLSX</button></div>
+      </section>
+
+      {detalle ? <div className="admin-bloque"><h3>Staging por filas</h3><p>Lote #{String(detalle.lote.id)} · Seleccionadas: {filasSeleccionadas}</p><table className="admin-tabla"><thead><tr><th>Fila</th><th>Imagen</th><th>Estado imagen</th><th>Acciones</th></tr></thead><tbody>{detalle.filas.map((fila) => <tr key={fila.id}><td><label><input type="checkbox" checked={fila.seleccionado} onChange={() => void ejecutarAccion(async () => { if (!detalle) return; actualizarFila(await cambiarSeleccionFilaImportacion(Number(detalle.lote.id), fila.id, !fila.seleccionado, token)); }, "No se pudo actualizar la selección de fila.")} /> #{fila.numero}</label><p>{fila.estado}</p>{fila.errores.map((e) => <p key={e} className="admin-estado admin-estado--error">{e}</p>)}</td><td>{fila.imagen ? <a href={fila.imagen} target="_blank">Preview imagen</a> : "Sin imagen"}</td><td>{fila.estado_imagen}</td><td><label className="admin-dropzone" onDragOver={(event: DragEvent<HTMLElement>) => event.preventDefault()} onDrop={(event: DragEvent<HTMLElement>) => { event.preventDefault(); void ejecutarAccion(async () => { if (!detalle || !event.dataTransfer.files?.[0]) return; actualizarFila(await adjuntarImagenFilaImportacion(Number(detalle.lote.id), fila.id, event.dataTransfer.files[0], token)); }, "No se pudo adjuntar la imagen."); }}><span>Adjuntar/Reemplazar imagen</span><input type="file" accept="image/*" onChange={(event) => void ejecutarAccion(async () => { if (!detalle || !event.target.files?.[0]) return; actualizarFila(await adjuntarImagenFilaImportacion(Number(detalle.lote.id), fila.id, event.target.files[0], token)); }, "No se pudo adjuntar la imagen.")} /></label><button type="button" onClick={() => void ejecutarAccion(async () => { if (!detalle) return; actualizarFila(await eliminarImagenFilaImportacion(Number(detalle.lote.id), fila.id, token)); }, "No se pudo eliminar la imagen.")}>Eliminar imagen</button> <button type="button" onClick={() => void ejecutarAccion(async () => { if (!detalle) return; actualizarFila(await descartarFilaImportacion(Number(detalle.lote.id), fila.id, token)); }, "No se pudo descartar la fila.")}>Descartar</button></td></tr>)}</tbody></table></div> : null}
 
       <section className="admin-bloque">
         <h3>Registros existentes</h3>
         <input placeholder="Buscar por nombre, slug o contenido" value={filtro} onChange={(event) => setFiltro(event.target.value)} />
-        <table className="admin-tabla"><thead><tr><th>Registro</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{filtrados.map((item) => <tr key={String(item.id)}><td>{String(item.nombre ?? item.titulo ?? item.slug ?? item.id)}</td><td>{item[campoEstado] ? "Publicado" : "Borrador"}</td><td><button type="button" onClick={() => setRegistroEdicion({ ...item })}>Editar</button> <button type="button" onClick={async () => { const actualizado = await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token); setItems(items.map((it) => (it.id === item.id ? actualizado : it))); }}>{item[campoEstado] ? "Despublicar" : "Publicar"}</button></td></tr>)}</tbody></table>
+        <table className="admin-tabla"><thead><tr><th>Registro</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{filtrados.map((item) => <tr key={String(item.id)}><td>{String(item.nombre ?? item.titulo ?? item.slug ?? item.id)}</td><td>{item[campoEstado] ? "Publicado" : "Borrador"}</td><td><button type="button" onClick={() => setRegistroEdicion({ ...item })}>Editar</button> <button type="button" onClick={() => void ejecutarAccion(async () => { const actualizado = await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token); setItems(items.map((it) => (it.id === item.id ? actualizado : it))); }, "No se pudo actualizar la publicación.")}>{item[campoEstado] ? "Despublicar" : "Publicar"}</button></td></tr>)}</tbody></table>
       </section>
 
       {registroEdicion ? (
