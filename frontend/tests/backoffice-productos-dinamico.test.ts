@@ -18,7 +18,7 @@ test("alta manual usa combobox humano de sección comercial", () => {
   const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
   assert.match(modulo, /etiqueta: "Sección comercial"/);
-  assert.match(componente, /<select value=\{String\(formAlta\[contextoFormulario\.clave\]/);
+  assert.match(componente, /<select\s+value=\{String\(formAlta\[contextoFormulario\.clave\]/);
 });
 
 test("flujo normal no expone campos id y slug editables", () => {
@@ -27,14 +27,16 @@ test("flujo normal no expone campos id y slug editables", () => {
   assert.doesNotMatch(modulo, /clave:\s*"id"/);
 });
 
-test("listado de productos se renderiza al final y exportación encima", () => {
+test("registros siguen debajo del formulario y herramientas quedan en lateral", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
   const indiceAlta = componente.indexOf("Alta / edición manual");
-  const indiceImportacion = componente.indexOf("Importación");
-  const indiceExportacion = componente.indexOf("Exportación contextual");
   const indiceListado = componente.indexOf("Registros existentes");
+  const indiceHerramientas = componente.indexOf("Herramientas");
 
-  assert.ok(indiceAlta < indiceImportacion);
-  assert.ok(indiceImportacion < indiceExportacion);
-  assert.ok(indiceExportacion < indiceListado);
+  assert.ok(indiceAlta >= 0);
+  assert.ok(indiceListado > indiceAlta);
+  assert.ok(indiceHerramientas >= 0);
+  assert.match(componente, /admin-columna-principal/);
+  assert.match(componente, /admin-columna-herramientas/);
+  assert.doesNotMatch(componente, /<section className="admin-bloque">\s*<h3>Importación<\/h3>/);
 });
