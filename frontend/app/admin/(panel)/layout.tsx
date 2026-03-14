@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { BotonLogoutBackoffice } from "@/componentes/admin/BotonLogoutBackoffice";
 import { obtenerUsuarioBackofficeSesionActual } from "@/infraestructura/auth/sesionBackoffice";
 
-import { MODULOS_NAVEGACION_ADMIN } from "@/infraestructura/configuracion/modulosAdmin";
+import { obtenerEnlacesAdminVisibles } from "@/componentes/admin/enlacesAdmin";
 
 export default async function AdminLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
   const usuario = await obtenerUsuarioBackofficeSesionActual();
@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <div className="admin-grid">
         <nav className="admin-nav" aria-label="Módulos de administración">
           <ul>
-            {MODULOS_NAVEGACION_ADMIN.map((modulo) => (
+            {obtenerEnlacesAdminVisibles("sidebar").map((modulo) => (
               <li key={modulo.href}>
                 <Link href={modulo.href}>{modulo.etiqueta}</Link>
               </li>
