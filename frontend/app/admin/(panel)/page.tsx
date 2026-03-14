@@ -1,14 +1,8 @@
 import Link from "next/link";
 
-const BLOQUES = [
-  { href: "/admin/productos", titulo: "Productos", descripcion: "Catálogo comercial, publicación y orden." },
-  { href: "/admin/rituales", titulo: "Rituales", descripcion: "Rutas rituales y relaciones con plantas." },
-  { href: "/admin/editorial", titulo: "Editorial", descripcion: "Artículos, hubs y contenidos públicos." },
-  { href: "/admin/importacion", titulo: "Importación masiva", descripcion: "Entrada operativa para cargas bulk." },
-  { href: "/admin/secciones", titulo: "Secciones públicas", descripcion: "Gestión de secciones visibles del sitio." },
-  { href: "/admin/imagenes", titulo: "Imágenes pendientes", descripcion: "Control de activos visuales pendientes." },
-  { href: "/admin/ajustes", titulo: "Ajustes", descripcion: "Parámetros de operación y accesos." },
-];
+import { MODULOS_NAVEGACION_ADMIN } from "@/infraestructura/configuracion/modulosAdmin";
+
+const BLOQUES = MODULOS_NAVEGACION_ADMIN.filter((modulo) => modulo.clave !== "dashboard");
 
 export default function AdminHomePage(): JSX.Element {
   return (
@@ -21,7 +15,7 @@ export default function AdminHomePage(): JSX.Element {
       <div className="admin-tarjetas">
         {BLOQUES.map((bloque) => (
           <article key={bloque.href} className="admin-card">
-            <h3>{bloque.titulo}</h3>
+            <h3>{bloque.etiqueta}</h3>
             <p>{bloque.descripcion}</p>
             <Link href={bloque.href}>Abrir módulo</Link>
           </article>
