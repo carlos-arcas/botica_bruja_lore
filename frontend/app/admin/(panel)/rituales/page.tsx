@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { ModuloCrudContextualAdmin } from "@/componentes/admin/ModuloCrudContextualAdmin";
 import { obtenerListadoAdmin } from "@/infraestructura/api/backoffice";
 import { NOMBRE_COOKIE_BACKOFFICE } from "@/infraestructura/auth/configuracion";
+import { construirPayloadRitual, normalizarItemsRituales } from "@/infraestructura/configuracion/adminRituales";
 
 const CAMPOS = [
   { clave: "nombre", etiqueta: "Nombre" },
@@ -17,16 +18,17 @@ export default async function AdminRitualesPage(): Promise<JSX.Element> {
   const token = cookies().get(NOMBRE_COOKIE_BACKOFFICE)?.value;
   const resultado = await obtenerListadoAdmin("rituales", new URLSearchParams(), token);
   const errorInicial = resultado.estado === "error" ? "No se pudieron cargar los rituales en este momento." : "";
+  const itemsIniciales = resultado.estado === "ok" ? normalizarItemsRituales(resultado.items) : [];
   return (
     <ModuloCrudContextualAdmin
       modulo="rituales"
       titulo="Rituales"
       token={token}
-      itemsIniciales={resultado.estado === "ok" ? resultado.items : []}
+      itemsIniciales={itemsIniciales}
       campoEstado="publicado"
       entidadImportacion="rituales"
       camposComunes={CAMPOS}
-      construirPayload={(form) => form}
+      construirPayload={construirPayloadRitual}
       errorInicial={errorInicial}
     />
   );

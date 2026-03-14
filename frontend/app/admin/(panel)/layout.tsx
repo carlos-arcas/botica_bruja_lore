@@ -5,15 +5,7 @@ import { redirect } from "next/navigation";
 import { BotonLogoutBackoffice } from "@/componentes/admin/BotonLogoutBackoffice";
 import { obtenerUsuarioBackofficeSesionActual } from "@/infraestructura/auth/sesionBackoffice";
 
-const MODULOS_ADMIN = [
-  { href: "/admin", etiqueta: "Dashboard" },
-  { href: "/admin/productos", etiqueta: "Productos" },
-  { href: "/admin/rituales", etiqueta: "Rituales" },
-  { href: "/admin/editorial", etiqueta: "Editorial" },
-  { href: "/admin/secciones", etiqueta: "Secciones" },
-  { href: "/admin/imagenes", etiqueta: "Imágenes" },
-  { href: "/admin/ajustes", etiqueta: "Ajustes" },
-];
+import { MODULOS_NAVEGACION_ADMIN } from "@/infraestructura/configuracion/modulosAdmin";
 
 export default async function AdminLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
   const usuario = await obtenerUsuarioBackofficeSesionActual();
@@ -36,7 +28,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <div className="admin-grid">
         <nav className="admin-nav" aria-label="Módulos de administración">
           <ul>
-            {MODULOS_ADMIN.map((modulo) => (
+            {MODULOS_NAVEGACION_ADMIN.map((modulo) => (
               <li key={modulo.href}>
                 <Link href={modulo.href}>{modulo.etiqueta}</Link>
               </li>
