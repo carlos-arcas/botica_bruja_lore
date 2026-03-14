@@ -17,9 +17,12 @@ import {
   obtenerLoteImportacion,
   revalidarLoteImportacion,
 } from "@/infraestructura/api/backoffice";
+import { construirPayloadRitual } from "@/infraestructura/configuracion/adminRituales";
 
 type ConfigCampo = { clave: string; etiqueta: string; tipo?: "text" | "textarea" | "checkbox" };
 type OpcionContexto = { etiqueta: string; valor: string };
+
+type TipoPayloadAdmin = "rituales" | "editorial" | "secciones" | "productos";
 
 type Props = {
   modulo: ModuloAdmin;
@@ -30,7 +33,7 @@ type Props = {
   entidadImportacion: "productos" | "rituales" | "articulos_editoriales" | "secciones_publicas";
   camposComunes: ConfigCampo[];
   camposEspecificos?: ConfigCampo[];
-  construirPayload: (form: Record<string, unknown>) => Record<string, unknown>;
+  tipoPayload: TipoPayloadAdmin;
   seccionSeleccionada?: string;
   columnasObligatoriasImportacion?: string[];
   columnasOpcionalesImportacion?: string[];
@@ -54,6 +57,21 @@ async function validarCabeceraCsv(archivo: File, columnasObligatorias: string[])
   return obtenerFaltantesCabecera(primeraLinea, columnasObligatorias);
 }
 
+
+function construirPayloadSegunTipo({
+  tipoPayload,
+  formulario,
+  seccionSeleccionada,
+}: {
+  tipoPayload: TipoPayloadAdmin;
+  formulario: Record<string, unknown>;
+  seccionSeleccionada: string;
+}): Record<string, unknown> {
+  if (tipoPayload === "rituales") return construirPayloadRitual(formulario);
+  if (tipoPayload === "productos") return { ...formulario, seccion_publica: seccionSeleccionada, orden_publicacion: 100 };
+  return formulario;
+}
+
 export function ModuloCrudContextualAdmin({
   modulo,
   titulo,
@@ -63,7 +81,7 @@ export function ModuloCrudContextualAdmin({
   entidadImportacion,
   camposComunes,
   camposEspecificos = [],
-  construirPayload,
+  tipoPayload,
   seccionSeleccionada = "",
   columnasObligatoriasImportacion = [],
   columnasOpcionalesImportacion = [],
@@ -116,7 +134,8 @@ export function ModuloCrudContextualAdmin({
   };
 
   const guardar = async (formulario: Record<string, unknown>) => {
-    const guardado = await guardarRegistroAdmin(modulo, construirPayload(formulario), token);
+    const payload = construirPayloadSegunTipo({ tipoPayload, formulario, seccionSeleccionada });
+    const guardado = await guardarRegistroAdmin(modulo, payload, token);
     const existe = items.some((it) => it.id === guardado.id);
     setItems(existe ? items.map((it) => (it.id === guardado.id ? guardado : it)) : [guardado, ...items]);
   };

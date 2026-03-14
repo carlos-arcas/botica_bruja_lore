@@ -10,6 +10,7 @@ test("productos inicia por selección de sección y cambia formulario", () => {
   assert.match(modulo, /Minerales y Energía/);
   assert.match(modulo, /Herramientas Esotéricas/);
   assert.match(modulo, /contextoFormulario/);
+  assert.match(modulo, /tipoPayload="productos"/);
   assert.match(modulo, /camposEspecificos=\{CAMPOS_POR_SECCION\[seccion\] \?\? \[\]\}/);
 });
 
@@ -28,12 +29,12 @@ test("flujo normal no expone campos id y slug editables", () => {
 
 test("listado de productos se renderiza al final y exportación encima", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
-  const indiceImportacion = componente.indexOf("Importación contextual");
-  const indiceAlta = componente.indexOf("Alta manual");
+  const indiceAlta = componente.indexOf("Alta / edición manual");
+  const indiceImportacion = componente.indexOf("Importación");
   const indiceExportacion = componente.indexOf("Exportación contextual");
   const indiceListado = componente.indexOf("Registros existentes");
 
-  assert.ok(indiceImportacion < indiceAlta);
-  assert.ok(indiceAlta < indiceExportacion);
+  assert.ok(indiceAlta < indiceImportacion);
+  assert.ok(indiceImportacion < indiceExportacion);
   assert.ok(indiceExportacion < indiceListado);
 });

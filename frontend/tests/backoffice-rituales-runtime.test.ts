@@ -18,7 +18,8 @@ test("página de rituales monta módulo correcto y no hereda configuración de p
 
   assert.match(pagina, /modulo="rituales"/);
   assert.doesNotMatch(pagina, /modulo="productos"/);
-  assert.match(pagina, /construirPayload=\{construirPayloadRitual\}/);
+  assert.match(pagina, /tipoPayload="rituales"/);
+  assert.doesNotMatch(pagina, /construirPayload=\{/);
 });
 
 test("componentes visibles del admin consumen navegación compartida sin hardcode de productos para Rituales", () => {

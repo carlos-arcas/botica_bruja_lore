@@ -23,7 +23,7 @@ export default async function AdminSeccionesPage(): Promise<JSX.Element> {
       campoEstado="publicada"
       entidadImportacion="secciones_publicas"
       camposComunes={CAMPOS}
-      construirPayload={(form) => form}
+      tipoPayload="secciones"
     />
   );
 }

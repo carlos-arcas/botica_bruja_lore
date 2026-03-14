@@ -83,7 +83,7 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
           const vacios = ["nombre", ...camposObligatorios.map((campo) => campo.clave)].filter((clave) => !String(form[clave] ?? "").trim());
           return vacios.length > 0 ? `Completa los campos obligatorios para ${seccionFormulario}: ${vacios.join(", ")}.` : null;
         }}
-        construirPayload={(form) => ({ ...form, seccion_publica: seccion, orden_publicacion: 100 })}
+        tipoPayload="productos"
       />
     </>
   );
