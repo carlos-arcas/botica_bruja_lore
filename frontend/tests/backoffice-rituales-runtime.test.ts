@@ -21,6 +21,25 @@ test("página de rituales monta módulo correcto y no hereda configuración de p
   assert.match(pagina, /construirPayload=\{construirPayloadRitual\}/);
 });
 
+test("componentes visibles del admin consumen navegación compartida sin hardcode de productos para Rituales", () => {
+  const layout = readFileSync("app/admin/(panel)/layout.tsx", "utf8");
+  const dashboard = readFileSync("app/admin/(panel)/page.tsx", "utf8");
+
+  assert.match(layout, /obtenerEnlacesAdminVisibles\("sidebar"\)/);
+  assert.match(dashboard, /obtenerEnlacesAdminVisibles\("tarjetas"\)/);
+  assert.doesNotMatch(layout, /Rituales[^\n]*\/admin\/productos/);
+  assert.doesNotMatch(dashboard, /Rituales[^\n]*\/admin\/productos/);
+});
+
+test("/admin/rituales no contiene redirección ni push hacia /admin/productos", () => {
+  const pagina = readFileSync("app/admin/(panel)/rituales/page.tsx", "utf8");
+  const middleware = readFileSync("middleware.ts", "utf8");
+
+  assert.doesNotMatch(pagina, /redirect\(\s*["']\/admin\/productos["']\s*\)/);
+  assert.doesNotMatch(pagina, /router\.push\(\s*["']\/admin\/productos["']\s*\)/);
+  assert.doesNotMatch(middleware, /\/admin\/productos/);
+});
+
 test("normalización de rituales evita crash con shape parcial y conserva estado de publicación", () => {
   const [normalizado] = normalizarItemsRituales([
     { id: "rit-1", nombre: null, publicado: 1, intenciones_relacionadas: "limpieza, enfoque" },
