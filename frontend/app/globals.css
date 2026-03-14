@@ -689,6 +689,39 @@ button:focus-visible {
   grid-template-columns: 2fr 1fr;
 }
 
+.admin-disposicion-crud {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.admin-columna-principal,
+.admin-columna-herramientas {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-panel-herramientas {
+  position: sticky;
+  top: 1rem;
+}
+
+.admin-panel-herramientas p {
+  margin-top: 0;
+  color: #6f5d4a;
+}
+
+.admin-boton-herramienta {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #bea486;
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  background: #fffdf9;
+  font-weight: 600;
+}
+
 .admin-formulario-amplio {
   display: grid;
   gap: 0.8rem;
@@ -749,6 +782,14 @@ button:focus-visible {
   .admin-campos-grid {
     grid-template-columns: 1fr;
   }
+
+  .admin-disposicion-crud {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-panel-herramientas {
+    position: static;
+  }
 }
 
 
@@ -789,4 +830,8 @@ button:focus-visible {
   border-radius: 14px;
   border: 1px solid var(--borde-editorial);
   padding: 1rem;
+}
+
+.admin-modal--grande {
+  width: min(1100px, 100%);
 }
