@@ -29,7 +29,7 @@ export default async function AdminEditorialPage(): Promise<JSX.Element> {
       campoEstado="publicado"
       entidadImportacion="articulos_editoriales"
       camposComunes={CAMPOS}
-      construirPayload={(form) => form}
+      tipoPayload="editorial"
     />
   );
 }

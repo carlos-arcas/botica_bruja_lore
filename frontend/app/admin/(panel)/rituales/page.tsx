@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { ModuloCrudContextualAdmin } from "@/componentes/admin/ModuloCrudContextualAdmin";
 import { obtenerListadoAdmin } from "@/infraestructura/api/backoffice";
 import { NOMBRE_COOKIE_BACKOFFICE } from "@/infraestructura/auth/configuracion";
-import { construirPayloadRitual, normalizarItemsRituales } from "@/infraestructura/configuracion/adminRituales";
+import { normalizarItemsRituales } from "@/infraestructura/configuracion/adminRituales";
 
 const CAMPOS = [
   { clave: "nombre", etiqueta: "Nombre" },
@@ -28,7 +28,7 @@ export default async function AdminRitualesPage(): Promise<JSX.Element> {
       campoEstado="publicado"
       entidadImportacion="rituales"
       camposComunes={CAMPOS}
-      construirPayload={construirPayloadRitual}
+      tipoPayload="rituales"
       errorInicial={errorInicial}
     />
   );
