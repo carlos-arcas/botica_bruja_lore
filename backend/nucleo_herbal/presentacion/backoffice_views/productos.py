@@ -67,9 +67,11 @@ def listado_productos_backoffice(request: HttpRequest) -> JsonResponse:
         queryset = queryset.filter(publicado=(publicado == "true"))
     if request.GET.get("seccion", ""):
         queryset = queryset.filter(seccion_publica=request.GET["seccion"])
+    items = [producto_dict(it) for it in queryset[:120]]
     return JsonResponse(
         {
-            "items": [producto_dict(it) for it in queryset[:120]],
+            "items": items,
+            "productos": items,
             "metricas": {"total": queryset.count()},
             "secciones": [{"slug": slug, "etiqueta": etiqueta} for slug, etiqueta in SECCIONES_PRODUCTOS.items()],
         }
@@ -139,7 +141,8 @@ def cambiar_publicacion_producto_backoffice(request: HttpRequest, producto_id: s
             "backoffice_producto_publicacion",
             extra={"usuario": usuario.username, "producto": producto.id, "publicado": publicar},
         )
-        return JsonResponse({"item": producto_dict(producto)})
+        item = producto_dict(producto)
+        return JsonResponse({"item": item, "producto": item})
     except ProductoModelo.DoesNotExist:
         return JsonResponse({"detalle": "Producto no encontrado."}, status=404)
     except ValueError as exc:
