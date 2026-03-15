@@ -698,7 +698,7 @@ button:focus-visible {
 
 .admin-filtros input,
 .admin-filtros select,
-.admin-filtros button,
+.admin-filtros button:not(.admin-boton),
 .admin-filtros a {
   border: 1px solid var(--borde-editorial);
   border-radius: 10px;
@@ -715,7 +715,7 @@ button:focus-visible {
 }
 
 .admin-login-form input,
-.admin-login-form button {
+.admin-login-form button:not(.admin-boton) {
   border: 1px solid var(--borde-editorial);
   border-radius: 10px;
   padding: 0.55rem 0.65rem;
@@ -813,9 +813,9 @@ button:focus-visible {
 .admin-campos-grid textarea,
 .admin-campos-grid select,
 .admin-bloque input,
-.admin-import-export button,
-.admin-formulario-amplio button,
-.admin-tabla button {
+.admin-import-export button:not(.admin-boton),
+.admin-formulario-amplio button:not(.admin-boton),
+.admin-tabla button:not(.admin-boton) {
   border: 1px solid #c9d2df;
   border-radius: 12px;
   min-height: 42px;
@@ -1057,6 +1057,7 @@ button:focus-visible {
 }
 
 .admin-boton {
+  appearance: none;
   border: 1px solid transparent;
   border-radius: 12px;
   min-height: 42px;
@@ -1086,6 +1087,13 @@ button:focus-visible {
   background: linear-gradient(180deg, #aa3e39, #8e312d);
   color: #fff;
   border-color: #8e312d;
+}
+
+.admin-boton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .admin-filtros--segmentado {
