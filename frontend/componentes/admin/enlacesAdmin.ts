@@ -6,6 +6,9 @@ function permiteModuloEnVariante(modulo: ModuloNavegacionAdmin, variante: Varian
   if (modulo.clave === "dashboard") {
     return false;
   }
+  if (variante === "sidebar" && modulo.clave === "importacion") {
+    return false;
+  }
   if (variante === "tarjetas" && (modulo.clave === "ajustes" || modulo.clave === "imagenes")) {
     return false;
   }

@@ -28,3 +28,10 @@ test("normalización evita drift si configuración base de rituales muta", () =>
   assert.ok(rituales);
   assert.equal(rituales?.href, "/admin/rituales");
 });
+
+test("sidebar no muestra importación masiva y usa naming humano para secciones", () => {
+  const sidebar = obtenerEnlacesAdminVisibles("sidebar");
+  assert.equal(sidebar.some((modulo) => modulo.clave === "importacion"), false);
+  assert.equal(sidebar.some((modulo) => modulo.etiqueta === "Secciones públicas"), false);
+  assert.equal(sidebar.some((modulo) => modulo.etiqueta === "Colecciones web"), true);
+});
