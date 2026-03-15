@@ -92,6 +92,11 @@ export type ResultadoFichaHerbal =
   | { estado: "no_encontrado" }
   | { estado: "error"; mensaje: string };
 
+export type ResultadoDetalleProductoPublico =
+  | { estado: "ok"; producto: ProductoSeccionPublica }
+  | { estado: "no_encontrado" }
+  | { estado: "error"; mensaje: string };
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
 
@@ -302,6 +307,52 @@ export async function obtenerProductosPublicosPorSeccion(
       tipoError: "fetch_error",
       mensaje: "No hay conexión con el backend para cargar Botica Natural.",
       diagnostico: { endpoint },
+    };
+  }
+}
+
+
+type RespuestaDetalleProducto = {
+  producto?: ProductoHerbalApi;
+};
+
+export async function obtenerDetalleProductoPublico(
+  slugProducto: string,
+): Promise<ResultadoDetalleProductoPublico> {
+  const endpoint = `${API_BASE_URL}/api/v1/herbal/productos/${slugProducto}/`;
+
+  try {
+    const respuesta = await fetch(endpoint, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 120 },
+    });
+
+    if (respuesta.status === 404) {
+      return { estado: "no_encontrado" };
+    }
+
+    if (!respuesta.ok) {
+      return {
+        estado: "error",
+        mensaje: "No pudimos cargar esta ficha de producto ahora mismo. Inténtalo más tarde.",
+      };
+    }
+
+    const data: RespuestaDetalleProducto = await respuesta.json();
+    const producto = data.producto ? normalizarProductoApi(data.producto) : null;
+
+    if (!producto) {
+      return {
+        estado: "error",
+        mensaje: "El backend devolvió una ficha de producto inválida.",
+      };
+    }
+
+    return { estado: "ok", producto };
+  } catch {
+    return {
+      estado: "error",
+      mensaje: "La ficha de producto no está disponible por un problema de conexión frontend-backend.",
     };
   }
 }

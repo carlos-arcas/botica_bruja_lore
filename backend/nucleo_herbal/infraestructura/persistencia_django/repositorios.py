@@ -90,6 +90,14 @@ class RepositorioProductosORM(RepositorioProductos):
         ).order_by("slug")[:limite]
         return tuple(a_producto(producto) for producto in queryset)
 
+    def obtener_publico_por_slug(self, slug_producto: str) -> Producto | None:
+        try:
+            producto = ProductoModelo.objects.get(slug=slug_producto, publicado=True)
+        except ProductoModelo.DoesNotExist:
+            return None
+        return a_producto(producto)
+
+
 class RepositorioRitualesORM(RepositorioRituales):
     def listar_navegables(self) -> tuple[Ritual, ...]:
         queryset = self._base_queryset().filter(publicado=True)

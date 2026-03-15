@@ -29,3 +29,7 @@ class RepositorioProductos(ABC):
     @abstractmethod
     def listar_publicos_por_seccion(self, slug_seccion: str, limite: int) -> tuple[Producto, ...]:
         """Devuelve productos públicos de una sección comercial en orden estable."""
+
+    @abstractmethod
+    def obtener_publico_por_slug(self, slug_producto: str) -> Producto | None:
+        """Busca un producto público por slug para ficha pública."""

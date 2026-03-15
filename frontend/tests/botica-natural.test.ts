@@ -21,6 +21,7 @@ test("la sección Botica Natural contempla vacío real separado de estados de er
   const pagina = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
 
   assert.equal(componente.includes("if (productos.length === 0)"), true);
+  assert.equal(componente.includes('/botica-natural/${producto.slug}'), true);
   assert.equal(componente.includes("sin productos publicados"), true);
   assert.equal(pagina.includes("No pudimos cargar Botica Natural"), true);
   assert.equal(pagina.includes("resolverMensajeError"), true);
@@ -33,4 +34,22 @@ test("el cliente API registra diagnóstico de endpoint y tipo de error", () => {
   assert.equal(api.includes('tipoError: "http_error"'), true);
   assert.equal(api.includes("[botica-natural]"), true);
   assert.equal(api.includes("respuesta_invalida"), true);
+});
+
+
+test("la ficha pública de Botica Natural usa endpoint real de detalle y CTA de cesta", () => {
+  const paginaDetalle = readFileSync(join(process.cwd(), "app/botica-natural/[slug]/page.tsx"), "utf8");
+  const noEncontrado = readFileSync(join(process.cwd(), "app/botica-natural/[slug]/not-found.tsx"), "utf8");
+  const api = readFileSync(join(process.cwd(), "infraestructura/api/herbal.ts"), "utf8");
+  const ficha = readFileSync(
+    join(process.cwd(), "componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx"),
+    "utf8",
+  );
+
+  assert.equal(paginaDetalle.includes("obtenerDetalleProductoPublico"), true);
+  assert.equal(paginaDetalle.includes("notFound()"), true);
+  assert.equal(api.includes('/api/v1/herbal/productos/${slugProducto}/'), true);
+  assert.equal(noEncontrado.includes("no existe o no está publicado"), true);
+  assert.equal(ficha.includes("BotonAnadirCestaRitual"), true);
+  assert.equal(ficha.includes("botica-natural__imagen--fallback"), true);
 });

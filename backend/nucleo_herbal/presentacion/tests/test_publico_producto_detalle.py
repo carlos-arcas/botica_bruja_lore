@@ -1,0 +1,45 @@
+from __future__ import annotations
+
+from django.test import Client, TestCase
+
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
+
+
+class PublicoProductoDetalleApiTests(TestCase):
+    def setUp(self) -> None:
+        self.client = Client()
+
+    def _crear_producto(self, *, slug: str, publicado: bool) -> None:
+        ProductoModelo.objects.create(
+            id=f"id-{slug}",
+            sku=f"SKU-{slug}",
+            slug=slug,
+            nombre=f"Producto {slug}",
+            tipo_producto="inciensos-y-sahumerios",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            descripcion_corta="Descripción pública",
+            precio_visible="12,00 €",
+            imagen_url="",
+            publicado=publicado,
+        )
+
+    def test_detalle_producto_publicado_devuelve_200(self):
+        self._crear_producto(slug="detalle-publico", publicado=True)
+
+        respuesta = self.client.get("/api/v1/herbal/productos/detalle-publico/")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.json()["producto"]["slug"], "detalle-publico")
+
+    def test_detalle_producto_inexistente_devuelve_404(self):
+        respuesta = self.client.get("/api/v1/herbal/productos/no-existe/")
+
+        self.assertEqual(respuesta.status_code, 404)
+
+    def test_detalle_producto_no_publicado_no_se_expone(self):
+        self._crear_producto(slug="detalle-privado", publicado=False)
+
+        respuesta = self.client.get("/api/v1/herbal/productos/detalle-privado/")
+
+        self.assertEqual(respuesta.status_code, 404)

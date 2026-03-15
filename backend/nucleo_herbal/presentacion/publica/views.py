@@ -74,6 +74,14 @@ def listado_productos_por_seccion(request: HttpRequest, slug_seccion: str) -> Js
         }
     )
 
+def detalle_producto_publico(request: HttpRequest, slug_producto: str) -> JsonResponse:
+    servicios = construir_servicios_publicos_herbales()
+    try:
+        producto = servicios.detalle_producto.ejecutar(slug_producto)
+    except ErrorAplicacionLookup as error:
+        return json_no_encontrado(str(error))
+    return JsonResponse({"producto": serializar_producto_resumen(producto)})
+
 def relaciones_por_intencion(request: HttpRequest, slug_intencion: str) -> JsonResponse:
     servicios = construir_servicios_publicos_herbales()
     try:
