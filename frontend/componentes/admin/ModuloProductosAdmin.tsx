@@ -85,8 +85,8 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
         columnasOpcionalesImportacion={COLUMNAS_OPCIONALES}
         contextoFormulario={{
           clave: "seccion_publica",
-          etiqueta: "Colección",
-          ayuda: "Selecciona la colección comercial antes de completar los demás campos.",
+          etiqueta: "Dónde se mostrará",
+          ayuda: "Selecciona la categoría del catálogo antes de completar los demás campos.",
           opciones: SECCIONES.map((it) => ({ etiqueta: it.etiqueta, valor: it.slug })),
         }}
         onCambioContexto={setSeccion}

@@ -553,8 +553,8 @@ button:focus-visible {
 }
 
 .admin-shell {
-  width: min(1200px, 94vw);
-  margin: 2rem auto 3rem;
+  width: min(1280px, 96vw);
+  margin: 1rem auto 2rem;
   display: grid;
   gap: 1rem;
 }
@@ -565,9 +565,9 @@ button:focus-visible {
 .admin-resumen,
 .admin-card,
 .admin-tabla {
-  border: 1px solid var(--borde-editorial);
-  background: rgba(255, 251, 244, 0.95);
-  border-radius: 14px;
+  border: 1px solid #d4dae3;
+  background: #fff;
+  border-radius: 12px;
 }
 
 .admin-cabecera,
@@ -575,31 +575,34 @@ button:focus-visible {
 .admin-resumen,
 .admin-card,
 .admin-tabla {
-  padding: 1rem 1.2rem;
+  padding: 1rem 1.15rem;
 }
 
 .admin-eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #74563e;
-  font-size: 0.78rem;
+  color: #4d5c73;
+  font-size: 0.76rem;
+  margin: 0 0 0.25rem;
 }
 
 .admin-cabecera h1,
 .admin-resumen h2,
 .admin-card h3,
 .admin-bloque h1 {
-  font-family: var(--tipografia-editorial-titulo);
+  font-family: var(--tipografia-editorial-cuerpo);
 }
 
 .admin-grid {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 260px 1fr;
   gap: 1rem;
 }
 
 .admin-nav {
-  padding: 0.75rem;
+  padding: 0.8rem;
+  background: #f4f7fb;
+  border-color: #d8e0ea;
 }
 
 .admin-nav ul {
@@ -613,11 +616,22 @@ button:focus-visible {
 .admin-nav a {
   display: block;
   text-decoration: none;
-  border: 1px solid var(--borde);
+  border: 1px solid #d0d8e3;
   border-radius: 10px;
-  padding: 0.55rem 0.7rem;
-  color: #43382f;
+  padding: 0.58rem 0.72rem;
+  color: #293241;
   background: #fff;
+  font-weight: 600;
+}
+
+.admin-nav a:hover {
+  border-color: #8aa1be;
+}
+
+.admin-nav a[aria-current="page"] {
+  background: #1f3552;
+  border-color: #1f3552;
+  color: #fff;
 }
 
 .admin-tarjetas {
@@ -671,6 +685,42 @@ button:focus-visible {
   padding: 0.55rem 0.65rem;
   background: #fff;
   color: #352f29;
+}
+
+.admin-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, #f8fbff, #f2f6fc);
+  border-color: #d4deea;
+}
+
+.admin-cabecera h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.admin-sesion {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: end;
+}
+
+.admin-usuario {
+  margin: 0;
+  color: #3d4f66;
+  font-weight: 600;
+}
+
+.admin-main {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-breadcrumb {
+  margin: 0;
+  color: #5a6d86;
+  font-size: 0.85rem;
 }
 
 .admin-estado--error {

@@ -150,8 +150,8 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
         <select name="entidad" value={entidad} onChange={(e) => setEntidad(e.target.value as EntidadImportacion)}>
           <option value="productos">Productos</option>
           <option value="rituales">Rituales</option>
-          <option value="articulos_editoriales">Editorial</option>
-          <option value="secciones_publicas">Secciones</option>
+          <option value="articulos_editoriales">Artículos</option>
+          <option value="secciones_publicas">Categorías de catálogo</option>
         </select>
         <select name="modo" defaultValue="crear_actualizar"><option value="solo_crear">Solo crear</option><option value="crear_actualizar">Crear o actualizar</option></select>
         <input type="file" name="archivo" accept=".csv,.xlsx" required />

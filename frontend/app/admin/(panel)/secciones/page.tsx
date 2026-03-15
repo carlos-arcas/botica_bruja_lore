@@ -17,7 +17,7 @@ export default async function AdminSeccionesPage(): Promise<JSX.Element> {
   return (
     <ModuloCrudContextualAdmin
       modulo="secciones"
-      titulo="Colecciones web"
+      titulo="Categorías de catálogo"
       token={token}
       itemsIniciales={resultado.estado === "ok" ? resultado.items : []}
       campoEstado="publicada"

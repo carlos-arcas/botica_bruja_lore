@@ -18,10 +18,10 @@ test("cada pestaña admin monta CRUD contextual con herramientas secundarias", (
   assert.match(componente, /className="admin-disposicion-crud"/);
   assert.match(componente, /className="admin-columna-herramientas"/);
   assert.match(componente, />Importar<\/button>/);
-  assert.match(componente, /Plantilla CSV/);
-  assert.match(componente, /Plantilla XLSX/);
-  assert.match(componente, /Inventario CSV/);
-  assert.match(componente, /Inventario XLSX/);
+  assert.match(componente, /plantilla CSV/i);
+  assert.match(componente, /plantilla XLSX/i);
+  assert.match(componente, /inventario CSV/i);
+  assert.match(componente, /inventario XLSX/i);
 });
 
 test("importación abre diálogo grande y mantiene staging por filas", () => {
@@ -62,4 +62,17 @@ test("pantalla /admin/importacion usa el módulo real de importación", () => {
 test("regresión: módulo contextual no contiene JSX inválido en staging", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
   assert.doesNotMatch(componente, /<\/td>\s*<\/td>/);
+});
+
+
+test("naming editorial del admin evita jerga interna en labels visibles", () => {
+  const paginaEditorial = readFileSync("app/admin/(panel)/editorial/page.tsx", "utf8");
+  const moduloImportacion = readFileSync("componentes/admin/ModuloImportacionAdmin.tsx", "utf8");
+
+  assert.doesNotMatch(paginaEditorial, /Sección pública/);
+  assert.match(paginaEditorial, /Dónde se mostrará/);
+  assert.doesNotMatch(paginaEditorial, /titulo="Editorial"/);
+  assert.match(paginaEditorial, /titulo="Artículos"/);
+  assert.doesNotMatch(moduloImportacion, /<option value="articulos_editoriales">Editorial<\/option>/);
+  assert.match(moduloImportacion, /<option value="articulos_editoriales">Artículos<\/option>/);
 });
