@@ -34,10 +34,34 @@ test("botones principales del admin usan variantes visuales y no estilo navegado
   const login = readFileSync("componentes/admin/FormularioLoginBackoffice.tsx", "utf8");
   const logout = readFileSync("componentes/admin/BotonLogoutBackoffice.tsx", "utf8");
   const staging = readFileSync("componentes/admin/TablaStagingImportacion.tsx", "utf8");
+  const estilos = readFileSync("app/globals.css", "utf8");
 
   assert.match(login, /admin-boton admin-boton--primario/);
   assert.match(logout, /admin-boton admin-boton--secundario/);
   assert.match(staging, /admin-boton admin-boton--peligro/);
+  assert.match(estilos, /\.admin-filtros button:not\(\.admin-boton\)/);
+  assert.match(estilos, /\.admin-formulario-amplio button:not\(\.admin-boton\)/);
+  assert.match(estilos, /\.admin-tabla button:not\(\.admin-boton\)/);
+  assert.match(estilos, /\.admin-boton\s*\{[\s\S]*appearance:\s*none;/);
+});
+
+test("botones críticos del backoffice mantienen label visible y acciones esperadas", () => {
+  const modulo = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  const importacion = readFileSync("componentes/admin/ModuloImportacionAdmin.tsx", "utf8");
+  const login = readFileSync("componentes/admin/FormularioLoginBackoffice.tsx", "utf8");
+  const logout = readFileSync("componentes/admin/BotonLogoutBackoffice.tsx", "utf8");
+
+  ["Editar", "Guardar", "Guardar cambios", "Importar", "Cerrar"].forEach((label) => {
+    assert.match(modulo, new RegExp(`>${label}<`));
+  });
+  assert.match(modulo, /\? "Despublicar" : "Publicar"/);
+
+  ["Exportar inventario CSV", "Exportar inventario XLSX"].forEach((label) => {
+    assert.match(importacion, new RegExp(`>${label}<`));
+  });
+
+  assert.match(login, /"Entrar al backoffice"/);
+  assert.match(logout, />\s*Cerrar sesión\s*</);
 });
 
 test("no regresión: navegación de Rituales y modales de edición/importación siguen presentes", () => {
