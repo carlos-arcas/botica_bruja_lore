@@ -11,7 +11,7 @@ export const MODULOS_NAVEGACION_ADMIN: ModuloNavegacionAdmin[] = [
   { clave: "rituales", href: "/admin/rituales", etiqueta: "Rituales", descripcion: "Rutas rituales y relaciones con plantas." },
   { clave: "editorial", href: "/admin/editorial", etiqueta: "Editorial", descripcion: "Artículos, hubs y contenidos públicos." },
   { clave: "importacion", href: "/admin/importacion", etiqueta: "Importación masiva", descripcion: "Entrada operativa para cargas bulk." },
-  { clave: "secciones", href: "/admin/secciones", etiqueta: "Secciones públicas", descripcion: "Gestión de secciones visibles del sitio." },
+  { clave: "secciones", href: "/admin/secciones", etiqueta: "Colecciones web", descripcion: "Gestión de colecciones visibles del sitio." },
   { clave: "imagenes", href: "/admin/imagenes", etiqueta: "Imágenes", descripcion: "Control de activos visuales pendientes." },
   { clave: "ajustes", href: "/admin/ajustes", etiqueta: "Ajustes", descripcion: "Parámetros de operación y accesos." },
 ];

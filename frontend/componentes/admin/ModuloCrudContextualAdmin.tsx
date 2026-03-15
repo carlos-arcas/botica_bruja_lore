@@ -18,9 +18,9 @@ import {
   obtenerLoteImportacion,
   revalidarLoteImportacion,
 } from "@/infraestructura/api/backoffice";
+import { CampoFormulario, ConfigCampo } from "@/componentes/admin/CamposFormularioAdmin";
 import { construirPayloadRitual } from "@/infraestructura/configuracion/adminRituales";
 
-type ConfigCampo = { clave: string; etiqueta: string; tipo?: "text" | "textarea" | "checkbox" };
 type OpcionContexto = { etiqueta: string; valor: string };
 type TipoPayloadAdmin = "rituales" | "editorial" | "secciones" | "productos";
 
@@ -60,12 +60,6 @@ function construirPayloadSegunTipo(tipoPayload: TipoPayloadAdmin, formulario: Re
   if (tipoPayload === "rituales") return construirPayloadRitual(formulario);
   if (tipoPayload === "productos") return { ...formulario, seccion_publica: seccionSeleccionada, orden_publicacion: 100 };
   return formulario;
-}
-
-function CampoFormulario({ valor, campo, onCambio }: { valor: unknown; campo: ConfigCampo; onCambio: (valor: unknown) => void }): JSX.Element {
-  if (campo.tipo === "checkbox") return <input type="checkbox" checked={Boolean(valor)} onChange={(event) => onCambio(event.target.checked)} />;
-  if (campo.tipo === "textarea") return <textarea value={String(valor ?? "")} onChange={(event) => onCambio(event.target.value)} />;
-  return <input value={String(valor ?? "")} onChange={(event) => onCambio(event.target.value)} />;
 }
 
 export function ModuloCrudContextualAdmin({
@@ -135,8 +129,6 @@ export function ModuloCrudContextualAdmin({
   const onGuardarEdicion = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!registroEdicion) return;
-    const errorValidacion = validarFormulario?.(registroEdicion);
-    if (errorValidacion) return setError(errorValidacion);
     await ejecutarAccion(async () => {
       await guardar(registroEdicion);
       setRegistroEdicion(null);
@@ -149,12 +141,10 @@ export function ModuloCrudContextualAdmin({
     if (!archivo) return;
     const faltantes = await validarCabeceraCsv(archivo, columnasObligatoriasImportacion);
     if (faltantes.length > 0) return setError(`Faltan columnas obligatorias: ${faltantes.join(", ")}.`);
-    const formData = new FormData();
-    formData.set("entidad", entidadImportacion);
-    formData.set("modo", "crear_actualizar");
-    if (seccionSeleccionada) formData.set("seccion", seccionSeleccionada);
-    formData.set("archivo", archivo);
     await ejecutarAccion(async () => {
+      const formData = new FormData();
+      formData.set("entidad", entidadImportacion);
+      formData.set("archivo", archivo);
       const loteId = await crearLoteImportacion(formData, token);
       const lote = await obtenerLoteImportacion(loteId, token);
       setDetalle({ lote: lote.lote, filas: lote.filas });
@@ -162,44 +152,43 @@ export function ModuloCrudContextualAdmin({
     }, "No se pudo cargar el lote de importación.");
   };
 
-  const actualizarFila = (actualizada: FilaImportacion) => {
-    if (!detalle) return;
-    setDetalle({ ...detalle, filas: detalle.filas.map((fila) => (fila.id === actualizada.id ? actualizada : fila)) });
-  };
-
   const onSeleccionFila = (fila: FilaImportacion) => void ejecutarAccion(async () => {
+    if (!detalle?.lote.id) return;
+    const actualizado = await cambiarSeleccionFilaImportacion(Number(detalle.lote.id), fila.id, !fila.seleccionado, token);
     if (!detalle) return;
-    const actualizada = await cambiarSeleccionFilaImportacion(Number(detalle.lote.id), fila.id, !fila.seleccionado, token);
-    actualizarFila(actualizada);
-  }, "No se pudo actualizar la selección de fila.");
+    setDetalle({ ...detalle, filas: detalle.filas.map((it) => (it.id === actualizado.id ? actualizado : it)) });
+  }, "No se pudo actualizar la selección.");
 
   const onAdjuntarImagen = (fila: FilaImportacion, archivo?: File) => void ejecutarAccion(async () => {
-    if (!detalle || !archivo) return;
+    if (!archivo || !detalle?.lote.id) return;
     const actualizada = await adjuntarImagenFilaImportacion(Number(detalle.lote.id), fila.id, archivo, token);
-    actualizarFila(actualizada);
+    if (!detalle) return;
+    setDetalle({ ...detalle, filas: detalle.filas.map((it) => (it.id === actualizada.id ? actualizada : it)) });
   }, "No se pudo adjuntar la imagen.");
 
   const onEliminarImagen = (fila: FilaImportacion) => void ejecutarAccion(async () => {
-    if (!detalle) return;
+    if (!detalle?.lote.id) return;
     const actualizada = await eliminarImagenFilaImportacion(Number(detalle.lote.id), fila.id, token);
-    actualizarFila(actualizada);
+    if (!detalle) return;
+    setDetalle({ ...detalle, filas: detalle.filas.map((it) => (it.id === actualizada.id ? actualizada : it)) });
   }, "No se pudo eliminar la imagen.");
 
   const onDescartarFila = (fila: FilaImportacion) => void ejecutarAccion(async () => {
-    if (!detalle) return;
+    if (!detalle?.lote.id) return;
     const actualizada = await descartarFilaImportacion(Number(detalle.lote.id), fila.id, token);
-    actualizarFila(actualizada);
+    if (!detalle) return;
+    setDetalle({ ...detalle, filas: detalle.filas.map((it) => (it.id === actualizada.id ? actualizada : it)) });
   }, "No se pudo descartar la fila.");
 
   const onConfirmarLote = () => void ejecutarAccion(async () => {
-    if (!detalle) return;
-    const filas = detalle.filas.filter((fila) => fila.seleccionado).map((fila) => fila.id);
-    const confirmadas = await confirmarLoteImportacion(Number(detalle.lote.id), filas, token);
+    if (!detalle?.lote.id) return;
+    const filasSeleccionadas = detalle.filas.filter((fila) => fila.seleccionado).map((fila) => fila.id);
+    const confirmadas = await confirmarLoteImportacion(Number(detalle.lote.id), filasSeleccionadas, token);
     setOk(`Lote confirmado. Filas aplicadas: ${confirmadas}.`);
   }, "No se pudo confirmar el lote.");
 
   const onRevalidarLote = () => void ejecutarAccion(async () => {
-    if (!detalle) return;
+    if (!detalle?.lote.id) return;
     await revalidarLoteImportacion(Number(detalle.lote.id), token);
     const lote = await obtenerLoteImportacion(Number(detalle.lote.id), token);
     setDetalle({ lote: lote.lote, filas: lote.filas });
@@ -216,11 +205,140 @@ export function ModuloCrudContextualAdmin({
     URL.revokeObjectURL(url);
   };
 
-  return <section className="admin-bloque"><h2>{titulo}</h2>{error ? <p className="admin-estado admin-estado--error">{error}</p> : null}{ok ? <p className="admin-estado admin-estado--ok">{ok}</p> : null}
-    <div className="admin-disposicion-crud"><div className="admin-columna-principal"><section className="admin-bloque admin-alta-manual"><h3>Alta / edición manual</h3><form onSubmit={onGuardarAlta} className="admin-formulario-amplio">{contextoFormulario ? <label><span>{contextoFormulario.etiqueta}</span><select value={String(formAlta[contextoFormulario.clave] ?? seccionSeleccionada)} onChange={(event) => { const valor = event.target.value; setFormAlta({ ...formAlta, [contextoFormulario.clave]: valor }); onCambioContexto?.(valor); }}>{contextoFormulario.opciones.map((opcion) => <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>)}</select><small>{contextoFormulario.ayuda}</small></label> : null}<div className="admin-campos-grid">{campos.map((campo) => <label key={campo.clave}><span>{campo.etiqueta}</span><CampoFormulario campo={campo} valor={formAlta[campo.clave]} onCambio={(valor) => setFormAlta({ ...formAlta, [campo.clave]: valor })} /></label>)}</div><button type="submit">Guardar alta</button></form></section>
-      <section className="admin-bloque"><h3>Registros existentes</h3><input placeholder="Buscar por nombre, slug o contenido" value={filtro} onChange={(event) => setFiltro(event.target.value)} /><table className="admin-tabla"><thead><tr><th>Registro</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{filtrados.map((item) => <tr key={String(item.id)}><td>{String(item.nombre ?? item.titulo ?? item.slug ?? item.id)}</td><td>{item[campoEstado] ? "Publicado" : "Borrador"}</td><td><button type="button" onClick={() => setRegistroEdicion({ ...item })}>Editar</button> <button type="button" onClick={() => void ejecutarAccion(async () => { const actualizado = await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token); setItems(items.map((it) => (it.id === item.id ? actualizado : it))); }, "No se pudo actualizar la publicación.")}>{item[campoEstado] ? "Despublicar" : "Publicar"}</button></td></tr>)}</tbody></table></section></div>
-      <aside className="admin-columna-herramientas" aria-label="Herramientas secundarias"><section className="admin-bloque admin-panel-herramientas"><h3>Herramientas</h3><p>Acciones secundarias de importación y exportación.</p><button type="button" className="admin-boton-herramienta" onClick={() => setImportacionAbierta(true)}>Importar</button><div className="admin-acciones-export"><button type="button" className="admin-boton-herramienta" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "csv"), "No se pudo descargar la plantilla CSV.")}>Plantilla CSV</button><button type="button" className="admin-boton-herramienta" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "xlsx"), "No se pudo descargar la plantilla XLSX.")}>Plantilla XLSX</button><button type="button" className="admin-boton-herramienta" onClick={() => void ejecutarAccion(async () => descargar("inventario", "csv"), "No se pudo exportar inventario CSV.")}>Inventario CSV</button><button type="button" className="admin-boton-herramienta" onClick={() => void ejecutarAccion(async () => descargar("inventario", "xlsx"), "No se pudo exportar inventario XLSX.")}>Inventario XLSX</button></div></section></aside></div>
-    {importacionAbierta ? <div className="admin-modal-fondo" role="presentation" onClick={() => setImportacionAbierta(false)}><div className="admin-modal admin-modal--grande" role="dialog" aria-modal="true" aria-label="Importar lote" onClick={(event) => event.stopPropagation()}><h3>Importación</h3><p>Columnas obligatorias: {columnasObligatoriasImportacion.length ? columnasObligatoriasImportacion.join(", ") : "(sin restricciones)"}</p><p>Columnas opcionales: {columnasOpcionalesImportacion.length ? columnasOpcionalesImportacion.join(", ") : "(sin opcionales)"}</p><input type="file" accept=".csv,.xlsx" onChange={(event) => void onArchivo(event)} /><div className="admin-filtros"><button type="button" onClick={onConfirmarLote}>Confirmar lote seleccionado</button><button type="button" onClick={onRevalidarLote}>Revalidar lote</button><button type="button" onClick={() => setImportacionAbierta(false)}>Cerrar</button></div>{detalle ? <TablaStagingImportacion detalleId={Number(detalle.lote.id)} filas={detalle.filas} onSeleccionar={onSeleccionFila} onAdjuntar={onAdjuntarImagen} onEliminarImagen={onEliminarImagen} onDescartar={onDescartarFila} /> : null}</div></div> : null}
-    {registroEdicion ? <div className="admin-modal-fondo" role="presentation" onClick={() => setRegistroEdicion(null)}><div className="admin-modal" role="dialog" aria-modal="true" aria-label="Editar registro" onClick={(event) => event.stopPropagation()}><h3>Editar registro</h3><form onSubmit={onGuardarEdicion} className="admin-formulario-amplio"><div className="admin-campos-grid">{campos.map((campo) => <label key={`editar-${campo.clave}`}><span>{campo.etiqueta}</span><CampoFormulario campo={campo} valor={registroEdicion[campo.clave]} onCambio={(valor) => setRegistroEdicion({ ...registroEdicion, [campo.clave]: valor })} /></label>)}</div><div className="admin-filtros"><button type="submit">Guardar cambios</button><button type="button" onClick={() => setRegistroEdicion(null)}>Cerrar</button></div></form></div></div> : null}
-  </section>;
+  return (
+    <section className="admin-bloque">
+      <h2>{titulo}</h2>
+      {error ? <p className="admin-estado admin-estado--error">{error}</p> : null}
+      {ok ? <p className="admin-estado admin-estado--ok">{ok}</p> : null}
+      <div className="admin-disposicion-crud">
+        <div className="admin-columna-principal">
+          <section className="admin-bloque admin-alta-manual">
+            <h3>Alta manual</h3>
+            <form onSubmit={onGuardarAlta} className="admin-formulario-amplio admin-formulario-vertical">
+              {contextoFormulario ? (
+                <label className="admin-control-contexto">
+                  <span>{contextoFormulario.etiqueta}</span>
+                  <select
+                    value={String(formAlta[contextoFormulario.clave] ?? seccionSeleccionada)}
+                    onChange={(event) => {
+                      const valor = event.target.value;
+                      setFormAlta({ ...formAlta, [contextoFormulario.clave]: valor });
+                      onCambioContexto?.(valor);
+                    }}
+                  >
+                    {contextoFormulario.opciones.map((opcion) => (
+                      <option key={opcion.valor} value={opcion.valor}>
+                        {opcion.etiqueta}
+                      </option>
+                    ))}
+                  </select>
+                  <small>{contextoFormulario.ayuda}</small>
+                </label>
+              ) : null}
+              <div className="admin-campos-grid admin-campos-grid--vertical">
+                {campos.map((campo) => (
+                  <label key={campo.clave}>
+                    <span>{campo.etiqueta}</span>
+                    <CampoFormulario campo={campo} valor={formAlta[campo.clave]} onCambio={(valor) => setFormAlta({ ...formAlta, [campo.clave]: valor })} />
+                  </label>
+                ))}
+              </div>
+              <button type="submit" className="admin-boton admin-boton--primario">Guardar</button>
+            </form>
+          </section>
+
+          <section className="admin-bloque">
+            <h3>Registros existentes</h3>
+            <input placeholder="Buscar por nombre, slug o contenido" value={filtro} onChange={(event) => setFiltro(event.target.value)} />
+            <table className="admin-tabla">
+              <thead><tr><th>Registro</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody>
+                {filtrados.map((item) => (
+                  <tr key={String(item.id)}>
+                    <td>{String(item.nombre ?? item.titulo ?? item.slug ?? item.id)}</td>
+                    <td>{item[campoEstado] ? "Publicado" : "Borrador"}</td>
+                    <td>
+                      <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setRegistroEdicion({ ...item })}>Editar</button>{" "}
+                      <button
+                        type="button"
+                        className={item[campoEstado] ? "admin-boton admin-boton--peligro" : "admin-boton admin-boton--primario"}
+                        onClick={() => void ejecutarAccion(async () => {
+                          const actualizado = await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token);
+                          setItems(items.map((it) => (it.id === item.id ? actualizado : it)));
+                        }, "No se pudo actualizar la publicación.")}
+                      >
+                        {item[campoEstado] ? "Despublicar" : "Publicar"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </div>
+
+        <aside className="admin-columna-herramientas" aria-label="Herramientas secundarias">
+          <section className="admin-bloque admin-panel-herramientas">
+            <h3>Herramientas</h3>
+            <p>Importación y exportación como tareas secundarias.</p>
+            <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setImportacionAbierta(true)}>Importar</button>
+            <div className="admin-acciones-export">
+              <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "csv"), "No se pudo descargar la plantilla CSV.")}>Exportar plantilla CSV</button>
+              <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "xlsx"), "No se pudo descargar la plantilla XLSX.")}>Exportar plantilla XLSX</button>
+              <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("inventario", "csv"), "No se pudo exportar inventario CSV.")}>Exportar inventario CSV</button>
+              <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("inventario", "xlsx"), "No se pudo exportar inventario XLSX.")}>Exportar inventario XLSX</button>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      {importacionAbierta ? (
+        <div className="admin-modal-fondo" role="presentation" onClick={() => setImportacionAbierta(false)}>
+          <div className="admin-modal admin-modal--grande" role="dialog" aria-modal="true" aria-label="Importar lote" onClick={(event) => event.stopPropagation()}>
+            <h3>Importación</h3>
+            <p>Columnas obligatorias: {columnasObligatoriasImportacion.length ? columnasObligatoriasImportacion.join(", ") : "(sin restricciones)"}</p>
+            <p>Columnas opcionales: {columnasOpcionalesImportacion.length ? columnasOpcionalesImportacion.join(", ") : "(sin opcionales)"}</p>
+            <input type="file" accept=".csv,.xlsx" onChange={(event) => void onArchivo(event)} />
+            <div className="admin-filtros">
+              <button type="button" className="admin-boton admin-boton--primario" onClick={onConfirmarLote}>Confirmar lote seleccionado</button>
+              <button type="button" className="admin-boton admin-boton--secundario" onClick={onRevalidarLote}>Revalidar lote</button>
+              <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setImportacionAbierta(false)}>Cerrar</button>
+            </div>
+            {detalle ? (
+              <TablaStagingImportacion
+                detalleId={Number(detalle.lote.id)}
+                filas={detalle.filas}
+                onSeleccionar={onSeleccionFila}
+                onAdjuntar={onAdjuntarImagen}
+                onEliminarImagen={onEliminarImagen}
+                onDescartar={onDescartarFila}
+              />
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {registroEdicion ? (
+        <div className="admin-modal-fondo" role="presentation" onClick={() => setRegistroEdicion(null)}>
+          <div className="admin-modal" role="dialog" aria-modal="true" aria-label="Editar registro" onClick={(event) => event.stopPropagation()}>
+            <h3>Editar registro</h3>
+            <form onSubmit={onGuardarEdicion} className="admin-formulario-amplio admin-formulario-vertical">
+              <div className="admin-campos-grid admin-campos-grid--vertical">
+                {campos.map((campo) => (
+                  <label key={`editar-${campo.clave}`}>
+                    <span>{campo.etiqueta}</span>
+                    <CampoFormulario campo={campo} valor={registroEdicion[campo.clave]} onCambio={(valor) => setRegistroEdicion({ ...registroEdicion, [campo.clave]: valor })} />
+                  </label>
+                ))}
+              </div>
+              <div className="admin-filtros">
+                <button type="submit" className="admin-boton admin-boton--primario">Guardar cambios</button>
+                <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setRegistroEdicion(null)}>Cerrar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
 }

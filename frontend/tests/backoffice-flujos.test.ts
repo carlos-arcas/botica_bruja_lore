@@ -35,7 +35,7 @@ test("submit real de alta usa endpoint guardar y devuelve item", async () => {
 test("edición, publish/unpublish y layout inferior quedan implementados", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
   assert.match(componente, /setRegistroEdicion\(\{ \.\.\.item \}\)/);
-  assert.match(componente, /value=\{String\(registroEdicion\[campo\.clave\] \?\? ""\)\}/);
+  assert.match(componente, /<CampoFormulario campo=\{campo\} valor=\{registroEdicion\[campo\.clave\]\}/);
   assert.match(componente, /role="dialog"/);
   assert.match(componente, /cambiarPublicacionAdmin/);
   assert.match(componente, /Registros existentes/);
