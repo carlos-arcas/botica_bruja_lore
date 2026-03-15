@@ -69,7 +69,23 @@ test("navbar comercial define estado activo visible y patrón editorial", () => 
 
   assert.match(componente, /aria-current=\{activa \? "page" : undefined\}/);
   assert.match(estilos, /\.enlaceActiva/);
-  assert.match(estilos, /border-color: #b9894b/);
   assert.match(estilos, /\.navegacion ul/);
-  assert.match(estilos, /linear-gradient\(180deg, #fcf7ed 0%, #f4e9d6 100%\)/);
+  assert.match(estilos, /repeating-linear-gradient/);
+  assert.match(estilos, /\.enlaceActiva::after/);
+});
+
+test("navbar comercial mantiene estados hover y focus visibles", () => {
+  const estilos = readFileSync("componentes/shell/shellComercial.module.css", "utf-8");
+
+  assert.match(estilos, /\.enlace:hover/);
+  assert.match(estilos, /\.enlace:focus-visible/);
+  assert.match(estilos, /outline: 2px solid/);
+});
+
+test("navbar comercial conserva estructura responsive para móvil", () => {
+  const estilos = readFileSync("componentes/shell/shellComercial.module.css", "utf-8");
+
+  assert.match(estilos, /@media \(max-width: 780px\)/);
+  assert.match(estilos, /\.navegacion ul \{[\s\S]*width: 100%/);
+  assert.match(estilos, /\.enlace \{[\s\S]*font-size: 0\.9rem/);
 });
