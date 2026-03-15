@@ -50,7 +50,7 @@ export function FormularioLoginBackoffice(): JSX.Element {
       />
 
       {error ? <p className="admin-estado admin-estado--error">{error}</p> : null}
-      <button type="submit" disabled={cargando}>
+      <button type="submit" className="admin-boton admin-boton--primario" disabled={cargando}>
         {cargando ? "Validando..." : "Entrar al backoffice"}
       </button>
     </form>

@@ -43,6 +43,7 @@ type Props = {
   onCambioContexto?: (valor: string) => void;
   validarFormulario?: (form: Record<string, unknown>) => string | null;
   errorInicial?: string;
+  mostrarPanelHerramientas?: boolean;
 };
 
 type DetalleLote = { lote: Record<string, unknown>; filas: FilaImportacion[] };
@@ -104,7 +105,16 @@ async function validarCabeceraCsv(archivo: File, columnasObligatorias: string[])
 
 function construirPayloadSegunTipo(tipoPayload: TipoPayloadAdmin, formulario: Record<string, unknown>, seccionSeleccionada: string): Record<string, unknown> {
   if (tipoPayload === "rituales") return construirPayloadRitual(formulario);
-  if (tipoPayload === "productos") return { ...formulario, seccion_publica: seccionSeleccionada, orden_publicacion: 100 };
+  if (tipoPayload === "productos") {
+    const tipoProducto = String(formulario.tipo_producto ?? "");
+    const personalizado = String(formulario.tipo_producto_personalizado ?? "").trim();
+    return {
+      ...formulario,
+      tipo_producto: tipoProducto === "personalizado" && personalizado ? personalizado : tipoProducto,
+      seccion_publica: seccionSeleccionada,
+      orden_publicacion: 100,
+    };
+  }
   return formulario;
 }
 
@@ -123,13 +133,19 @@ function agruparCamposFormulario(campos: ConfigCampo[]): GrupoCampos[] {
     .map(([id, camposGrupo]) => ({ id, titulo: TITULOS_BLOQUE[id], descripcion: DESCRIPCIONES_BLOQUE[id], campos: camposGrupo }));
 }
 
-function BloqueCampos({ grupo, formulario, onCambio, controlImagen }: { grupo: GrupoCampos; formulario: Record<string, unknown>; onCambio: (clave: string, valor: unknown) => void; controlImagen?: ControlImagenFormulario }): JSX.Element {
+
+function debeMostrarCampo(modulo: ModuloAdmin, campo: ConfigCampo, formulario: Record<string, unknown>): boolean {
+  if (modulo !== "productos" || campo.clave !== "tipo_producto_personalizado") return true;
+  return String(formulario.tipo_producto ?? "") === "personalizado";
+}
+
+function BloqueCampos({ modulo, grupo, formulario, onCambio, controlImagen }: { modulo: ModuloAdmin; grupo: GrupoCampos; formulario: Record<string, unknown>; onCambio: (clave: string, valor: unknown) => void; controlImagen?: ControlImagenFormulario }): JSX.Element {
   return (
     <fieldset className="admin-subseccion-formulario">
       <legend>{grupo.titulo}</legend>
       <p>{grupo.descripcion}</p>
       <div className="admin-campos-grid admin-campos-grid--vertical">
-        {grupo.campos.map((campo) => {
+        {grupo.campos.filter((campo) => debeMostrarCampo(modulo, campo, formulario)).map((campo) => {
           const clase = CLAVES_ESTADO.has(campo.clave) ? "admin-campo-flag" : "admin-campo-control";
           return (
             <label key={campo.clave} className={clase}>
@@ -141,6 +157,16 @@ function BloqueCampos({ grupo, formulario, onCambio, controlImagen }: { grupo: G
       </div>
     </fieldset>
   );
+}
+
+
+function prepararRegistroEdicion(modulo: ModuloAdmin, campos: ConfigCampo[], item: Record<string, unknown>): Record<string, unknown> {
+  if (modulo !== "productos") return { ...item };
+  const tipoProducto = String(item.tipo_producto ?? "");
+  const campoTipoProducto = campos.find((campo) => campo.clave === "tipo_producto");
+  const opciones = new Set((campoTipoProducto?.opciones ?? []).map((opcion) => opcion.valor));
+  if (!tipoProducto || opciones.has(tipoProducto)) return { ...item };
+  return { ...item, tipo_producto: "personalizado", tipo_producto_personalizado: tipoProducto };
 }
 
 export function ModuloCrudContextualAdmin({
@@ -160,6 +186,7 @@ export function ModuloCrudContextualAdmin({
   onCambioContexto,
   validarFormulario,
   errorInicial = "",
+  mostrarPanelHerramientas = false,
 }: Props): JSX.Element {
   const [items, setItems] = useState(itemsIniciales);
   const [formAlta, setFormAlta] = useState<Record<string, unknown>>({ [contextoFormulario?.clave ?? ""]: seccionSeleccionada });
@@ -350,7 +377,18 @@ export function ModuloCrudContextualAdmin({
       {ok ? <p className="admin-estado">{ok}</p> : null}
       {error ? <p className="admin-estado admin-estado--error">{error}</p> : null}
 
-      <div className="admin-disposicion-crud">
+      <section className="admin-bloque admin-acciones-modulo" aria-label="Acciones del módulo">
+        <h3>Acciones rápidas</h3>
+        <div className="admin-filtros">
+          <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setImportacionAbierta(true)}>Importar</button>
+          <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "csv"), "No se pudo descargar la plantilla CSV.")}>Plantilla CSV</button>
+          <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "xlsx"), "No se pudo descargar la plantilla XLSX.")}>Plantilla XLSX</button>
+          <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("inventario", "csv"), "No se pudo exportar inventario CSV.")}>Inventario CSV</button>
+          <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("inventario", "xlsx"), "No se pudo exportar inventario XLSX.")}>Inventario XLSX</button>
+        </div>
+      </section>
+
+      <div className={mostrarPanelHerramientas ? "admin-disposicion-crud" : "admin-disposicion-crud admin-disposicion-crud--ancha"}>
         <div className="admin-columna-principal">
           <section className="admin-bloque admin-alta-manual">
             <h3>Formulario principal</h3>
@@ -369,7 +407,7 @@ export function ModuloCrudContextualAdmin({
                   </select>
                 </label>
               ) : null}
-              {gruposFormulario.map((grupo) => <BloqueCampos key={grupo.id} grupo={grupo} formulario={formAlta} onCambio={(clave, valor) => setFormAlta({ ...formAlta, [clave]: valor })} controlImagen={controlImagenAlta} />)}
+              {gruposFormulario.map((grupo) => <BloqueCampos key={grupo.id} modulo={modulo} grupo={grupo} formulario={formAlta} onCambio={(clave, valor) => setFormAlta({ ...formAlta, [clave]: valor })} controlImagen={controlImagenAlta} />)}
               <div className="admin-acciones-formulario">
                 <button type="submit" className="admin-boton admin-boton--primario">Guardar</button>
               </div>
@@ -390,7 +428,7 @@ export function ModuloCrudContextualAdmin({
                     <td>{item[campoEstado] ? "Publicado" : "Borrador"}</td>
                     <td>
                       <div className="admin-acciones-fila">
-                        <button type="button" className="admin-boton admin-boton--secundario" onClick={() => { setRegistroEdicion({ ...item }); setEstadoImagenEdicion({ estado: "idle", mensaje: "" }); }}>Editar</button>
+                        <button type="button" className="admin-boton admin-boton--secundario" onClick={() => { setRegistroEdicion(prepararRegistroEdicion(modulo, campos, item)); setEstadoImagenEdicion({ estado: "idle", mensaje: "" }); }}>Editar</button>
                         <button
                           type="button"
                           className={item[campoEstado] ? "admin-boton admin-boton--peligro" : "admin-boton admin-boton--primario"}
@@ -410,19 +448,16 @@ export function ModuloCrudContextualAdmin({
           </section>
         </div>
 
-        <aside className="admin-columna-herramientas" aria-label="Herramientas secundarias">
-          <section className="admin-bloque admin-panel-herramientas">
-            <h3>Herramientas</h3>
-            <p>Importación y exportación como tareas secundarias.</p>
-            <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setImportacionAbierta(true)}>Importar</button>
-            <div className="admin-acciones-export">
-              <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "csv"), "No se pudo descargar la plantilla CSV.")}>Exportar plantilla CSV</button>
-              <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("plantilla", "xlsx"), "No se pudo descargar la plantilla XLSX.")}>Exportar plantilla XLSX</button>
-              <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("inventario", "csv"), "No se pudo exportar inventario CSV.")}>Exportar inventario CSV</button>
+        {mostrarPanelHerramientas ? (
+          <aside className="admin-columna-herramientas" aria-label="Herramientas secundarias">
+            <section className="admin-bloque admin-panel-herramientas">
+              <h3>Herramientas</h3>
+              <p>Accesos complementarios para operaciones frecuentes.</p>
+              <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setImportacionAbierta(true)}>Importar lote</button>
               <button type="button" className="admin-boton admin-boton--secundario" onClick={() => void ejecutarAccion(async () => descargar("inventario", "xlsx"), "No se pudo exportar inventario XLSX.")}>Exportar inventario XLSX</button>
-            </div>
-          </section>
-        </aside>
+            </section>
+          </aside>
+        ) : null}
       </div>
 
       {importacionAbierta ? (
@@ -450,7 +485,7 @@ export function ModuloCrudContextualAdmin({
               <p>Revisa cada bloque antes de guardar para mantener consistencia editorial y comercial.</p>
             </header>
             <form onSubmit={onGuardarEdicion} className="admin-formulario-amplio admin-formulario-vertical">
-              {gruposFormulario.map((grupo) => <BloqueCampos key={`editar-${grupo.id}`} grupo={grupo} formulario={registroEdicion} onCambio={(clave, valor) => setRegistroEdicion({ ...registroEdicion, [clave]: valor })} controlImagen={controlImagenEdicion} />)}
+              {gruposFormulario.map((grupo) => <BloqueCampos key={`editar-${grupo.id}`} modulo={modulo} grupo={grupo} formulario={registroEdicion} onCambio={(clave, valor) => setRegistroEdicion({ ...registroEdicion, [clave]: valor })} controlImagen={controlImagenEdicion} />)}
               <div className="admin-acciones-formulario admin-acciones-formulario--dialogo">
                 <button type="submit" className="admin-boton admin-boton--primario">Guardar cambios</button>
                 <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setRegistroEdicion(null)}>Cerrar</button>

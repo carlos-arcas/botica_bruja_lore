@@ -12,7 +12,7 @@ export function BotonLogoutBackoffice(): JSX.Element {
   }
 
   return (
-    <button type="button" onClick={logout}>
+    <button type="button" className="admin-boton admin-boton--secundario" onClick={logout}>
       Cerrar sesión
     </button>
   );

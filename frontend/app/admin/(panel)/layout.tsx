@@ -2,9 +2,8 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import { BotonLogoutBackoffice } from "@/componentes/admin/BotonLogoutBackoffice";
-import { obtenerUsuarioBackofficeSesionActual } from "@/infraestructura/auth/sesionBackoffice";
-
 import { NavegacionLateralAdmin } from "@/componentes/admin/NavegacionLateralAdmin";
+import { obtenerUsuarioBackofficeSesionActual } from "@/infraestructura/auth/sesionBackoffice";
 
 export default async function AdminLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
   const usuario = await obtenerUsuarioBackofficeSesionActual();
@@ -14,7 +13,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="admin-shell">
-      <header className="admin-cabecera">
+      <header className="admin-cabecera admin-cabecera--topbar">
         <div>
           <p className="admin-eyebrow">Zona de administración</p>
           <h1>Backoffice · La Botica de la Bruja Lore</h1>
@@ -24,10 +23,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <BotonLogoutBackoffice />
         </div>
       </header>
-      <div className="admin-grid">
-        <NavegacionLateralAdmin />
-        <main className="admin-main">{children}</main>
-      </div>
+      <NavegacionLateralAdmin />
+      <main className="admin-main">{children}</main>
     </div>
   );
 }

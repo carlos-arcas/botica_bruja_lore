@@ -44,8 +44,8 @@ export function TablaStagingImportacion({ detalleId, filas, onSeleccionar, onAdj
               <td>{fila.estado_imagen}</td>
               <td>
                 <DropImagen fila={fila} onAdjuntar={onAdjuntar} />
-                <button type="button" onClick={() => onEliminarImagen(fila)}>Eliminar imagen</button>{" "}
-                <button type="button" onClick={() => onDescartar(fila)}>Descartar</button>
+                <button type="button" className="admin-boton admin-boton--secundario" onClick={() => onEliminarImagen(fila)}>Eliminar imagen</button>{" "}
+                <button type="button" className="admin-boton admin-boton--peligro" onClick={() => onDescartar(fila)}>Descartar</button>
               </td>
             </tr>
           ))}
