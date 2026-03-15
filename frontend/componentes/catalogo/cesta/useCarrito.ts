@@ -21,7 +21,7 @@ import {
 export type UseCarrito = {
   cesta: CestaRitual;
   totalUnidades: number;
-  agregarAlCarrito: (slug: string) => void;
+  agregarAlCarrito: (slug: string, cantidad?: number) => void;
   eliminar: (slug: string) => void;
   cambiarCantidad: (slug: string, cantidad: number) => void;
   limpiar: () => void;
@@ -50,8 +50,8 @@ export function useCarrito(): UseCarrito {
     setCesta(siguiente);
   }, []);
 
-  const agregarAlCarrito = useCallback((slug: string): void => {
-    persistir(agregarProducto(cesta, slug));
+  const agregarAlCarrito = useCallback((slug: string, cantidad?: number): void => {
+    persistir(agregarProducto(cesta, slug, cantidad));
   }, [cesta, persistir]);
 
   const eliminar = useCallback((slug: string): void => {

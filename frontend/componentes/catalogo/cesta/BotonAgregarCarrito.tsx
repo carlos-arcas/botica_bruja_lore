@@ -7,9 +7,10 @@ import estilos from "./cestaRitual.module.css";
 
 type Props = {
   slugProducto: string;
+  cantidad?: number;
 };
 
-export function BotonAgregarCarrito({ slugProducto }: Props): JSX.Element {
+export function BotonAgregarCarrito({ slugProducto, cantidad }: Props): JSX.Element {
   const { agregarAlCarrito } = useCarrito();
   const [agregado, setAgregado] = useState(false);
 
@@ -23,7 +24,7 @@ export function BotonAgregarCarrito({ slugProducto }: Props): JSX.Element {
   }, [agregado]);
 
   const agregarProducto = (): void => {
-    agregarAlCarrito(slugProducto);
+    agregarAlCarrito(slugProducto, cantidad);
     setAgregado(true);
   };
 
