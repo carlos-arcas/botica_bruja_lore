@@ -155,14 +155,14 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
         </select>
         <select name="modo" defaultValue="crear_actualizar"><option value="solo_crear">Solo crear</option><option value="crear_actualizar">Crear o actualizar</option></select>
         <input type="file" name="archivo" accept=".csv,.xlsx" required />
-        <button type="submit">Validar archivo</button>
+        <button type="submit" className="admin-boton admin-boton--primario">Validar archivo</button>
       </form>
 
       <div className="admin-acciones-export" style={{ marginTop: 10 }}>
-        <button type="button" onClick={() => descargarPlantilla("csv")}>Descargar plantilla CSV</button>
-        <button type="button" onClick={() => descargarPlantilla("xlsx")}>Descargar plantilla XLSX</button>
-        <button type="button" onClick={() => descargar("inventario", "csv")}>Exportar inventario CSV</button>
-        <button type="button" onClick={() => descargar("inventario", "xlsx")}>Exportar inventario XLSX</button>
+        <button type="button" className="admin-boton admin-boton--secundario" onClick={() => descargarPlantilla("csv")}>Descargar plantilla CSV</button>
+        <button type="button" className="admin-boton admin-boton--secundario" onClick={() => descargarPlantilla("xlsx")}>Descargar plantilla XLSX</button>
+        <button type="button" className="admin-boton admin-boton--secundario" onClick={() => descargar("inventario", "csv")}>Exportar inventario CSV</button>
+        <button type="button" className="admin-boton admin-boton--secundario" onClick={() => descargar("inventario", "xlsx")}>Exportar inventario XLSX</button>
       </div>
 
       {ok ? <p className="admin-estado">{ok}</p> : null}
@@ -172,8 +172,8 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
         <div className="admin-bloque" style={{ marginTop: 16 }}>
           <p>Lote #{String(detalle.lote.id)} · Seleccionadas: {filasSeleccionadas}</p>
           <div className="admin-filtros">
-            <button type="button" onClick={confirmar}>Confirmar filas seleccionadas</button>
-            <button type="button" onClick={revalidar}>Revalidar lote</button>
+            <button type="button" className="admin-boton admin-boton--primario" onClick={confirmar}>Confirmar filas seleccionadas</button>
+            <button type="button" className="admin-boton admin-boton--secundario" onClick={revalidar}>Revalidar lote</button>
           </div>
           <table className="admin-tabla">
             <thead><tr><th>Fila</th><th>Preview</th><th>Estado imagen</th><th>Acciones</th></tr></thead>
@@ -193,8 +193,8 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
                       <span>Arrastra imagen o selecciona</span>
                       <input type="file" accept="image/*" onChange={(e) => onInputImagen(fila, e)} />
                     </label>
-                    <button type="button" onClick={() => eliminarImagen(fila)}>Eliminar imagen</button>{" "}
-                    <button type="button" onClick={() => descartar(fila)}>Descartar fila</button>
+                    <button type="button" className="admin-boton admin-boton--secundario" onClick={() => eliminarImagen(fila)}>Eliminar imagen</button>{" "}
+                    <button type="button" className="admin-boton admin-boton--peligro" onClick={() => descartar(fila)}>Descartar fila</button>
                   </td>
                 </tr>
               ))}

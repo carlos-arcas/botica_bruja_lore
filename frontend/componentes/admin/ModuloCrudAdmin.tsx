@@ -69,7 +69,7 @@ export function ModuloCrudAdmin({ modulo, titulo, token, itemsIniciales, plantil
               )}
             </label>
           ))}
-          <button type="button" onClick={guardar}>Guardar</button>
+          <button type="button" className="admin-boton admin-boton--primario" onClick={guardar}>Guardar</button>
         </div>
         <div>
           <h3>Listado</h3>
@@ -81,8 +81,8 @@ export function ModuloCrudAdmin({ modulo, titulo, token, itemsIniciales, plantil
                   <td>{String(item.nombre ?? item.titulo ?? item.slug ?? item.id)}</td>
                   <td>{item[campoEstado] ? "Publicado" : "Borrador"}</td>
                   <td>
-                    <button type="button" onClick={() => editar(item)}>Editar</button>{" "}
-                    <button type="button" onClick={() => publicar(String(item.id), !Boolean(item[campoEstado]))}>{item[campoEstado] ? "Despublicar" : "Publicar"}</button>
+                    <button type="button" className="admin-boton admin-boton--secundario" onClick={() => editar(item)}>Editar</button>{" "}
+                    <button type="button" className={item[campoEstado] ? "admin-boton admin-boton--peligro" : "admin-boton admin-boton--primario"} onClick={() => publicar(String(item.id), !Boolean(item[campoEstado]))}>{item[campoEstado] ? "Despublicar" : "Publicar"}</button>
                   </td>
                 </tr>
               ))}

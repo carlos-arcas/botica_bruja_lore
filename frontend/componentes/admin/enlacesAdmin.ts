@@ -1,12 +1,9 @@
 import { MODULOS_NAVEGACION_ADMIN, ModuloNavegacionAdmin } from "../../infraestructura/configuracion/modulosAdmin";
 
-export type VarianteEnlaceAdmin = "sidebar" | "tarjetas";
+export type VarianteEnlaceAdmin = "topbar" | "tarjetas";
 
 function permiteModuloEnVariante(modulo: ModuloNavegacionAdmin, variante: VarianteEnlaceAdmin): boolean {
-  if (modulo.clave === "dashboard") {
-    return false;
-  }
-  if (variante === "sidebar" && modulo.clave === "importacion") {
+  if (modulo.clave === "dashboard" || modulo.clave === "importacion") {
     return false;
   }
   if (variante === "tarjetas" && (modulo.clave === "ajustes" || modulo.clave === "imagenes")) {

@@ -26,9 +26,19 @@ const OPCIONES_TIPO_VELAS = [
   { etiqueta: "Cono aromático", valor: "cono-aromatico" },
 ];
 
+const OPCIONES_FORMATO_PESO = [
+  { etiqueta: "A granel (25g)", valor: "a-granel-25g" },
+  { etiqueta: "A granel (50g)", valor: "a-granel-50g" },
+  { etiqueta: "A granel (100g)", valor: "a-granel-100g" },
+  { etiqueta: "Atado / manojo", valor: "atado" },
+  { etiqueta: "Bolsita ritual", valor: "bolsita-ritual" },
+  { etiqueta: "Otro / personalizado", valor: "personalizado" },
+];
+
 const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string; tipo?: "select"; opciones?: { etiqueta: string; valor: string }[] }[]> = {
   "botica-natural": [
-    { clave: "tipo_producto", etiqueta: "Formato / peso" },
+    { clave: "tipo_producto", etiqueta: "Formato / peso", tipo: "select", opciones: OPCIONES_FORMATO_PESO },
+    { clave: "tipo_producto_personalizado", etiqueta: "Formato / peso personalizado" },
     { clave: "categoria_comercial", etiqueta: "Uso" },
   ],
   "velas-e-incienso": [
@@ -93,7 +103,13 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
         validarFormulario={(form) => {
           const seccionFormulario = String(form.seccion_publica ?? "");
           const camposObligatorios = CAMPOS_POR_SECCION[seccionFormulario] ?? [];
-          const vacios = ["nombre", ...camposObligatorios.map((campo) => campo.clave)].filter((clave) => !String(form[clave] ?? "").trim());
+          const vacios = ["nombre", ...camposObligatorios.map((campo) => campo.clave)].filter((clave) => {
+            if (clave === "tipo_producto_personalizado" && String(form.tipo_producto ?? "") !== "personalizado") return false;
+            return !String(form[clave] ?? "").trim();
+          });
+          if (String(form.tipo_producto ?? "") === "personalizado" && !String(form.tipo_producto_personalizado ?? "").trim()) {
+            vacios.push("tipo_producto_personalizado");
+          }
           const precio = String(form.precio_visible ?? "").trim();
           if (precio && !/^[0-9]+([.,][0-9]{1,2})?$/.test(precio)) {
             return "Precio visible solo acepta números con decimal opcional.";
@@ -101,6 +117,7 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
           return vacios.length > 0 ? `Completa los campos obligatorios para ${seccionFormulario}: ${vacios.join(", ")}.` : null;
         }}
         tipoPayload="productos"
+        mostrarPanelHerramientas
       />
     </>
   );
