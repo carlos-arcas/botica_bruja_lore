@@ -64,7 +64,8 @@ class BackofficeE2ETests(TestCase):
         self.assertNotIn("producto-e2e", [p["slug"] for p in publico2.json()["productos"]])
 
     def test_ritual_e2e_create_edit_publish_unpublish_y_reflejo_publico(self):
-        crear = {"slug": "ritual-e2e", "nombre": "Ritual E2E", "contexto_breve": "ctx", "contenido": "contenido", "imagen_url": "https://cdn.test/producto.webp", "intenciones_relacionadas": ["proteccion"], "publicado": False}
+        producto = ProductoModelo.objects.create(id="prod-ritual-e2e", sku="SKU-RIT-E2E", slug="prod-ritual-e2e", nombre="Producto ritual e2e", tipo_producto="inciensos-y-sahumerios", categoria_comercial="botica", seccion_publica="botica-natural", publicado=True)
+        crear = {"slug": "ritual-e2e", "nombre": "Ritual E2E", "contexto_breve": "ctx", "contenido": "contenido", "imagen_url": "https://cdn.test/producto.webp", "intenciones_relacionadas": ["proteccion"], "productos_relacionados": [producto.id], "publicado": False}
         r = self.client.post("/api/v1/backoffice/rituales/guardar/", data=json.dumps(crear), content_type="application/json", **self._auth())
         ritual_id = r.json()["item"]["id"]
 
@@ -84,6 +85,8 @@ class BackofficeE2ETests(TestCase):
         detalle_publico = self.client.get("/api/v1/rituales/ritual-e2e/")
         self.assertEqual(detalle_publico.status_code, 200)
         self.assertEqual(detalle_publico.json()["ritual"]["nombre"], "Ritual E2E editado")
+        productos_publicos = self.client.get("/api/v1/rituales/ritual-e2e/productos/")
+        self.assertIn("prod-ritual-e2e", [p["slug"] for p in productos_publicos.json()["productos"]])
 
         despublicacion = self.client.post(f"/api/v1/backoffice/rituales/{ritual_id}/publicacion/", data=json.dumps({"publicado": False}), content_type="application/json", **self._auth())
         self.assertEqual(despublicacion.status_code, 200)
@@ -93,7 +96,8 @@ class BackofficeE2ETests(TestCase):
         self.assertEqual(detalle_no_publico.status_code, 404)
 
     def test_editorial_e2e_create_edit_publish_unpublish_y_reflejo_publico(self):
-        crear = {"slug": "art-e2e", "titulo": "Artículo E2E", "resumen": "r", "contenido": "c", "tema": "t", "hub": "h", "subhub": "s", "imagen_url": "https://cdn.test/producto.webp", "indexable": True, "publicado": False, "seccion_publica": "guias"}
+        producto = ProductoModelo.objects.create(id="prod-art-e2e", sku="SKU-ART-E2E", slug="prod-art-e2e", nombre="Producto art e2e", tipo_producto="inciensos-y-sahumerios", categoria_comercial="botica", seccion_publica="botica-natural", publicado=True)
+        crear = {"slug": "art-e2e", "titulo": "Artículo E2E", "resumen": "r", "contenido": "c", "tema": "t", "hub": "h", "subhub": "s", "imagen_url": "https://cdn.test/producto.webp", "indexable": True, "publicado": False, "seccion_publica": "guias", "productos_relacionados": [producto.id]}
         r = self.client.post("/api/v1/backoffice/editorial/guardar/", data=json.dumps(crear), content_type="application/json", **self._auth())
         articulo_id = r.json()["item"]["id"]
 
@@ -113,6 +117,7 @@ class BackofficeE2ETests(TestCase):
         detalle_publico = self.client.get("/api/v1/herbal/editorial/art-e2e/")
         self.assertEqual(detalle_publico.status_code, 200)
         self.assertEqual(detalle_publico.json()["articulo"]["titulo"], "Artículo E2E editado")
+        self.assertIn("prod-art-e2e", [p["slug"] for p in detalle_publico.json()["articulo"]["productos_relacionados"]])
 
         despublicacion = self.client.post(f"/api/v1/backoffice/editorial/{articulo_id}/publicacion/", data=json.dumps({"publicado": False}), content_type="application/json", **self._auth())
         self.assertEqual(despublicacion.status_code, 200)

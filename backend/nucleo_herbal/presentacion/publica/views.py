@@ -6,6 +6,7 @@ from django.http import HttpRequest, JsonResponse
 import logging
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
+from ...infraestructura.persistencia_django.mapeadores import a_producto
 from ...infraestructura.persistencia_django.models import ArticuloEditorialModelo
 from .dependencias import (
     construir_servicios_publicos_calendario_ritual,
@@ -178,6 +179,7 @@ def detalle_editorial_publico(request: HttpRequest, slug_articulo: str) -> JsonR
 
 
 def _serializar_articulo_publico(articulo: ArticuloEditorialModelo) -> dict:
+    productos = [serializar_producto_resumen(a_producto(it)) for it in articulo.productos_relacionados.filter(publicado=True)]
     return {
         "slug": articulo.slug,
         "titulo": articulo.titulo,
@@ -188,4 +190,5 @@ def _serializar_articulo_publico(articulo: ArticuloEditorialModelo) -> dict:
         "subhub": articulo.subhub,
         "indexable": articulo.indexable,
         "fecha_publicacion": articulo.fecha_publicacion.isoformat() if articulo.fecha_publicacion else None,
+        "productos_relacionados": productos,
     }

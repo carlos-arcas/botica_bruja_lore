@@ -11,12 +11,23 @@ const CAMPOS = [
   { clave: "contenido", etiqueta: "Contenido", tipo: "textarea" as const },
   { clave: "imagen_url", etiqueta: "Imagen", tipo: "imagen" as const },
   { clave: "intenciones_relacionadas", etiqueta: "Intenciones (csv)" },
+  { clave: "productos_relacionados", etiqueta: "Productos recomendados para este ritual", tipo: "selector_productos" as const },
   { clave: "publicado", etiqueta: "Publicado", tipo: "checkbox" as const },
 ];
 
 export default async function AdminRitualesPage(): Promise<JSX.Element> {
   const token = cookies().get(NOMBRE_COOKIE_BACKOFFICE)?.value;
-  const resultado = await obtenerListadoAdmin("rituales", new URLSearchParams(), token);
+  const [resultado, productos] = await Promise.all([
+    obtenerListadoAdmin("rituales", new URLSearchParams(), token),
+    obtenerListadoAdmin("productos", new URLSearchParams(), token),
+  ]);
+  const opcionesProductos =
+    productos.estado === "ok"
+      ? productos.items.map((item) => ({
+          valor: String(item.id ?? ""),
+          etiqueta: `${String(item.nombre ?? "")} · ${String(item.sku ?? "")}`.trim(),
+        }))
+      : [];
   const errorInicial = resultado.estado === "error" ? "No se pudieron cargar los rituales en este momento." : "";
   const itemsIniciales = resultado.estado === "ok" ? normalizarItemsRituales(resultado.items) : [];
   return (
@@ -27,7 +38,7 @@ export default async function AdminRitualesPage(): Promise<JSX.Element> {
       itemsIniciales={itemsIniciales}
       campoEstado="publicado"
       entidadImportacion="rituales"
-      camposComunes={CAMPOS}
+      camposComunes={CAMPOS.map((campo) => campo.clave === "productos_relacionados" ? { ...campo, opciones: opcionesProductos } : campo)}
       tipoPayload="rituales"
       errorInicial={errorInicial}
     />

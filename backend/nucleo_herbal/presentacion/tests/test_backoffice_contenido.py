@@ -68,6 +68,59 @@ class BackofficeContenidoTests(TestCase):
         self.client.post(f"/api/v1/backoffice/secciones/{sid}/publicacion/", data=json.dumps({"publicado": False}), content_type="application/json", **self._auth())
         self.assertFalse(SeccionPublicaModelo.objects.get(id=sid).publicada)
 
+
+    def test_ritual_y_editorial_guardan_productos_relacionados(self):
+        producto = ProductoModelo.objects.create(
+            id="prod-rel-1",
+            sku="SKU-REL-1",
+            slug="prod-rel-1",
+            nombre="Producto Rel",
+            tipo_producto="inciensos-y-sahumerios",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            publicado=True,
+        )
+        seccion = SeccionPublicaModelo.objects.create(slug="guias-rel", nombre="Guías Rel", publicada=True)
+
+        rr = self.client.post(
+            "/api/v1/backoffice/rituales/guardar/",
+            data=json.dumps({
+                "nombre": "Ritual productos",
+                "contexto_breve": "c",
+                "contenido": "d",
+                "imagen_url": "",
+                "publicado": False,
+                "productos_relacionados": [producto.id],
+            }),
+            content_type="application/json",
+            **self._auth(),
+        )
+        self.assertEqual(rr.status_code, 200)
+        ritual = RitualModelo.objects.get(id=rr.json()["item"]["id"])
+        self.assertEqual(list(ritual.productos_relacionados.values_list("id", flat=True)), [producto.id])
+
+        ra = self.client.post(
+            "/api/v1/backoffice/editorial/guardar/",
+            data=json.dumps({
+                "titulo": "Articulo con productos",
+                "resumen": "r",
+                "contenido": "c",
+                "tema": "t",
+                "hub": "h",
+                "subhub": "s",
+                "imagen_url": "",
+                "indexable": True,
+                "publicado": True,
+                "seccion_publica": seccion.slug,
+                "productos_relacionados": [producto.id],
+            }),
+            content_type="application/json",
+            **self._auth(),
+        )
+        self.assertEqual(ra.status_code, 200)
+        articulo = ArticuloEditorialModelo.objects.get(id=ra.json()["item"]["id"])
+        self.assertEqual(list(articulo.productos_relacionados.values_list("id", flat=True)), [producto.id])
+
     def test_slug_e_id_automaticos(self):
         payload = {"sku": "SKU-AUTO", "nombre": "Producto Auto", "tipo_producto": "te", "categoria_comercial": "herbal", "seccion_publica": "botica-natural", "descripcion_corta": "x", "precio_visible": "9.99", "publicado": False}
         r = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())

@@ -1,11 +1,12 @@
 "use client";
 
 import { CampoImagenAdmin } from "@/componentes/admin/CampoImagenAdmin";
+import { SelectorProductosRelacionados } from "@/componentes/admin/SelectorProductosRelacionados";
 
 export type ConfigCampo = {
   clave: string;
   etiqueta: string;
-  tipo?: "text" | "textarea" | "checkbox" | "select" | "precio" | "imagen";
+  tipo?: "text" | "textarea" | "checkbox" | "select" | "precio" | "imagen" | "selector_productos";
   opciones?: { etiqueta: string; valor: string }[];
 };
 
@@ -61,6 +62,10 @@ export function CampoFormulario({ valor, campo, onCambio, controlImagen }: { val
         ))}
       </select>
     );
+  }
+
+  if (campo.tipo === "selector_productos") {
+    return <SelectorProductosRelacionados valor={valor} onCambio={(nuevoValor) => onCambio(nuevoValor)} opciones={campo.opciones ?? []} />;
   }
   if (campo.tipo === "precio") {
     return (

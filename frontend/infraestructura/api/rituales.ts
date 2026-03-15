@@ -25,6 +25,10 @@ export type ProductoRelacionadoRitual = {
   nombre: string;
   tipo_producto: string;
   categoria_comercial: string;
+  seccion_publica: string;
+  descripcion_corta: string;
+  precio_visible: string;
+  imagen_url: string;
 };
 
 export type RitualDetallePublico = {
@@ -56,13 +60,7 @@ type PlantaApi = {
   intenciones: IntencionPublica[];
 };
 
-type ProductoApi = {
-  sku: string;
-  slug: string;
-  nombre: string;
-  tipo_producto: string;
-  categoria_comercial: string;
-};
+type ProductoApi = ProductoRelacionadoRitual;
 
 type RespuestaListadoRituales = {
   rituales: RitualApi[];
