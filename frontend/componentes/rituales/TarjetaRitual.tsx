@@ -21,6 +21,9 @@ function resumenIntencion(ritual: RitualPublico): string {
 export function TarjetaRitual({ ritual }: Props): JSX.Element {
   return (
     <li className="tarjeta-ritual">
+      <Link href={ritual.urlDetalle} className="tarjeta-media-enlace" aria-label={`Abrir ficha ritual de ${ritual.nombre}`}>
+        <div className="tarjeta-media-fallback" aria-hidden="true" />
+      </Link>
       <h3>{ritual.nombre}</h3>
       <p>{ritual.contexto_breve}</p>
       <p className="meta-intencion">

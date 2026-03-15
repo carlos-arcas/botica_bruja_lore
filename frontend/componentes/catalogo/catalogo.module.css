@@ -72,6 +72,37 @@
   gap: 0.55rem;
 }
 
+
+.mediaEnlace {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2d8c8;
+  text-decoration: none;
+}
+
+.mediaEnlace:hover,
+.mediaEnlace:focus-visible {
+  box-shadow: 0 0 0 2px rgba(140, 90, 60, 0.16);
+}
+
+.mediaFallback {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #efe3cf, #e7dbc6);
+  position: relative;
+}
+
+.mediaFallback::after {
+  content: "Ver ficha";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #6f5d48;
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .tarjeta h2 {
   margin: 0;
   font-size: 1.12rem;
