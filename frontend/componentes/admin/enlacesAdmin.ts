@@ -22,8 +22,13 @@ function normalizarHrefModulo(modulo: ModuloNavegacionAdmin): string {
   return modulo.href;
 }
 
+function normalizarEtiquetaModulo(modulo: ModuloNavegacionAdmin): string {
+  if (modulo.clave === "editorial") return "Artículos";
+  return modulo.etiqueta;
+}
+
 export function obtenerEnlacesAdminVisibles(variante: VarianteEnlaceAdmin): ModuloNavegacionAdmin[] {
   return MODULOS_NAVEGACION_ADMIN
     .filter((modulo) => permiteModuloEnVariante(modulo, variante))
-    .map((modulo) => ({ ...modulo, href: normalizarHrefModulo(modulo) }));
+    .map((modulo) => ({ ...modulo, href: normalizarHrefModulo(modulo), etiqueta: normalizarEtiquetaModulo(modulo) }));
 }

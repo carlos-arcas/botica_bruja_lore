@@ -26,7 +26,7 @@ test("componentes visibles del admin consumen navegación compartida sin hardcod
   const layout = readFileSync("app/admin/(panel)/layout.tsx", "utf8");
   const dashboard = readFileSync("app/admin/(panel)/page.tsx", "utf8");
 
-  assert.match(layout, /obtenerEnlacesAdminVisibles\("sidebar"\)/);
+  assert.match(layout, /NavegacionLateralAdmin/);
   assert.match(dashboard, /obtenerEnlacesAdminVisibles\("tarjetas"\)/);
   assert.doesNotMatch(layout, /Rituales[^\n]*\/admin\/productos/);
   assert.doesNotMatch(dashboard, /Rituales[^\n]*\/admin\/productos/);
@@ -80,4 +80,16 @@ test("regresión de error de backend: la pantalla expone error controlado", () =
   const pagina = readFileSync("app/admin/(panel)/rituales/page.tsx", "utf8");
   assert.match(pagina, /No se pudieron cargar los rituales en este momento\./);
   assert.match(pagina, /errorInicial=\{errorInicial\}/);
+});
+
+
+test("layout admin aplica foco activo de navegación y cabecera de sesión", () => {
+  const layout = readFileSync("app/admin/(panel)/layout.tsx", "utf8");
+  const estilos = readFileSync("app/globals.css", "utf8");
+
+  assert.match(layout, /Zona de administración/);
+  assert.match(layout, /Sesión activa:/);
+  assert.match(layout, /className="admin-main"/);
+  assert.match(estilos, /admin-nav a\[aria-current="page"\]/);
+  assert.match(estilos, /admin-cabecera/);
 });
