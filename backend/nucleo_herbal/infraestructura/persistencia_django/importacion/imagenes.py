@@ -8,9 +8,10 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 
 try:
-    from PIL import Image
+    from PIL import Image, ImageFile
 except ModuleNotFoundError:  # pragma: no cover
     Image = None
+    ImageFile = None
 
 
 MAX_CARD_SIZE = (640, 640)
@@ -36,7 +37,11 @@ def _slugify_nombre(nombre: str) -> str:
 def _guardar_como_webp(archivo, prefijo: str) -> str:
     if Image is None:
         raise ErrorImagenWebP("Conversión WebP no disponible en el servidor.")
+    carga_truncada_original = False
     try:
+        if ImageFile is not None:
+            carga_truncada_original = ImageFile.LOAD_TRUNCATED_IMAGES
+            ImageFile.LOAD_TRUNCATED_IMAGES = True
         archivo.seek(0)
         imagen = Image.open(archivo)
         if imagen.mode not in ("RGB", "RGBA"):
@@ -48,6 +53,9 @@ def _guardar_como_webp(archivo, prefijo: str) -> str:
         ruta = default_storage.save(f"{prefijo}/{nombre}", ContentFile(output.getvalue()))
     except Exception as error:
         raise ErrorImagenWebP("No fue posible convertir la imagen a WebP.") from error
+    finally:
+        if ImageFile is not None:
+            ImageFile.LOAD_TRUNCATED_IMAGES = carga_truncada_original
     return default_storage.url(ruta)
 
 
