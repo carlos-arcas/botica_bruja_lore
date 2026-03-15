@@ -20,14 +20,14 @@ function formatearPrecioVisible(valor: unknown): string {
 
 export function CampoFormulario({ valor, campo, onCambio }: { valor: unknown; campo: ConfigCampo; onCambio: (valor: unknown) => void }): JSX.Element {
   if (campo.tipo === "checkbox") {
-    return <input type="checkbox" checked={Boolean(valor)} onChange={(event) => onCambio(event.target.checked)} />;
+    return <input className="admin-checkbox" type="checkbox" checked={Boolean(valor)} onChange={(event) => onCambio(event.target.checked)} />;
   }
   if (campo.tipo === "textarea") {
-    return <textarea value={String(valor ?? "")} onChange={(event) => onCambio(event.target.value)} />;
+    return <textarea className="admin-textarea" value={String(valor ?? "")} onChange={(event) => onCambio(event.target.value)} />;
   }
   if (campo.tipo === "select") {
     return (
-      <select value={String(valor ?? "")} onChange={(event) => onCambio(event.target.value)}>
+      <select className="admin-select" value={String(valor ?? "")} onChange={(event) => onCambio(event.target.value)}>
         <option value="">Selecciona una opción</option>
         {(campo.opciones ?? []).map((opcion) => (
           <option key={opcion.valor} value={opcion.valor}>
@@ -52,5 +52,5 @@ export function CampoFormulario({ valor, campo, onCambio }: { valor: unknown; ca
       </div>
     );
   }
-  return <input value={String(valor ?? "")} onChange={(event) => onCambio(event.target.value)} />;
+  return <input className="admin-input" value={String(valor ?? "")} onChange={(event) => onCambio(event.target.value)} />;
 }
