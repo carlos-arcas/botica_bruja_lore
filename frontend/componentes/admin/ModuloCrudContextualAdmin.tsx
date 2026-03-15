@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 
+import { CampoFormulario, ConfigCampo } from "@/componentes/admin/CamposFormularioAdmin";
 import { TablaStagingImportacion } from "@/componentes/admin/TablaStagingImportacion";
 import {
   FilaImportacion,
@@ -18,11 +19,11 @@ import {
   obtenerLoteImportacion,
   revalidarLoteImportacion,
 } from "@/infraestructura/api/backoffice";
-import { CampoFormulario, ConfigCampo } from "@/componentes/admin/CamposFormularioAdmin";
 import { construirPayloadRitual } from "@/infraestructura/configuracion/adminRituales";
 
 type OpcionContexto = { etiqueta: string; valor: string };
 type TipoPayloadAdmin = "rituales" | "editorial" | "secciones" | "productos";
+type GrupoCampos = { id: string; titulo: string; descripcion: string; campos: ConfigCampo[] };
 
 type Props = {
   modulo: ModuloAdmin;
@@ -45,6 +46,26 @@ type Props = {
 
 type DetalleLote = { lote: Record<string, unknown>; filas: FilaImportacion[] };
 
+const TITULOS_BLOQUE: Record<string, string> = {
+  basica: "Información básica",
+  presentacion: "Presentación en la web",
+  estado: "Estado y publicación",
+};
+
+const DESCRIPCIONES_BLOQUE: Record<string, string> = {
+  basica: "Datos esenciales de lectura rápida para gestión editorial y comercial.",
+  presentacion: "Cómo se mostrará este registro dentro del catálogo o módulos públicos.",
+  estado: "Control de visibilidad y publicación para evitar cambios sin contexto.",
+};
+
+const CLAVES_BLOQUE: Record<string, Set<string>> = {
+  basica: new Set(["nombre", "titulo", "descripcion", "descripcion_corta", "resumen", "contenido", "tema", "hub", "subhub"]),
+  presentacion: new Set(["precio_visible", "imagen_url", "seccion_publica", "tipo_producto", "categoria_comercial", "intenciones_relacionadas", "orden"]),
+  estado: new Set(["publicado", "publicada", "indexable"]),
+};
+
+const CLAVES_ESTADO = new Set(["publicado", "publicada", "indexable"]);
+
 const obtenerFaltantesCabecera = (cabecera: string, columnasObligatorias: string[]): string[] => {
   const columnas = new Set(cabecera.split(",").map((valor) => valor.trim().toLowerCase()).filter(Boolean));
   return columnasObligatorias.filter((columna) => !columnas.has(columna.toLowerCase()));
@@ -60,6 +81,41 @@ function construirPayloadSegunTipo(tipoPayload: TipoPayloadAdmin, formulario: Re
   if (tipoPayload === "rituales") return construirPayloadRitual(formulario);
   if (tipoPayload === "productos") return { ...formulario, seccion_publica: seccionSeleccionada, orden_publicacion: 100 };
   return formulario;
+}
+
+function clasificarCampo(campo: ConfigCampo): "basica" | "presentacion" | "estado" {
+  if (CLAVES_BLOQUE.estado.has(campo.clave) || campo.tipo === "checkbox") return "estado";
+  if (CLAVES_BLOQUE.basica.has(campo.clave)) return "basica";
+  if (CLAVES_BLOQUE.presentacion.has(campo.clave)) return "presentacion";
+  return "presentacion";
+}
+
+function agruparCamposFormulario(campos: ConfigCampo[]): GrupoCampos[] {
+  const grupos: Record<string, ConfigCampo[]> = { basica: [], presentacion: [], estado: [] };
+  campos.forEach((campo) => grupos[clasificarCampo(campo)].push(campo));
+  return Object.entries(grupos)
+    .filter(([, camposGrupo]) => camposGrupo.length > 0)
+    .map(([id, camposGrupo]) => ({ id, titulo: TITULOS_BLOQUE[id], descripcion: DESCRIPCIONES_BLOQUE[id], campos: camposGrupo }));
+}
+
+function BloqueCampos({ grupo, formulario, onCambio }: { grupo: GrupoCampos; formulario: Record<string, unknown>; onCambio: (clave: string, valor: unknown) => void }): JSX.Element {
+  return (
+    <fieldset className="admin-subseccion-formulario">
+      <legend>{grupo.titulo}</legend>
+      <p>{grupo.descripcion}</p>
+      <div className="admin-campos-grid admin-campos-grid--vertical">
+        {grupo.campos.map((campo) => {
+          const clase = CLAVES_ESTADO.has(campo.clave) ? "admin-campo-flag" : "admin-campo-control";
+          return (
+            <label key={campo.clave} className={clase}>
+              <span>{campo.etiqueta}</span>
+              <CampoFormulario campo={campo} valor={formulario[campo.clave]} onCambio={(valor) => onCambio(campo.clave, valor)} />
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
 }
 
 export function ModuloCrudContextualAdmin({
@@ -96,6 +152,7 @@ export function ModuloCrudContextualAdmin({
   }, [contextoFormulario?.clave, seccionSeleccionada]);
 
   const campos = useMemo(() => [...camposComunes, ...camposEspecificos], [camposComunes, camposEspecificos]);
+  const gruposFormulario = useMemo(() => agruparCamposFormulario(campos), [campos]);
   const filtrados = useMemo(() => items.filter((item) => JSON.stringify(item).toLowerCase().includes(filtro.toLowerCase())), [items, filtro]);
 
   const ejecutarAccion = async (accion: () => Promise<void>, mensajeError: string) => {
@@ -146,110 +203,109 @@ export function ModuloCrudContextualAdmin({
       formData.set("entidad", entidadImportacion);
       formData.set("archivo", archivo);
       const loteId = await crearLoteImportacion(formData, token);
-      const lote = await obtenerLoteImportacion(loteId, token);
-      setDetalle({ lote: lote.lote, filas: lote.filas });
+      const data = await obtenerLoteImportacion(loteId, token);
+      setDetalle(data);
+      setImportacionAbierta(true);
       setOk("Lote cargado. Revisa filas antes de confirmar.");
     }, "No se pudo cargar el lote de importación.");
   };
 
-  const onSeleccionFila = (fila: FilaImportacion) => void ejecutarAccion(async () => {
-    if (!detalle?.lote.id) return;
-    const actualizado = await cambiarSeleccionFilaImportacion(Number(detalle.lote.id), fila.id, !fila.seleccionado, token);
+  const onSeleccionFila = async (filaId: number, seleccionado: boolean) => {
     if (!detalle) return;
-    setDetalle({ ...detalle, filas: detalle.filas.map((it) => (it.id === actualizado.id ? actualizado : it)) });
-  }, "No se pudo actualizar la selección.");
+    await ejecutarAccion(async () => {
+      await cambiarSeleccionFilaImportacion(Number(detalle.lote.id), filaId, seleccionado, token);
+      setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+    }, "No se pudo actualizar la selección de la fila.");
+  };
 
-  const onAdjuntarImagen = (fila: FilaImportacion, archivo?: File) => void ejecutarAccion(async () => {
-    if (!archivo || !detalle?.lote.id) return;
-    const actualizada = await adjuntarImagenFilaImportacion(Number(detalle.lote.id), fila.id, archivo, token);
+  const onAdjuntarImagen = async (filaId: number, archivo: File) => {
     if (!detalle) return;
-    setDetalle({ ...detalle, filas: detalle.filas.map((it) => (it.id === actualizada.id ? actualizada : it)) });
-  }, "No se pudo adjuntar la imagen.");
+    await ejecutarAccion(async () => {
+      await adjuntarImagenFilaImportacion(Number(detalle.lote.id), filaId, archivo, token);
+      setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+    }, "No se pudo adjuntar la imagen de la fila.");
+  };
 
-  const onEliminarImagen = (fila: FilaImportacion) => void ejecutarAccion(async () => {
-    if (!detalle?.lote.id) return;
-    const actualizada = await eliminarImagenFilaImportacion(Number(detalle.lote.id), fila.id, token);
+  const onEliminarImagen = async (filaId: number) => {
     if (!detalle) return;
-    setDetalle({ ...detalle, filas: detalle.filas.map((it) => (it.id === actualizada.id ? actualizada : it)) });
-  }, "No se pudo eliminar la imagen.");
+    await ejecutarAccion(async () => {
+      await eliminarImagenFilaImportacion(Number(detalle.lote.id), filaId, token);
+      setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+    }, "No se pudo eliminar la imagen de la fila.");
+  };
 
-  const onDescartarFila = (fila: FilaImportacion) => void ejecutarAccion(async () => {
-    if (!detalle?.lote.id) return;
-    const actualizada = await descartarFilaImportacion(Number(detalle.lote.id), fila.id, token);
+  const onDescartarFila = async (filaId: number) => {
     if (!detalle) return;
-    setDetalle({ ...detalle, filas: detalle.filas.map((it) => (it.id === actualizada.id ? actualizada : it)) });
-  }, "No se pudo descartar la fila.");
+    await ejecutarAccion(async () => {
+      await descartarFilaImportacion(Number(detalle.lote.id), filaId, token);
+      setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+    }, "No se pudo descartar la fila.");
+  };
 
-  const onConfirmarLote = () => void ejecutarAccion(async () => {
-    if (!detalle?.lote.id) return;
-    const filasSeleccionadas = detalle.filas.filter((fila) => fila.seleccionado).map((fila) => fila.id);
-    const confirmadas = await confirmarLoteImportacion(Number(detalle.lote.id), filasSeleccionadas, token);
-    setOk(`Lote confirmado. Filas aplicadas: ${confirmadas}.`);
-  }, "No se pudo confirmar el lote.");
-
-  const onRevalidarLote = () => void ejecutarAccion(async () => {
-    if (!detalle?.lote.id) return;
+  const onRevalidarLote = () => !detalle ? Promise.resolve() : ejecutarAccion(async () => {
     await revalidarLoteImportacion(Number(detalle.lote.id), token);
-    const lote = await obtenerLoteImportacion(Number(detalle.lote.id), token);
-    setDetalle({ lote: lote.lote, filas: lote.filas });
+    setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
     setOk("Lote revalidado.");
   }, "No se pudo revalidar el lote.");
 
+  const onConfirmarLote = () => !detalle ? Promise.resolve() : ejecutarAccion(async () => {
+    const seleccionadas = detalle.filas.filter((fila) => fila.seleccionado).map((fila) => fila.id);
+    const confirmadas = await confirmarLoteImportacion(Number(detalle.lote.id), seleccionadas, token);
+    setOk(`Lote confirmado. Filas aplicadas: ${confirmadas}.`);
+    setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+  }, "No se pudo confirmar el lote.");
+
   const descargar = async (tipo: "plantilla" | "inventario", formato: "csv" | "xlsx") => {
-    const blob = await descargarExportacionAdmin(modulo, tipo, formato, token, seccionSeleccionada);
-    const url = URL.createObjectURL(blob);
-    const ancla = document.createElement("a");
-    ancla.href = url;
-    ancla.download = `${modulo}-${tipo}.${formato}`;
-    ancla.click();
-    URL.revokeObjectURL(url);
+    await descargarExportacionAdmin(modulo, tipo, formato, token, seccionSeleccionada);
+    setOk(`Descarga lista: ${tipo.toUpperCase()} (${formato.toUpperCase()}).`);
   };
 
+  const onSeleccionStaging = (fila: FilaImportacion) => void onSeleccionFila(fila.id, !fila.seleccionado);
+  const onAdjuntarStaging = (fila: FilaImportacion, archivo?: File) => {
+    if (!archivo) return;
+    void onAdjuntarImagen(fila.id, archivo);
+  };
+  const onEliminarStaging = (fila: FilaImportacion) => void onEliminarImagen(fila.id);
+  const onDescartarStaging = (fila: FilaImportacion) => void onDescartarFila(fila.id);
+
   return (
-    <section className="admin-bloque">
-      <h2>{titulo}</h2>
+    <section className="admin-contenido">
+      <p className="admin-breadcrumb">Admin / {titulo}</p>
+      <div className="admin-resumen"><h2>{titulo}</h2></div>
+      {ok ? <p className="admin-estado">{ok}</p> : null}
       {error ? <p className="admin-estado admin-estado--error">{error}</p> : null}
-      {ok ? <p className="admin-estado admin-estado--ok">{ok}</p> : null}
+
       <div className="admin-disposicion-crud">
         <div className="admin-columna-principal">
           <section className="admin-bloque admin-alta-manual">
-            <h3>Alta manual</h3>
+            <h3>Formulario principal</h3>
+            <p className="admin-subtitulo">Completa el registro por bloques para mantener una edición clara y consistente.</p>
             <form onSubmit={onGuardarAlta} className="admin-formulario-amplio admin-formulario-vertical">
               {contextoFormulario ? (
-                <label className="admin-control-contexto">
+                <label className="admin-control-contexto admin-campo-control">
                   <span>{contextoFormulario.etiqueta}</span>
-                  <select
-                    value={String(formAlta[contextoFormulario.clave] ?? seccionSeleccionada)}
-                    onChange={(event) => {
-                      const valor = event.target.value;
-                      setFormAlta({ ...formAlta, [contextoFormulario.clave]: valor });
-                      onCambioContexto?.(valor);
-                    }}
-                  >
-                    {contextoFormulario.opciones.map((opcion) => (
-                      <option key={opcion.valor} value={opcion.valor}>
-                        {opcion.etiqueta}
-                      </option>
-                    ))}
-                  </select>
                   <small>{contextoFormulario.ayuda}</small>
+                  <select value={String(formAlta[contextoFormulario.clave] ?? seccionSeleccionada)} onChange={(event) => {
+                    const valor = event.target.value;
+                    setFormAlta({ ...formAlta, [contextoFormulario.clave]: valor });
+                    onCambioContexto?.(valor);
+                  }}>
+                    {contextoFormulario.opciones.map((opcion) => <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>)}
+                  </select>
                 </label>
               ) : null}
-              <div className="admin-campos-grid admin-campos-grid--vertical">
-                {campos.map((campo) => (
-                  <label key={campo.clave}>
-                    <span>{campo.etiqueta}</span>
-                    <CampoFormulario campo={campo} valor={formAlta[campo.clave]} onCambio={(valor) => setFormAlta({ ...formAlta, [campo.clave]: valor })} />
-                  </label>
-                ))}
+              {gruposFormulario.map((grupo) => <BloqueCampos key={grupo.id} grupo={grupo} formulario={formAlta} onCambio={(clave, valor) => setFormAlta({ ...formAlta, [clave]: valor })} />)}
+              <div className="admin-acciones-formulario">
+                <button type="submit" className="admin-boton admin-boton--primario">Guardar</button>
               </div>
-              <button type="submit" className="admin-boton admin-boton--primario">Guardar</button>
             </form>
           </section>
 
-          <section className="admin-bloque">
-            <h3>Registros existentes</h3>
-            <input placeholder="Buscar por nombre, slug o contenido" value={filtro} onChange={(event) => setFiltro(event.target.value)} />
+          <section className="admin-bloque admin-registros-existentes">
+            <div className="admin-registros-cabecera">
+              <h3>Registros existentes</h3>
+              <input placeholder="Buscar por nombre, slug o contenido" value={filtro} onChange={(event) => setFiltro(event.target.value)} />
+            </div>
             <table className="admin-tabla">
               <thead><tr><th>Registro</th><th>Estado</th><th>Acciones</th></tr></thead>
               <tbody>
@@ -258,17 +314,19 @@ export function ModuloCrudContextualAdmin({
                     <td>{String(item.nombre ?? item.titulo ?? item.slug ?? item.id)}</td>
                     <td>{item[campoEstado] ? "Publicado" : "Borrador"}</td>
                     <td>
-                      <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setRegistroEdicion({ ...item })}>Editar</button>{" "}
-                      <button
-                        type="button"
-                        className={item[campoEstado] ? "admin-boton admin-boton--peligro" : "admin-boton admin-boton--primario"}
-                        onClick={() => void ejecutarAccion(async () => {
-                          const actualizado = await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token);
-                          setItems(items.map((it) => (it.id === item.id ? actualizado : it)));
-                        }, "No se pudo actualizar la publicación.")}
-                      >
-                        {item[campoEstado] ? "Despublicar" : "Publicar"}
-                      </button>
+                      <div className="admin-acciones-fila">
+                        <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setRegistroEdicion({ ...item })}>Editar</button>
+                        <button
+                          type="button"
+                          className={item[campoEstado] ? "admin-boton admin-boton--peligro" : "admin-boton admin-boton--primario"}
+                          onClick={() => void ejecutarAccion(async () => {
+                            const actualizado = await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token);
+                            setItems(items.map((it) => (it.id === item.id ? actualizado : it)));
+                          }, "No se pudo actualizar la publicación.")}
+                        >
+                          {item[campoEstado] ? "Despublicar" : "Publicar"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -304,16 +362,7 @@ export function ModuloCrudContextualAdmin({
               <button type="button" className="admin-boton admin-boton--secundario" onClick={onRevalidarLote}>Revalidar lote</button>
               <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setImportacionAbierta(false)}>Cerrar</button>
             </div>
-            {detalle ? (
-              <TablaStagingImportacion
-                detalleId={Number(detalle.lote.id)}
-                filas={detalle.filas}
-                onSeleccionar={onSeleccionFila}
-                onAdjuntar={onAdjuntarImagen}
-                onEliminarImagen={onEliminarImagen}
-                onDescartar={onDescartarFila}
-              />
-            ) : null}
+            {detalle ? <TablaStagingImportacion detalleId={Number(detalle.lote.id)} filas={detalle.filas} onSeleccionar={onSeleccionStaging} onAdjuntar={onAdjuntarStaging} onEliminarImagen={onEliminarStaging} onDescartar={onDescartarStaging} /> : null}
           </div>
         </div>
       ) : null}
@@ -321,17 +370,13 @@ export function ModuloCrudContextualAdmin({
       {registroEdicion ? (
         <div className="admin-modal-fondo" role="presentation" onClick={() => setRegistroEdicion(null)}>
           <div className="admin-modal" role="dialog" aria-modal="true" aria-label="Editar registro" onClick={(event) => event.stopPropagation()}>
-            <h3>Editar registro</h3>
+            <header className="admin-modal-cabecera">
+              <h3>Editar registro</h3>
+              <p>Revisa cada bloque antes de guardar para mantener consistencia editorial y comercial.</p>
+            </header>
             <form onSubmit={onGuardarEdicion} className="admin-formulario-amplio admin-formulario-vertical">
-              <div className="admin-campos-grid admin-campos-grid--vertical">
-                {campos.map((campo) => (
-                  <label key={`editar-${campo.clave}`}>
-                    <span>{campo.etiqueta}</span>
-                    <CampoFormulario campo={campo} valor={registroEdicion[campo.clave]} onCambio={(valor) => setRegistroEdicion({ ...registroEdicion, [campo.clave]: valor })} />
-                  </label>
-                ))}
-              </div>
-              <div className="admin-filtros">
+              {gruposFormulario.map((grupo) => <BloqueCampos key={`editar-${grupo.id}`} grupo={grupo} formulario={registroEdicion} onCambio={(clave, valor) => setRegistroEdicion({ ...registroEdicion, [clave]: valor })} />)}
+              <div className="admin-acciones-formulario admin-acciones-formulario--dialogo">
                 <button type="submit" className="admin-boton admin-boton--primario">Guardar cambios</button>
                 <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setRegistroEdicion(null)}>Cerrar</button>
               </div>

@@ -76,3 +76,16 @@ test("naming editorial del admin evita jerga interna en labels visibles", () => 
   assert.doesNotMatch(moduloImportacion, /<option value="articulos_editoriales">Editorial<\/option>/);
   assert.match(moduloImportacion, /<option value="articulos_editoriales">Artículos<\/option>/);
 });
+
+
+test("regresión módulos: productos, rituales, artículos y categorías siguen usando CRUD contextual", () => {
+  const productos = readFileSync("app/admin/(panel)/productos/page.tsx", "utf8");
+  const rituales = readFileSync("app/admin/(panel)/rituales/page.tsx", "utf8");
+  const editorial = readFileSync("app/admin/(panel)/editorial/page.tsx", "utf8");
+  const secciones = readFileSync("app/admin/(panel)/secciones/page.tsx", "utf8");
+
+  assert.match(productos, /ModuloProductosAdmin/);
+  assert.match(rituales, /titulo="Rituales"/);
+  assert.match(editorial, /titulo="Artículos"/);
+  assert.match(secciones, /titulo="Categorías de catálogo"/);
+});
