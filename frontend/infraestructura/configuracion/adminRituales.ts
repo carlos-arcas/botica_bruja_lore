@@ -16,6 +16,17 @@ function normalizarIntenciones(valor: unknown): string[] {
   return [];
 }
 
+
+function normalizarIdsProductos(valor: unknown): string[] {
+  if (Array.isArray(valor)) {
+    return valor.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+  }
+  if (typeof valor === "string") {
+    return valor.split(",").map((item) => item.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 export function normalizarItemRitual(item: Record<string, unknown>): Record<string, unknown> {
   const base: Record<string, unknown> = { ...item };
 
@@ -25,6 +36,7 @@ export function normalizarItemRitual(item: Record<string, unknown>): Record<stri
 
   base.publicado = Boolean(item.publicado);
   base.intenciones_relacionadas = normalizarIntenciones(item.intenciones_relacionadas);
+  base.productos_relacionados = normalizarIdsProductos(item.productos_relacionados);
 
   return base;
 }
@@ -36,5 +48,6 @@ export function normalizarItemsRituales(items: Record<string, unknown>[]): Recor
 export function construirPayloadRitual(formulario: Record<string, unknown>): Record<string, unknown> {
   const payload = normalizarItemRitual(formulario);
   payload.intenciones_relacionadas = normalizarIntenciones(formulario.intenciones_relacionadas);
+  payload.productos_relacionados = normalizarIdsProductos(formulario.productos_relacionados);
   return payload;
 }

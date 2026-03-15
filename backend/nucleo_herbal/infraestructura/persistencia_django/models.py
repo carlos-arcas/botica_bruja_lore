@@ -182,6 +182,12 @@ class ArticuloEditorialModelo(models.Model):
         blank=True,
     )
     fecha_publicacion = models.DateTimeField(null=True, blank=True)
+    productos_relacionados = models.ManyToManyField(
+        ProductoModelo,
+        related_name="articulos_editoriales",
+        blank=True,
+        help_text="Productos relacionados con el artículo para continuidad comercial.",
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 
 import { BloquePlantasRelacionadas } from "@/componentes/rituales/detalle/BloquePlantasRelacionadas";
-import { BloqueResolucionComercialRitual } from "@/componentes/rituales/detalle/BloqueResolucionComercialRitual";
+import { BloqueProductosRelacionados } from "@/componentes/catalogo/relacionados/BloqueProductosRelacionados";
 import { CabeceraFichaRitual } from "@/componentes/rituales/detalle/CabeceraFichaRitual";
 import { EstadoErrorFichaRitual } from "@/componentes/rituales/detalle/EstadoFichaRitual";
 import { BloqueGuiasRelacionadas } from "@/componentes/editorial/BloqueGuiasRelacionadas";
@@ -75,7 +75,7 @@ export default async function PaginaDetalleRitual({ params }: Props): Promise<JS
       {schemasFicha.length > 0 ? <JsonLd id="schema-ficha-ritual" data={schemasFicha} /> : null}
       <CabeceraFichaRitual ritual={ritual} />
       <BloquePlantasRelacionadas plantas={plantas} />
-      <BloqueResolucionComercialRitual productos={productos} />
+      <BloqueProductosRelacionados titulo="Productos para este ritual" productos={productos} />
       <BloqueGuiasRelacionadas
         titulo="Guías editoriales relacionadas con este ritual"
         descripcion="Amplía esta práctica con guías conectadas al hub de rituales y a rutas complementarias del catálogo."

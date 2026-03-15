@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from backend.nucleo_herbal.infraestructura.persistencia_django.models import IntencionModelo, RitualModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import IntencionModelo, ProductoModelo, RitualModelo
 
 from .auth import usuario_staff
 from .identificadores import generar_id_si_falta, generar_slug_unico
@@ -25,6 +25,7 @@ def ritual_dict(obj: RitualModelo) -> dict:
         "imagen_url": obj.imagen_url,
         "publicado": obj.publicado,
         "intenciones_relacionadas": [it.slug for it in obj.intenciones.all()],
+        "productos_relacionados": [it.id for it in obj.productos_relacionados.all()],
     }
 
 
@@ -62,6 +63,7 @@ def guardar_ritual_backoffice(request: HttpRequest) -> JsonResponse:
         obj.publicado = to_bool(data, "publicado")
         obj.save()
         _actualizar_intenciones(obj, data)
+        _actualizar_productos(obj, data)
         LOGGER.info("backoffice_ritual_guardado", extra={"usuario": usuario.username, "ritual": obj.id})
         return JsonResponse({"item": ritual_dict(obj)})
     except ValueError as exc:
@@ -81,6 +83,21 @@ def _actualizar_intenciones(ritual: RitualModelo, data: dict) -> None:
     if len(intenciones) != len(set(slugs)):
         raise ValueError("Hay intenciones relacionadas inexistentes.")
     ritual.intenciones.set(intenciones)
+
+
+def _actualizar_productos(ritual: RitualModelo, data: dict) -> None:
+    ids = data.get("productos_relacionados") or []
+    if isinstance(ids, str):
+        ids = [item.strip() for item in ids.split(",") if item.strip()]
+    if not isinstance(ids, list):
+        raise ValueError("productos_relacionados debe ser lista o csv.")
+    if not ids:
+        ritual.productos_relacionados.clear()
+        return
+    productos = list(ProductoModelo.objects.filter(id__in=ids))
+    if len(productos) != len(set(ids)):
+        raise ValueError("Hay productos relacionados inexistentes.")
+    ritual.productos_relacionados.set(productos)
 
 
 @csrf_exempt

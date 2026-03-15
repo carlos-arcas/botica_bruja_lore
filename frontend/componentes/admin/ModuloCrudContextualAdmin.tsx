@@ -86,7 +86,7 @@ const DESCRIPCIONES_BLOQUE: Record<string, string> = {
 
 const CLAVES_BLOQUE: Record<string, Set<string>> = {
   basica: new Set(["nombre", "titulo", "descripcion", "descripcion_corta", "resumen", "contenido", "tema", "hub", "subhub"]),
-  presentacion: new Set(["precio_visible", "imagen_url", "seccion_publica", "tipo_producto", "categoria_comercial", "intenciones_relacionadas", "orden"]),
+  presentacion: new Set(["precio_visible", "imagen_url", "seccion_publica", "tipo_producto", "categoria_comercial", "intenciones_relacionadas", "productos_relacionados", "orden"]),
   estado: new Set(["publicado", "publicada", "indexable"]),
 };
 

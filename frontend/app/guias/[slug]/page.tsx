@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BloqueProductosRelacionados } from "@/componentes/catalogo/relacionados/BloqueProductosRelacionados";
 import { JsonLd } from "@/componentes/seo/JsonLd";
 import {
   obtenerEnlacesCatalogoParaGuia,
@@ -10,6 +11,7 @@ import {
   obtenerGuiasPublicadasIndexables,
   obtenerSubhubEditorialParaGuia,
 } from "@/contenido/editorial/guiasEditoriales";
+import { obtenerArticuloEditorialPublico } from "@/infraestructura/api/editorial";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 import { construirSchemasDetalleGuiaEditorial } from "@/infraestructura/seo/structuredData";
 
@@ -39,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default function PaginaDetalleGuia({ params }: Props): JSX.Element {
+export default async function PaginaDetalleGuia({ params }: Props): Promise<JSX.Element> {
   const guia = obtenerGuiaEditorialPorSlug(params.slug);
 
   if (!guia || !guia.publicada) {
@@ -50,6 +52,7 @@ export default function PaginaDetalleGuia({ params }: Props): JSX.Element {
   const enlacesFichas = obtenerEnlacesFichaParaGuia(guia);
   const subhub = obtenerSubhubEditorialParaGuia(guia);
   const schemas = construirSchemasDetalleGuiaEditorial(guia);
+  const articuloBackoffice = await obtenerArticuloEditorialPublico(guia.slug);
 
   return (
     <main className="contenedor-home">
@@ -69,6 +72,12 @@ export default function PaginaDetalleGuia({ params }: Props): JSX.Element {
         </section>
       ))}
 
+
+
+      <BloqueProductosRelacionados
+        titulo="Productos relacionados"
+        productos={articuloBackoffice?.productos_relacionados ?? []}
+      />
 
       {subhub ? (
         <section className="bloque-home" aria-labelledby="subhub-guia-relacionado">

@@ -7,7 +7,7 @@ from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
-from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, SeccionPublicaModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, ProductoModelo, SeccionPublicaModelo
 
 from .auth import usuario_staff
 from .identificadores import generar_slug_unico
@@ -30,6 +30,7 @@ def articulo_dict(obj: ArticuloEditorialModelo) -> dict:
         "indexable": obj.indexable,
         "publicado": obj.publicado,
         "seccion_publica": obj.seccion_publica.slug if obj.seccion_publica else "",
+        "productos_relacionados": [it.id for it in obj.productos_relacionados.all()],
     }
 
 
@@ -74,10 +75,26 @@ def guardar_editorial_backoffice(request: HttpRequest) -> JsonResponse:
         if obj.publicado and not obj.fecha_publicacion:
             obj.fecha_publicacion = timezone.now()
         obj.save()
+        _actualizar_productos_relacionados(obj, data)
         LOGGER.info("backoffice_editorial_guardado", extra={"usuario": usuario.username, "articulo": obj.id})
         return JsonResponse({"item": articulo_dict(obj)})
     except ValueError as exc:
         return JsonResponse({"detalle": str(exc)}, status=400)
+
+
+def _actualizar_productos_relacionados(articulo: ArticuloEditorialModelo, data: dict) -> None:
+    ids = data.get("productos_relacionados") or []
+    if isinstance(ids, str):
+        ids = [item.strip() for item in ids.split(",") if item.strip()]
+    if not isinstance(ids, list):
+        raise ValueError("productos_relacionados debe ser lista o csv.")
+    if not ids:
+        articulo.productos_relacionados.clear()
+        return
+    productos = list(ProductoModelo.objects.filter(id__in=ids))
+    if len(productos) != len(set(ids)):
+        raise ValueError("Hay productos relacionados inexistentes.")
+    articulo.productos_relacionados.set(productos)
 
 
 def _resolver_seccion_publica(data: dict) -> SeccionPublicaModelo | None:
