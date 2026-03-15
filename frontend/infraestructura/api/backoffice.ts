@@ -134,6 +134,22 @@ export async function eliminarImagenFilaImportacion(loteId: number, filaId: numb
   return data.fila;
 }
 
+
+
+export async function subirImagenBackoffice(imagen: File, prefijo: string, token?: string): Promise<string> {
+  const formData = new FormData();
+  formData.set("imagen", imagen);
+  formData.set("prefijo", prefijo);
+  const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+  const r = await fetch(`${API_BACKEND_BASE}/api/v1/backoffice/imagenes/subir/`, { method: "POST", headers, body: formData });
+  if (!r.ok) {
+    const data = (await r.json().catch(() => ({ detalle: "No se pudo subir la imagen." }))) as { detalle?: string };
+    throw new Error(data.detalle || "No se pudo subir la imagen.");
+  }
+  const data = (await r.json()) as { imagen_url: string };
+  return data.imagen_url;
+}
+
 export async function descargarExportacionAdmin(modulo: ModuloAdmin, tipo: "plantilla" | "inventario", formato: "csv" | "xlsx", token?: string, seccion = ""): Promise<Blob> {
   const query = new URLSearchParams({ tipo, formato });
   if (seccion) query.set("seccion", seccion);

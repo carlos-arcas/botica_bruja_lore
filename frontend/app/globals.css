@@ -1082,3 +1082,45 @@ button:focus-visible {
 .admin-filtros--segmentado {
   gap: 0.6rem;
 }
+
+.admin-campo-imagen {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.admin-dropzone-imagen {
+  border: 1px dashed #9d7b5c;
+  border-radius: 12px;
+  background: #fffaf3;
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.45rem;
+  cursor: pointer;
+}
+
+.admin-dropzone-imagen p {
+  margin: 0;
+}
+
+.admin-input-oculto {
+  display: none;
+}
+
+.admin-preview-imagen {
+  width: 100%;
+  max-width: 260px;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #d7deea;
+}
+
+.admin-acciones-imagen {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.admin-mensaje-error {
+  color: #9c2f18;
+  font-weight: 600;
+}

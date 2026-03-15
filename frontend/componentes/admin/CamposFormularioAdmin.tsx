@@ -1,10 +1,19 @@
 "use client";
 
+import { CampoImagenAdmin } from "@/componentes/admin/CampoImagenAdmin";
+
 export type ConfigCampo = {
   clave: string;
   etiqueta: string;
-  tipo?: "text" | "textarea" | "checkbox" | "select" | "precio";
+  tipo?: "text" | "textarea" | "checkbox" | "select" | "precio" | "imagen";
   opciones?: { etiqueta: string; valor: string }[];
+};
+
+export type ControlImagenFormulario = {
+  estado: "idle" | "subiendo" | "ok" | "error";
+  mensaje: string;
+  onSubirArchivo: (archivo: File) => void;
+  onQuitarImagen: () => void;
 };
 
 function normalizarPrecioEntrada(valor: string): string {
@@ -18,9 +27,25 @@ function formatearPrecioVisible(valor: unknown): string {
   return Number.isFinite(numero) ? numero.toFixed(2) : "";
 }
 
-export function CampoFormulario({ valor, campo, onCambio }: { valor: unknown; campo: ConfigCampo; onCambio: (valor: unknown) => void }): JSX.Element {
+function esCampoImagen(campo: ConfigCampo): boolean {
+  return campo.tipo === "imagen" || campo.clave === "imagen_url";
+}
+
+export function CampoFormulario({ valor, campo, onCambio, controlImagen }: { valor: unknown; campo: ConfigCampo; onCambio: (valor: unknown) => void; controlImagen?: ControlImagenFormulario }): JSX.Element {
   if (campo.tipo === "checkbox") {
     return <input className="admin-checkbox" type="checkbox" checked={Boolean(valor)} onChange={(event) => onCambio(event.target.checked)} />;
+  }
+  if (esCampoImagen(campo) && controlImagen) {
+    return (
+      <CampoImagenAdmin
+        etiqueta={campo.etiqueta}
+        imagenUrl={String(valor ?? "")}
+        estado={controlImagen.estado}
+        mensaje={controlImagen.mensaje}
+        onSubirArchivo={controlImagen.onSubirArchivo}
+        onQuitarImagen={controlImagen.onQuitarImagen}
+      />
+    );
   }
   if (campo.tipo === "textarea") {
     return <textarea className="admin-textarea" value={String(valor ?? "")} onChange={(event) => onCambio(event.target.value)} />;

@@ -89,3 +89,10 @@ test("regresión módulos: productos, rituales, artículos y categorías siguen 
   assert.match(editorial, /titulo="Artículos"/);
   assert.match(secciones, /titulo="Categorías de catálogo"/);
 });
+
+
+test("imagen ya no se presenta como input de texto principal", () => {
+  const campos = readFileSync("componentes/admin/CamposFormularioAdmin.tsx", "utf8");
+  assert.match(campos, /esCampoImagen/);
+  assert.match(campos, /CampoImagenAdmin/);
+});

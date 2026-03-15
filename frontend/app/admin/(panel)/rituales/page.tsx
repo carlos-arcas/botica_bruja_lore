@@ -9,7 +9,7 @@ const CAMPOS = [
   { clave: "nombre", etiqueta: "Nombre" },
   { clave: "contexto_breve", etiqueta: "Contexto breve", tipo: "textarea" as const },
   { clave: "contenido", etiqueta: "Contenido", tipo: "textarea" as const },
-  { clave: "imagen_url", etiqueta: "Imagen" },
+  { clave: "imagen_url", etiqueta: "Imagen", tipo: "imagen" as const },
   { clave: "intenciones_relacionadas", etiqueta: "Intenciones (csv)" },
   { clave: "publicado", etiqueta: "Publicado", tipo: "checkbox" as const },
 ];

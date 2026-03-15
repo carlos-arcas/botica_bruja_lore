@@ -12,7 +12,7 @@ const CAMPOS = [
   { clave: "hub", etiqueta: "Hub" },
   { clave: "subhub", etiqueta: "Subhub" },
   { clave: "seccion_publica", etiqueta: "Dónde se mostrará" },
-  { clave: "imagen_url", etiqueta: "Imagen" },
+  { clave: "imagen_url", etiqueta: "Imagen", tipo: "imagen" as const },
   { clave: "indexable", etiqueta: "Indexable", tipo: "checkbox" as const },
   { clave: "publicado", etiqueta: "Publicado", tipo: "checkbox" as const },
 ];
