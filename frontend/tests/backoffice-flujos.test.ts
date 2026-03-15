@@ -14,6 +14,7 @@ import {
   guardarRegistroAdmin,
   obtenerLoteImportacion,
   revalidarLoteImportacion,
+  subirImagenBackoffice,
 } from "../infraestructura/api/backoffice";
 
 test("submit real de alta usa endpoint guardar y devuelve item", async () => {
@@ -135,4 +136,32 @@ test("ui de importación valida columnas faltantes y muestra mensaje claro", () 
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
   assert.match(componente, /Faltan columnas obligatorias/);
   assert.match(componente, /columnasObligatoriasImportacion/);
+});
+
+
+test("subida de imagen manual usa endpoint de backoffice y reporta url", async () => {
+  let url = "";
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    url = String(input);
+    return { ok: true, json: async () => ({ imagen_url: "https://cdn.test/demo.webp" }) } as Response;
+  }) as unknown as typeof fetch;
+
+  const imagen = await subirImagenBackoffice(new File(["x"], "demo.png", { type: "image/png" }), "backoffice/productos", "token");
+
+  assert.match(url, /\/api\/v1\/backoffice\/imagenes\/subir\/$/);
+  assert.equal(imagen, "https://cdn.test/demo.webp");
+});
+
+test("formulario usa componente visual de imagen en alta y edición", () => {
+  const modulo = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  const campoImagen = readFileSync("componentes/admin/CampoImagenAdmin.tsx", "utf8");
+
+  assert.match(modulo, /controlImagenAlta/);
+  assert.match(modulo, /controlImagenEdicion/);
+  assert.match(modulo, /subirImagenBackoffice/);
+  assert.match(modulo, /controlImagen=\{campo\.clave/);
+  assert.match(campoImagen, /Arrastra una imagen aquí/);
+  assert.match(campoImagen, /o selecciónala desde tu PC/);
+  assert.match(campoImagen, /Reemplazar/);
+  assert.match(campoImagen, /Quitar/);
 });

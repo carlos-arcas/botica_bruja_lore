@@ -2,7 +2,7 @@
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 
-import { CampoFormulario, ConfigCampo } from "@/componentes/admin/CamposFormularioAdmin";
+import { CampoFormulario, ConfigCampo, ControlImagenFormulario } from "@/componentes/admin/CamposFormularioAdmin";
 import { TablaStagingImportacion } from "@/componentes/admin/TablaStagingImportacion";
 import {
   FilaImportacion,
@@ -18,6 +18,7 @@ import {
   guardarRegistroAdmin,
   obtenerLoteImportacion,
   revalidarLoteImportacion,
+  subirImagenBackoffice,
 } from "@/infraestructura/api/backoffice";
 import { construirPayloadRitual } from "@/infraestructura/configuracion/adminRituales";
 
@@ -45,6 +46,16 @@ type Props = {
 };
 
 type DetalleLote = { lote: Record<string, unknown>; filas: FilaImportacion[] };
+
+
+type EstadoImagenFormulario = { estado: "idle" | "subiendo" | "ok" | "error"; mensaje: string };
+
+function prefijoImagenModulo(modulo: ModuloAdmin): string {
+  if (modulo === "productos") return "backoffice/productos";
+  if (modulo === "rituales") return "backoffice/rituales";
+  if (modulo === "editorial") return "backoffice/articulos";
+  return "backoffice/imagenes";
+}
 
 const TITULOS_BLOQUE: Record<string, string> = {
   basica: "Información básica",
@@ -98,7 +109,7 @@ function agruparCamposFormulario(campos: ConfigCampo[]): GrupoCampos[] {
     .map(([id, camposGrupo]) => ({ id, titulo: TITULOS_BLOQUE[id], descripcion: DESCRIPCIONES_BLOQUE[id], campos: camposGrupo }));
 }
 
-function BloqueCampos({ grupo, formulario, onCambio }: { grupo: GrupoCampos; formulario: Record<string, unknown>; onCambio: (clave: string, valor: unknown) => void }): JSX.Element {
+function BloqueCampos({ grupo, formulario, onCambio, controlImagen }: { grupo: GrupoCampos; formulario: Record<string, unknown>; onCambio: (clave: string, valor: unknown) => void; controlImagen?: ControlImagenFormulario }): JSX.Element {
   return (
     <fieldset className="admin-subseccion-formulario">
       <legend>{grupo.titulo}</legend>
@@ -109,7 +120,7 @@ function BloqueCampos({ grupo, formulario, onCambio }: { grupo: GrupoCampos; for
           return (
             <label key={campo.clave} className={clase}>
               <span>{campo.etiqueta}</span>
-              <CampoFormulario campo={campo} valor={formulario[campo.clave]} onCambio={(valor) => onCambio(campo.clave, valor)} />
+              <CampoFormulario campo={campo} valor={formulario[campo.clave]} onCambio={(valor) => onCambio(campo.clave, valor)} controlImagen={campo.clave === "imagen_url" ? controlImagen : undefined} />
             </label>
           );
         })}
@@ -143,6 +154,8 @@ export function ModuloCrudContextualAdmin({
   const [ok, setOk] = useState("");
   const [detalle, setDetalle] = useState<DetalleLote | null>(null);
   const [registroEdicion, setRegistroEdicion] = useState<Record<string, unknown> | null>(null);
+  const [estadoImagenAlta, setEstadoImagenAlta] = useState<EstadoImagenFormulario>({ estado: "idle", mensaje: "" });
+  const [estadoImagenEdicion, setEstadoImagenEdicion] = useState<EstadoImagenFormulario>({ estado: "idle", mensaje: "" });
   const [importacionAbierta, setImportacionAbierta] = useState(false);
 
   useEffect(() => setItems(itemsIniciales), [itemsIniciales]);
@@ -189,6 +202,7 @@ export function ModuloCrudContextualAdmin({
     await ejecutarAccion(async () => {
       await guardar(registroEdicion);
       setRegistroEdicion(null);
+      setEstadoImagenEdicion({ estado: "idle", mensaje: "" });
       setOk("Cambios guardados.");
     }, "No se pudo guardar la edición.");
   };
@@ -255,6 +269,52 @@ export function ModuloCrudContextualAdmin({
     setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
   }, "No se pudo confirmar el lote.");
 
+
+
+  const subirImagen = async (archivo: File, esEdicion: boolean) => {
+    const asignar = esEdicion ? setEstadoImagenEdicion : setEstadoImagenAlta;
+    asignar({ estado: "subiendo", mensaje: "" });
+    try {
+      const imagenUrl = await subirImagenBackoffice(archivo, prefijoImagenModulo(modulo), token);
+      if (esEdicion) {
+        if (!registroEdicion) return;
+        setRegistroEdicion({ ...registroEdicion, imagen_url: imagenUrl });
+      } else {
+        setFormAlta({ ...formAlta, imagen_url: imagenUrl });
+      }
+      asignar({ estado: "ok", mensaje: "" });
+    } catch (error) {
+      asignar({ estado: "error", mensaje: error instanceof Error ? error.message : "No se pudo subir la imagen." });
+    }
+  };
+
+  const quitarImagen = (esEdicion: boolean) => {
+    if (esEdicion) {
+      if (!registroEdicion) return;
+      setRegistroEdicion({ ...registroEdicion, imagen_url: "" });
+      setEstadoImagenEdicion({ estado: "idle", mensaje: "" });
+      return;
+    }
+    setFormAlta({ ...formAlta, imagen_url: "" });
+    setEstadoImagenAlta({ estado: "idle", mensaje: "" });
+  };
+
+  const controlImagenAlta: ControlImagenFormulario = {
+    ...estadoImagenAlta,
+    onSubirArchivo: (archivo) => {
+      void subirImagen(archivo, false);
+    },
+    onQuitarImagen: () => quitarImagen(false),
+  };
+
+  const controlImagenEdicion: ControlImagenFormulario = {
+    ...estadoImagenEdicion,
+    onSubirArchivo: (archivo) => {
+      void subirImagen(archivo, true);
+    },
+    onQuitarImagen: () => quitarImagen(true),
+  };
+
   const descargar = async (tipo: "plantilla" | "inventario", formato: "csv" | "xlsx") => {
     await descargarExportacionAdmin(modulo, tipo, formato, token, seccionSeleccionada);
     setOk(`Descarga lista: ${tipo.toUpperCase()} (${formato.toUpperCase()}).`);
@@ -294,7 +354,7 @@ export function ModuloCrudContextualAdmin({
                   </select>
                 </label>
               ) : null}
-              {gruposFormulario.map((grupo) => <BloqueCampos key={grupo.id} grupo={grupo} formulario={formAlta} onCambio={(clave, valor) => setFormAlta({ ...formAlta, [clave]: valor })} />)}
+              {gruposFormulario.map((grupo) => <BloqueCampos key={grupo.id} grupo={grupo} formulario={formAlta} onCambio={(clave, valor) => setFormAlta({ ...formAlta, [clave]: valor })} controlImagen={controlImagenAlta} />)}
               <div className="admin-acciones-formulario">
                 <button type="submit" className="admin-boton admin-boton--primario">Guardar</button>
               </div>
@@ -315,7 +375,7 @@ export function ModuloCrudContextualAdmin({
                     <td>{item[campoEstado] ? "Publicado" : "Borrador"}</td>
                     <td>
                       <div className="admin-acciones-fila">
-                        <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setRegistroEdicion({ ...item })}>Editar</button>
+                        <button type="button" className="admin-boton admin-boton--secundario" onClick={() => { setRegistroEdicion({ ...item }); setEstadoImagenEdicion({ estado: "idle", mensaje: "" }); }}>Editar</button>
                         <button
                           type="button"
                           className={item[campoEstado] ? "admin-boton admin-boton--peligro" : "admin-boton admin-boton--primario"}
@@ -375,7 +435,7 @@ export function ModuloCrudContextualAdmin({
               <p>Revisa cada bloque antes de guardar para mantener consistencia editorial y comercial.</p>
             </header>
             <form onSubmit={onGuardarEdicion} className="admin-formulario-amplio admin-formulario-vertical">
-              {gruposFormulario.map((grupo) => <BloqueCampos key={`editar-${grupo.id}`} grupo={grupo} formulario={registroEdicion} onCambio={(clave, valor) => setRegistroEdicion({ ...registroEdicion, [clave]: valor })} />)}
+              {gruposFormulario.map((grupo) => <BloqueCampos key={`editar-${grupo.id}`} grupo={grupo} formulario={registroEdicion} onCambio={(clave, valor) => setRegistroEdicion({ ...registroEdicion, [clave]: valor })} controlImagen={controlImagenEdicion} />)}
               <div className="admin-acciones-formulario admin-acciones-formulario--dialogo">
                 <button type="submit" className="admin-boton admin-boton--primario">Guardar cambios</button>
                 <button type="button" className="admin-boton admin-boton--secundario" onClick={() => setRegistroEdicion(null)}>Cerrar</button>

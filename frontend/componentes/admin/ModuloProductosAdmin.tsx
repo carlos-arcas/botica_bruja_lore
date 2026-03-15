@@ -15,7 +15,7 @@ const CAMPOS_COMUNES = [
   { clave: "nombre", etiqueta: "Nombre" },
   { clave: "descripcion_corta", etiqueta: "Descripción corta", tipo: "textarea" as const },
   { clave: "precio_visible", etiqueta: "Precio visible", tipo: "precio" as const },
-  { clave: "imagen_url", etiqueta: "Imagen" },
+  { clave: "imagen_url", etiqueta: "Imagen", tipo: "imagen" as const },
   { clave: "publicado", etiqueta: "Publicado", tipo: "checkbox" as const },
 ];
 

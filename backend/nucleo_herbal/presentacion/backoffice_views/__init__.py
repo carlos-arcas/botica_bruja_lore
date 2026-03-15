@@ -5,6 +5,7 @@ from .editorial import (
     listado_editorial_backoffice,
 )
 from .exportacion import exportar_backoffice
+from .imagenes import subir_imagen_backoffice
 from .importacion import (
     actualizar_seleccion_fila_importacion_backoffice,
     adjuntar_imagen_fila_importacion_backoffice,
@@ -54,4 +55,5 @@ __all__ = [
     "eliminar_imagen_fila_importacion_backoffice",
     "actualizar_seleccion_fila_importacion_backoffice",
     "descartar_fila_importacion_backoffice",
+    "subir_imagen_backoffice",
 ]

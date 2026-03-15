@@ -15,10 +15,16 @@ except ModuleNotFoundError:  # pragma: no cover
 
 MAX_CARD_SIZE = (640, 640)
 WEBP_QUALITY = 82
+MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+TIPOS_IMAGEN_PERMITIDOS = {"image/webp", "image/png", "image/jpeg", "image/jpg"}
 
 
 class ErrorImagenWebP(ValueError):
     """Error controlado cuando no es posible guardar una imagen como WebP."""
+
+
+class ErrorValidacionImagen(ValueError):
+    """Error controlado cuando la imagen subida no cumple validaciones mínimas."""
 
 
 def _slugify_nombre(nombre: str) -> str:
@@ -43,6 +49,23 @@ def _guardar_como_webp(archivo, prefijo: str) -> str:
     except Exception as error:
         raise ErrorImagenWebP("No fue posible convertir la imagen a WebP.") from error
     return default_storage.url(ruta)
+
+
+def validar_imagen_subida(archivo) -> None:
+    if archivo is None:
+        raise ErrorValidacionImagen("Debes seleccionar una imagen.")
+    if getattr(archivo, "size", 0) <= 0:
+        raise ErrorValidacionImagen("La imagen no contiene datos válidos.")
+    if archivo.size > MAX_IMAGE_SIZE_BYTES:
+        raise ErrorValidacionImagen("La imagen supera el tamaño máximo permitido (5 MB).")
+    content_type = (getattr(archivo, "content_type", "") or "").lower()
+    if content_type and content_type not in TIPOS_IMAGEN_PERMITIDOS:
+        raise ErrorValidacionImagen("Formato de imagen no permitido. Usa WEBP, PNG o JPG.")
+
+
+def guardar_imagen_backoffice(archivo, prefijo: str = "backoffice/imagenes") -> str:
+    validar_imagen_subida(archivo)
+    return _guardar_como_webp(archivo, prefijo)
 
 
 def guardar_imagenes_adjuntas(archivos) -> dict[str, str]:
