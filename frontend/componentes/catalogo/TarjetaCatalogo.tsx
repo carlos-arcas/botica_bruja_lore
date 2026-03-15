@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { ProductoCatalogo } from "@/contenido/catalogo/catalogo";
-import { BotonAnadirCestaRitual } from "@/componentes/catalogo/cesta/BotonAnadirCestaRitual";
+import { BotonAgregarCarrito } from "@/componentes/catalogo/cesta/BotonAgregarCarrito";
 
 import estilos from "./catalogo.module.css";
 
@@ -27,7 +27,7 @@ export function TarjetaCatalogo({ producto }: Props): JSX.Element {
         ))}
       </ul>
       <div className={estilos.accionesTarjeta}>
-        <BotonAnadirCestaRitual slugProducto={producto.slug} />
+        <BotonAgregarCarrito slugProducto={producto.slug} />
         <Link href={`/colecciones/${producto.slug}`} className="boton boton--secundario" aria-label={`Ver ficha de ${producto.nombre}`}>
           Ver ficha
         </Link>

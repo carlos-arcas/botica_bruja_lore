@@ -1,4 +1,4 @@
-import { BotonAnadirCestaRitual } from "@/componentes/catalogo/cesta/BotonAnadirCestaRitual";
+import { BotonAgregarCarrito } from "@/componentes/catalogo/cesta/BotonAgregarCarrito";
 import type { ProductoSeccionPublica } from "@/infraestructura/api/herbal";
 
 type Props = {
@@ -23,7 +23,7 @@ export function BloqueProductosRelacionados({ titulo, productos }: Props): JSX.E
             <div className="botica-natural__contenido">
               <h3>{producto.nombre}</h3>
               <p className="botica-natural__precio">{producto.precio_visible}</p>
-              <BotonAnadirCestaRitual slugProducto={producto.slug} />
+              <BotonAgregarCarrito slugProducto={producto.slug} />
             </div>
           </article>
         ))}

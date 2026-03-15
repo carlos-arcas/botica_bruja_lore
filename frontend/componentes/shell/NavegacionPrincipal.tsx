@@ -9,13 +9,13 @@ import {
   debeMostrarContadorCesta,
   esRutaActiva,
 } from "@/contenido/shell/navegacionGlobal";
-import { useCestaRitual } from "@/componentes/catalogo/cesta/useCestaRitual";
+import { useCarrito } from "@/componentes/catalogo/cesta/useCarrito";
 
 import estilos from "./shellComercial.module.css";
 
 export function NavegacionPrincipal(): JSX.Element {
   const rutaActual = usePathname();
-  const { totalUnidades } = useCestaRitual();
+  const { totalUnidades } = useCarrito();
 
   return (
     <nav aria-label="Navegación principal" className={estilos.navegacion}>

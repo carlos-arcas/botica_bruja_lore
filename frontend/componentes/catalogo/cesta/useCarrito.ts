@@ -18,16 +18,16 @@ import {
   limpiarCestaRitualLocal,
 } from "@/infraestructura/catalogo/almacenCestaRitual";
 
-export type UseCestaRitual = {
+export type UseCarrito = {
   cesta: CestaRitual;
   totalUnidades: number;
-  anadir: (slug: string) => void;
+  agregarAlCarrito: (slug: string) => void;
   eliminar: (slug: string) => void;
   cambiarCantidad: (slug: string, cantidad: number) => void;
   limpiar: () => void;
 };
 
-export function useCestaRitual(): UseCestaRitual {
+export function useCarrito(): UseCarrito {
   const [cesta, setCesta] = useState<CestaRitual>(() => crearCestaVacia());
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export function useCestaRitual(): UseCestaRitual {
     setCesta(siguiente);
   }, []);
 
-  const anadir = useCallback((slug: string): void => {
+  const agregarAlCarrito = useCallback((slug: string): void => {
     persistir(agregarProducto(cesta, slug));
   }, [cesta, persistir]);
 
@@ -69,5 +69,5 @@ export function useCestaRitual(): UseCestaRitual {
 
   const totalUnidades = useMemo(() => contarUnidades(cesta), [cesta]);
 
-  return { cesta, totalUnidades, anadir, eliminar, cambiarCantidad, limpiar };
+  return { cesta, totalUnidades, agregarAlCarrito, eliminar, cambiarCantidad, limpiar };
 }
