@@ -12,6 +12,13 @@ type Props = {
 export function TarjetaCatalogo({ producto }: Props): JSX.Element {
   return (
     <li className={estilos.tarjeta}>
+      <Link
+        href={`/colecciones/${producto.slug}`}
+        className={estilos.mediaEnlace}
+        aria-label={`Abrir ficha de ${producto.nombre}`}
+      >
+        <div className={estilos.mediaFallback} aria-hidden="true" />
+      </Link>
       <p className={estilos.tarjetaMeta}>{producto.categoria.replace("-", " · ")}</p>
       <h2>{producto.nombre}</h2>
       <p className={estilos.subtitulo}>{producto.subtitulo}</p>

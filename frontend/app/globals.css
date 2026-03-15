@@ -294,6 +294,37 @@ button:focus-visible {
   margin-top: 0.5rem;
 }
 
+
+.tarjeta-media-enlace {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2d8c8;
+  text-decoration: none;
+}
+
+.tarjeta-media-enlace:hover,
+.tarjeta-media-enlace:focus-visible {
+  box-shadow: 0 0 0 2px rgba(140, 90, 60, 0.16);
+}
+
+.tarjeta-media-fallback {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #efe3cf, #e7dbc6);
+  position: relative;
+}
+
+.tarjeta-media-fallback::after {
+  content: "Abrir ficha";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #6f5d48;
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .tarjeta-planta-herbal,
 .tarjeta-ritual {
   display: grid;
@@ -531,10 +562,22 @@ button:focus-visible {
   min-height: 100%;
 }
 
-.botica-natural__media {
+.botica-natural__media,
+.botica-natural__media-enlace {
   aspect-ratio: 4 / 3;
   border-bottom: 1px solid rgba(130, 100, 76, 0.2);
   background: radial-gradient(circle at 15% 10%, rgba(247, 235, 216, 0.8), rgba(235, 223, 204, 0.85));
+}
+
+.botica-natural__media-enlace {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.botica-natural__media-enlace:hover,
+.botica-natural__media-enlace:focus-visible {
+  filter: brightness(0.97);
 }
 
 .botica-natural__imagen {

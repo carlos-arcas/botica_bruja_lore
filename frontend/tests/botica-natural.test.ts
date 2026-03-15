@@ -40,9 +40,9 @@ test("las cards de Botica Natural reservan media fija y fallback sin romper layo
   const tarjeta = readFileSync(join(process.cwd(), "componentes/botica-natural/TarjetaProductoBoticaNatural.tsx"), "utf8");
   const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
 
-  assert.equal(tarjeta.includes("botica-natural__media"), true);
+  assert.equal(tarjeta.includes("botica-natural__media-enlace"), true);
   assert.equal(tarjeta.includes("botica-natural__imagen--fallback"), true);
-  assert.equal(estilos.includes(".botica-natural__media"), true);
+  assert.equal(estilos.includes(".botica-natural__media-enlace"), true);
   assert.equal(estilos.includes("aspect-ratio: 4 / 3"), true);
   assert.equal(estilos.includes(".botica-natural__card"), true);
   assert.equal(estilos.includes("grid-template-rows: auto 1fr"), true);
