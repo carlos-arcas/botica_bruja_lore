@@ -14,10 +14,13 @@ test("productos inicia con selector comercial y opciones humanas", () => {
   assert.match(modulo, /tipoPayload="productos"/);
 });
 
-test("alta manual usa layout vertical con labels arriba", () => {
+test("formulario renderiza grupos visuales y evita pila plana de campos", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.match(componente, /Información básica/);
+  assert.match(componente, /Presentación en la web/);
+  assert.match(componente, /Estado y publicación/);
+  assert.match(componente, /admin-subseccion-formulario/);
   assert.match(componente, /className="admin-formulario-amplio admin-formulario-vertical"/);
-  assert.match(componente, /admin-campos-grid admin-campos-grid--vertical/);
 });
 
 test("precio visible es numérico y muestra símbolo euro en UI", () => {
@@ -39,7 +42,7 @@ test("Velas e Incienso obliga tipo por combo/select", () => {
 
 test("registros siguen debajo del formulario y herramientas en lateral", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
-  const indiceAlta = componente.indexOf("Alta manual");
+  const indiceAlta = componente.indexOf("Formulario principal");
   const indiceListado = componente.indexOf("Registros existentes");
   const indiceHerramientas = componente.indexOf("Herramientas");
 
@@ -55,4 +58,29 @@ test("flujo normal no expone campos id y slug editables", () => {
   const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
   assert.doesNotMatch(modulo, /clave:\s*"slug"/);
   assert.doesNotMatch(modulo, /clave:\s*"id"/);
+});
+
+
+test("botones mantienen jerarquía primaria, secundaria y peligro", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.match(componente, /admin-boton admin-boton--primario">Guardar/);
+  assert.match(componente, /admin-boton admin-boton--secundario/);
+  assert.match(componente, />Editar<\/button>/);
+  assert.match(componente, /admin-boton admin-boton--peligro/);
+});
+
+test("registros existentes se mantiene debajo del formulario principal", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  const indiceFormulario = componente.indexOf("Formulario principal");
+  const indiceListado = componente.indexOf("Registros existentes");
+  assert.ok(indiceFormulario >= 0);
+  assert.ok(indiceListado > indiceFormulario);
+});
+
+test("dialogo de edición conserva apertura y render de bloques", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.match(componente, /setRegistroEdicion\(\{ \.\.\.item \}\)/);
+  assert.match(componente, /role="dialog"/);
+  assert.match(componente, /Editar registro/);
+  assert.match(componente, /admin-modal-cabecera/);
 });
