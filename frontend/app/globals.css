@@ -1141,3 +1141,55 @@ button:focus-visible {
   color: #9c2f18;
   font-weight: 600;
 }
+
+.botica-natural__breadcrumb {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.botica-natural__ficha {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--borde);
+  background: var(--fondo-bloque);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.botica-natural__ficha-media {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.botica-natural__imagen-ficha {
+  width: 100%;
+  max-height: 360px;
+  object-fit: cover;
+  background: #f7f2f4;
+}
+
+.botica-natural__ficha-contenido {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.botica-natural__eyebrow {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.botica-natural__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (min-width: 900px) {
+  .botica-natural__ficha {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}

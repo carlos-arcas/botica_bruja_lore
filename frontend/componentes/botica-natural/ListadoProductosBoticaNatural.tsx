@@ -36,7 +36,7 @@ export function ListadoProductosBoticaNatural({ productos }: Props): JSX.Element
             <h2>{producto.nombre}</h2>
             <p>{producto.descripcion_corta}</p>
             <p className="botica-natural__precio">{producto.precio_visible}</p>
-            <Link href={`/colecciones/${producto.slug}`} className="boton boton--secundario">
+            <Link href={`/botica-natural/${producto.slug}`} className="boton boton--secundario">
               Ver detalle
             </Link>
           </div>

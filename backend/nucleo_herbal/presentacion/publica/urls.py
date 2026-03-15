@@ -28,6 +28,11 @@ urlpatterns = [
         name="publico-listado-productos-por-seccion",
     ),
     path(
+        "productos/<slug:slug_producto>/",
+        views.detalle_producto_publico,
+        name="publico-detalle-producto",
+    ),
+    path(
         "editorial/",
         views.listado_editorial_publico,
         name="publico-listado-editorial",

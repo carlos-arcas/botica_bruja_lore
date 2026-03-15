@@ -62,6 +62,17 @@ class ObtenerListadoPublicoProductosPorSeccion:
 
 
 @dataclass(slots=True)
+class ObtenerDetallePublicoProductoPorSlug:
+    repositorio_productos: RepositorioProductos
+
+    def ejecutar(self, slug_producto: str) -> ProductoResumenDTO:
+        producto = self.repositorio_productos.obtener_publico_por_slug(slug_producto)
+        if producto is None:
+            raise ErrorAplicacionLookup(f"Producto no encontrado: {slug_producto}")
+        return _a_producto_resumen(producto)
+
+
+@dataclass(slots=True)
 class ObtenerRelacionesHerbalesPorIntencion:
     repositorio_plantas: RepositorioPlantas
 
