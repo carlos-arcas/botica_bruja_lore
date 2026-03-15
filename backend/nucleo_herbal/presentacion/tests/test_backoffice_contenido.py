@@ -76,6 +76,15 @@ class BackofficeContenidoTests(TestCase):
         self.assertTrue(item["id"])
         self.assertEqual(item["slug"], "producto-auto")
 
+    def test_sku_automatico_evita_colision_en_altas_repetidas(self):
+        payload = {"nombre": "Producto Repetido", "tipo_producto": "te", "categoria_comercial": "herbal", "seccion_publica": "botica-natural", "descripcion_corta": "x", "precio_visible": "9.99", "publicado": False}
+        primero = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+        segundo = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+        self.assertEqual(primero.status_code, 200)
+        self.assertEqual(segundo.status_code, 200)
+        self.assertNotEqual(primero.json()["item"]["sku"], segundo.json()["item"]["sku"])
+
+
     def test_exportacion_modulos_csv_y_xlsx(self):
         ProductoModelo.objects.create(id="p-exp", sku="SKU-EXP", slug="prod-exp", nombre="Producto Export", tipo_producto="te", categoria_comercial="cat", seccion_publica="botica-natural", descripcion_corta="", precio_visible="1", imagen_url="", orden_publicacion=1, publicado=True)
         r_csv = self.client.get("/api/v1/backoffice/productos/exportar/?tipo=inventario&formato=csv", **self._auth())

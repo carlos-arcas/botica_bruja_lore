@@ -23,6 +23,19 @@ SECCIONES_PRODUCTOS = {
 }
 
 
+def _generar_sku_unico(sku_base: str, existente_id: str | None = None) -> str:
+    sku_limpio = sku_base.strip().upper()[:40] or "SKU-PRODUCTO"
+    usados = set(ProductoModelo.objects.exclude(id=existente_id).filter(sku__startswith=sku_limpio).values_list("sku", flat=True))
+    if sku_limpio not in usados:
+        return sku_limpio
+    for indice in range(2, 1000):
+        sufijo = f"-{indice}"
+        candidato = f"{sku_limpio[: 40 - len(sufijo)]}{sufijo}"
+        if candidato not in usados:
+            return candidato
+    raise ValueError("No se pudo generar SKU único para el producto.")
+
+
 def producto_dict(obj: ProductoModelo) -> dict:
     return {
         "id": obj.id,
@@ -79,7 +92,8 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
         seccion = data.get("seccion_publica", "").strip()
         if seccion not in SECCIONES_PRODUCTOS:
             raise ValueError("Sección de producto inválida.")
-        sku = (data.get("sku", "").strip() or f"SKU-{nombre[:16].upper().replace(' ', '-')}")[:40]
+        sku_base = data.get("sku", "").strip() or f"SKU-{nombre[:16].upper().replace(' ', '-')}"
+        sku = _generar_sku_unico(sku_base, existente.id if existente else None)
         slug_base = data.get("slug", "").strip() or nombre
         slug = generar_slug_unico(ProductoModelo, slug_base, existente.id if existente else None)
         defaults = {

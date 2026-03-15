@@ -15,7 +15,14 @@ import {
   obtenerLoteImportacion,
   revalidarLoteImportacion,
   subirImagenBackoffice,
+  resolverBaseBackoffice,
 } from "../infraestructura/api/backoffice";
+
+
+test("resuelve base de API para servidor y navegador", () => {
+  assert.equal(resolverBaseBackoffice(false), "http://127.0.0.1:8000");
+  assert.equal(resolverBaseBackoffice(true), "/api/backoffice/proxy");
+});
 
 test("submit real de alta usa endpoint guardar y devuelve item", async () => {
   let url = "";

@@ -47,6 +47,20 @@ type Props = {
 
 type DetalleLote = { lote: Record<string, unknown>; filas: FilaImportacion[] };
 
+function descargarBlobNavegador(blob: Blob, nombre: string): void {
+  const url = window.URL.createObjectURL(blob);
+  const enlace = document.createElement("a");
+  enlace.href = url;
+  enlace.download = nombre;
+  enlace.click();
+  window.URL.revokeObjectURL(url);
+}
+
+function construirNombreExportacion(modulo: ModuloAdmin, tipo: "plantilla" | "inventario", formato: "csv" | "xlsx", seccion: string): string {
+  const sufijoSeccion = seccion ? `-${seccion}` : "";
+  return `${modulo}-${tipo}${sufijoSeccion}.${formato}`;
+}
+
 
 type EstadoImagenFormulario = { estado: "idle" | "subiendo" | "ok" | "error"; mensaje: string };
 
@@ -316,7 +330,8 @@ export function ModuloCrudContextualAdmin({
   };
 
   const descargar = async (tipo: "plantilla" | "inventario", formato: "csv" | "xlsx") => {
-    await descargarExportacionAdmin(modulo, tipo, formato, token, seccionSeleccionada);
+    const blob = await descargarExportacionAdmin(modulo, tipo, formato, token, seccionSeleccionada);
+    descargarBlobNavegador(blob, construirNombreExportacion(modulo, tipo, formato, seccionSeleccionada));
     setOk(`Descarga lista: ${tipo.toUpperCase()} (${formato.toUpperCase()}).`);
   };
 
