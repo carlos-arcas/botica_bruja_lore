@@ -21,7 +21,7 @@ test("la sección Botica Natural contempla vacío real separado de estados de er
   const pagina = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
 
   assert.equal(componente.includes("if (productos.length === 0)"), true);
-  assert.equal(componente.includes('/botica-natural/${producto.slug}'), true);
+  assert.equal(componente.includes("TarjetaProductoBoticaNatural"), true);
   assert.equal(componente.includes("sin productos publicados"), true);
   assert.equal(pagina.includes("No pudimos cargar Botica Natural"), true);
   assert.equal(pagina.includes("resolverMensajeError"), true);
@@ -36,20 +36,40 @@ test("el cliente API registra diagnóstico de endpoint y tipo de error", () => {
   assert.equal(api.includes("respuesta_invalida"), true);
 });
 
+test("las cards de Botica Natural reservan media fija y fallback sin romper layout", () => {
+  const tarjeta = readFileSync(join(process.cwd(), "componentes/botica-natural/TarjetaProductoBoticaNatural.tsx"), "utf8");
+  const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
 
-test("la ficha pública de Botica Natural usa endpoint real de detalle y CTA de carrito", () => {
-  const paginaDetalle = readFileSync(join(process.cwd(), "app/botica-natural/[slug]/page.tsx"), "utf8");
-  const noEncontrado = readFileSync(join(process.cwd(), "app/botica-natural/[slug]/not-found.tsx"), "utf8");
-  const api = readFileSync(join(process.cwd(), "infraestructura/api/herbal.ts"), "utf8");
-  const ficha = readFileSync(
-    join(process.cwd(), "componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx"),
-    "utf8",
-  );
+  assert.equal(tarjeta.includes("botica-natural__media"), true);
+  assert.equal(tarjeta.includes("botica-natural__imagen--fallback"), true);
+  assert.equal(estilos.includes(".botica-natural__media"), true);
+  assert.equal(estilos.includes("aspect-ratio: 4 / 3"), true);
+  assert.equal(estilos.includes(".botica-natural__card"), true);
+  assert.equal(estilos.includes("grid-template-rows: auto 1fr"), true);
+});
 
-  assert.equal(paginaDetalle.includes("obtenerDetalleProductoPublico"), true);
-  assert.equal(paginaDetalle.includes("notFound()"), true);
-  assert.equal(api.includes('/api/v1/herbal/productos/${slugProducto}/'), true);
-  assert.equal(noEncontrado.includes("no existe o no está publicado"), true);
-  assert.equal(ficha.includes("BotonAgregarCarrito"), true);
-  assert.equal(ficha.includes("botica-natural__imagen--fallback"), true);
+test("cada card incorpora control de unidades y CTA conectado al flujo de carrito", () => {
+  const tarjeta = readFileSync(join(process.cwd(), "componentes/botica-natural/TarjetaProductoBoticaNatural.tsx"), "utf8");
+  const control = readFileSync(join(process.cwd(), "componentes/botica-natural/ControlUnidadesBoticaNatural.tsx"), "utf8");
+  const hook = readFileSync(join(process.cwd(), "componentes/catalogo/cesta/useCarrito.ts"), "utf8");
+
+  assert.equal(tarjeta.includes("ControlUnidadesBoticaNatural"), true);
+  assert.equal(control.includes("Disminuir unidades"), true);
+  assert.equal(control.includes("Aumentar unidades"), true);
+  assert.equal(control.includes("min={1}"), true);
+  assert.equal(tarjeta.includes("Agregar al carrito"), true);
+  assert.equal(tarjeta.includes("agregarAlCarrito(producto.slug, cantidad)"), true);
+  assert.equal(hook.includes("agregarProducto(cesta, slug, cantidad)"), true);
+});
+
+test("la card mantiene jerarquía estable de contenido y acciones", () => {
+  const tarjeta = readFileSync(join(process.cwd(), "componentes/botica-natural/TarjetaProductoBoticaNatural.tsx"), "utf8");
+  const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+
+  assert.equal(tarjeta.includes("botica-natural__descripcion"), true);
+  assert.equal(tarjeta.includes("botica-natural__precio"), true);
+  assert.equal(tarjeta.includes("botica-natural__acciones"), true);
+  assert.equal(estilos.includes(".botica-natural__contenido"), true);
+  assert.equal(estilos.includes("grid-template-rows: auto 1fr auto auto"), true);
+  assert.equal(estilos.includes("@media (max-width: 640px)"), true);
 });

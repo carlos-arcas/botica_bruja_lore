@@ -61,3 +61,15 @@ test("cabecera comercial apunta al backoffice interno /admin", () => {
   assert.match(cabecera, /href="\/admin"/);
   assert.equal(ETIQUETA_ENLACE_ADMIN_CABECERA.length > 0, true);
 });
+
+
+test("navbar comercial define estado activo visible y patrón editorial", () => {
+  const componente = readFileSync("componentes/shell/NavegacionPrincipal.tsx", "utf-8");
+  const estilos = readFileSync("componentes/shell/shellComercial.module.css", "utf-8");
+
+  assert.match(componente, /aria-current=\{activa \? "page" : undefined\}/);
+  assert.match(estilos, /\.enlaceActiva/);
+  assert.match(estilos, /border-color: #b9894b/);
+  assert.match(estilos, /\.navegacion ul/);
+  assert.match(estilos, /linear-gradient\(180deg, #fcf7ed 0%, #f4e9d6 100%\)/);
+});

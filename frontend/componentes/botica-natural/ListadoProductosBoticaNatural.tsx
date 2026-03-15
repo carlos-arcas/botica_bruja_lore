@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { TarjetaProductoBoticaNatural } from "@/componentes/botica-natural/TarjetaProductoBoticaNatural";
 import type { ProductoSeccionPublica } from "@/infraestructura/api/herbal";
 
 type Props = {
@@ -21,26 +20,7 @@ export function ListadoProductosBoticaNatural({ productos }: Props): JSX.Element
   return (
     <section aria-label="Productos de Botica Natural" className="botica-natural__rejilla">
       {productos.map((producto) => (
-        <article key={producto.sku} className="botica-natural__card">
-          {producto.imagen_url ? (
-            <img
-              src={producto.imagen_url}
-              alt={producto.nombre}
-              loading="lazy"
-              className="botica-natural__imagen"
-            />
-          ) : (
-            <div className="botica-natural__imagen botica-natural__imagen--fallback" aria-hidden="true" />
-          )}
-          <div className="botica-natural__contenido">
-            <h2>{producto.nombre}</h2>
-            <p>{producto.descripcion_corta}</p>
-            <p className="botica-natural__precio">{producto.precio_visible}</p>
-            <Link href={`/botica-natural/${producto.slug}`} className="boton boton--secundario">
-              Ver detalle
-            </Link>
-          </div>
-        </article>
+        <TarjetaProductoBoticaNatural key={producto.sku} producto={producto} />
       ))}
     </section>
   );
