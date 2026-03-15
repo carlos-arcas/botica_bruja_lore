@@ -37,7 +37,7 @@ test("el cliente API registra diagnóstico de endpoint y tipo de error", () => {
 });
 
 
-test("la ficha pública de Botica Natural usa endpoint real de detalle y CTA de cesta", () => {
+test("la ficha pública de Botica Natural usa endpoint real de detalle y CTA de carrito", () => {
   const paginaDetalle = readFileSync(join(process.cwd(), "app/botica-natural/[slug]/page.tsx"), "utf8");
   const noEncontrado = readFileSync(join(process.cwd(), "app/botica-natural/[slug]/not-found.tsx"), "utf8");
   const api = readFileSync(join(process.cwd(), "infraestructura/api/herbal.ts"), "utf8");
@@ -50,6 +50,6 @@ test("la ficha pública de Botica Natural usa endpoint real de detalle y CTA de 
   assert.equal(paginaDetalle.includes("notFound()"), true);
   assert.equal(api.includes('/api/v1/herbal/productos/${slugProducto}/'), true);
   assert.equal(noEncontrado.includes("no existe o no está publicado"), true);
-  assert.equal(ficha.includes("BotonAnadirCestaRitual"), true);
+  assert.equal(ficha.includes("BotonAgregarCarrito"), true);
   assert.equal(ficha.includes("botica-natural__imagen--fallback"), true);
 });

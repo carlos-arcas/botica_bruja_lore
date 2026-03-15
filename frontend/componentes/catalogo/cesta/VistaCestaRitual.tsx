@@ -11,10 +11,10 @@ import {
 import { PRODUCTOS_CATALOGO } from "@/contenido/catalogo/catalogo";
 
 import estilos from "./cestaRitual.module.css";
-import { useCestaRitual } from "./useCestaRitual";
+import { useCarrito } from "./useCarrito";
 
 export function VistaCestaRitual(): JSX.Element {
-  const { cesta, totalUnidades, cambiarCantidad, eliminar, limpiar } = useCestaRitual();
+  const { cesta, totalUnidades, cambiarCantidad, eliminar, limpiar } = useCarrito();
 
   const enlaceEncargo = useMemo(() => {
     const seleccion = serializarItemsEncargo(convertirCestaAItemsEncargo(cesta));

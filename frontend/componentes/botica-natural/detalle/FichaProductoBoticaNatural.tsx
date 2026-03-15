@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { BotonAnadirCestaRitual } from "@/componentes/catalogo/cesta/BotonAnadirCestaRitual";
+import { BotonAgregarCarrito } from "@/componentes/catalogo/cesta/BotonAgregarCarrito";
 import type { ProductoSeccionPublica } from "@/infraestructura/api/herbal";
 
 type Props = {
@@ -45,7 +45,7 @@ export function FichaProductoBoticaNatural({ producto }: Props): JSX.Element {
           <p>{producto.descripcion_corta || "Producto publicado en catálogo con información comercial mínima."}</p>
           <p className="botica-natural__precio">{producto.precio_visible || "Precio no disponible"}</p>
           <div className="botica-natural__acciones">
-            <BotonAnadirCestaRitual slugProducto={producto.slug} />
+            <BotonAgregarCarrito slugProducto={producto.slug} />
             <Link href={urlSeccion} className="boton boton--secundario">
               Volver a {nombreSeccion}
             </Link>
