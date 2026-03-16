@@ -1,5 +1,7 @@
 """Repositorios concretos Django para el núcleo herbal."""
 
+import logging
+
 from django.db import transaction
 
 from ...aplicacion.puertos.proveedores_historial_pedidos_demo import ProveedorHistorialPedidosDemo
@@ -11,6 +13,7 @@ from ...aplicacion.puertos.repositorios_rituales import RepositorioRituales
 from datetime import date
 
 from ...dominio.entidades import Planta, Producto, TIPO_PRODUCTO_HERBAL
+from ...dominio.excepciones import ErrorDominio
 from ...dominio.calendario_ritual import ReglaCalendario
 from ...dominio.cuentas_demo import CuentaDemo
 from ...dominio.pedidos_demo import PedidoDemo
@@ -26,6 +29,9 @@ from .mapeadores import (
     a_ritual,
     a_regla_calendario,
 )
+
+
+logger = logging.getLogger(__name__)
 from .models import (
     CuentaDemoModelo,
     LineaPedidoModelo,
@@ -81,21 +87,45 @@ class RepositorioProductosORM(RepositorioProductos):
             publicado=True,
             seccion_publica__iexact=seccion_normalizada,
         ).order_by("slug")[:limite]
-        if queryset:
-            return tuple(a_producto(producto) for producto in queryset)
+        productos = self._mapear_productos_validos(queryset)
+        if productos:
+            return productos
 
         queryset = ProductoModelo.objects.filter(
             publicado=True,
             tipo_producto=TIPO_PRODUCTO_HERBAL,
         ).order_by("slug")[:limite]
-        return tuple(a_producto(producto) for producto in queryset)
+        return self._mapear_productos_validos(queryset)
 
     def obtener_publico_por_slug(self, slug_producto: str) -> Producto | None:
         try:
             producto = ProductoModelo.objects.get(slug=slug_producto, publicado=True)
         except ProductoModelo.DoesNotExist:
             return None
-        return a_producto(producto)
+        try:
+            return a_producto(producto)
+        except (ErrorDominio, AttributeError, TypeError):
+            logger.warning(
+                "Producto público con datos inválidos omitido en detalle",
+                extra={"producto_id": producto.id, "producto_slug": producto.slug},
+            )
+            return None
+
+    def _mapear_productos_validos(self, productos_orm) -> tuple[Producto, ...]:
+        productos_validos: list[Producto] = []
+        for producto in productos_orm:
+            try:
+                productos_validos.append(a_producto(producto))
+            except (ErrorDominio, AttributeError, TypeError):
+                logger.warning(
+                    "Producto público con datos inválidos omitido en listado",
+                    extra={
+                        "producto_id": producto.id,
+                        "producto_slug": producto.slug,
+                        "seccion_publica": producto.seccion_publica,
+                    },
+                )
+        return tuple(productos_validos)
 
 
 class RepositorioRitualesORM(RepositorioRituales):

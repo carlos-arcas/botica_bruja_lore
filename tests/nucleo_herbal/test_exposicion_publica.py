@@ -207,6 +207,40 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         slugs = [item["slug"] for item in data["productos"]]
         self.assertEqual(slugs, sorted(slugs))
 
+    def test_listado_productos_por_seccion_omite_registros_invalidos_legacy(self) -> None:
+        ProductoModelo.objects.create(
+            id="pro-bn-valido",
+            sku="BN-VAL-001",
+            slug="botica-natural-valido",
+            nombre="Producto Válido",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 €",
+            imagen_url="",
+            publicado=True,
+        )
+        ProductoModelo.objects.create(
+            id="pro-bn-legacy",
+            sku="BN-LEG-001",
+            slug="botica-natural-legacy",
+            nombre="Producto Legacy",
+            tipo_producto="legacy-tipo-no-valido",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual([item["slug"] for item in data["productos"]], ["botica-natural-valido"])
+
     def test_relaciones_por_intencion_expone_plantas_asociadas(self) -> None:
         response = self.client.get("/api/v1/herbal/intenciones/calma/plantas/")
 

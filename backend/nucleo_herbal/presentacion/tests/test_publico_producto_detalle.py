@@ -43,3 +43,22 @@ class PublicoProductoDetalleApiTests(TestCase):
         respuesta = self.client.get("/api/v1/herbal/productos/detalle-privado/")
 
         self.assertEqual(respuesta.status_code, 404)
+
+    def test_detalle_producto_con_tipo_legacy_invalido_devuelve_404_seguro(self):
+        ProductoModelo.objects.create(
+            id="id-detalle-legacy",
+            sku="SKU-detalle-legacy",
+            slug="detalle-legacy",
+            nombre="Producto detalle legacy",
+            tipo_producto="legacy-tipo-no-valido",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            descripcion_corta="Descripción pública",
+            precio_visible="",
+            imagen_url="",
+            publicado=True,
+        )
+
+        respuesta = self.client.get("/api/v1/herbal/productos/detalle-legacy/")
+
+        self.assertEqual(respuesta.status_code, 404)
