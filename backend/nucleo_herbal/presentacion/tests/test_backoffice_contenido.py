@@ -138,6 +138,50 @@ class BackofficeContenidoTests(TestCase):
         self.assertNotEqual(primero.json()["item"]["sku"], segundo.json()["item"]["sku"])
 
 
+
+
+    def test_alta_producto_persiste_y_reaparece_en_listados_admin_y_publico(self):
+        payload = {
+            "sku": "SKU-PERSIST",
+            "nombre": "Producto Persistente",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "botica",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "Alta estable",
+            "precio_visible": "11.50",
+            "imagen_url": "",
+            "publicado": True,
+        }
+        alta = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+        self.assertEqual(alta.status_code, 200)
+        producto_id = alta.json()["item"]["id"]
+
+        self.assertTrue(ProductoModelo.objects.filter(id=producto_id).exists())
+
+        listado_admin = self.client.get("/api/v1/backoffice/productos/?seccion=botica-natural", **self._auth())
+        self.assertEqual(listado_admin.status_code, 200)
+        ids_admin = [item["id"] for item in listado_admin.json()["items"]]
+        self.assertIn(producto_id, ids_admin)
+
+        listado_publico = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/")
+        self.assertEqual(listado_publico.status_code, 200)
+        slugs_publicos = [item["slug"] for item in listado_publico.json()["productos"]]
+        self.assertIn("producto-persistente", slugs_publicos)
+
+    def test_guardado_invalido_no_crea_registro_fantasma(self):
+        total_antes = ProductoModelo.objects.count()
+        payload = {
+            "sku": "SKU-FANTASMA",
+            "nombre": "",
+            "tipo_producto": "te",
+            "categoria_comercial": "herbal",
+            "seccion_publica": "botica-natural",
+            "publicado": True,
+        }
+        respuesta = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(ProductoModelo.objects.count(), total_antes)
+
     def test_exportacion_modulos_csv_y_xlsx(self):
         ProductoModelo.objects.create(id="p-exp", sku="SKU-EXP", slug="prod-exp", nombre="Producto Export", tipo_producto="te", categoria_comercial="cat", seccion_publica="botica-natural", descripcion_corta="", precio_visible="1", imagen_url="", orden_publicacion=1, publicado=True)
         r_csv = self.client.get("/api/v1/backoffice/productos/exportar/?tipo=inventario&formato=csv", **self._auth())

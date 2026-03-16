@@ -73,3 +73,9 @@ test("la card mantiene jerarquía estable de contenido y acciones", () => {
   assert.equal(estilos.includes("grid-template-rows: auto 1fr auto auto"), true);
   assert.equal(estilos.includes("@media (max-width: 640px)"), true);
 });
+
+
+test("listado público de Botica Natural desactiva caché stale para reflejar altas reales", () => {
+  const api = readFileSync(join(process.cwd(), "infraestructura/api/herbal.ts"), "utf8");
+  assert.equal(api.includes("cache: \"no-store\""), true);
+});

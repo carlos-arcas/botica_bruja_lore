@@ -47,6 +47,8 @@ test("edición, publish/unpublish y layout inferior quedan implementados", () =>
   assert.match(componente, /role="dialog"/);
   assert.match(componente, /cambiarPublicacionAdmin/);
   assert.match(componente, /Registros existentes/);
+  assert.match(componente, /useRouter/);
+  assert.match(componente, /router\.refresh\(\)/);
 });
 
 test("feedback de éxito y error se informa en UI para alta, edición e importación", () => {
@@ -73,6 +75,14 @@ test("publish/unpublish llama endpoint de publicación", async () => {
   assert.equal(item.publicado, true);
 });
 
+
+
+test("alta y publicación recargan listado real en backend sin inserción optimista", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.match(componente, /obtenerListadoAdmin/);
+  assert.match(componente, /await recargarListadoReal\(\)/);
+  assert.doesNotMatch(componente, /setItems\(existe \? items\.map/);
+});
 test("submit de alta propaga errores backend cuando guardar falla", async () => {
   globalThis.fetch = (async () => ({ ok: false, status: 500, json: async () => ({}) }) as Response) as unknown as typeof fetch;
   await assert.rejects(() => guardarRegistroAdmin("productos", { nombre: "fallido" }, "token"), /No se pudo guardar/);

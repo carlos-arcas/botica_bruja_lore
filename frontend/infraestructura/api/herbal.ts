@@ -260,7 +260,7 @@ export async function obtenerProductosPublicosPorSeccion(
   try {
     const respuesta = await fetch(endpoint, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 120 },
+      cache: "no-store",
     });
 
     if (!respuesta.ok) {
