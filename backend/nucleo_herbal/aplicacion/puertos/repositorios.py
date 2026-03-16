@@ -27,8 +27,8 @@ class RepositorioProductos(ABC):
         """Devuelve resolución comercial mínima asociada a una planta."""
 
     @abstractmethod
-    def listar_publicos_por_seccion(self, slug_seccion: str, limite: int) -> tuple[Producto, ...]:
-        """Devuelve productos públicos de una sección comercial en orden estable."""
+    def listar_publicos_por_seccion(self, slug_seccion: str, filtros: dict[str, str]) -> tuple[Producto, ...]:
+        """Devuelve productos públicos de una sección comercial aplicando filtros."""
 
     @abstractmethod
     def obtener_publico_por_slug(self, slug_producto: str) -> Producto | None:

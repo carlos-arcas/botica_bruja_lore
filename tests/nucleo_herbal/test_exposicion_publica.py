@@ -154,7 +154,7 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         self.assertEqual(len(data["productos"]), 1)
         self.assertEqual(data["productos"][0]["sku"], "HERB-001")
 
-    def test_listado_productos_por_seccion_botica_natural_limita_a_cinco_publicos(self) -> None:
+    def test_listado_productos_por_seccion_botica_natural_devuelve_todos_publicos(self) -> None:
         for idx in range(6):
             ProductoModelo.objects.create(
                 id=f"pro-bn-{idx}",
@@ -201,14 +201,14 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["seccion_slug"], "botica-natural")
-        self.assertEqual(len(data["productos"]), 5)
+        self.assertEqual(len(data["productos"]), 6)
         self.assertTrue(all(item["seccion_publica"] == "botica-natural" for item in data["productos"]))
         self.assertTrue(all(item["slug"].startswith("botica-natural-demo-") for item in data["productos"]))
         slugs = [item["slug"] for item in data["productos"]]
         self.assertEqual(slugs, sorted(slugs))
 
 
-    def test_listado_productos_por_seccion_rellena_cupo_con_validos_tras_omitir_invalidos(self) -> None:
+    def test_listado_productos_por_seccion_filtra_invalidos_legacy(self) -> None:
         for slug in (
             "botica-natural-a",
             "botica-natural-b",
@@ -282,6 +282,48 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual([item["slug"] for item in data["productos"]], ["botica-natural-valido"])
+
+    def test_listado_productos_por_seccion_filtra_por_beneficio_formato_modo_y_precio(self) -> None:
+        ProductoModelo.objects.create(
+            id="pro-bn-fil-1",
+            sku="BN-FIL-1",
+            slug="botica-natural-fil-1",
+            nombre="Producto filtro 1",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00",
+            beneficio_principal="calma",
+            formato_comercial="granel",
+            modo_uso="infusion",
+            categoria_visible="hierbas-a-granel",
+            publicado=True,
+        )
+        ProductoModelo.objects.create(
+            id="pro-bn-fil-2",
+            sku="BN-FIL-2",
+            slug="botica-natural-fil-2",
+            nombre="Producto filtro 2",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="30,00",
+            beneficio_principal="energia",
+            formato_comercial="capsulas",
+            modo_uso="ingesta-directa",
+            categoria_visible="capsulas",
+            publicado=True,
+        )
+
+        response = self.client.get(
+            "/api/v1/herbal/secciones/botica-natural/productos/?beneficio=calma&formato=granel&modo_uso=infusion&precio_max=15"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual([item["slug"] for item in data["productos"]], ["botica-natural-fil-1"])
 
     def test_relaciones_por_intencion_expone_plantas_asociadas(self) -> None:
         response = self.client.get("/api/v1/herbal/intenciones/calma/plantas/")

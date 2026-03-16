@@ -81,13 +81,14 @@ class RepositorioProductosORM(RepositorioProductos):
         return tuple(a_producto(producto) for producto in queryset)
 
 
-    def listar_publicos_por_seccion(self, slug_seccion: str, limite: int) -> tuple[Producto, ...]:
+    def listar_publicos_por_seccion(self, slug_seccion: str, filtros: dict[str, str]) -> tuple[Producto, ...]:
         seccion_normalizada = slug_seccion.strip().lower()
         queryset = ProductoModelo.objects.filter(
             publicado=True,
             seccion_publica__iexact=seccion_normalizada,
         ).order_by("slug")
-        productos = self._mapear_productos_validos(queryset, limite=limite)
+        queryset = self._aplicar_filtros_publicos(queryset, filtros)
+        productos = self._filtrar_por_precio(self._mapear_productos_validos(queryset), filtros)
         if productos:
             return productos
 
@@ -95,7 +96,45 @@ class RepositorioProductosORM(RepositorioProductos):
             publicado=True,
             tipo_producto=TIPO_PRODUCTO_HERBAL,
         ).order_by("slug")
-        return self._mapear_productos_validos(queryset, limite=limite)
+        queryset = self._aplicar_filtros_publicos(queryset, filtros)
+        return self._filtrar_por_precio(self._mapear_productos_validos(queryset), filtros)
+
+
+
+    def _filtrar_por_precio(self, productos: tuple[Producto, ...], filtros: dict[str, str]) -> tuple[Producto, ...]:
+        precio_min_raw = filtros.get("precio_min", "").strip().replace(",", ".")
+        precio_max_raw = filtros.get("precio_max", "").strip().replace(",", ".")
+        if not precio_min_raw and not precio_max_raw:
+            return productos
+        try:
+            precio_min = float(precio_min_raw) if precio_min_raw else None
+            precio_max = float(precio_max_raw) if precio_max_raw else None
+        except ValueError:
+            return productos
+        filtrados = []
+        for item in productos:
+            texto = item.precio_visible.strip().replace("€", "").replace(" ", "").replace(",", ".")
+            try:
+                precio = float(texto)
+            except ValueError:
+                continue
+            if precio_min is not None and precio < precio_min:
+                continue
+            if precio_max is not None and precio > precio_max:
+                continue
+            filtrados.append(item)
+        return tuple(filtrados)
+    def _aplicar_filtros_publicos(self, queryset, filtros: dict[str, str]):
+        beneficio = filtros.get("beneficio", "").strip()
+        formato = filtros.get("formato", "").strip()
+        modo_uso = filtros.get("modo_uso", "").strip()
+        if beneficio:
+            queryset = queryset.filter(beneficio_principal=beneficio)
+        if formato:
+            queryset = queryset.filter(formato_comercial=formato)
+        if modo_uso:
+            queryset = queryset.filter(modo_uso=modo_uso)
+        return queryset
 
     def obtener_publico_por_slug(self, slug_producto: str) -> Producto | None:
         try:
@@ -111,13 +150,11 @@ class RepositorioProductosORM(RepositorioProductos):
             )
             return None
 
-    def _mapear_productos_validos(self, productos_orm, limite: int | None = None) -> tuple[Producto, ...]:
+    def _mapear_productos_validos(self, productos_orm) -> tuple[Producto, ...]:
         productos_validos: list[Producto] = []
         for producto in productos_orm:
             try:
                 productos_validos.append(a_producto(producto))
-                if limite is not None and len(productos_validos) >= limite:
-                    break
             except (ErrorDominio, AttributeError, TypeError):
                 logger.warning(
                     "Producto público con datos inválidos omitido en listado",

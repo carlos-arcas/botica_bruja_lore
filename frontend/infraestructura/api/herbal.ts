@@ -29,6 +29,11 @@ export type ProductoHerbalMinimoPublico = {
   descripcion_corta: string;
   precio_visible: string;
   imagen_url: string;
+  beneficio_principal?: string;
+  beneficios_secundarios?: string[];
+  formato_comercial?: string;
+  modo_uso?: string;
+  categoria_visible?: string;
 };
 
 export type ProductoSeccionPublica = ProductoHerbalMinimoPublico;
@@ -63,6 +68,11 @@ type ProductoHerbalApi = {
   descripcion_corta?: string;
   precio_visible?: string;
   imagen_url?: string;
+  beneficio_principal?: string;
+  beneficios_secundarios?: string[];
+  formato_comercial?: string;
+  modo_uso?: string;
+  categoria_visible?: string;
 };
 
 type RespuestaListadoHerbal = {
@@ -129,6 +139,11 @@ function normalizarProductoApi(producto: ProductoHerbalApi): ProductoHerbalMinim
     descripcion_corta: producto.descripcion_corta ?? "",
     precio_visible: producto.precio_visible ?? "",
     imagen_url: producto.imagen_url ?? "",
+    beneficio_principal: producto.beneficio_principal ?? "",
+    beneficios_secundarios: Array.isArray(producto.beneficios_secundarios) ? producto.beneficios_secundarios : [],
+    formato_comercial: producto.formato_comercial ?? "",
+    modo_uso: producto.modo_uso ?? "",
+    categoria_visible: producto.categoria_visible ?? "",
   };
 }
 
@@ -254,8 +269,16 @@ export type ResultadoProductosSeccion =
 
 export async function obtenerProductosPublicosPorSeccion(
   slugSeccion: string,
+  filtros?: { beneficio?: string; formato?: string; modo_uso?: string; precio_min?: string; precio_max?: string },
 ): Promise<ResultadoProductosSeccion> {
-  const endpoint = `${API_BASE_URL}/api/v1/herbal/secciones/${slugSeccion}/productos/`;
+  const query = new URLSearchParams();
+  if (filtros?.beneficio) query.set("beneficio", filtros.beneficio);
+  if (filtros?.formato) query.set("formato", filtros.formato);
+  if (filtros?.modo_uso) query.set("modo_uso", filtros.modo_uso);
+  if (filtros?.precio_min) query.set("precio_min", filtros.precio_min);
+  if (filtros?.precio_max) query.set("precio_max", filtros.precio_max);
+  const qs = query.toString();
+  const endpoint = `${API_BASE_URL}/api/v1/herbal/secciones/${slugSeccion}/productos/${qs ? `?${qs}` : ""}`;
 
   try {
     const respuesta = await fetch(endpoint, {

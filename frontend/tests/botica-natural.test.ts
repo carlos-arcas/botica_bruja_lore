@@ -7,7 +7,7 @@ test("/botica-natural usa fetch real al endpoint de secciones y renderiza cards"
   const pagina = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
   const api = readFileSync(join(process.cwd(), "infraestructura/api/herbal.ts"), "utf8");
 
-  assert.equal(pagina.includes('obtenerProductosPublicosPorSeccion("botica-natural")'), true);
+  assert.equal(pagina.includes('obtenerProductosPublicosPorSeccion("botica-natural", filtros)'), true);
   assert.equal(pagina.includes("<ListadoProductosBoticaNatural"), true);
   assert.equal(api.includes('/api/v1/herbal/secciones/${slugSeccion}/productos/'), true);
   assert.equal(api.includes("NEXT_PUBLIC_API_BASE_URL"), true);
@@ -78,4 +78,24 @@ test("la card mantiene jerarquía estable de contenido y acciones", () => {
 test("listado público de Botica Natural desactiva caché stale para reflejar altas reales", () => {
   const api = readFileSync(join(process.cwd(), "infraestructura/api/herbal.ts"), "utf8");
   assert.equal(api.includes("cache: \"no-store\""), true);
+});
+
+
+test("Botica Natural consume query params de filtros reales", () => {
+  const pagina = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
+  const api = readFileSync(join(process.cwd(), "infraestructura/api/herbal.ts"), "utf8");
+  assert.equal(pagina.includes("searchParams"), true);
+  assert.equal(api.includes("beneficio"), true);
+  assert.equal(api.includes("formato"), true);
+  assert.equal(api.includes("modo_uso"), true);
+  assert.equal(api.includes("precio_min"), true);
+  assert.equal(api.includes("precio_max"), true);
+});
+
+test("listado Botica muestra lateral de filtros", () => {
+  const listado = readFileSync(join(process.cwd(), "componentes/botica-natural/ListadoProductosBoticaNatural.tsx"), "utf8");
+  assert.equal(listado.includes("botica-natural__filtros"), true);
+  assert.equal(listado.includes("Beneficio"), true);
+  assert.equal(listado.includes("Formato"), true);
+  assert.equal(listado.includes("Modo de uso"), true);
 });

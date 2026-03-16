@@ -2,17 +2,25 @@ import { ListadoProductosBoticaNatural } from "@/componentes/botica-natural/List
 import { obtenerProductosPublicosPorSeccion } from "@/infraestructura/api/herbal";
 
 function resolverMensajeError(tipoError: "fetch_error" | "http_error" | "respuesta_invalida"): string {
-  if (tipoError === "http_error") {
-    return "No se pudo consultar el catálogo público de Botica Natural (error HTTP).";
-  }
-  if (tipoError === "respuesta_invalida") {
-    return "El catálogo público respondió con un formato inválido y no se puede renderizar.";
-  }
+  if (tipoError === "http_error") return "No se pudo consultar el catálogo público de Botica Natural (error HTTP).";
+  if (tipoError === "respuesta_invalida") return "El catálogo público respondió con un formato inválido y no se puede renderizar.";
   return "No hay conexión con el backend público de Botica Natural.";
 }
 
-export default async function PaginaBoticaNatural(): Promise<JSX.Element> {
-  const resultado = await obtenerProductosPublicosPorSeccion("botica-natural");
+export default async function PaginaBoticaNatural({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<JSX.Element> {
+  const params = (await searchParams) ?? {};
+  const filtros = {
+    beneficio: String(params.beneficio ?? ""),
+    formato: String(params.formato ?? ""),
+    modo_uso: String(params.modo_uso ?? ""),
+    precio_min: String(params.precio_min ?? ""),
+    precio_max: String(params.precio_max ?? ""),
+  };
+  const resultado = await obtenerProductosPublicosPorSeccion("botica-natural", filtros);
 
   if (resultado.estado === "error") {
     return (
@@ -39,7 +47,7 @@ export default async function PaginaBoticaNatural(): Promise<JSX.Element> {
           <h1>Botica Natural</h1>
           <p>Selección herbal pública conectada con catálogo real en producción.</p>
         </header>
-        <ListadoProductosBoticaNatural productos={resultado.productos} />
+        <ListadoProductosBoticaNatural productos={resultado.productos} filtrosActivos={filtros} />
       </section>
     </main>
   );

@@ -62,14 +62,22 @@ def productos_por_planta(request: HttpRequest, slug_planta: str) -> JsonResponse
 
 def listado_productos_por_seccion(request: HttpRequest, slug_seccion: str) -> JsonResponse:
     servicios = construir_servicios_publicos_herbales()
-    productos = servicios.listado_productos_por_seccion.ejecutar(slug_seccion, limite=5)
+    filtros = {
+        "beneficio": request.GET.get("beneficio", "").strip(),
+        "formato": request.GET.get("formato", "").strip(),
+        "modo_uso": request.GET.get("modo_uso", "").strip(),
+        "precio_min": request.GET.get("precio_min", "").strip(),
+        "precio_max": request.GET.get("precio_max", "").strip(),
+    }
+    productos = servicios.listado_productos_por_seccion.ejecutar(slug_seccion, filtros=filtros)
     logger.info(
         "listado_productos_por_seccion generado",
-        extra={"seccion_slug": slug_seccion, "total_productos": len(productos)},
+        extra={"seccion_slug": slug_seccion, "total_productos": len(productos), "filtros": filtros},
     )
     return JsonResponse(
         {
             "seccion_slug": slug_seccion,
+            "filtros": filtros,
             "productos": [serializar_producto_resumen(item) for item in productos],
         }
     )

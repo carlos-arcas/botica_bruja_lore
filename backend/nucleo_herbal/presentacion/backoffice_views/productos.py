@@ -59,6 +59,16 @@ def normalizar_categoria_botica(data: dict) -> str:
         formato = str(data.get("formato_peso_personalizado", "")).strip()
     return formato
 
+
+
+def _a_slug_catalogo(valor: str) -> str:
+    return valor.strip().lower().replace(" ", "-")
+
+
+def _normalizar_lista_slugs(valor: str) -> str:
+    partes = [item.strip() for item in valor.split(",") if item.strip()]
+    return ",".join(_a_slug_catalogo(item) for item in partes)
+
 def _generar_sku_unico(sku_base: str, existente_id: str | None = None) -> str:
     sku_limpio = sku_base.strip().upper()[:40] or "SKU-PRODUCTO"
     usados = set(ProductoModelo.objects.exclude(id=existente_id).filter(sku__startswith=sku_limpio).values_list("sku", flat=True))
@@ -84,6 +94,11 @@ def producto_dict(obj: ProductoModelo) -> dict:
         "descripcion_corta": obj.descripcion_corta,
         "precio_visible": obj.precio_visible,
         "imagen_url": obj.imagen_url,
+        "beneficio_principal": obj.beneficio_principal,
+        "beneficios_secundarios": obj.beneficios_secundarios,
+        "formato_comercial": obj.formato_comercial,
+        "modo_uso": obj.modo_uso,
+        "categoria_visible": obj.categoria_visible,
         "publicado": obj.publicado,
         "orden_publicacion": obj.orden_publicacion,
     }
@@ -149,6 +164,11 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
             "descripcion_corta": data.get("descripcion_corta", "").strip(),
             "precio_visible": data.get("precio_visible", "").strip(),
             "imagen_url": data.get("imagen_url", "").strip(),
+            "beneficio_principal": _a_slug_catalogo(str(data.get("beneficio_principal", ""))),
+            "beneficios_secundarios": _normalizar_lista_slugs(str(data.get("beneficios_secundarios", ""))),
+            "formato_comercial": _a_slug_catalogo(str(data.get("formato_comercial", ""))),
+            "modo_uso": _a_slug_catalogo(str(data.get("modo_uso", ""))),
+            "categoria_visible": _a_slug_catalogo(str(data.get("categoria_visible", ""))),
             "publicado": to_bool(data, "publicado"),
             "orden_publicacion": to_int(data, "orden_publicacion", 100),
         }

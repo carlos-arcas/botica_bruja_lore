@@ -86,3 +86,46 @@ class ApiBackofficeTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["producto"]["publicado"])
+
+    def test_guardar_producto_botica_persiste_campos_catalogo(self) -> None:
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            "/api/v1/backoffice/productos/guardar/",
+            data='{"nombre":"Melisa","seccion_publica":"botica-natural","tipo_producto":"hierbas-a-granel","categoria_comercial":"botica","beneficio_principal":"calma","beneficios_secundarios":"descanso,sueno","formato_comercial":"granel","modo_uso":"infusion","categoria_visible":"hierbas-a-granel","publicado":true}',
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        item = response.json()["item"]
+        self.assertEqual(item["beneficio_principal"], "calma")
+        self.assertEqual(item["formato_comercial"], "granel")
+        self.assertEqual(item["modo_uso"], "infusion")
+
+    def test_editar_producto_botica_conserva_campos_catalogo(self) -> None:
+        self.client.force_login(self.staff)
+        producto = ProductoModelo.objects.create(
+            id="pro-edit-botica",
+            sku="BOT-EDIT-001",
+            slug="botica-edit-1",
+            nombre="Botica Edit",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            beneficio_principal="calma",
+            formato_comercial="granel",
+            modo_uso="infusion",
+            categoria_visible="hierbas-a-granel",
+            publicado=True,
+        )
+
+        response = self.client.post(
+            "/api/v1/backoffice/productos/guardar/",
+            data=f'{{"id":"{producto.id}","nombre":"Botica Edit 2","seccion_publica":"botica-natural","tipo_producto":"hierbas-a-granel","categoria_comercial":"botica","beneficio_principal":"energia","formato_comercial":"capsulas","modo_uso":"ingesta-directa","categoria_visible":"capsulas","publicado":true}}',
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        item = response.json()["item"]
+        self.assertEqual(item["beneficio_principal"], "energia")
+        self.assertEqual(item["formato_comercial"], "capsulas")

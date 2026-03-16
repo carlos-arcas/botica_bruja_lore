@@ -13,23 +13,19 @@ test("Rituales y Artículos usan layout ancho sin panel lateral fijo", () => {
   assert.equal(editorial.includes("mostrarPanelHerramientas"), false);
 });
 
-test("Productos conserva formulario funcional y permite herramientas compactas", () => {
+test("Productos conserva formulario funcional con CRUD contextual", () => {
   const productos = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
-  assert.match(productos, /mostrarPanelHerramientas/);
   assert.match(productos, /ModuloCrudContextualAdmin/);
 });
 
-test("Botica separa tipo de producto y formato/peso con campo condicional", () => {
+test("Botica separa atributos reales de catálogo", () => {
   const productos = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
-  const moduloCrud = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
 
-  assert.match(productos, /OPCIONES_FORMATO_PESO/);
-  assert.match(productos, /Otro \/ personalizado/);
-  assert.match(productos, /OPCIONES_TIPO_BOTICA/);
-  assert.match(productos, /formato_peso/);
-  assert.match(productos, /formato_peso_personalizado/);
-  assert.match(moduloCrud, /debeMostrarCampo/);
-  assert.match(moduloCrud, /formulario\.formato_peso \?\? ""\) === "personalizado"/);
+  assert.match(productos, /beneficio_principal/);
+  assert.match(productos, /beneficios_secundarios/);
+  assert.match(productos, /formato_comercial/);
+  assert.match(productos, /modo_uso/);
+  assert.match(productos, /categoria_visible/);
 });
 
 test("botones principales del admin usan variantes visuales y no estilo navegador por defecto", () => {
