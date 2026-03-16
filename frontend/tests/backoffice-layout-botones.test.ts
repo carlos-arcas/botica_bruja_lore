@@ -19,15 +19,17 @@ test("Productos conserva formulario funcional y permite herramientas compactas",
   assert.match(productos, /ModuloCrudContextualAdmin/);
 });
 
-test("Formato/peso usa combo con opción personalizada y campo condicional", () => {
+test("Botica separa tipo de producto y formato/peso con campo condicional", () => {
   const productos = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
   const moduloCrud = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
 
   assert.match(productos, /OPCIONES_FORMATO_PESO/);
   assert.match(productos, /Otro \/ personalizado/);
-  assert.match(productos, /tipo_producto_personalizado/);
+  assert.match(productos, /OPCIONES_TIPO_BOTICA/);
+  assert.match(productos, /formato_peso/);
+  assert.match(productos, /formato_peso_personalizado/);
   assert.match(moduloCrud, /debeMostrarCampo/);
-  assert.match(moduloCrud, /formulario\.tipo_producto \?\? ""\) === "personalizado"/);
+  assert.match(moduloCrud, /formulario\.formato_peso \?\? ""\) === "personalizado"/);
 });
 
 test("botones principales del admin usan variantes visuales y no estilo navegador por defecto", () => {

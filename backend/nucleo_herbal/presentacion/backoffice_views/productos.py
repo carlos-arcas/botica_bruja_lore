@@ -23,6 +23,42 @@ SECCIONES_PRODUCTOS = {
 }
 
 
+
+TIPOS_PRODUCTO_CANONICOS = {
+    "hierbas-a-granel",
+    "inciensos-y-sahumerios",
+    "herramientas-rituales",
+    "tarot-y-oraculos",
+    "minerales-y-piedras",
+    "packs-y-cestas",
+}
+
+MAPEO_TIPO_LEGACY_BOTICA = {
+    "a-granel-25g": "hierbas-a-granel",
+    "a-granel-50g": "hierbas-a-granel",
+    "a-granel-100g": "hierbas-a-granel",
+    "atado": "hierbas-a-granel",
+    "bolsita-ritual": "inciensos-y-sahumerios",
+    "personalizado": "herramientas-rituales",
+}
+
+
+def normalizar_tipo_producto_botica(data: dict) -> str:
+    tipo_raw = str(data.get("tipo_producto", "")).strip()
+    if tipo_raw in TIPOS_PRODUCTO_CANONICOS:
+        return tipo_raw
+    return MAPEO_TIPO_LEGACY_BOTICA.get(tipo_raw, "herramientas-rituales")
+
+
+def normalizar_categoria_botica(data: dict) -> str:
+    categoria = str(data.get("categoria_comercial", "")).strip()
+    if categoria:
+        return categoria
+    formato = str(data.get("formato_peso", "")).strip()
+    if formato == "personalizado":
+        formato = str(data.get("formato_peso_personalizado", "")).strip()
+    return formato
+
 def _generar_sku_unico(sku_base: str, existente_id: str | None = None) -> str:
     sku_limpio = sku_base.strip().upper()[:40] or "SKU-PRODUCTO"
     usados = set(ProductoModelo.objects.exclude(id=existente_id).filter(sku__startswith=sku_limpio).values_list("sku", flat=True))
@@ -98,11 +134,17 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
         sku = _generar_sku_unico(sku_base, existente.id if existente else None)
         slug_base = data.get("slug", "").strip() or nombre
         slug = generar_slug_unico(ProductoModelo, slug_base, existente.id if existente else None)
+        tipo_producto = data.get("tipo_producto", "").strip()
+        categoria_comercial = data.get("categoria_comercial", "").strip()
+        if seccion == "botica-natural":
+            tipo_producto = normalizar_tipo_producto_botica(data)
+            categoria_comercial = normalizar_categoria_botica(data)
+
         defaults = {
             "sku": sku,
             "nombre": nombre,
-            "tipo_producto": data.get("tipo_producto", "").strip(),
-            "categoria_comercial": data.get("categoria_comercial", "").strip(),
+            "tipo_producto": tipo_producto,
+            "categoria_comercial": categoria_comercial,
             "seccion_publica": seccion,
             "descripcion_corta": data.get("descripcion_corta", "").strip(),
             "precio_visible": data.get("precio_visible", "").strip(),

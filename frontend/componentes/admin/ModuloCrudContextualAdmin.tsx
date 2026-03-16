@@ -108,12 +108,13 @@ async function validarCabeceraCsv(archivo: File, columnasObligatorias: string[])
 function construirPayloadSegunTipo(tipoPayload: TipoPayloadAdmin, formulario: Record<string, unknown>, seccionSeleccionada: string): Record<string, unknown> {
   if (tipoPayload === "rituales") return construirPayloadRitual(formulario);
   if (tipoPayload === "productos") {
-    const tipoProducto = String(formulario.tipo_producto ?? "");
-    const personalizado = String(formulario.tipo_producto_personalizado ?? "").trim();
+    const formatoPeso = String(formulario.formato_peso ?? "");
+    const formatoPersonalizado = String(formulario.formato_peso_personalizado ?? "").trim();
+    const formatoFinal = formatoPeso === "personalizado" && formatoPersonalizado ? formatoPersonalizado : formatoPeso;
     return {
       ...formulario,
-      tipo_producto: tipoProducto === "personalizado" && personalizado ? personalizado : tipoProducto,
       seccion_publica: seccionSeleccionada,
+      categoria_comercial: String(formulario.categoria_comercial ?? "").trim() || formatoFinal,
       orden_publicacion: 100,
     };
   }
@@ -137,8 +138,8 @@ function agruparCamposFormulario(campos: ConfigCampo[]): GrupoCampos[] {
 
 
 function debeMostrarCampo(modulo: ModuloAdmin, campo: ConfigCampo, formulario: Record<string, unknown>): boolean {
-  if (modulo !== "productos" || campo.clave !== "tipo_producto_personalizado") return true;
-  return String(formulario.tipo_producto ?? "") === "personalizado";
+  if (modulo !== "productos" || campo.clave !== "formato_peso_personalizado") return true;
+  return String(formulario.formato_peso ?? "") === "personalizado";
 }
 
 function BloqueCampos({ modulo, grupo, formulario, onCambio, controlImagen }: { modulo: ModuloAdmin; grupo: GrupoCampos; formulario: Record<string, unknown>; onCambio: (clave: string, valor: unknown) => void; controlImagen?: ControlImagenFormulario }): JSX.Element {
@@ -164,11 +165,7 @@ function BloqueCampos({ modulo, grupo, formulario, onCambio, controlImagen }: { 
 
 function prepararRegistroEdicion(modulo: ModuloAdmin, campos: ConfigCampo[], item: Record<string, unknown>): Record<string, unknown> {
   if (modulo !== "productos") return { ...item };
-  const tipoProducto = String(item.tipo_producto ?? "");
-  const campoTipoProducto = campos.find((campo) => campo.clave === "tipo_producto");
-  const opciones = new Set((campoTipoProducto?.opciones ?? []).map((opcion) => opcion.valor));
-  if (!tipoProducto || opciones.has(tipoProducto)) return { ...item };
-  return { ...item, tipo_producto: "personalizado", tipo_producto_personalizado: tipoProducto };
+  return { ...item };
 }
 
 export function ModuloCrudContextualAdmin({

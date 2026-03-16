@@ -207,6 +207,48 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         slugs = [item["slug"] for item in data["productos"]]
         self.assertEqual(slugs, sorted(slugs))
 
+
+    def test_listado_productos_por_seccion_rellena_cupo_con_validos_tras_omitir_invalidos(self) -> None:
+        for slug in (
+            "botica-natural-a",
+            "botica-natural-b",
+            "botica-natural-c",
+            "botica-natural-d-invalido",
+            "botica-natural-e-invalido",
+            "botica-natural-f",
+            "botica-natural-g",
+        ):
+            tipo = "legacy-invalido" if "invalido" in slug else "herramientas-rituales"
+            ProductoModelo.objects.create(
+                id=f"pro-{slug}",
+                sku=f"SKU-{slug}",
+                slug=slug,
+                nombre=f"Producto {slug}",
+                tipo_producto=tipo,
+                categoria_comercial="botica",
+                seccion_publica="botica-natural",
+                descripcion_corta="demo",
+                precio_visible="10,00 €",
+                imagen_url="",
+                publicado=True,
+            )
+
+        response = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["productos"]), 5)
+        self.assertEqual(
+            [item["slug"] for item in data["productos"]],
+            [
+                "botica-natural-a",
+                "botica-natural-b",
+                "botica-natural-c",
+                "botica-natural-f",
+                "botica-natural-g",
+            ],
+        )
+
     def test_listado_productos_por_seccion_omite_registros_invalidos_legacy(self) -> None:
         ProductoModelo.objects.create(
             id="pro-bn-valido",

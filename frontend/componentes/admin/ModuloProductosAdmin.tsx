@@ -26,6 +26,15 @@ const OPCIONES_TIPO_VELAS = [
   { etiqueta: "Cono aromático", valor: "cono-aromatico" },
 ];
 
+const OPCIONES_TIPO_BOTICA = [
+  { etiqueta: "Hierbas a granel", valor: "hierbas-a-granel" },
+  { etiqueta: "Inciensos y sahumerios", valor: "inciensos-y-sahumerios" },
+  { etiqueta: "Herramientas rituales", valor: "herramientas-rituales" },
+  { etiqueta: "Tarot y oráculos", valor: "tarot-y-oraculos" },
+  { etiqueta: "Minerales y piedras", valor: "minerales-y-piedras" },
+  { etiqueta: "Packs y cestas", valor: "packs-y-cestas" },
+];
+
 const OPCIONES_FORMATO_PESO = [
   { etiqueta: "A granel (25g)", valor: "a-granel-25g" },
   { etiqueta: "A granel (50g)", valor: "a-granel-50g" },
@@ -37,8 +46,9 @@ const OPCIONES_FORMATO_PESO = [
 
 const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string; tipo?: "select"; opciones?: { etiqueta: string; valor: string }[] }[]> = {
   "botica-natural": [
-    { clave: "tipo_producto", etiqueta: "Formato / peso", tipo: "select", opciones: OPCIONES_FORMATO_PESO },
-    { clave: "tipo_producto_personalizado", etiqueta: "Formato / peso personalizado" },
+    { clave: "tipo_producto", etiqueta: "Tipo de producto", tipo: "select", opciones: OPCIONES_TIPO_BOTICA },
+    { clave: "formato_peso", etiqueta: "Formato / peso", tipo: "select", opciones: OPCIONES_FORMATO_PESO },
+    { clave: "formato_peso_personalizado", etiqueta: "Formato / peso personalizado" },
     { clave: "categoria_comercial", etiqueta: "Uso" },
   ],
   "velas-e-incienso": [
@@ -56,7 +66,7 @@ const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string; tipo
 };
 
 const COLUMNAS_OBLIGATORIAS = ["nombre", "seccion_publica", "tipo_producto", "categoria_comercial"];
-const COLUMNAS_OPCIONALES = ["descripcion_corta", "precio_visible", "imagen_url", "publicado"];
+const COLUMNAS_OPCIONALES = ["descripcion_corta", "precio_visible", "imagen_url", "publicado", "formato_peso"];
 
 export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string; itemsIniciales: Record<string, unknown>[] }): JSX.Element {
   const [seccion, setSeccion] = useState<string>(SECCIONES[0].slug);
@@ -104,11 +114,11 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
           const seccionFormulario = String(form.seccion_publica ?? "");
           const camposObligatorios = CAMPOS_POR_SECCION[seccionFormulario] ?? [];
           const vacios = ["nombre", ...camposObligatorios.map((campo) => campo.clave)].filter((clave) => {
-            if (clave === "tipo_producto_personalizado" && String(form.tipo_producto ?? "") !== "personalizado") return false;
+            if (clave === "formato_peso_personalizado" && String(form.formato_peso ?? "") !== "personalizado") return false;
             return !String(form[clave] ?? "").trim();
           });
-          if (String(form.tipo_producto ?? "") === "personalizado" && !String(form.tipo_producto_personalizado ?? "").trim()) {
-            vacios.push("tipo_producto_personalizado");
+          if (String(form.formato_peso ?? "") === "personalizado" && !String(form.formato_peso_personalizado ?? "").trim()) {
+            vacios.push("formato_peso_personalizado");
           }
           const precio = String(form.precio_visible ?? "").trim();
           if (precio && !/^[0-9]+([.,][0-9]{1,2})?$/.test(precio)) {
