@@ -86,16 +86,16 @@ class RepositorioProductosORM(RepositorioProductos):
         queryset = ProductoModelo.objects.filter(
             publicado=True,
             seccion_publica__iexact=seccion_normalizada,
-        ).order_by("slug")[:limite]
-        productos = self._mapear_productos_validos(queryset)
+        ).order_by("slug")
+        productos = self._mapear_productos_validos(queryset, limite=limite)
         if productos:
             return productos
 
         queryset = ProductoModelo.objects.filter(
             publicado=True,
             tipo_producto=TIPO_PRODUCTO_HERBAL,
-        ).order_by("slug")[:limite]
-        return self._mapear_productos_validos(queryset)
+        ).order_by("slug")
+        return self._mapear_productos_validos(queryset, limite=limite)
 
     def obtener_publico_por_slug(self, slug_producto: str) -> Producto | None:
         try:
@@ -111,11 +111,13 @@ class RepositorioProductosORM(RepositorioProductos):
             )
             return None
 
-    def _mapear_productos_validos(self, productos_orm) -> tuple[Producto, ...]:
+    def _mapear_productos_validos(self, productos_orm, limite: int | None = None) -> tuple[Producto, ...]:
         productos_validos: list[Producto] = []
         for producto in productos_orm:
             try:
                 productos_validos.append(a_producto(producto))
+                if limite is not None and len(productos_validos) >= limite:
+                    break
             except (ErrorDominio, AttributeError, TypeError):
                 logger.warning(
                     "Producto público con datos inválidos omitido en listado",

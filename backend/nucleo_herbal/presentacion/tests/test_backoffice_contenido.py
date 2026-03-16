@@ -31,6 +31,26 @@ class BackofficeContenidoTests(TestCase):
         r = self.client.post("/api/v1/backoffice/importacion/lotes/", data={"entidad": "productos", "modo": "crear_actualizar", "archivo": archivo}, **self._auth())
         return r.json()["lote_id"]
 
+
+    def test_producto_botica_normaliza_tipo_producto_legacy_en_guardado(self):
+        payload = {
+            "sku": "SKU-LEGACY",
+            "nombre": "Producto Legacy Botica",
+            "tipo_producto": "a-granel-50g",
+            "categoria_comercial": "",
+            "formato_peso": "a-granel-50g",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "precio_visible": "9.99",
+            "publicado": True,
+        }
+
+        r = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+
+        self.assertEqual(r.status_code, 200)
+        item = r.json()["item"]
+        self.assertEqual(item["tipo_producto"], "hierbas-a-granel")
+
     def test_producto_create_update_publish_and_permiso(self):
         r = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps({}), content_type="application/json", **self._auth(staff=False))
         self.assertEqual(r.status_code, 403)

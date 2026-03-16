@@ -198,6 +198,27 @@ class TestRepositoriosDjango(unittest.TestCase):
         self.assertTrue(all(slug.startswith("botica-") for slug in slugs))
 
 
+
+    def test_listar_publicos_por_seccion_filtra_invalidos_antes_de_limitar(self) -> None:
+        for slug in ("a-valido", "b-valido", "c-valido", "d-invalido", "e-invalido", "f-valido", "g-valido"):
+            tipo = "legacy-invalido" if "invalido" in slug else "herramientas-rituales"
+            self.ProductoModelo.objects.create(
+                id=f"id-{slug}",
+                sku=f"SKU-{slug}",
+                slug=slug,
+                nombre=f"Producto {slug}",
+                tipo_producto=tipo,
+                categoria_comercial="botica",
+                seccion_publica="botica-natural",
+                publicado=True,
+            )
+
+        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", limite=5)
+
+        self.assertEqual(len(productos), 5)
+        slugs = [producto.slug for producto in productos]
+        self.assertEqual(slugs, ["a-valido", "b-valido", "c-valido", "f-valido", "g-valido"])
+
     def test_listar_publicos_por_seccion_acepta_mayusculas_en_seccion(self) -> None:
         self.ProductoModelo.objects.create(
             id="id-bn-mayus",
