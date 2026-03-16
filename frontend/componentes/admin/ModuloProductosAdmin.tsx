@@ -19,40 +19,18 @@ const CAMPOS_COMUNES = [
   { clave: "publicado", etiqueta: "Publicado", tipo: "checkbox" as const },
 ];
 
-const OPCIONES_TIPO_VELAS = [
-  { etiqueta: "Vela", valor: "vela" },
-  { etiqueta: "Incienso", valor: "incienso" },
-  { etiqueta: "Sahumerio", valor: "sahumerio" },
-  { etiqueta: "Cono aromático", valor: "cono-aromatico" },
-];
-
-const OPCIONES_TIPO_BOTICA = [
-  { etiqueta: "Hierbas a granel", valor: "hierbas-a-granel" },
-  { etiqueta: "Inciensos y sahumerios", valor: "inciensos-y-sahumerios" },
-  { etiqueta: "Herramientas rituales", valor: "herramientas-rituales" },
-  { etiqueta: "Tarot y oráculos", valor: "tarot-y-oraculos" },
-  { etiqueta: "Minerales y piedras", valor: "minerales-y-piedras" },
-  { etiqueta: "Packs y cestas", valor: "packs-y-cestas" },
-];
-
-const OPCIONES_FORMATO_PESO = [
-  { etiqueta: "A granel (25g)", valor: "a-granel-25g" },
-  { etiqueta: "A granel (50g)", valor: "a-granel-50g" },
-  { etiqueta: "A granel (100g)", valor: "a-granel-100g" },
-  { etiqueta: "Atado / manojo", valor: "atado" },
-  { etiqueta: "Bolsita ritual", valor: "bolsita-ritual" },
-  { etiqueta: "Otro / personalizado", valor: "personalizado" },
-];
-
 const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string; tipo?: "select"; opciones?: { etiqueta: string; valor: string }[] }[]> = {
   "botica-natural": [
-    { clave: "tipo_producto", etiqueta: "Tipo de producto", tipo: "select", opciones: OPCIONES_TIPO_BOTICA },
-    { clave: "formato_peso", etiqueta: "Formato / peso", tipo: "select", opciones: OPCIONES_FORMATO_PESO },
-    { clave: "formato_peso_personalizado", etiqueta: "Formato / peso personalizado" },
-    { clave: "categoria_comercial", etiqueta: "Uso" },
+    { clave: "beneficio_principal", etiqueta: "Beneficio" },
+    { clave: "beneficios_secundarios", etiqueta: "Beneficios secundarios (coma separada)" },
+    { clave: "formato_comercial", etiqueta: "Formato comercial" },
+    { clave: "modo_uso", etiqueta: "Modo de uso" },
+    { clave: "categoria_visible", etiqueta: "Categoría visible" },
+    { clave: "tipo_producto", etiqueta: "Tipo de producto" },
+    { clave: "categoria_comercial", etiqueta: "Categoría comercial interna" },
   ],
   "velas-e-incienso": [
-    { clave: "tipo_producto", etiqueta: "Tipo", tipo: "select", opciones: OPCIONES_TIPO_VELAS },
+    { clave: "tipo_producto", etiqueta: "Tipo" },
     { clave: "categoria_comercial", etiqueta: "Aroma" },
   ],
   "minerales-y-energia": [
@@ -66,7 +44,17 @@ const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string; tipo
 };
 
 const COLUMNAS_OBLIGATORIAS = ["nombre", "seccion_publica", "tipo_producto", "categoria_comercial"];
-const COLUMNAS_OPCIONALES = ["descripcion_corta", "precio_visible", "imagen_url", "publicado", "formato_peso"];
+const COLUMNAS_OPCIONALES = [
+  "descripcion_corta",
+  "precio_visible",
+  "imagen_url",
+  "publicado",
+  "beneficio_principal",
+  "beneficios_secundarios",
+  "formato_comercial",
+  "modo_uso",
+  "categoria_visible",
+];
 
 export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string; itemsIniciales: Record<string, unknown>[] }): JSX.Element {
   const [seccion, setSeccion] = useState<string>(SECCIONES[0].slug);
@@ -93,6 +81,7 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
       </section>
       <ModuloCrudContextualAdmin
         modulo="productos"
+        tipoPayload="productos"
         titulo="Productos"
         token={token}
         itemsIniciales={filtrados}
@@ -110,24 +99,6 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
           opciones: SECCIONES.map((it) => ({ etiqueta: it.etiqueta, valor: it.slug })),
         }}
         onCambioContexto={setSeccion}
-        validarFormulario={(form) => {
-          const seccionFormulario = String(form.seccion_publica ?? "");
-          const camposObligatorios = CAMPOS_POR_SECCION[seccionFormulario] ?? [];
-          const vacios = ["nombre", ...camposObligatorios.map((campo) => campo.clave)].filter((clave) => {
-            if (clave === "formato_peso_personalizado" && String(form.formato_peso ?? "") !== "personalizado") return false;
-            return !String(form[clave] ?? "").trim();
-          });
-          if (String(form.formato_peso ?? "") === "personalizado" && !String(form.formato_peso_personalizado ?? "").trim()) {
-            vacios.push("formato_peso_personalizado");
-          }
-          const precio = String(form.precio_visible ?? "").trim();
-          if (precio && !/^[0-9]+([.,][0-9]{1,2})?$/.test(precio)) {
-            return "Precio visible solo acepta números con decimal opcional.";
-          }
-          return vacios.length > 0 ? `Completa los campos obligatorios para ${seccionFormulario}: ${vacios.join(", ")}.` : null;
-        }}
-        tipoPayload="productos"
-        mostrarPanelHerramientas
       />
     </>
   );

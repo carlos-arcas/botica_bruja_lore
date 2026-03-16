@@ -94,11 +94,14 @@ class ProductoAdmin(admin.ModelAdmin):
         "tipo_producto",
         "categoria_comercial",
         "seccion_publica",
+        "beneficio_principal",
+        "formato_comercial",
+        "modo_uso",
         "orden_publicacion",
         "publicado",
     )
     search_fields = ("nombre", "sku", "slug", "categoria_comercial", "seccion_publica")
-    list_filter = ("publicado", "tipo_producto", "categoria_comercial", "seccion_publica")
+    list_filter = ("publicado", "tipo_producto", "categoria_comercial", "seccion_publica", "beneficio_principal", "formato_comercial", "modo_uso")
     ordering = ("orden_publicacion", "nombre")
     list_editable = ("orden_publicacion", "publicado")
     prepopulated_fields = {"slug": ("nombre",)}
@@ -115,6 +118,11 @@ class ProductoAdmin(admin.ModelAdmin):
                     "tipo_producto",
                     "categoria_comercial",
                     "seccion_publica",
+                    "beneficio_principal",
+                    "beneficios_secundarios",
+                    "formato_comercial",
+                    "modo_uso",
+                    "categoria_visible",
                     "orden_publicacion",
                     "publicado",
                 )

@@ -40,6 +40,10 @@ def a_planta(modelo: PlantaModelo) -> Planta:
     )
 
 
+def _parsear_beneficios_secundarios(valor: str) -> tuple[str, ...]:
+    return tuple(item.strip() for item in valor.split(",") if item.strip())
+
+
 def a_producto(modelo: ProductoModelo) -> Producto:
     return Producto(
         id=modelo.id,
@@ -53,6 +57,11 @@ def a_producto(modelo: ProductoModelo) -> Producto:
         descripcion_corta=modelo.descripcion_corta,
         precio_visible=modelo.precio_visible,
         imagen_url=modelo.imagen_url,
+        beneficio_principal=modelo.beneficio_principal,
+        beneficios_secundarios=_parsear_beneficios_secundarios(modelo.beneficios_secundarios),
+        formato_comercial=modelo.formato_comercial,
+        modo_uso=modelo.modo_uso,
+        categoria_visible=modelo.categoria_visible,
     )
 
 

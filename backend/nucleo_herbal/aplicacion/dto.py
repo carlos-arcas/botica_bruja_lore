@@ -39,6 +39,11 @@ class ProductoResumenDTO:
     descripcion_corta: str
     precio_visible: str
     imagen_url: str
+    beneficio_principal: str
+    beneficios_secundarios: tuple[str, ...]
+    formato_comercial: str
+    modo_uso: str
+    categoria_visible: str
 
 
 @dataclass(frozen=True, slots=True)

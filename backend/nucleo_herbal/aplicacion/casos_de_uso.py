@@ -56,8 +56,8 @@ class ObtenerResolucionComercialMinimaDePlanta:
 class ObtenerListadoPublicoProductosPorSeccion:
     repositorio_productos: RepositorioProductos
 
-    def ejecutar(self, slug_seccion: str, limite: int = 5) -> tuple[ProductoResumenDTO, ...]:
-        productos = self.repositorio_productos.listar_publicos_por_seccion(slug_seccion, limite)
+    def ejecutar(self, slug_seccion: str, filtros: dict[str, str] | None = None) -> tuple[ProductoResumenDTO, ...]:
+        productos = self.repositorio_productos.listar_publicos_por_seccion(slug_seccion, filtros or {})
         return tuple(_a_producto_resumen(producto) for producto in productos)
 
 
@@ -124,6 +124,11 @@ def _a_producto_resumen(producto: Producto) -> ProductoResumenDTO:
         descripcion_corta=producto.descripcion_corta,
         precio_visible=producto.precio_visible,
         imagen_url=producto.imagen_url,
+        beneficio_principal=producto.beneficio_principal,
+        beneficios_secundarios=producto.beneficios_secundarios,
+        formato_comercial=producto.formato_comercial,
+        modo_uso=producto.modo_uso,
+        categoria_visible=producto.categoria_visible,
     )
 
 

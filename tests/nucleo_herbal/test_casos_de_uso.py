@@ -61,13 +61,15 @@ class RepositorioProductosEnMemoria(RepositorioProductos):
             if producto.tipo_producto == "hierbas-a-granel" and producto.planta_id == id_planta
         )
 
-    def listar_publicos_por_seccion(self, slug_seccion: str, limite: int) -> tuple[Producto, ...]:
-        seleccion = [
-            producto
-            for producto in self._productos
-            if producto.seccion_publica == slug_seccion
-        ]
-        return tuple(sorted(seleccion, key=lambda item: item.slug)[:limite])
+    def listar_publicos_por_seccion(self, slug_seccion: str, filtros: dict[str, str]) -> tuple[Producto, ...]:
+        seleccion = [producto for producto in self._productos if producto.seccion_publica == slug_seccion]
+        return tuple(sorted(seleccion, key=lambda item: item.slug))
+
+    def obtener_publico_por_slug(self, slug_producto: str) -> Producto | None:
+        for producto in self._productos:
+            if producto.slug == slug_producto:
+                return producto
+        return None
 
 
 class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
@@ -88,6 +90,11 @@ class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
                     descripcion_corta="demo",
                     precio_visible="10,00 €",
                     imagen_url="",
+                    beneficio_principal="calma",
+                    beneficios_secundarios=("descanso",),
+                    formato_comercial="granel",
+                    modo_uso="infusion",
+                    categoria_visible="hierbas-a-granel",
                 ),
                 Producto(
                     id="prod-2",
@@ -101,6 +108,11 @@ class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
                     descripcion_corta="demo",
                     precio_visible="12,00 €",
                     imagen_url="/img.webp",
+                    beneficio_principal="",
+                    beneficios_secundarios=(),
+                    formato_comercial="",
+                    modo_uso="",
+                    categoria_visible="",
                 ),
             )
         )
@@ -154,7 +166,7 @@ class TestCasosDeUsoNucleoHerbal(unittest.TestCase):
     def test_obtener_listado_publico_productos_por_seccion(self) -> None:
         caso = ObtenerListadoPublicoProductosPorSeccion(self.repo_productos)
 
-        resultado = caso.ejecutar("botica-natural", limite=5)
+        resultado = caso.ejecutar("botica-natural")
 
         self.assertEqual(len(resultado), 1)
         self.assertEqual(resultado[0].slug, "melisa-a-granel-50g")

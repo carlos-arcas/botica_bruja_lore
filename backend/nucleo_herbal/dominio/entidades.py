@@ -66,6 +66,11 @@ class Producto:
     descripcion_corta: str = ""
     precio_visible: str = ""
     imagen_url: str = ""
+    beneficio_principal: str = ""
+    beneficios_secundarios: tuple[str, ...] = ()
+    formato_comercial: str = ""
+    modo_uso: str = ""
+    categoria_visible: str = ""
 
     def __post_init__(self) -> None:
         if not self.sku.strip():

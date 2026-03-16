@@ -167,7 +167,7 @@ class TestRepositoriosDjango(unittest.TestCase):
         self.assertEqual(productos[0].sku, "HERB-001")
 
 
-    def test_listar_publicos_por_seccion_limita_y_ordena_por_slug(self) -> None:
+    def test_listar_publicos_por_seccion_devuelve_todos_y_ordena_por_slug(self) -> None:
         for slug in ("botica-c", "botica-a", "botica-b", "botica-d", "botica-e", "botica-f"):
             self.ProductoModelo.objects.create(
                 id=f"id-{slug}",
@@ -190,16 +190,16 @@ class TestRepositoriosDjango(unittest.TestCase):
             publicado=True,
         )
 
-        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", limite=5)
+        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", {})
 
-        self.assertEqual(len(productos), 5)
+        self.assertEqual(len(productos), 6)
         slugs = [producto.slug for producto in productos]
         self.assertEqual(slugs, sorted(slugs))
         self.assertTrue(all(slug.startswith("botica-") for slug in slugs))
 
 
 
-    def test_listar_publicos_por_seccion_filtra_invalidos_antes_de_limitar(self) -> None:
+    def test_listar_publicos_por_seccion_filtra_invalidos_legacy(self) -> None:
         for slug in ("a-valido", "b-valido", "c-valido", "d-invalido", "e-invalido", "f-valido", "g-valido"):
             tipo = "legacy-invalido" if "invalido" in slug else "herramientas-rituales"
             self.ProductoModelo.objects.create(
@@ -213,7 +213,7 @@ class TestRepositoriosDjango(unittest.TestCase):
                 publicado=True,
             )
 
-        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", limite=5)
+        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", {})
 
         self.assertEqual(len(productos), 5)
         slugs = [producto.slug for producto in productos]
@@ -231,7 +231,7 @@ class TestRepositoriosDjango(unittest.TestCase):
             publicado=True,
         )
 
-        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", limite=5)
+        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", {})
 
         slugs = [producto.slug for producto in productos]
         self.assertIn("botica-mayus", slugs)
@@ -256,7 +256,7 @@ class TestRepositoriosDjango(unittest.TestCase):
             publicado=True,
         )
 
-        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", limite=5)
+        productos = self.repo_productos.listar_publicos_por_seccion("botica-natural", {})
 
         slugs = [producto.slug for producto in productos]
         self.assertIn("fallback-herbal", slugs)

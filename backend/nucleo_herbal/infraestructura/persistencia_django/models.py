@@ -53,6 +53,11 @@ class ProductoModelo(models.Model):
     descripcion_corta = models.TextField(blank=True, default="")
     precio_visible = models.CharField(max_length=80, blank=True, default="")
     imagen_url = models.CharField(max_length=255, blank=True, default="")
+    beneficio_principal = models.SlugField(max_length=80, blank=True, default="")
+    beneficios_secundarios = models.CharField(max_length=255, blank=True, default="")
+    formato_comercial = models.SlugField(max_length=80, blank=True, default="")
+    modo_uso = models.SlugField(max_length=80, blank=True, default="")
+    categoria_visible = models.SlugField(max_length=80, blank=True, default="")
     orden_publicacion = models.PositiveIntegerField(default=100)
     planta = models.ForeignKey(
         PlantaModelo,
