@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { CampoFormulario, ConfigCampo, ControlImagenFormulario } from "@/componentes/admin/CamposFormularioAdmin";
 import { TablaStagingImportacion } from "@/componentes/admin/TablaStagingImportacion";
@@ -16,6 +17,7 @@ import {
   descargarExportacionAdmin,
   eliminarImagenFilaImportacion,
   guardarRegistroAdmin,
+  obtenerListadoAdmin,
   obtenerLoteImportacion,
   revalidarLoteImportacion,
   subirImagenBackoffice,
@@ -188,6 +190,7 @@ export function ModuloCrudContextualAdmin({
   errorInicial = "",
   mostrarPanelHerramientas = false,
 }: Props): JSX.Element {
+  const router = useRouter();
   const [items, setItems] = useState(itemsIniciales);
   const [formAlta, setFormAlta] = useState<Record<string, unknown>>({ [contextoFormulario?.clave ?? ""]: seccionSeleccionada });
   const [filtro, setFiltro] = useState("");
@@ -209,6 +212,19 @@ export function ModuloCrudContextualAdmin({
   const gruposFormulario = useMemo(() => agruparCamposFormulario(campos), [campos]);
   const filtrados = useMemo(() => items.filter((item) => JSON.stringify(item).toLowerCase().includes(filtro.toLowerCase())), [items, filtro]);
 
+  const recargarListadoReal = async (): Promise<void> => {
+    const query = new URLSearchParams();
+    if (modulo === "productos" && seccionSeleccionada) {
+      query.set("seccion", seccionSeleccionada);
+    }
+    const actualizado = await obtenerListadoAdmin(modulo, query, token);
+    if (actualizado.estado !== "ok") {
+      throw new Error(actualizado.detalle);
+    }
+    setItems(actualizado.items);
+    router.refresh();
+  };
+
   const ejecutarAccion = async (accion: () => Promise<void>, mensajeError: string) => {
     try {
       await accion();
@@ -221,9 +237,8 @@ export function ModuloCrudContextualAdmin({
 
   const guardar = async (formulario: Record<string, unknown>) => {
     const payload = construirPayloadSegunTipo(tipoPayload, formulario, seccionSeleccionada);
-    const guardado = await guardarRegistroAdmin(modulo, payload, token);
-    const existe = items.some((it) => it.id === guardado.id);
-    setItems(existe ? items.map((it) => (it.id === guardado.id ? guardado : it)) : [guardado, ...items]);
+    await guardarRegistroAdmin(modulo, payload, token);
+    await recargarListadoReal();
   };
 
   const onGuardarAlta = async (event: FormEvent<HTMLFormElement>) => {
@@ -433,8 +448,8 @@ export function ModuloCrudContextualAdmin({
                           type="button"
                           className={item[campoEstado] ? "admin-boton admin-boton--peligro" : "admin-boton admin-boton--primario"}
                           onClick={() => void ejecutarAccion(async () => {
-                            const actualizado = await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token);
-                            setItems(items.map((it) => (it.id === item.id ? actualizado : it)));
+                            await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token);
+                            await recargarListadoReal();
                           }, "No se pudo actualizar la publicación.")}
                         >
                           {item[campoEstado] ? "Despublicar" : "Publicar"}
