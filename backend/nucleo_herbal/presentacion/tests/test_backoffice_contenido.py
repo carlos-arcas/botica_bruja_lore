@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import ErrorImagenWebP, guardar_imagen_fila
-from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, PlantaModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
 from backend.nucleo_herbal.presentacion.backoffice_auth import crear_token_backoffice
 
 
@@ -290,6 +290,38 @@ class BackofficeContenidoTests(TestCase):
 
         por_precio = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/?precio_min=5&precio_max=6").json()["productos"]
         self.assertEqual([p["sku"] for p in por_precio], ["SKU-FIL-1"])
+
+
+    def test_edicion_hierbas_a_granel_exige_planta_id(self):
+        PlantaModelo.objects.create(id="pla-1", slug="menta", nombre="Menta")
+        PlantaModelo.objects.create(id="pla-2", slug="melisa", nombre="Melisa")
+        crear = {
+            "sku": "SKU-HIERBA-1",
+            "nombre": "Hierba Base",
+            "tipo_producto": "hierbas-a-granel",
+            "categoria_comercial": "hierbas",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "precio_visible": "8.50",
+            "beneficio_principal": "calma",
+            "beneficios_secundarios": "energia",
+            "formato_comercial": "hoja-seca",
+            "modo_uso": "infusion",
+            "categoria_visible": "hierbas",
+            "planta_id": "pla-1",
+            "publicado": False,
+        }
+        respuesta_crear = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(crear), content_type="application/json", **self._auth())
+        self.assertEqual(respuesta_crear.status_code, 200)
+
+        edicion_invalida = {**crear, "id": respuesta_crear.json()["item"]["id"], "planta_id": ""}
+        respuesta_invalida = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(edicion_invalida), content_type="application/json", **self._auth())
+        self.assertEqual(respuesta_invalida.status_code, 400)
+        self.assertIn("planta", respuesta_invalida.json()["detalle"].lower())
+
+        edicion_valida = {**edicion_invalida, "planta_id": "pla-2"}
+        respuesta_valida = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(edicion_valida), content_type="application/json", **self._auth())
+        self.assertEqual(respuesta_valida.status_code, 200)
 
     def test_guardado_botica_invalido_bloquea_publicacion(self):
         payload = {
