@@ -95,6 +95,17 @@ ADMIN_USUARIO_PROVISIONAL=karkas ADMIN_PASSWORD_PROVISIONAL='<tu_password_segura
 
 ### Logging operativo mínimo (stdout)
 
+### Debug log viewer remoto (opcional, interno)
+
+- `DEBUG_LOG_VIEWER_ENABLED=true|false` activa/desactiva el visor técnico.
+- `DEBUG_LOG_VIEWER_KEY=<clave_temporal_segura>` protege acceso sin login clásico.
+- Endpoints backend internos:
+  - `GET /api/debug/logs`
+  - `POST /api/debug/logs/clear`
+- El acceso requiere `X-Debug-Log-Key` (se admite `debug_key` en query como fallback temporal).
+- Si no está habilitado o la clave no coincide, el backend responde `404` neutro.
+- Los archivos `var/logs/app.log` y `var/logs/error.log` se inicializan en modo sobreescritura por arranque (`mode=w`) para no persistir histórico entre ejecuciones.
+
 - El backend emite logs a **stdout** (capturados por Railway automáticamente).
 - `LOG_LEVEL` es opcional (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) y por defecto usa `INFO`.
 - Formato de logs: timestamp + nivel + logger + mensaje.

@@ -13,6 +13,8 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parents[2]
 LOCAL_VAR_DIR = BASE_DIR / "var"
 LOCAL_VAR_DIR.mkdir(exist_ok=True)
+LOG_DIR = LOCAL_VAR_DIR / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _leer_booleano(nombre: str, valor_por_defecto: bool = False) -> bool:
@@ -107,6 +109,10 @@ def _en_entorno_railway() -> bool:
 
 DEBUG = _leer_booleano("DEBUG", os.getenv("DATABASE_URL") is None)
 LOG_LEVEL = _normalizar_log_level(os.getenv("LOG_LEVEL"), "INFO")
+DEBUG_LOG_VIEWER_ENABLED = _leer_booleano("DEBUG_LOG_VIEWER_ENABLED", False)
+DEBUG_LOG_VIEWER_KEY = os.getenv("DEBUG_LOG_VIEWER_KEY", "").strip()
+DEBUG_LOG_APP_FILE = str(LOG_DIR / "app.log")
+DEBUG_LOG_ERROR_FILE = str(LOG_DIR / "error.log")
 
 
 def _configurar_secret_key() -> str:
@@ -237,10 +243,25 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
             "formatter": "railway",
-        }
+        },
+        "app_file": {
+            "class": "logging.FileHandler",
+            "filename": DEBUG_LOG_APP_FILE,
+            "mode": "w",
+            "formatter": "railway",
+            "encoding": "utf-8",
+        },
+        "error_file": {
+            "class": "logging.FileHandler",
+            "filename": DEBUG_LOG_ERROR_FILE,
+            "mode": "w",
+            "formatter": "railway",
+            "encoding": "utf-8",
+            "level": "ERROR",
+        },
     },
     "root": {
-        "handlers": ["console"],
+        "handlers": ["console", "app_file", "error_file"],
         "level": LOG_LEVEL,
     },
     "loggers": {
