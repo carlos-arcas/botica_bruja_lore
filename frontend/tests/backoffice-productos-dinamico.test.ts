@@ -84,3 +84,11 @@ test("dialogo de edición conserva apertura y render de bloques", () => {
   assert.match(componente, /Editar registro/);
   assert.match(componente, /admin-modal-cabecera/);
 });
+
+
+test("campo multi_select soporta taxonomías secundarias de Botica", () => {
+  const campos = readFileSync("componentes/admin/CamposFormularioAdmin.tsx", "utf8");
+  assert.match(campos, /"multi_select"/);
+  assert.match(campos, /multiple/);
+  assert.match(campos, /selectedOptions/);
+});

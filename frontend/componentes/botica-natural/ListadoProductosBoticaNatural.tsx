@@ -1,14 +1,11 @@
 import { TarjetaProductoBoticaNatural } from "@/componentes/botica-natural/TarjetaProductoBoticaNatural";
+import { BENEFICIOS_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
 import type { ProductoSeccionPublica } from "@/infraestructura/api/herbal";
 
 type Props = {
   productos: ProductoSeccionPublica[];
   filtrosActivos: { beneficio: string; formato: string; modo_uso: string; precio_min: string; precio_max: string };
 };
-
-function opcionUnica(productos: ProductoSeccionPublica[], clave: "beneficio_principal" | "formato_comercial" | "modo_uso") {
-  return Array.from(new Set(productos.map((item) => item[clave]).filter(Boolean))).sort();
-}
 
 export function ListadoProductosBoticaNatural({ productos, filtrosActivos }: Props): JSX.Element {
   if (productos.length === 0) {
@@ -20,21 +17,42 @@ export function ListadoProductosBoticaNatural({ productos, filtrosActivos }: Pro
     );
   }
 
-  const beneficios = opcionUnica(productos, "beneficio_principal");
-  const formatos = opcionUnica(productos, "formato_comercial");
-  const modos = opcionUnica(productos, "modo_uso");
-
   return (
     <section className="botica-natural__layout-filtros">
       <aside className="botica-natural__filtros" aria-label="Filtros de Botica Natural">
         <h2>Filtrar catálogo</h2>
-        <p>Beneficio</p>
-        <ul>{beneficios.map((it) => <li key={it}>{it}</li>)}</ul>
-        <p>Formato</p>
-        <ul>{formatos.map((it) => <li key={it}>{it}</li>)}</ul>
-        <p>Modo de uso</p>
-        <ul>{modos.map((it) => <li key={it}>{it}</li>)}</ul>
-        <p>Precio: {filtrosActivos.precio_min || "0"} - {filtrosActivos.precio_max || "∞"}</p>
+        <form method="get" className="botica-natural__filtros-formulario">
+          <label>
+            Beneficio
+            <select name="beneficio" defaultValue={filtrosActivos.beneficio}>
+              <option value="">Todos</option>
+              {BENEFICIOS_BOTICA.map((it) => <option key={it.valor} value={it.valor}>{it.etiqueta}</option>)}
+            </select>
+          </label>
+          <label>
+            Formato
+            <select name="formato" defaultValue={filtrosActivos.formato}>
+              <option value="">Todos</option>
+              {FORMATOS_BOTICA.map((it) => <option key={it.valor} value={it.valor}>{it.etiqueta}</option>)}
+            </select>
+          </label>
+          <label>
+            Modo de uso
+            <select name="modo_uso" defaultValue={filtrosActivos.modo_uso}>
+              <option value="">Todos</option>
+              {MODOS_USO_BOTICA.map((it) => <option key={it.valor} value={it.valor}>{it.etiqueta}</option>)}
+            </select>
+          </label>
+          <label>
+            Precio mínimo (€)
+            <input name="precio_min" inputMode="decimal" defaultValue={filtrosActivos.precio_min} />
+          </label>
+          <label>
+            Precio máximo (€)
+            <input name="precio_max" inputMode="decimal" defaultValue={filtrosActivos.precio_max} />
+          </label>
+          <button type="submit" className="boton boton--secundario">Aplicar</button>
+        </form>
       </aside>
       <section aria-label="Productos de Botica Natural" className="botica-natural__rejilla">
         {productos.map((producto) => (

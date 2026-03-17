@@ -260,3 +260,76 @@ class BackofficeContenidoTests(TestCase):
         r = self.client.post(f"/api/v1/backoffice/importacion/lotes/{lote}/filas/{fila_id}/imagen/", data={"imagen": imagen}, **self._auth())
         self.assertEqual(r.status_code, 422)
         self.assertIn("WebP", r.json()["detalle"])
+
+
+    def test_filtros_publicos_botica_por_beneficio_formato_modo_precio(self):
+        base = {
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "hierbas",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "imagen_url": "",
+            "publicado": True,
+        }
+        payloads = [
+            {**base, "sku": "SKU-FIL-1", "nombre": "Calma Infusion", "precio_visible": "5.50", "beneficio_principal": "calma", "beneficios_secundarios": "enfoque", "formato_comercial": "hoja-seca", "modo_uso": "infusion", "categoria_visible": "hierbas"},
+            {**base, "sku": "SKU-FIL-2", "nombre": "Energia Sahumado", "precio_visible": "12.10", "beneficio_principal": "energia", "beneficios_secundarios": "calma", "formato_comercial": "resina", "modo_uso": "sahumado", "categoria_visible": "inciensos"},
+        ]
+        for payload in payloads:
+            r = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+            self.assertEqual(r.status_code, 200)
+
+        por_beneficio = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/?beneficio=calma").json()["productos"]
+        self.assertEqual([p["sku"] for p in por_beneficio], ["SKU-FIL-1"])
+
+        por_formato = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/?formato=resina").json()["productos"]
+        self.assertEqual([p["sku"] for p in por_formato], ["SKU-FIL-2"])
+
+        por_modo = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/?modo_uso=infusion").json()["productos"]
+        self.assertEqual([p["sku"] for p in por_modo], ["SKU-FIL-1"])
+
+        por_precio = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/?precio_min=5&precio_max=6").json()["productos"]
+        self.assertEqual([p["sku"] for p in por_precio], ["SKU-FIL-1"])
+
+    def test_guardado_botica_invalido_bloquea_publicacion(self):
+        payload = {
+            "sku": "SKU-INV-1",
+            "nombre": "Invalido botica",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "hierbas",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "precio_visible": "no-num",
+            "beneficio_principal": "beneficio-random",
+            "beneficios_secundarios": "calma",
+            "formato_comercial": "hoja-seca",
+            "modo_uso": "infusion",
+            "categoria_visible": "hierbas",
+            "publicado": True,
+        }
+        respuesta = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertFalse(ProductoModelo.objects.filter(sku="SKU-INV-1").exists())
+
+    def test_listado_publico_sin_limite_fijo_de_cinco(self):
+        base = {
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "botica",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "precio_visible": "9.90",
+            "imagen_url": "",
+            "beneficio_principal": "calma",
+            "beneficios_secundarios": "energia",
+            "formato_comercial": "resina",
+            "modo_uso": "sahumado",
+            "categoria_visible": "inciensos",
+            "publicado": True,
+        }
+        for idx in range(7):
+            payload = {**base, "sku": f"SKU-SIN-LIM-{idx}", "nombre": f"Producto {idx}"}
+            r = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+            self.assertEqual(r.status_code, 200)
+
+        listado = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/").json()["productos"]
+        self.assertGreaterEqual(len(listado), 7)

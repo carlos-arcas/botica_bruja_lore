@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { ModuloCrudContextualAdmin } from "@/componentes/admin/ModuloCrudContextualAdmin";
+import { BENEFICIOS_BOTICA, CATEGORIAS_VISIBLES_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
 
 const SECCIONES = [
   { etiqueta: "Botica Natural", slug: "botica-natural" },
@@ -19,15 +20,15 @@ const CAMPOS_COMUNES = [
   { clave: "publicado", etiqueta: "Publicado", tipo: "checkbox" as const },
 ];
 
-const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string; tipo?: "select"; opciones?: { etiqueta: string; valor: string }[] }[]> = {
+const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string; tipo?: "select" | "multi_select"; opciones?: { etiqueta: string; valor: string }[] }[]> = {
   "botica-natural": [
-    { clave: "beneficio_principal", etiqueta: "Beneficio" },
-    { clave: "beneficios_secundarios", etiqueta: "Beneficios secundarios (coma separada)" },
-    { clave: "formato_comercial", etiqueta: "Formato comercial" },
-    { clave: "modo_uso", etiqueta: "Modo de uso" },
-    { clave: "categoria_visible", etiqueta: "Categoría visible" },
-    { clave: "tipo_producto", etiqueta: "Tipo de producto" },
-    { clave: "categoria_comercial", etiqueta: "Categoría comercial interna" },
+    { clave: "beneficio_principal", etiqueta: "Beneficio", tipo: "select", opciones: BENEFICIOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+    { clave: "beneficios_secundarios", etiqueta: "Beneficios secundarios", tipo: "multi_select", opciones: BENEFICIOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+    { clave: "formato_comercial", etiqueta: "Formato comercial", tipo: "select", opciones: FORMATOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+    { clave: "modo_uso", etiqueta: "Modo de uso", tipo: "select", opciones: MODOS_USO_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+    { clave: "categoria_visible", etiqueta: "Categoría visible", tipo: "select", opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+    { clave: "tipo_producto", etiqueta: "Tipo de producto", tipo: "select", opciones: [{ etiqueta: "Hierbas a granel", valor: "hierbas-a-granel" }, { etiqueta: "Inciensos y sahumerios", valor: "inciensos-y-sahumerios" }, { etiqueta: "Herramientas rituales", valor: "herramientas-rituales" }] },
+    { clave: "categoria_comercial", etiqueta: "Categoría comercial interna", tipo: "select", opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
   ],
   "velas-e-incienso": [
     { clave: "tipo_producto", etiqueta: "Tipo" },
