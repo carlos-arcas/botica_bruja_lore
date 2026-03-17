@@ -3,11 +3,17 @@ import { NextResponse } from "next/server";
 import { DURACION_COOKIE_BACKOFFICE_SEGUNDOS, NOMBRE_COOKIE_BACKOFFICE } from "@/infraestructura/auth/configuracion";
 import { loginBackofficeBackend } from "@/infraestructura/auth/clienteBackendAuth";
 
+type Credenciales = { username?: string; password?: string };
+
+function respuestaError(detalle: string, reasonCode: string, status: number): Response {
+  return NextResponse.json({ detalle, reason_code: reasonCode }, { status });
+}
+
 export async function POST(request: Request): Promise<Response> {
   try {
-    const { username, password } = (await request.json()) as { username?: string; password?: string };
+    const { username, password } = (await request.json()) as Credenciales;
     if (!username || !password) {
-      return NextResponse.json({ detalle: "Debes completar usuario y contraseña." }, { status: 400 });
+      return respuestaError("Debes completar usuario y contraseña.", "missing_credentials", 400);
     }
 
     const resultado = await loginBackofficeBackend(username, password);
@@ -21,6 +27,6 @@ export async function POST(request: Request): Promise<Response> {
     });
     return response;
   } catch {
-    return NextResponse.json({ detalle: "Credenciales inválidas para backoffice." }, { status: 401 });
+    return respuestaError("Credenciales inválidas para backoffice.", "invalid_credentials", 401);
   }
 }
