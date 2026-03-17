@@ -13,6 +13,13 @@ export type EnlaceFooter = {
 
 export const ETIQUETA_ENLACE_ADMIN_CABECERA = "Acceso admin";
 
+
+const ENLACE_LOGS_DEBUG: EnlaceNavegacionGlobal = {
+  etiqueta: "Logs",
+  href: "/debug/logs",
+  coincidencia: "exacta",
+};
+
 export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
   { etiqueta: "Inicio", href: "/", coincidencia: "exacta" },
   { etiqueta: "Colecciones", href: "/colecciones", coincidencia: "prefijo" },
@@ -42,6 +49,10 @@ const ENLACES_LEGALES_SECUNDARIOS: EnlaceFooter[] = ENLACES_LEGALES_FOOTER.map((
 }));
 
 export const ENLACES_FOOTER: EnlaceFooter[] = [...ENLACES_BASE_FOOTER, ...ENLACES_LEGALES_SECUNDARIOS];
+
+export function construirNavegacionPrincipal(mostrarLogs: boolean): EnlaceNavegacionGlobal[] {
+  return mostrarLogs ? [...NAVEGACION_PRINCIPAL, ENLACE_LOGS_DEBUG] : NAVEGACION_PRINCIPAL;
+}
 
 export function esRutaActiva(rutaActual: string, enlace: EnlaceNavegacionGlobal): boolean {
   if (enlace.coincidencia === "exacta") {

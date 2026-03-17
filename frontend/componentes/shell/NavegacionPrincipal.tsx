@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
-  NAVEGACION_PRINCIPAL,
+  construirNavegacionPrincipal,
   construirTextoContadorCesta,
   debeMostrarContadorCesta,
   esRutaActiva,
@@ -13,14 +13,19 @@ import { useCarrito } from "@/componentes/catalogo/cesta/useCarrito";
 
 import estilos from "./shellComercial.module.css";
 
-export function NavegacionPrincipal(): JSX.Element {
+type NavegacionPrincipalProps = {
+  mostrarLogs: boolean;
+};
+
+export function NavegacionPrincipal({ mostrarLogs }: NavegacionPrincipalProps): JSX.Element {
   const rutaActual = usePathname();
   const { totalUnidades } = useCarrito();
+  const enlaces = construirNavegacionPrincipal(mostrarLogs);
 
   return (
     <nav aria-label="Navegación principal" className={estilos.navegacion}>
       <ul>
-        {NAVEGACION_PRINCIPAL.map((enlace) => {
+        {enlaces.map((enlace) => {
           const activa = esRutaActiva(rutaActual, enlace);
           const mostrarContador = enlace.href === "/cesta" && debeMostrarContadorCesta(totalUnidades);
 

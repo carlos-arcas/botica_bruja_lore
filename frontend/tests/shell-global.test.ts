@@ -7,6 +7,7 @@ import {
   ENLACES_FOOTER,
   ETIQUETA_ENLACE_ADMIN_CABECERA,
   NAVEGACION_PRINCIPAL,
+  construirNavegacionPrincipal,
   construirTextoContadorCesta,
   debeMostrarContadorCesta,
   esRutaActiva,
@@ -88,4 +89,13 @@ test("navbar comercial conserva estructura responsive para móvil", () => {
   assert.match(estilos, /@media \(max-width: 780px\)/);
   assert.match(estilos, /\.navegacion ul \{[\s\S]*width: 100%/);
   assert.match(estilos, /\.enlace \{[\s\S]*font-size: 0\.9rem/);
+});
+
+
+test("enlace Logs solo aparece cuando la flag está activa", () => {
+  const sinLogs = construirNavegacionPrincipal(false).map((enlace) => enlace.href);
+  const conLogs = construirNavegacionPrincipal(true).map((enlace) => enlace.href);
+
+  assert.equal(sinLogs.includes("/debug/logs"), false);
+  assert.equal(conLogs.includes("/debug/logs"), true);
 });

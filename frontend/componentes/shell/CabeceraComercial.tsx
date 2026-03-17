@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ETIQUETA_ENLACE_ADMIN_CABECERA } from "@/contenido/shell/navegacionGlobal";
+import { debugLogViewerHabilitado } from "@/infraestructura/configuracion/debugLogs";
 
 import { NavegacionPrincipal } from "./NavegacionPrincipal";
 import estilos from "./shellComercial.module.css";
@@ -14,7 +15,7 @@ export function CabeceraComercial(): JSX.Element {
           <span>Botica editorial · ritual artesanal</span>
         </Link>
         <div className={estilos.accionesCabecera}>
-          <NavegacionPrincipal />
+          <NavegacionPrincipal mostrarLogs={debugLogViewerHabilitado()} />
           <Link
             href="/admin"
             className={estilos.enlaceAdmin}

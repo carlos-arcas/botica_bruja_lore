@@ -3,6 +3,7 @@ from __future__ import annotations
 import secrets
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpRequest
 
 
@@ -14,6 +15,6 @@ def validar_acceso_debug_logs(request: HttpRequest) -> None:
     if not clave_configurada:
         raise Http404("Not found")
 
-    clave = request.headers.get("X-Debug-Log-Key") or request.GET.get("debug_key", "")
+    clave = request.headers.get("X-Debug-Log-Key", "")
     if not secrets.compare_digest(clave, clave_configurada):
-        raise Http404("Not found")
+        raise PermissionDenied("Clave inválida o faltante")
