@@ -80,4 +80,5 @@ urlpatterns = [
         "api/v1/backoffice/",
         include("backend.nucleo_herbal.presentacion.backoffice_urls"),
     ),
+    path("api/debug/", include("backend.nucleo_herbal.presentacion.debug_logs.urls")),
 ]

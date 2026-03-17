@@ -30,6 +30,12 @@ htmlcov/
 
 *.log
 logs/
+!frontend/app/debug/logs/
+!frontend/app/debug/logs/page.tsx
+!frontend/app/api/debug/logs/
+!frontend/app/api/debug/logs/route.ts
+!frontend/app/api/debug/logs/clear/
+!frontend/app/api/debug/logs/clear/route.ts
 
 # Django locales compilados (mantener solo .po versionados)
 *.mo
