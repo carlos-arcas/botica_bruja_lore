@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useCarrito } from "@/componentes/catalogo/cesta/useCarrito";
+import { construirHrefFichaProductoPublico } from "@/componentes/catalogo/rutasProductoPublico";
 import type { ProductoSeccionPublica } from "@/infraestructura/api/herbal";
 
 import { ControlUnidadesBoticaNatural } from "./ControlUnidadesBoticaNatural";
-import { construirHrefFichaProductoPublico } from "@/componentes/catalogo/rutasProductoPublico";
 
 type Props = {
   producto: ProductoSeccionPublica;
@@ -55,13 +55,15 @@ export function TarjetaProductoBoticaNatural({ producto }: Props): JSX.Element {
         <p className="botica-natural__precio">{producto.precio_visible}</p>
         <div className="botica-natural__acciones" data-testid="botica-natural-acciones-card">
           <ControlUnidadesBoticaNatural cantidad={cantidad} alDisminuir={disminuir} alAumentar={aumentar} />
-          <button type="button" className="boton boton--principal" onClick={manejarAgregarCarrito}>
-            Agregar al carrito
-          </button>
+          <div className="botica-natural__acciones-cta">
+            <Link href={hrefFicha} className="boton boton--secundario">
+              Ver detalle
+            </Link>
+            <button type="button" className="boton boton--principal" onClick={manejarAgregarCarrito}>
+              Agregar al carrito
+            </button>
+          </div>
           {agregado && <p className="botica-natural__estado-carrito">Producto agregado al carrito.</p>}
-          <Link href={hrefFicha} className="boton boton--secundario">
-            Ver detalle
-          </Link>
         </div>
       </div>
     </article>

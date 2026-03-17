@@ -14,6 +14,9 @@ import {
   resolverRangoPrecioBotica,
 } from "../contenido/catalogo/precioRangosBoticaNatural";
 import { debeMostrarControlMostrarMas, obtenerOpcionesVisibles, restaurarVisibilidadReducida } from "../componentes/botica-natural/filtros/estadoVisualFiltros";
+
+const leer = (ruta: string): string => readFileSync(join(process.cwd(), ruta), "utf8");
+
 test("grupos con <=6 opciones muestran todo y no requieren Mostrar más", () => {
   const opcionesBreves = OPCIONES_RANGO_PRECIO_BOTICA.slice(0, 6);
   assert.equal(debeMostrarControlMostrarMas(opcionesBreves), false);
@@ -93,9 +96,52 @@ test("si llegan rango y min/max simultáneamente, precio_rango tiene precedencia
 });
 
 test("accesibilidad del acordeón se mantiene estable tras re-render", () => {
-  const acordeon = readFileSync(join(process.cwd(), "componentes/botica-natural/filtros/AcordeonFiltro.tsx"), "utf8");
+  const acordeon = leer("componentes/botica-natural/filtros/AcordeonFiltro.tsx");
 
   assert.equal(acordeon.includes("aria-expanded={expandido}"), true);
   assert.equal(acordeon.includes("aria-controls={panelId}"), true);
-  assert.equal(acordeon.includes("role=\"region\""), true);
+  assert.equal(acordeon.includes('role="region"'), true);
+});
+
+test("desktop renderiza rail de filtros fuera del contenedor principal del listado", () => {
+  const pagina = leer("app/botica-natural/page.tsx");
+
+  assert.equal(pagina.includes('className="botica-natural__layout-catalogo"'), true);
+  assert.equal(pagina.includes('className="botica-natural__rail-filtros"'), true);
+  assert.equal(pagina.includes('className="botica-natural__bloque botica-natural__bloque--catalogo"'), true);
+});
+
+test("listado no incluye estructuralmente el rail de filtros", () => {
+  const listado = leer("componentes/botica-natural/ListadoProductosBoticaNatural.tsx");
+
+  assert.equal(listado.includes("PanelFiltrosBoticaNatural"), false);
+  assert.equal(listado.includes("botica-natural__rail-filtros"), false);
+  assert.equal(listado.includes('className="botica-natural__contenedor-listado"'), true);
+});
+
+test("grid aplica configuración compacta para mayor densidad", () => {
+  const estilos = leer("app/globals.css");
+
+  assert.equal(estilos.includes("grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));"), true);
+  assert.equal(estilos.includes(".botica-natural__acciones-cta"), true);
+});
+
+test("card mantiene render compacto y orden de acciones con CTA principal a la derecha", () => {
+  const tarjeta = leer("componentes/botica-natural/TarjetaProductoBoticaNatural.tsx");
+  const ordenDetalle = tarjeta.indexOf("Ver detalle");
+  const ordenCarrito = tarjeta.indexOf("Agregar al carrito");
+
+  assert.equal(tarjeta.includes('className="botica-natural__acciones-cta"'), true);
+  assert.equal(ordenDetalle >= 0, true);
+  assert.equal(ordenCarrito > ordenDetalle, true);
+  assert.equal(tarjeta.includes('className="boton boton--principal"'), true);
+});
+
+test("en móvil se mantiene flujo de filtros sin rail sticky", () => {
+  const estilos = leer("app/globals.css");
+
+  assert.equal(estilos.includes("@media (max-width: 900px)"), true);
+  assert.equal(estilos.includes(".botica-natural__layout-catalogo"), true);
+  assert.equal(estilos.includes(".botica-natural__rail-filtros"), true);
+  assert.equal(estilos.includes("position: static;"), true);
 });

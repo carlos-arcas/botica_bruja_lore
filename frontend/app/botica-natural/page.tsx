@@ -1,4 +1,5 @@
 import { ListadoProductosBoticaNatural } from "@/componentes/botica-natural/ListadoProductosBoticaNatural";
+import { PanelFiltrosBoticaNatural } from "@/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural";
 import { resolverFiltrosBoticaDesdeSearchParams } from "@/contenido/catalogo/filtrosBoticaNatural";
 import { obtenerProductosPublicosPorSeccion } from "@/infraestructura/api/herbal";
 
@@ -36,12 +37,18 @@ export default async function PaginaBoticaNatural({
 
   return (
     <main className="contenedor-home">
-      <section aria-label="Catálogo Botica Natural" className="botica-natural__bloque">
-        <header className="botica-natural__cabecera">
-          <h1>Botica Natural</h1>
-          <p>Selección herbal pública conectada con catálogo real en producción.</p>
-        </header>
-        <ListadoProductosBoticaNatural productos={resultado.productos} filtrosActivos={filtros} />
+      <section aria-label="Catálogo Botica Natural" className="botica-natural__layout-catalogo">
+        <aside className="botica-natural__rail-filtros" aria-label="Filtros de Botica Natural">
+          <h2>Filtrar catálogo</h2>
+          <PanelFiltrosBoticaNatural filtrosActivos={filtros} />
+        </aside>
+        <section className="botica-natural__bloque botica-natural__bloque--catalogo">
+          <header className="botica-natural__cabecera">
+            <h1>Botica Natural</h1>
+            <p>Selección herbal pública conectada con catálogo real en producción.</p>
+          </header>
+          <ListadoProductosBoticaNatural productos={resultado.productos} />
+        </section>
       </section>
     </main>
   );
