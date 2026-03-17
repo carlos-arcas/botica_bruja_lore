@@ -7,9 +7,16 @@ function normalizarBandera(valor: string | undefined): boolean {
   return VALORES_VERDADEROS.has(valor.trim().toLowerCase());
 }
 
-export function debugLogViewerHabilitado(): boolean {
-  return normalizarBandera(
-    process.env.DEBUG_LOG_VIEWER_ENABLED ?? process.env.NEXT_PUBLIC_DEBUG_LOG_VIEWER_ENABLED,
-  );
+function resolverValorBandera(): string | undefined {
+  const valorServidor = process.env.DEBUG_LOG_VIEWER_ENABLED?.trim();
+  if (valorServidor) {
+    return valorServidor;
+  }
+
+  const valorPublico = process.env.NEXT_PUBLIC_DEBUG_LOG_VIEWER_ENABLED?.trim();
+  return valorPublico || undefined;
 }
 
+export function debugLogViewerHabilitado(): boolean {
+  return normalizarBandera(resolverValorBandera());
+}
