@@ -101,8 +101,10 @@ export function CampoFormulario({ valor, campo, onCambio, controlImagen }: { val
       <div className="admin-input-precio">
         <span aria-hidden="true">€</span>
         <input
+          type="number"
           inputMode="decimal"
-          pattern="^[0-9]+([.,][0-9]{1,2})?$"
+          min="0"
+          step="0.01"
           value={normalizarPrecioEntrada(String(valor ?? ""))}
           onChange={(event) => onCambio(normalizarPrecioEntrada(event.target.value))}
           onBlur={() => onCambio(formatearPrecioVisible(valor))}

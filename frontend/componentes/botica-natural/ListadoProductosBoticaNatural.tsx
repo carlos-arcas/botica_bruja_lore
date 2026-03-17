@@ -22,6 +22,7 @@ export function ListadoProductosBoticaNatural({ productos, filtrosActivos }: Pro
       <aside className="botica-natural__filtros" aria-label="Filtros de Botica Natural">
         <h2>Filtrar catálogo</h2>
         <form method="get" className="botica-natural__filtros-formulario">
+          <p className="botica-natural__filtros-ayuda">Ajusta los filtros para encontrar tu mezcla ideal.</p>
           <label>
             Beneficio
             <select name="beneficio" defaultValue={filtrosActivos.beneficio}>
@@ -45,13 +46,16 @@ export function ListadoProductosBoticaNatural({ productos, filtrosActivos }: Pro
           </label>
           <label>
             Precio mínimo (€)
-            <input name="precio_min" inputMode="decimal" defaultValue={filtrosActivos.precio_min} />
+            <input type="number" min="0" step="0.01" name="precio_min" inputMode="decimal" defaultValue={filtrosActivos.precio_min} />
           </label>
           <label>
             Precio máximo (€)
-            <input name="precio_max" inputMode="decimal" defaultValue={filtrosActivos.precio_max} />
+            <input type="number" min="0" step="0.01" name="precio_max" inputMode="decimal" defaultValue={filtrosActivos.precio_max} />
           </label>
-          <button type="submit" className="boton boton--secundario">Aplicar</button>
+          <div className="botica-natural__acciones-filtros">
+            <button type="submit" className="boton boton--secundario">Aplicar</button>
+            <a href="/botica-natural" className="boton boton--secundario">Limpiar</a>
+          </div>
         </form>
       </aside>
       <section aria-label="Productos de Botica Natural" className="botica-natural__rejilla">

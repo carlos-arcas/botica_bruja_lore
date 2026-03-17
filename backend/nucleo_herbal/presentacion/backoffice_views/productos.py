@@ -92,6 +92,18 @@ def normalizar_categoria_botica(data: dict) -> str:
 
 
 
+
+
+def _validar_publicacion_catalogo(*, tipo_producto: str, categoria_comercial: str, planta_id: str, publicado: bool) -> None:
+    if tipo_producto not in TIPOS_PRODUCTO_CANONICOS:
+        raise ValueError("Tipo de producto inválido.")
+    if not categoria_comercial.strip():
+        raise ValueError("Categoría comercial obligatoria.")
+    if tipo_producto == "hierbas-a-granel" and not planta_id:
+        raise ValueError("Los productos de hierbas a granel requieren planta asociada para catálogo público.")
+    if publicado and tipo_producto == "hierbas-a-granel" and not planta_id:
+        raise ValueError("No se puede publicar una hierba a granel sin planta asociada.")
+
 def _a_slug_catalogo(valor: str) -> str:
     return valor.strip().lower().replace(" ", "-")
 
@@ -131,6 +143,7 @@ def producto_dict(obj: ProductoModelo) -> dict:
         "formato_comercial": obj.formato_comercial,
         "modo_uso": obj.modo_uso,
         "categoria_visible": obj.categoria_visible,
+        "planta_id": obj.planta_id or "",
         "publicado": obj.publicado,
         "orden_publicacion": obj.orden_publicacion,
     }
@@ -189,6 +202,8 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
 
         precio_visible = data.get("precio_visible", "").strip()
         precio_numerico = parsear_precio_numerico(precio_visible)
+        planta_id = data.get("planta_id", "").strip()
+        publicado = to_bool(data, "publicado")
         beneficio_principal = _a_slug_catalogo(str(data.get("beneficio_principal", "")))
         beneficios_secundarios = _normalizar_lista_slugs(str(data.get("beneficios_secundarios", "")))
         formato_comercial = _a_slug_catalogo(str(data.get("formato_comercial", "")))
@@ -201,6 +216,8 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
             formato_comercial = _validar_valor_catalogo(str(data.get("formato_comercial", "")), VALORES_FORMATO, "Formato comercial", "hoja-seca")
             modo_uso = _validar_valor_catalogo(str(data.get("modo_uso", "")), VALORES_MODO_USO, "Modo de uso", "infusion")
             categoria_visible = _validar_valor_catalogo(str(data.get("categoria_visible", "")), VALORES_CATEGORIA_VISIBLE, "Categoría visible", "hierbas")
+
+        _validar_publicacion_catalogo(tipo_producto=tipo_producto, categoria_comercial=categoria_comercial, planta_id=planta_id, publicado=publicado)
 
         defaults = {
             "sku": sku,
@@ -217,7 +234,8 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
             "formato_comercial": formato_comercial,
             "modo_uso": modo_uso,
             "categoria_visible": categoria_visible,
-            "publicado": to_bool(data, "publicado"),
+            "planta_id": planta_id or None,
+            "publicado": publicado,
             "orden_publicacion": to_int(data, "orden_publicacion", 100),
         }
         if existente:

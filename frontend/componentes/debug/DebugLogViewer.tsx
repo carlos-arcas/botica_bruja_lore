@@ -35,6 +35,7 @@ export function DebugLogViewer(): JSX.Element {
   const [raw, setRaw] = useState(false);
   const [estado, setEstado] = useState("Bloqueado");
   const [items, setItems] = useState<ItemLog[]>([]);
+  const [autoactualizar, setAutoactualizar] = useState(false);
 
   const bloque = useMemo(() => items.map((linea) => (raw ? linea.raw : linea.sanitized)).join("\n"), [items, raw]);
 
@@ -46,6 +47,14 @@ export function DebugLogViewer(): JSX.Element {
     void cargar(claveGuardada);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!autoactualizar || estadoVisor !== "operativo" || !clave) return;
+    const intervalo = window.setInterval(() => {
+      void cargar(clave);
+    }, 2500);
+    return () => window.clearInterval(intervalo);
+  }, [autoactualizar, estadoVisor, clave, source, query, level, limit]);
 
   async function cargar(claveActiva: string = clave): Promise<void> {
     setEstado("Cargando...");
@@ -97,6 +106,7 @@ export function DebugLogViewer(): JSX.Element {
 
     setItems([]);
     setEstado("Logs limpiados");
+    await cargar();
   }
 
   async function copiar(): Promise<void> {
@@ -158,9 +168,12 @@ export function DebugLogViewer(): JSX.Element {
               <label>
                 <input type="checkbox" checked={raw} onChange={(e) => setRaw(e.target.checked)} /> Raw
               </label>
+              <label>
+                <input type="checkbox" checked={autoactualizar} onChange={(e) => setAutoactualizar(e.target.checked)} /> Autoactualizar
+              </label>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button onClick={() => void cargar()}>Refrescar</button>
+              <button onClick={() => void cargar()}>Refrescar ahora</button>
               <button onClick={() => void limpiarLogs()}>Limpiar logs</button>
               <button onClick={() => void copiar()}>Copiar bloque</button>
               <button onClick={bloquearVisor}>Bloquear</button>

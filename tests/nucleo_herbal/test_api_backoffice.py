@@ -92,14 +92,14 @@ class ApiBackofficeTests(TestCase):
 
         response = self.client.post(
             "/api/v1/backoffice/productos/guardar/",
-            data='{"nombre":"Melisa","seccion_publica":"botica-natural","tipo_producto":"hierbas-a-granel","categoria_comercial":"botica","beneficio_principal":"calma","beneficios_secundarios":"descanso,sueno","formato_comercial":"granel","modo_uso":"infusion","categoria_visible":"hierbas-a-granel","publicado":true}',
+            data='{"nombre":"Melisa","seccion_publica":"botica-natural","tipo_producto":"herramientas-rituales","categoria_comercial":"hierbas","beneficio_principal":"calma","beneficios_secundarios":"energia","formato_comercial":"hoja-seca","modo_uso":"infusion","categoria_visible":"hierbas","publicado":true}',
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 200)
         item = response.json()["item"]
         self.assertEqual(item["beneficio_principal"], "calma")
-        self.assertEqual(item["formato_comercial"], "granel")
+        self.assertEqual(item["formato_comercial"], "hoja-seca")
         self.assertEqual(item["modo_uso"], "infusion")
 
     def test_editar_producto_botica_conserva_campos_catalogo(self) -> None:
@@ -109,23 +109,61 @@ class ApiBackofficeTests(TestCase):
             sku="BOT-EDIT-001",
             slug="botica-edit-1",
             nombre="Botica Edit",
-            tipo_producto="hierbas-a-granel",
-            categoria_comercial="botica",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="hierbas",
             seccion_publica="botica-natural",
             beneficio_principal="calma",
-            formato_comercial="granel",
+            formato_comercial="hoja-seca",
             modo_uso="infusion",
-            categoria_visible="hierbas-a-granel",
+            categoria_visible="hierbas",
             publicado=True,
         )
 
         response = self.client.post(
             "/api/v1/backoffice/productos/guardar/",
-            data=f'{{"id":"{producto.id}","nombre":"Botica Edit 2","seccion_publica":"botica-natural","tipo_producto":"hierbas-a-granel","categoria_comercial":"botica","beneficio_principal":"energia","formato_comercial":"capsulas","modo_uso":"ingesta-directa","categoria_visible":"capsulas","publicado":true}}',
+            data=f'{{"id":"{producto.id}","nombre":"Botica Edit 2","seccion_publica":"botica-natural","tipo_producto":"herramientas-rituales","categoria_comercial":"mezclas","beneficio_principal":"energia","formato_comercial":"mezcla-herbal","modo_uso":"altar","categoria_visible":"mezclas","publicado":true}}',
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 200)
         item = response.json()["item"]
         self.assertEqual(item["beneficio_principal"], "energia")
-        self.assertEqual(item["formato_comercial"], "capsulas")
+        self.assertEqual(item["formato_comercial"], "mezcla-herbal")
+
+    def test_guardar_producto_invalido_hierba_sin_planta_devuelve_error(self) -> None:
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            "/api/v1/backoffice/productos/guardar/",
+            data='{"nombre":"Menta","seccion_publica":"botica-natural","tipo_producto":"hierbas-a-granel","categoria_comercial":"hierbas","publicado":true}',
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(ProductoModelo.objects.filter(nombre="Menta").count(), 0)
+
+    def test_guardar_producto_valido_hierba_con_planta_funciona(self) -> None:
+        from backend.nucleo_herbal.infraestructura.persistencia_django.models import PlantaModelo
+
+        self.client.force_login(self.staff)
+        planta = PlantaModelo.objects.create(
+            id="pla-001",
+            slug="melisa",
+            nombre="Melisa",
+            descripcion_breve="calma",
+            publicada=True,
+        )
+
+        response = self.client.post(
+            "/api/v1/backoffice/productos/guardar/",
+            data=(
+                '{"nombre":"Melisa 25g","seccion_publica":"botica-natural","tipo_producto":"hierbas-a-granel",'
+                '"categoria_comercial":"hierbas","planta_id":"%s","beneficio_principal":"calma",'
+                '"formato_comercial":"hoja-seca","modo_uso":"infusion","categoria_visible":"hierbas","publicado":true}'
+            )
+            % planta.id,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["item"]["planta_id"], planta.id)

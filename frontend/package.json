@@ -39,7 +39,8 @@
     "test:backoffice-rituales-nav": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/backoffice-rituales-navegacion-visible.test.ts componentes/admin/enlacesAdmin.ts infraestructura/configuracion/modulosAdmin.ts && node .tmp-tests/tests/backoffice-rituales-navegacion-visible.test.js",
     "test:backoffice-layout": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/backoffice-layout-botones.test.ts && node .tmp-tests/backoffice-layout-botones.test.js",
     "test:productos-relacionados": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/productos-relacionados.test.ts && node .tmp-tests/productos-relacionados.test.js",
-    "test:backoffice-auth-debug": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --outDir .tmp-tests tests/backoffice-auth-debug.test.ts && node .tmp-tests/backoffice-auth-debug.test.js"
+    "test:backoffice-auth-debug": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --outDir .tmp-tests tests/backoffice-auth-debug.test.ts && node .tmp-tests/backoffice-auth-debug.test.js",
+    "test:debug-logs": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/debug-log-viewer.test.ts && node .tmp-tests/debug-log-viewer.test.js"
   },
   "dependencies": {
     "next": "14.2.35",

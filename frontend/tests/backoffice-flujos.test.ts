@@ -1,6 +1,7 @@
 import * as assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import { join } from "node:path";
 
 import {
   adjuntarImagenFilaImportacion,
@@ -181,4 +182,12 @@ test("formulario usa componente visual de imagen en alta y edición", () => {
   assert.match(campoImagen, /o selecciónala desde tu PC/);
   assert.match(campoImagen, /Reemplazar/);
   assert.match(campoImagen, /Quitar/);
+});
+
+
+test("campo precio del backoffice usa input numérico real", () => {
+  const campos = readFileSync(join(process.cwd(), "componentes/admin/CamposFormularioAdmin.tsx"), "utf8");
+  assert.equal(campos.includes('type="number"'), true);
+  assert.equal(campos.includes('step="0.01"'), true);
+  assert.equal(campos.includes('aria-label="Precio visible en euros"'), true);
 });

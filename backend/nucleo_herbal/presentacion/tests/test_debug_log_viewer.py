@@ -56,6 +56,19 @@ class DebugLogViewerTests(TestCase):
         self.assertNotIn("abcd1234", item["sanitized"])
         self.assertNotIn("secreto", item["sanitized"])
 
+    def test_limpieza_logs_no_bloqueada_por_csrf(self):
+        client_csrf = Client(enforce_csrf_checks=True)
+        Path(self.error_log).write_text("ERROR csrf", encoding="utf-8")
+        with override_settings(**self._settings()):
+            respuesta = client_csrf.post(
+                "/api/debug/logs/clear",
+                data=json.dumps({"source": "error"}),
+                content_type="application/json",
+                HTTP_X_DEBUG_LOG_KEY="clave-debug",
+            )
+
+        self.assertEqual(respuesta.status_code, 200)
+
     def test_limpieza_logs_trunca_archivo(self):
         Path(self.error_log).write_text("ERROR fallo inicial", encoding="utf-8")
         with override_settings(**self._settings()):

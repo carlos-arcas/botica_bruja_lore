@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from .seguridad import validar_acceso_debug_logs
@@ -28,6 +29,7 @@ def obtener_logs(request):
     return JsonResponse(data, status=200)
 
 
+@csrf_exempt
 @require_POST
 def limpiar_logs_view(request):
     validar_acceso_debug_logs(request)
