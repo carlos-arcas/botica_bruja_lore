@@ -6,6 +6,14 @@ from django.db.models import Q
 from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from backend.nucleo_herbal.infraestructura.persistencia_django.catalogo_botica import (
+    BENEFICIOS_BOTICA,
+    CATEGORIAS_VISIBLES_BOTICA,
+    FORMATOS_BOTICA,
+    MODOS_USO_BOTICA,
+    opciones_a_valores,
+    parsear_precio_numerico,
+)
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
 
 from .auth import usuario_staff
@@ -41,6 +49,29 @@ MAPEO_TIPO_LEGACY_BOTICA = {
     "bolsita-ritual": "inciensos-y-sahumerios",
     "personalizado": "herramientas-rituales",
 }
+
+
+VALORES_BENEFICIO = opciones_a_valores(BENEFICIOS_BOTICA)
+VALORES_FORMATO = opciones_a_valores(FORMATOS_BOTICA)
+VALORES_MODO_USO = opciones_a_valores(MODOS_USO_BOTICA)
+VALORES_CATEGORIA_VISIBLE = opciones_a_valores(CATEGORIAS_VISIBLES_BOTICA)
+
+
+def _validar_valor_catalogo(valor: str, permitidos: set[str], etiqueta: str, valor_defecto: str) -> str:
+    limpio = _a_slug_catalogo(valor)
+    if not limpio:
+        return valor_defecto
+    if limpio not in permitidos:
+        raise ValueError(f"{etiqueta} inválido para Botica Natural.")
+    return limpio
+
+
+def _normalizar_beneficios_secundarios(valor: str) -> str:
+    slugs = [item for item in _normalizar_lista_slugs(valor).split(",") if item]
+    invalidos = [item for item in slugs if item not in VALORES_BENEFICIO]
+    if invalidos:
+        raise ValueError("Beneficios secundarios inválidos para Botica Natural.")
+    return ",".join(dict.fromkeys(slugs))
 
 
 def normalizar_tipo_producto_botica(data: dict) -> str:
@@ -93,6 +124,7 @@ def producto_dict(obj: ProductoModelo) -> dict:
         "seccion_publica": obj.seccion_publica,
         "descripcion_corta": obj.descripcion_corta,
         "precio_visible": obj.precio_visible,
+        "precio_numerico": str(obj.precio_numerico) if obj.precio_numerico is not None else "",
         "imagen_url": obj.imagen_url,
         "beneficio_principal": obj.beneficio_principal,
         "beneficios_secundarios": obj.beneficios_secundarios,
@@ -155,6 +187,21 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
             tipo_producto = normalizar_tipo_producto_botica(data)
             categoria_comercial = normalizar_categoria_botica(data)
 
+        precio_visible = data.get("precio_visible", "").strip()
+        precio_numerico = parsear_precio_numerico(precio_visible)
+        beneficio_principal = _a_slug_catalogo(str(data.get("beneficio_principal", "")))
+        beneficios_secundarios = _normalizar_lista_slugs(str(data.get("beneficios_secundarios", "")))
+        formato_comercial = _a_slug_catalogo(str(data.get("formato_comercial", "")))
+        modo_uso = _a_slug_catalogo(str(data.get("modo_uso", "")))
+        categoria_visible = _a_slug_catalogo(str(data.get("categoria_visible", "")))
+
+        if seccion == "botica-natural":
+            beneficio_principal = _validar_valor_catalogo(str(data.get("beneficio_principal", "")), VALORES_BENEFICIO, "Beneficio principal", "calma")
+            beneficios_secundarios = _normalizar_beneficios_secundarios(str(data.get("beneficios_secundarios", "")))
+            formato_comercial = _validar_valor_catalogo(str(data.get("formato_comercial", "")), VALORES_FORMATO, "Formato comercial", "hoja-seca")
+            modo_uso = _validar_valor_catalogo(str(data.get("modo_uso", "")), VALORES_MODO_USO, "Modo de uso", "infusion")
+            categoria_visible = _validar_valor_catalogo(str(data.get("categoria_visible", "")), VALORES_CATEGORIA_VISIBLE, "Categoría visible", "hierbas")
+
         defaults = {
             "sku": sku,
             "nombre": nombre,
@@ -162,13 +209,14 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
             "categoria_comercial": categoria_comercial,
             "seccion_publica": seccion,
             "descripcion_corta": data.get("descripcion_corta", "").strip(),
-            "precio_visible": data.get("precio_visible", "").strip(),
+            "precio_visible": precio_visible,
+            "precio_numerico": precio_numerico,
             "imagen_url": data.get("imagen_url", "").strip(),
-            "beneficio_principal": _a_slug_catalogo(str(data.get("beneficio_principal", ""))),
-            "beneficios_secundarios": _normalizar_lista_slugs(str(data.get("beneficios_secundarios", ""))),
-            "formato_comercial": _a_slug_catalogo(str(data.get("formato_comercial", ""))),
-            "modo_uso": _a_slug_catalogo(str(data.get("modo_uso", ""))),
-            "categoria_visible": _a_slug_catalogo(str(data.get("categoria_visible", ""))),
+            "beneficio_principal": beneficio_principal,
+            "beneficios_secundarios": beneficios_secundarios,
+            "formato_comercial": formato_comercial,
+            "modo_uso": modo_uso,
+            "categoria_visible": categoria_visible,
             "publicado": to_bool(data, "publicado"),
             "orden_publicacion": to_int(data, "orden_publicacion", 100),
         }

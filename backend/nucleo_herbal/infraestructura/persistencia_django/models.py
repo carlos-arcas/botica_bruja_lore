@@ -52,6 +52,7 @@ class ProductoModelo(models.Model):
     seccion_publica = models.SlugField(max_length=80, default="catalogo-general")
     descripcion_corta = models.TextField(blank=True, default="")
     precio_visible = models.CharField(max_length=80, blank=True, default="")
+    precio_numerico = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     imagen_url = models.CharField(max_length=255, blank=True, default="")
     beneficio_principal = models.SlugField(max_length=80, blank=True, default="")
     beneficios_secundarios = models.CharField(max_length=255, blank=True, default="")

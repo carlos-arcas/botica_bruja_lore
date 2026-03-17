@@ -99,3 +99,24 @@ test("listado Botica muestra lateral de filtros", () => {
   assert.equal(listado.includes("Formato"), true);
   assert.equal(listado.includes("Modo de uso"), true);
 });
+
+
+test("lateral de Botica usa controles de formulario reales y query params persistentes", () => {
+  const listado = readFileSync(join(process.cwd(), "componentes/botica-natural/ListadoProductosBoticaNatural.tsx"), "utf8");
+  assert.equal(listado.includes('<form method="get"'), true);
+  assert.equal(listado.includes('name="beneficio"'), true);
+  assert.equal(listado.includes('name="formato"'), true);
+  assert.equal(listado.includes('name="modo_uso"'), true);
+  assert.equal(listado.includes('name="precio_min"'), true);
+  assert.equal(listado.includes('name="precio_max"'), true);
+  assert.equal(listado.includes("defaultValue={filtrosActivos.beneficio}"), true);
+});
+
+test("backoffice Botica define selectores tipados para taxonomias", () => {
+  const modulo = readFileSync(join(process.cwd(), "componentes/admin/ModuloProductosAdmin.tsx"), "utf8");
+  assert.equal(modulo.includes('tipo: "select"'), true);
+  assert.equal(modulo.includes('tipo: "multi_select"'), true);
+  assert.equal(modulo.includes("BENEFICIOS_BOTICA"), true);
+  assert.equal(modulo.includes("FORMATOS_BOTICA"), true);
+  assert.equal(modulo.includes("MODOS_USO_BOTICA"), true);
+});

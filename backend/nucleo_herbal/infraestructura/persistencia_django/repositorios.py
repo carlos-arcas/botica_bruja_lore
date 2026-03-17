@@ -88,42 +88,24 @@ class RepositorioProductosORM(RepositorioProductos):
             seccion_publica__iexact=seccion_normalizada,
         ).order_by("slug")
         queryset = self._aplicar_filtros_publicos(queryset, filtros)
-        productos = self._filtrar_por_precio(self._mapear_productos_validos(queryset), filtros)
-        if productos:
-            return productos
-
-        queryset = ProductoModelo.objects.filter(
-            publicado=True,
-            tipo_producto=TIPO_PRODUCTO_HERBAL,
-        ).order_by("slug")
-        queryset = self._aplicar_filtros_publicos(queryset, filtros)
-        return self._filtrar_por_precio(self._mapear_productos_validos(queryset), filtros)
+        return self._filtrar_por_precio(queryset, filtros)
 
 
 
-    def _filtrar_por_precio(self, productos: tuple[Producto, ...], filtros: dict[str, str]) -> tuple[Producto, ...]:
+    def _filtrar_por_precio(self, queryset, filtros: dict[str, str]) -> tuple[Producto, ...]:
         precio_min_raw = filtros.get("precio_min", "").strip().replace(",", ".")
         precio_max_raw = filtros.get("precio_max", "").strip().replace(",", ".")
-        if not precio_min_raw and not precio_max_raw:
-            return productos
         try:
             precio_min = float(precio_min_raw) if precio_min_raw else None
             precio_max = float(precio_max_raw) if precio_max_raw else None
         except ValueError:
-            return productos
-        filtrados = []
-        for item in productos:
-            texto = item.precio_visible.strip().replace("€", "").replace(" ", "").replace(",", ".")
-            try:
-                precio = float(texto)
-            except ValueError:
-                continue
-            if precio_min is not None and precio < precio_min:
-                continue
-            if precio_max is not None and precio > precio_max:
-                continue
-            filtrados.append(item)
-        return tuple(filtrados)
+            precio_min = None
+            precio_max = None
+        if precio_min is not None:
+            queryset = queryset.filter(precio_numerico__gte=precio_min)
+        if precio_max is not None:
+            queryset = queryset.filter(precio_numerico__lte=precio_max)
+        return self._mapear_productos_validos(queryset)
     def _aplicar_filtros_publicos(self, queryset, filtros: dict[str, str]):
         beneficio = filtros.get("beneficio", "").strip()
         formato = filtros.get("formato", "").strip()
