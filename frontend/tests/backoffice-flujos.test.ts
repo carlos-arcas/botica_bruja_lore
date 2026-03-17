@@ -16,6 +16,7 @@ import {
   obtenerLoteImportacion,
   revalidarLoteImportacion,
   subirImagenBackoffice,
+  obtenerPlantasAsociadasBackoffice,
   resolverBaseBackoffice,
 } from "../infraestructura/api/backoffice";
 import { validarFormularioProducto } from "../infraestructura/configuracion/validacionProductosBackoffice";
@@ -228,4 +229,18 @@ test("validación de producto bloquea payload incompleto de botica en alta y edi
 test("validación de producto exige precio numérico", () => {
   const invalido = validarFormularioProducto({ nombre: "Producto", seccion_publica: "botica-natural", precio_visible: "" });
   assert.equal(invalido, "El precio debe ser numérico y válido.");
+});
+
+
+test("api de backoffice carga plantas asociadas para selector humano", async () => {
+  let url = "";
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    url = String(input);
+    return { ok: true, json: async () => ({ items: [{ id: "pla-1", nombre: "Menta" }] }) } as Response;
+  }) as unknown as typeof fetch;
+
+  const plantas = await obtenerPlantasAsociadasBackoffice("token");
+  assert.match(url, /\/api\/v1\/backoffice\/productos\/plantas\/$/);
+  assert.equal(plantas[0]?.id, "pla-1");
+  assert.equal(plantas[0]?.nombre, "Menta");
 });

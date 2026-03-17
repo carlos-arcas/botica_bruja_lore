@@ -14,7 +14,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.catalogo_botica i
     opciones_a_valores,
     parsear_precio_numerico,
 )
-from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import PlantaModelo, ProductoModelo
 
 from .auth import usuario_staff
 from .identificadores import generar_id_si_falta, generar_slug_unico
@@ -147,6 +147,16 @@ def producto_dict(obj: ProductoModelo) -> dict:
         "publicado": obj.publicado,
         "orden_publicacion": obj.orden_publicacion,
     }
+
+
+def listado_plantas_backoffice(request: HttpRequest) -> JsonResponse:
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+    if usuario_staff(request) is None:
+        return json_no_autorizado()
+
+    plantas = PlantaModelo.objects.order_by("nombre").values("id", "nombre")
+    return JsonResponse({"items": [{"id": item["id"], "nombre": item["nombre"]} for item in plantas]})
 
 
 def listado_productos_backoffice(request: HttpRequest) -> JsonResponse:

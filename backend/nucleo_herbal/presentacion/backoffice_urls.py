@@ -24,6 +24,7 @@ from .backoffice_views import (
     guardar_seccion_backoffice,
     listado_editorial_backoffice,
     listado_productos_backoffice,
+    listado_plantas_backoffice,
     listado_rituales_backoffice,
     listado_secciones_backoffice,
 )
@@ -31,6 +32,7 @@ from .backoffice_views import (
 urlpatterns = [
     path("estado/", estado_backoffice, name="backoffice-estado"),
     path("productos/", listado_productos_backoffice, name="backoffice-productos"),
+    path("productos/plantas/", listado_plantas_backoffice, name="backoffice-productos-plantas"),
     path("productos/guardar/", guardar_producto_backoffice, name="backoffice-producto-guardar"),
     path("productos/<str:producto_id>/publicacion/", cambiar_publicacion_producto_backoffice, name="backoffice-producto-publicacion"),
     path("rituales/", listado_rituales_backoffice, name="backoffice-rituales"),

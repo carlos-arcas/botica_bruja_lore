@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ModuloCrudContextualAdmin } from "@/componentes/admin/ModuloCrudContextualAdmin";
+import { obtenerPlantasAsociadasBackoffice } from "@/infraestructura/api/backoffice";
 import { validarFormularioProducto } from "@/infraestructura/configuracion/validacionProductosBackoffice";
 import { BENEFICIOS_BOTICA, CATEGORIAS_VISIBLES_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
 
@@ -21,30 +22,32 @@ const CAMPOS_COMUNES = [
   { clave: "publicado", etiqueta: "Publicado", tipo: "checkbox" as const },
 ];
 
-const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string; tipo?: "select" | "multi_select"; opciones?: { etiqueta: string; valor: string }[] }[]> = {
-  "botica-natural": [
-    { clave: "beneficio_principal", etiqueta: "Beneficio", tipo: "select", opciones: BENEFICIOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
-    { clave: "beneficios_secundarios", etiqueta: "Beneficios secundarios", tipo: "multi_select", opciones: BENEFICIOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
-    { clave: "formato_comercial", etiqueta: "Formato comercial", tipo: "select", opciones: FORMATOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
-    { clave: "modo_uso", etiqueta: "Modo de uso", tipo: "select", opciones: MODOS_USO_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
-    { clave: "categoria_visible", etiqueta: "Categoría visible", tipo: "select", opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
-    { clave: "tipo_producto", etiqueta: "Tipo de producto", tipo: "select", opciones: [{ etiqueta: "Hierbas a granel", valor: "hierbas-a-granel" }, { etiqueta: "Inciensos y sahumerios", valor: "inciensos-y-sahumerios" }, { etiqueta: "Herramientas rituales", valor: "herramientas-rituales" }] },
-    { clave: "categoria_comercial", etiqueta: "Categoría comercial interna", tipo: "select", opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
-    { clave: "planta_id", etiqueta: "Planta asociada (ID)" },
-  ],
-  "velas-e-incienso": [
-    { clave: "tipo_producto", etiqueta: "Tipo" },
-    { clave: "categoria_comercial", etiqueta: "Aroma" },
-  ],
-  "minerales-y-energia": [
-    { clave: "tipo_producto", etiqueta: "Mineral" },
-    { clave: "categoria_comercial", etiqueta: "Tamaño / acabado" },
-  ],
-  "herramientas-esotericas": [
-    { clave: "tipo_producto", etiqueta: "Tipo de herramienta" },
-    { clave: "categoria_comercial", etiqueta: "Material / compatibilidades" },
-  ],
-};
+function construirCamposPorSeccion(opcionesPlantas: { etiqueta: string; valor: string }[]): Record<string, { clave: string; etiqueta: string; tipo?: "select" | "multi_select"; opciones?: { etiqueta: string; valor: string }[] }[]> {
+  return {
+    "botica-natural": [
+      { clave: "beneficio_principal", etiqueta: "Beneficio", tipo: "select", opciones: BENEFICIOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+      { clave: "beneficios_secundarios", etiqueta: "Beneficios secundarios", tipo: "multi_select", opciones: BENEFICIOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+      { clave: "formato_comercial", etiqueta: "Formato comercial", tipo: "select", opciones: FORMATOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+      { clave: "modo_uso", etiqueta: "Modo de uso", tipo: "select", opciones: MODOS_USO_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+      { clave: "categoria_visible", etiqueta: "Categoría visible", tipo: "select", opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+      { clave: "tipo_producto", etiqueta: "Tipo de producto", tipo: "select", opciones: [{ etiqueta: "Hierbas a granel", valor: "hierbas-a-granel" }, { etiqueta: "Inciensos y sahumerios", valor: "inciensos-y-sahumerios" }, { etiqueta: "Herramientas rituales", valor: "herramientas-rituales" }] },
+      { clave: "categoria_comercial", etiqueta: "Categoría comercial interna", tipo: "select", opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+      { clave: "planta_id", etiqueta: "Planta asociada", tipo: "select", opciones: opcionesPlantas },
+    ],
+    "velas-e-incienso": [
+      { clave: "tipo_producto", etiqueta: "Tipo" },
+      { clave: "categoria_comercial", etiqueta: "Aroma" },
+    ],
+    "minerales-y-energia": [
+      { clave: "tipo_producto", etiqueta: "Mineral" },
+      { clave: "categoria_comercial", etiqueta: "Tamaño / acabado" },
+    ],
+    "herramientas-esotericas": [
+      { clave: "tipo_producto", etiqueta: "Tipo de herramienta" },
+      { clave: "categoria_comercial", etiqueta: "Material / compatibilidades" },
+    ],
+  };
+}
 
 const COLUMNAS_OBLIGATORIAS = ["nombre", "seccion_publica", "tipo_producto", "categoria_comercial"];
 const COLUMNAS_OPCIONALES = [
@@ -61,7 +64,27 @@ const COLUMNAS_OPCIONALES = [
 
 export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string; itemsIniciales: Record<string, unknown>[] }): JSX.Element {
   const [seccion, setSeccion] = useState<string>(SECCIONES[0].slug);
+  const [opcionesPlantas, setOpcionesPlantas] = useState<{ etiqueta: string; valor: string }[]>([]);
   const filtrados = useMemo(() => itemsIniciales.filter((item) => item.seccion_publica === seccion), [itemsIniciales, seccion]);
+  const camposPorSeccion = useMemo(() => construirCamposPorSeccion(opcionesPlantas), [opcionesPlantas]);
+
+  useEffect(() => {
+    let activa = true;
+    const cargarPlantas = async () => {
+      try {
+        const plantas = await obtenerPlantasAsociadasBackoffice(token);
+        if (!activa) return;
+        setOpcionesPlantas(plantas.map((planta) => ({ etiqueta: planta.nombre, valor: planta.id })));
+      } catch {
+        if (!activa) return;
+        setOpcionesPlantas([]);
+      }
+    };
+    void cargarPlantas();
+    return () => {
+      activa = false;
+    };
+  }, [token]);
 
   return (
     <>
@@ -91,7 +114,7 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
         campoEstado="publicado"
         entidadImportacion="productos"
         camposComunes={CAMPOS_COMUNES}
-        camposEspecificos={CAMPOS_POR_SECCION[seccion] ?? []}
+        camposEspecificos={camposPorSeccion[seccion] ?? []}
         seccionSeleccionada={seccion}
         columnasObligatoriasImportacion={COLUMNAS_OBLIGATORIAS}
         columnasOpcionalesImportacion={COLUMNAS_OPCIONALES}

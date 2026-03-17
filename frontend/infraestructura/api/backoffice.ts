@@ -78,6 +78,18 @@ export async function obtenerListadoAdmin(modulo: ModuloAdmin, query: URLSearchP
   }
 }
 
+
+export type PlantaAsociadaBackoffice = {
+  id: string;
+  nombre: string;
+};
+
+export async function obtenerPlantasAsociadasBackoffice(token?: string): Promise<PlantaAsociadaBackoffice[]> {
+  const r = await fetch(construirUrlBackoffice("/api/v1/backoffice/productos/plantas/"), { headers: cabecerasConToken(token, false), cache: "no-store" });
+  if (!r.ok) throw new Error("No se pudieron cargar las plantas disponibles.");
+  const data = (await r.json()) as { items?: PlantaAsociadaBackoffice[] };
+  return Array.isArray(data.items) ? data.items : [];
+}
 export async function guardarRegistroAdmin(modulo: ModuloAdmin, payload: Record<string, unknown>, token?: string): Promise<Record<string, unknown>> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/${modulo}/guardar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify(payload) });
   if (!r.ok) throw new Error("No se pudo guardar");

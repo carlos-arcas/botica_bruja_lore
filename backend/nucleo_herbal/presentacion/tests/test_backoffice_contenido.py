@@ -292,6 +292,18 @@ class BackofficeContenidoTests(TestCase):
         self.assertEqual([p["sku"] for p in por_precio], ["SKU-FIL-1"])
 
 
+
+    def test_listado_plantas_backoffice_retorna_nombre_humano(self):
+        PlantaModelo.objects.create(id="pla-menta", slug="menta", nombre="Menta")
+        PlantaModelo.objects.create(id="pla-melisa", slug="melisa", nombre="Melisa")
+
+        respuesta = self.client.get("/api/v1/backoffice/productos/plantas/", **self._auth())
+
+        self.assertEqual(respuesta.status_code, 200)
+        items = respuesta.json()["items"]
+        self.assertEqual([item["nombre"] for item in items], ["Melisa", "Menta"])
+        self.assertEqual(items[0]["id"], "pla-melisa")
+
     def test_edicion_hierbas_a_granel_exige_planta_id(self):
         PlantaModelo.objects.create(id="pla-1", slug="menta", nombre="Menta")
         PlantaModelo.objects.create(id="pla-2", slug="melisa", nombre="Melisa")
