@@ -138,8 +138,10 @@ function agruparCamposFormulario(campos: ConfigCampo[]): GrupoCampos[] {
 
 
 function debeMostrarCampo(modulo: ModuloAdmin, campo: ConfigCampo, formulario: Record<string, unknown>): boolean {
-  if (modulo !== "productos" || campo.clave !== "formato_peso_personalizado") return true;
-  return String(formulario.formato_peso ?? "") === "personalizado";
+  if (modulo !== "productos") return true;
+  if (campo.clave === "formato_peso_personalizado") return String(formulario.formato_peso ?? "") === "personalizado";
+  if (campo.clave === "planta_id") return String(formulario.tipo_producto ?? "") === "hierbas-a-granel";
+  return true;
 }
 
 function BloqueCampos({ modulo, grupo, formulario, onCambio, controlImagen }: { modulo: ModuloAdmin; grupo: GrupoCampos; formulario: Record<string, unknown>; onCambio: (clave: string, valor: unknown) => void; controlImagen?: ControlImagenFormulario }): JSX.Element {

@@ -39,6 +39,8 @@ export type EstadoAccesoBackoffice =
 
 export type ResultadoListado = { estado: "ok"; items: Record<string, unknown>[] } | { estado: "denegado"; detalle: string } | { estado: "error"; detalle: string };
 
+export type PlantaAsociable = { id: string; nombre: string };
+
 function cabecerasConToken(token?: string, json = true): HeadersInit {
   const base: Record<string, string> = { Accept: "application/json" };
   if (json) base["Content-Type"] = "application/json";
@@ -76,6 +78,14 @@ export async function obtenerListadoAdmin(modulo: ModuloAdmin, query: URLSearchP
   } catch {
     return { estado: "error", detalle: "Error de red." };
   }
+}
+
+
+export async function obtenerPlantasAsociables(token?: string): Promise<PlantaAsociable[]> {
+  const respuesta = await fetch(construirUrlBackoffice("/api/v1/backoffice/productos/plantas-asociables/"), { headers: cabecerasConToken(token, false), cache: "no-store" });
+  if (!respuesta.ok) throw new Error("No se pudo cargar la lista de plantas asociables.");
+  const data = (await respuesta.json()) as { items?: PlantaAsociable[] };
+  return Array.isArray(data.items) ? data.items : [];
 }
 
 export async function guardarRegistroAdmin(modulo: ModuloAdmin, payload: Record<string, unknown>, token?: string): Promise<Record<string, unknown>> {
