@@ -94,8 +94,12 @@ test("navbar comercial conserva estructura responsive para móvil", () => {
 
 test("enlace Logs solo aparece cuando la flag está activa", () => {
   const sinLogs = construirNavegacionPrincipal(false).map((enlace) => enlace.href);
-  const conLogs = construirNavegacionPrincipal(true).map((enlace) => enlace.href);
+  const conLogs = construirNavegacionPrincipal(true);
+  const rutasConLogs = conLogs.map((enlace) => enlace.href);
+  const enlaceLogs = conLogs.find((enlace) => enlace.href === "/debug/logs");
 
   assert.equal(sinLogs.includes("/debug/logs"), false);
-  assert.equal(conLogs.includes("/debug/logs"), true);
+  assert.equal(rutasConLogs.includes("/debug/logs"), true);
+  assert.equal(enlaceLogs?.etiqueta, "Logs");
+  assert.equal(enlaceLogs?.coincidencia, "exacta");
 });
