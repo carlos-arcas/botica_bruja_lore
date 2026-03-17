@@ -532,7 +532,11 @@ button:focus-visible {
   border: 1px solid var(--borde);
   background: var(--fondo-bloque);
   border-radius: 16px;
-  padding: 1rem;
+  padding: 0.9rem;
+}
+
+.botica-natural__bloque--catalogo {
+  padding: 0.85rem;
 }
 
 .botica-natural__cabecera h1 {
@@ -545,26 +549,29 @@ button:focus-visible {
 }
 
 
-.botica-natural__layout-filtros {
+.botica-natural__layout-catalogo {
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
-  margin-top: 1rem;
 }
 
-.botica-natural__filtros {
+.botica-natural__rail-filtros {
   border: 1px solid rgba(130, 100, 76, 0.25);
   background: linear-gradient(180deg, #fffdf9 0%, #f7f1e7 100%);
   border-radius: 14px;
-  padding: 0.9rem;
+  padding: 0.8rem;
   position: sticky;
   top: 1rem;
 }
 
-.botica-natural__filtros h2 {
+.botica-natural__rail-filtros h2 {
   margin: 0 0 0.35rem;
   font-size: 1rem;
+}
+
+.botica-natural__contenedor-listado {
+  margin-top: 0.6rem;
 }
 
 .botica-natural__filtros-ayuda {
@@ -690,14 +697,13 @@ button:focus-visible {
 
 .botica-natural__rejilla {
   display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  margin-top: 1rem;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 .botica-natural__card {
   border: 1px solid rgba(130, 100, 76, 0.35);
-  border-radius: 16px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #fffdf9 0%, #faf6ee 100%);
   box-shadow: 0 10px 24px rgba(62, 45, 31, 0.08);
   overflow: hidden;
@@ -708,7 +714,7 @@ button:focus-visible {
 
 .botica-natural__media,
 .botica-natural__media-enlace {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 11;
   border-bottom: 1px solid rgba(130, 100, 76, 0.2);
   background: radial-gradient(circle at 15% 10%, rgba(247, 235, 216, 0.8), rgba(235, 223, 204, 0.85));
 }
@@ -751,19 +757,20 @@ button:focus-visible {
 .botica-natural__contenido {
   display: grid;
   grid-template-rows: auto 1fr auto auto;
-  gap: 0.6rem;
-  padding: 1rem;
+  gap: 0.5rem;
+  padding: 0.8rem;
 }
 
 .botica-natural__contenido h2 {
   margin: 0;
-  font-size: 1.08rem;
+  font-size: 1rem;
 }
 
 .botica-natural__descripcion {
   margin: 0;
   color: #5d5144;
-  line-height: 1.4;
+  line-height: 1.3;
+  font-size: 0.93rem;
 }
 
 .botica-natural__precio {
@@ -774,8 +781,20 @@ button:focus-visible {
 
 .botica-natural__acciones {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.45rem;
   align-content: end;
+}
+
+.botica-natural__acciones-cta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.botica-natural__acciones-cta .boton {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.65rem;
 }
 
 .botica-natural__control-unidades {
@@ -791,7 +810,7 @@ button:focus-visible {
 
 .botica-natural__stepper {
   display: grid;
-  grid-template-columns: 2rem 1fr 2rem;
+  grid-template-columns: 1.8rem 1fr 1.8rem;
   align-items: center;
   border: 1px solid #cebfa9;
   border-radius: 999px;
@@ -804,7 +823,7 @@ button:focus-visible {
   background: transparent;
   font-size: 1rem;
   color: #4f3f2f;
-  height: 2rem;
+  height: 1.8rem;
 }
 
 .botica-natural__stepper input {
@@ -829,11 +848,11 @@ button:focus-visible {
 
 
 @media (max-width: 900px) {
-  .botica-natural__layout-filtros {
+  .botica-natural__layout-catalogo {
     grid-template-columns: 1fr;
   }
 
-  .botica-natural__filtros {
+  .botica-natural__rail-filtros {
     position: static;
   }
 }
