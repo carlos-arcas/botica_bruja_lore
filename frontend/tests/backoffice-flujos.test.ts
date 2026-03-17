@@ -18,6 +18,7 @@ import {
   subirImagenBackoffice,
   resolverBaseBackoffice,
 } from "../infraestructura/api/backoffice";
+import { validarFormularioProducto } from "../infraestructura/configuracion/validacionProductosBackoffice";
 
 
 test("resuelve base de API para servidor y navegador", () => {
@@ -190,4 +191,41 @@ test("campo precio del backoffice usa input numérico real", () => {
   assert.equal(campos.includes('type="number"'), true);
   assert.equal(campos.includes('step="0.01"'), true);
   assert.equal(campos.includes('aria-label="Precio visible en euros"'), true);
+});
+
+
+test("validación de producto bloquea payload incompleto de botica en alta y edición", () => {
+  const invalido = validarFormularioProducto({
+    nombre: "Producto",
+    seccion_publica: "botica-natural",
+    precio_visible: "9.90",
+    tipo_producto: "hierbas-a-granel",
+    categoria_comercial: "hierbas",
+    beneficio_principal: "calma",
+    formato_comercial: "hoja-seca",
+    modo_uso: "infusion",
+    categoria_visible: "hierbas",
+    planta_id: "",
+  });
+
+  const valido = validarFormularioProducto({
+    nombre: "Producto",
+    seccion_publica: "botica-natural",
+    precio_visible: "9.90",
+    tipo_producto: "hierbas-a-granel",
+    categoria_comercial: "hierbas",
+    beneficio_principal: "calma",
+    formato_comercial: "hoja-seca",
+    modo_uso: "infusion",
+    categoria_visible: "hierbas",
+    planta_id: "pla-1",
+  });
+
+  assert.equal(invalido, "Las hierbas a granel requieren planta asociada.");
+  assert.equal(valido, null);
+});
+
+test("validación de producto exige precio numérico", () => {
+  const invalido = validarFormularioProducto({ nombre: "Producto", seccion_publica: "botica-natural", precio_visible: "" });
+  assert.equal(invalido, "El precio debe ser numérico y válido.");
 });

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { ModuloCrudContextualAdmin } from "@/componentes/admin/ModuloCrudContextualAdmin";
+import { validarFormularioProducto } from "@/infraestructura/configuracion/validacionProductosBackoffice";
 import { BENEFICIOS_BOTICA, CATEGORIAS_VISIBLES_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
 
 const SECCIONES = [
@@ -29,6 +30,7 @@ const CAMPOS_POR_SECCION: Record<string, { clave: string; etiqueta: string; tipo
     { clave: "categoria_visible", etiqueta: "Categoría visible", tipo: "select", opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
     { clave: "tipo_producto", etiqueta: "Tipo de producto", tipo: "select", opciones: [{ etiqueta: "Hierbas a granel", valor: "hierbas-a-granel" }, { etiqueta: "Inciensos y sahumerios", valor: "inciensos-y-sahumerios" }, { etiqueta: "Herramientas rituales", valor: "herramientas-rituales" }] },
     { clave: "categoria_comercial", etiqueta: "Categoría comercial interna", tipo: "select", opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+    { clave: "planta_id", etiqueta: "Planta asociada (ID)" },
   ],
   "velas-e-incienso": [
     { clave: "tipo_producto", etiqueta: "Tipo" },
@@ -100,6 +102,7 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
           opciones: SECCIONES.map((it) => ({ etiqueta: it.etiqueta, valor: it.slug })),
         }}
         onCambioContexto={setSeccion}
+        validarFormulario={validarFormularioProducto}
       />
     </>
   );
