@@ -544,6 +544,66 @@ button:focus-visible {
   margin: 0.4rem 0 0;
 }
 
+
+.botica-natural__layout-filtros {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+.botica-natural__filtros {
+  border: 1px solid rgba(130, 100, 76, 0.25);
+  background: linear-gradient(180deg, #fffdf9 0%, #f7f1e7 100%);
+  border-radius: 14px;
+  padding: 0.9rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.botica-natural__filtros h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.botica-natural__filtros-ayuda {
+  margin: 0 0 0.6rem;
+  color: #5d5144;
+  font-size: 0.9rem;
+}
+
+.botica-natural__filtros-formulario {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.botica-natural__filtros-formulario label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+  color: #473a2f;
+}
+
+.botica-natural__filtros-formulario input,
+.botica-natural__filtros-formulario select {
+  border: 1px solid #ccb89f;
+  border-radius: 10px;
+  padding: 0.5rem 0.55rem;
+  background: #fff;
+}
+
+.botica-natural__acciones-filtros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.botica-natural__acciones-filtros .boton {
+  width: 100%;
+  text-align: center;
+}
+
 .botica-natural__rejilla {
   display: grid;
   gap: 1rem;
@@ -683,6 +743,16 @@ button:focus-visible {
   margin-top: 1rem;
 }
 
+
+@media (max-width: 900px) {
+  .botica-natural__layout-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .botica-natural__filtros {
+    position: static;
+  }
+}
 
 @media (max-width: 640px) {
   .botica-natural__rejilla {

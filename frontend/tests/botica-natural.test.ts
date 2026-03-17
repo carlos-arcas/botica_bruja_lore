@@ -120,3 +120,14 @@ test("backoffice Botica define selectores tipados para taxonomias", () => {
   assert.equal(modulo.includes("FORMATOS_BOTICA"), true);
   assert.equal(modulo.includes("MODOS_USO_BOTICA"), true);
 });
+
+
+test("filtros de Botica Natural usan columna lateral y campos de precio numéricos", () => {
+  const listado = readFileSync(join(process.cwd(), "componentes/botica-natural/ListadoProductosBoticaNatural.tsx"), "utf8");
+  const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+
+  assert.equal(listado.includes("botica-natural__layout-filtros"), true);
+  assert.equal(estilos.includes("grid-template-columns: minmax(220px, 280px) minmax(0, 1fr)"), true);
+  assert.equal(listado.includes('type="number"'), true);
+  assert.equal(estilos.includes(".botica-natural__filtros"), true);
+});
