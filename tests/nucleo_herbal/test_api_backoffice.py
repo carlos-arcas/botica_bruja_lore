@@ -130,6 +130,25 @@ class ApiBackofficeTests(TestCase):
         self.assertEqual(item["beneficio_principal"], "energia")
         self.assertEqual(item["formato_comercial"], "mezcla-herbal")
 
+
+    def test_listado_plantas_asociables_backoffice_devuelve_nombres_humanos(self) -> None:
+        from backend.nucleo_herbal.infraestructura.persistencia_django.models import PlantaModelo
+
+        PlantaModelo.objects.create(
+            id="pla-010",
+            slug="menta",
+            nombre="Menta",
+            descripcion_breve="fresca",
+            publicada=True,
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.get("/api/v1/backoffice/productos/plantas-asociables/")
+
+        self.assertEqual(response.status_code, 200)
+        items = response.json()["items"]
+        self.assertTrue(any(item["id"] == "pla-010" and item["nombre"] == "Menta" for item in items))
+
     def test_guardar_producto_invalido_hierba_sin_planta_devuelve_error(self) -> None:
         self.client.force_login(self.staff)
 

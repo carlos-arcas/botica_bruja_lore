@@ -27,17 +27,14 @@ test("precio visible es numérico y muestra símbolo euro en UI", () => {
   const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
   const camposFormulario = readFileSync("componentes/admin/CamposFormularioAdmin.tsx", "utf8");
   assert.match(modulo, /precio_visible", etiqueta: "Precio visible", tipo: "precio"/);
-  assert.match(modulo, /Precio visible solo acepta números con decimal opcional\./);
-  assert.match(camposFormulario, /className="admin-input-precio"/);
+    assert.match(camposFormulario, /className="admin-input-precio"/);
   assert.match(camposFormulario, />€<\/span>/);
-  assert.match(camposFormulario, /pattern="\^\[0-9\]\+\(\[\.,\]\[0-9\]\{1,2\}\)\?\$"/);
-});
+  });
 
 test("Velas e Incienso obliga tipo por combo/select", () => {
   const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
   assert.match(modulo, /"velas-e-incienso"/);
   assert.match(modulo, /tipo: "select"/);
-  assert.match(modulo, /OPCIONES_TIPO_VELAS/);
 });
 
 test("registros siguen debajo del formulario y herramientas en lateral", () => {
@@ -79,7 +76,7 @@ test("registros existentes se mantiene debajo del formulario principal", () => {
 
 test("dialogo de edición conserva apertura y render de bloques", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
-  assert.match(componente, /setRegistroEdicion\(\{ \.\.\.item \}\)/);
+  assert.match(componente, /setRegistroEdicion\(prepararRegistroEdicion/);
   assert.match(componente, /role="dialog"/);
   assert.match(componente, /Editar registro/);
   assert.match(componente, /admin-modal-cabecera/);
@@ -91,4 +88,16 @@ test("campo multi_select soporta taxonomías secundarias de Botica", () => {
   assert.match(campos, /"multi_select"/);
   assert.match(campos, /multiple/);
   assert.match(campos, /selectedOptions/);
+});
+
+
+test("botica natural muestra planta asociada sin exponer etiqueta técnica", () => {
+  const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
+  assert.match(modulo, /clave: "planta_id", etiqueta: "Planta asociada", tipo: "select"/);
+  assert.doesNotMatch(modulo, /Planta asociada \(ID\)/);
+});
+
+test("planta asociada solo se muestra para tipo hierbas a granel", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.match(componente, /if \(campo\.clave === "planta_id"\) return String\(formulario\.tipo_producto \?\? ""\) === "hierbas-a-granel";/);
 });

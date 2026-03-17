@@ -14,7 +14,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.catalogo_botica i
     opciones_a_valores,
     parsear_precio_numerico,
 )
-from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import PlantaModelo, ProductoModelo
 
 from .auth import usuario_staff
 from .identificadores import generar_id_si_falta, generar_slug_unico
@@ -172,6 +172,15 @@ def listado_productos_backoffice(request: HttpRequest) -> JsonResponse:
             "secciones": [{"slug": slug, "etiqueta": etiqueta} for slug, etiqueta in SECCIONES_PRODUCTOS.items()],
         }
     )
+
+
+def listado_plantas_asociables_backoffice(request: HttpRequest) -> JsonResponse:
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+    if usuario_staff(request) is None:
+        return json_no_autorizado()
+    plantas = PlantaModelo.objects.order_by("nombre").values("id", "nombre")[:500]
+    return JsonResponse({"items": list(plantas)})
 
 
 @csrf_exempt

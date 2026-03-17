@@ -19,6 +19,7 @@ from .importacion import (
 from .productos import (
     cambiar_publicacion_producto_backoffice,
     guardar_producto_backoffice,
+    listado_plantas_asociables_backoffice,
     listado_productos_backoffice,
 )
 from .rituales import (
@@ -36,6 +37,7 @@ __all__ = [
     "estado_backoffice",
     "listado_productos_backoffice",
     "guardar_producto_backoffice",
+    "listado_plantas_asociables_backoffice",
     "cambiar_publicacion_producto_backoffice",
     "listado_rituales_backoffice",
     "guardar_ritual_backoffice",
