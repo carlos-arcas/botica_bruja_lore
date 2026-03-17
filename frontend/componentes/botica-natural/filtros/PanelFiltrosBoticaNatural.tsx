@@ -2,13 +2,14 @@
 
 import { useState, type Dispatch, type SetStateAction } from "react";
 
-import { BENEFICIOS_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
 import {
-  mapearRangoAPreciosBotica,
-  OPCIONES_RANGO_PRECIO_BOTICA,
-  resolverRangoPrecioBotica,
-  type RangoPrecioBotica,
-} from "@/contenido/catalogo/precioRangosBoticaNatural";
+  construirQueryFiltrosBotica,
+  contarFiltroActivo,
+  resolverFiltrosBoticaDesdeSearchParams,
+  type FiltrosBotica,
+} from "@/contenido/catalogo/filtrosBoticaNatural";
+import { OPCIONES_RANGO_PRECIO_BOTICA, resolverRangoPrecioBotica, type RangoPrecioBotica } from "@/contenido/catalogo/precioRangosBoticaNatural";
+import { BENEFICIOS_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
 
 import { AcordeonFiltro } from "./AcordeonFiltro";
 import { ListaTogglesFiltro } from "./ListaTogglesFiltro";
@@ -27,11 +28,17 @@ type Props = {
 
 type EstadoAcordeones = Record<"beneficio" | "formato" | "modo_uso" | "precio", boolean>;
 type EstadoMostrarMas = Record<"beneficio" | "formato" | "modo_uso" | "precio", boolean>;
+type SeleccionFiltros = {
+  beneficio: string;
+  formato: string;
+  modo_uso: string;
+  precioRango: RangoPrecioBotica;
+};
 
 const OPCION_TODOS = { valor: "", etiqueta: "Todos" };
 
 export function PanelFiltrosBoticaNatural({ filtrosActivos }: Props): JSX.Element {
-  const [seleccion, setSeleccion] = useState({
+  const [seleccion, setSeleccion] = useState<SeleccionFiltros>({
     beneficio: filtrosActivos.beneficio,
     formato: filtrosActivos.formato,
     modo_uso: filtrosActivos.modo_uso,
@@ -52,17 +59,18 @@ export function PanelFiltrosBoticaNatural({ filtrosActivos }: Props): JSX.Elemen
     precio: false,
   });
 
-  const precioMapeado = mapearRangoAPreciosBotica(seleccion.precioRango);
+  const hrefLimpiar = construirHrefLimpiar();
+  const hrefAplicar = construirHrefAplicar(seleccion);
 
   return (
-    <form method="get" className="botica-natural__filtros-formulario">
+    <form action="/botica-natural" method="get" className="botica-natural__filtros-formulario">
       <p className="botica-natural__filtros-ayuda">Ajusta los filtros para encontrar tu mezcla ideal.</p>
 
       <AcordeonFiltro
         id="filtro-beneficio"
         titulo="Beneficio"
         expandido={acordeones.beneficio}
-        contadorSeleccionados={calcularSeleccionados(seleccion.beneficio)}
+        contadorSeleccionados={contarFiltroActivo(seleccion.beneficio)}
         onToggle={() => alternarAcordeon(setAcordeones, "beneficio")}
       >
         <ListaTogglesFiltro
@@ -79,7 +87,7 @@ export function PanelFiltrosBoticaNatural({ filtrosActivos }: Props): JSX.Elemen
         id="filtro-formato"
         titulo="Formato"
         expandido={acordeones.formato}
-        contadorSeleccionados={calcularSeleccionados(seleccion.formato)}
+        contadorSeleccionados={contarFiltroActivo(seleccion.formato)}
         onToggle={() => alternarAcordeon(setAcordeones, "formato")}
       >
         <ListaTogglesFiltro
@@ -96,7 +104,7 @@ export function PanelFiltrosBoticaNatural({ filtrosActivos }: Props): JSX.Elemen
         id="filtro-modo-uso"
         titulo="Modo de uso"
         expandido={acordeones.modo_uso}
-        contadorSeleccionados={calcularSeleccionados(seleccion.modo_uso)}
+        contadorSeleccionados={contarFiltroActivo(seleccion.modo_uso)}
         onToggle={() => alternarAcordeon(setAcordeones, "modo_uso")}
       >
         <ListaTogglesFiltro
@@ -113,7 +121,7 @@ export function PanelFiltrosBoticaNatural({ filtrosActivos }: Props): JSX.Elemen
         id="filtro-precio"
         titulo="Precio"
         expandido={acordeones.precio}
-        contadorSeleccionados={calcularSeleccionados(seleccion.precioRango === "todos" ? "" : seleccion.precioRango)}
+        contadorSeleccionados={contarFiltroActivo(seleccion.precioRango)}
         onToggle={() => alternarAcordeon(setAcordeones, "precio")}
       >
         <ListaTogglesFiltro
@@ -126,14 +134,40 @@ export function PanelFiltrosBoticaNatural({ filtrosActivos }: Props): JSX.Elemen
         />
       </AcordeonFiltro>
 
-      <input type="hidden" name="precio_min" value={precioMapeado.precio_min} />
-      <input type="hidden" name="precio_max" value={precioMapeado.precio_max} />
       <div className="botica-natural__acciones-filtros">
-        <button type="submit" className="boton boton--secundario">Aplicar</button>
-        <a href="/botica-natural" className="boton boton--secundario">Limpiar</a>
+        <button type="submit" formAction={hrefAplicar} className="boton boton--secundario">Aplicar</button>
+        <a href={hrefLimpiar} className="boton boton--secundario">Limpiar</a>
       </div>
     </form>
   );
+}
+
+function construirHrefAplicar(seleccion: SeleccionFiltros): string {
+  const query = construirQueryFiltrosBotica(seleccionAFiltrosBotica(seleccion));
+  const queryString = query.toString();
+  return queryString ? `/botica-natural?${queryString}` : "/botica-natural";
+}
+
+function construirHrefLimpiar(): string {
+  const query = construirQueryFiltrosBotica(
+    resolverFiltrosBoticaDesdeSearchParams({ beneficio: "todos", formato: "todos", modo_uso: "todos", precio_rango: "todos" }),
+  );
+  const queryString = query.toString();
+  return queryString ? `/botica-natural?${queryString}` : "/botica-natural";
+}
+
+function seleccionAFiltrosBotica(seleccion: SeleccionFiltros): FiltrosBotica {
+  const filtros = resolverFiltrosBoticaDesdeSearchParams({
+    beneficio: seleccion.beneficio,
+    formato: seleccion.formato,
+    modo_uso: seleccion.modo_uso,
+    precio_rango: seleccion.precioRango,
+  });
+
+  return {
+    ...filtros,
+    precio_rango: seleccion.precioRango,
+  };
 }
 
 function alternarAcordeon(
@@ -148,8 +182,4 @@ function alternarMostrarMas(
   clave: keyof EstadoMostrarMas,
 ): void {
   setEstado((previo) => ({ ...previo, [clave]: !previo[clave] }));
-}
-
-function calcularSeleccionados(valor: string): number {
-  return valor ? 1 : 0;
 }
