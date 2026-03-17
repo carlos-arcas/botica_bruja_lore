@@ -1,5 +1,5 @@
+import { PanelFiltrosBoticaNatural } from "@/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural";
 import { TarjetaProductoBoticaNatural } from "@/componentes/botica-natural/TarjetaProductoBoticaNatural";
-import { BENEFICIOS_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
 import type { ProductoSeccionPublica } from "@/infraestructura/api/herbal";
 
 type Props = {
@@ -21,42 +21,7 @@ export function ListadoProductosBoticaNatural({ productos, filtrosActivos }: Pro
     <section className="botica-natural__layout-filtros">
       <aside className="botica-natural__filtros" aria-label="Filtros de Botica Natural">
         <h2>Filtrar catálogo</h2>
-        <form method="get" className="botica-natural__filtros-formulario">
-          <p className="botica-natural__filtros-ayuda">Ajusta los filtros para encontrar tu mezcla ideal.</p>
-          <label>
-            Beneficio
-            <select name="beneficio" defaultValue={filtrosActivos.beneficio}>
-              <option value="">Todos</option>
-              {BENEFICIOS_BOTICA.map((it) => <option key={it.valor} value={it.valor}>{it.etiqueta}</option>)}
-            </select>
-          </label>
-          <label>
-            Formato
-            <select name="formato" defaultValue={filtrosActivos.formato}>
-              <option value="">Todos</option>
-              {FORMATOS_BOTICA.map((it) => <option key={it.valor} value={it.valor}>{it.etiqueta}</option>)}
-            </select>
-          </label>
-          <label>
-            Modo de uso
-            <select name="modo_uso" defaultValue={filtrosActivos.modo_uso}>
-              <option value="">Todos</option>
-              {MODOS_USO_BOTICA.map((it) => <option key={it.valor} value={it.valor}>{it.etiqueta}</option>)}
-            </select>
-          </label>
-          <label>
-            Precio mínimo (€)
-            <input type="number" min="0" step="0.01" name="precio_min" inputMode="decimal" defaultValue={filtrosActivos.precio_min} />
-          </label>
-          <label>
-            Precio máximo (€)
-            <input type="number" min="0" step="0.01" name="precio_max" inputMode="decimal" defaultValue={filtrosActivos.precio_max} />
-          </label>
-          <div className="botica-natural__acciones-filtros">
-            <button type="submit" className="boton boton--secundario">Aplicar</button>
-            <a href="/botica-natural" className="boton boton--secundario">Limpiar</a>
-          </div>
-        </form>
+        <PanelFiltrosBoticaNatural filtrosActivos={filtrosActivos} />
       </aside>
       <section aria-label="Productos de Botica Natural" className="botica-natural__rejilla">
         {productos.map((producto) => (
