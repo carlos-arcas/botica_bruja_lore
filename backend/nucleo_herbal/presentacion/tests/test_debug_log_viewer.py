@@ -31,10 +31,17 @@ class DebugLogViewerTests(TestCase):
     def test_control_acceso_por_clave(self):
         with override_settings(**self._settings()):
             sin_clave = self.client.get("/api/debug/logs")
-            self.assertEqual(sin_clave.status_code, 404)
+            self.assertEqual(sin_clave.status_code, 403)
 
             con_clave = self.client.get("/api/debug/logs", HTTP_X_DEBUG_LOG_KEY="clave-debug")
             self.assertEqual(con_clave.status_code, 200)
+
+
+    def test_clave_en_query_param_no_autoriza_acceso(self):
+        with override_settings(**self._settings()):
+            respuesta = self.client.get("/api/debug/logs?debug_key=clave-debug")
+
+        self.assertEqual(respuesta.status_code, 403)
 
     def test_lectura_logs_y_redaccion_sensible(self):
         Path(self.app_log).write_text(
