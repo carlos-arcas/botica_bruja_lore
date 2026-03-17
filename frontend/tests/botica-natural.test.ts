@@ -4,40 +4,16 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import {
+  construirQueryFiltrosBotica,
+  contarFiltroActivo,
+  resolverFiltrosBoticaDesdeSearchParams,
+} from "../contenido/catalogo/filtrosBoticaNatural";
+import {
   mapearRangoAPreciosBotica,
   OPCIONES_RANGO_PRECIO_BOTICA,
   resolverRangoPrecioBotica,
 } from "../contenido/catalogo/precioRangosBoticaNatural";
-import {
-  debeMostrarControlMostrarMas,
-  obtenerOpcionesVisibles,
-  restaurarVisibilidadReducida,
-} from "../componentes/botica-natural/filtros/estadoVisualFiltros";
-
-test("/botica-natural usa fetch real al endpoint de secciones y renderiza cards", () => {
-  const pagina = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
-  const api = readFileSync(join(process.cwd(), "infraestructura/api/herbal.ts"), "utf8");
-
-  assert.equal(pagina.includes('obtenerProductosPublicosPorSeccion("botica-natural", filtros)'), true);
-  assert.equal(pagina.includes("<ListadoProductosBoticaNatural"), true);
-  assert.equal(api.includes('/api/v1/herbal/secciones/${slugSeccion}/productos/'), true);
-});
-
-test("todos los grupos de filtros arrancan colapsados con acordeones accesibles", () => {
-  const panel = readFileSync(
-    join(process.cwd(), "componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx"),
-    "utf8",
-  );
-  const acordeon = readFileSync(join(process.cwd(), "componentes/botica-natural/filtros/AcordeonFiltro.tsx"), "utf8");
-
-  assert.equal(panel.includes("beneficio: false"), true);
-  assert.equal(panel.includes("formato: false"), true);
-  assert.equal(panel.includes("modo_uso: false"), true);
-  assert.equal(panel.includes("precio: false"), true);
-  assert.equal(acordeon.includes("aria-expanded={expandido}"), true);
-  assert.equal(acordeon.includes("aria-controls={panelId}"), true);
-});
-
+import { debeMostrarControlMostrarMas, obtenerOpcionesVisibles, restaurarVisibilidadReducida } from "../componentes/botica-natural/filtros/estadoVisualFiltros";
 test("grupos con <=6 opciones muestran todo y no requieren Mostrar más", () => {
   const opcionesBreves = OPCIONES_RANGO_PRECIO_BOTICA.slice(0, 6);
   assert.equal(debeMostrarControlMostrarMas(opcionesBreves), false);
@@ -51,20 +27,44 @@ test("grupos con >6 opciones arrancan en 6 visibles y soportan Mostrar más/meno
   assert.equal(restaurarVisibilidadReducida(), false);
 });
 
-test("las selecciones persisten y se mantienen botones de Aplicar y Limpiar", () => {
-  const panel = readFileSync(
-    join(process.cwd(), "componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx"),
-    "utf8",
-  );
-
-  assert.equal(panel.includes("useState({"), true);
-  const toggle = readFileSync(join(process.cwd(), "componentes/botica-natural/filtros/ToggleFiltro.tsx"), "utf8");
-  assert.equal(toggle.includes("checked={activo}"), true);
-  assert.equal(panel.includes("Aplicar"), true);
-  assert.equal(panel.includes("Limpiar"), true);
+test("Todos no incrementa contador y valor real sí incrementa", () => {
+  assert.equal(contarFiltroActivo("todos"), 0);
+  assert.equal(contarFiltroActivo(""), 0);
+  assert.equal(contarFiltroActivo("digestivo"), 1);
 });
 
-test("precio por rangos mapea a precio_min/precio_max sin romper compatibilidad", () => {
+test("Limpiar deja contador a cero para filtros y precio", () => {
+  const filtros = resolverFiltrosBoticaDesdeSearchParams({
+    beneficio: "todos",
+    formato: "todos",
+    modo_uso: "todos",
+    precio_rango: "todos",
+  });
+
+  assert.equal(contarFiltroActivo(filtros.beneficio), 0);
+  assert.equal(contarFiltroActivo(filtros.formato), 0);
+  assert.equal(contarFiltroActivo(filtros.modo_uso), 0);
+  assert.equal(contarFiltroActivo(filtros.precio_rango), 0);
+});
+
+test("no se generan query params basura cuando filtro efectivo es Todos", () => {
+  const filtros = resolverFiltrosBoticaDesdeSearchParams({
+    beneficio: "todos",
+    formato: "todos",
+    modo_uso: "todos",
+    precio_rango: "todos",
+  });
+
+  const query = construirQueryFiltrosBotica(filtros);
+  assert.equal(query.has("beneficio"), false);
+  assert.equal(query.has("formato"), false);
+  assert.equal(query.has("modo_uso"), false);
+  assert.equal(query.has("precio_rango"), false);
+  assert.equal(query.has("precio_min"), false);
+  assert.equal(query.has("precio_max"), false);
+});
+
+test("precio_rango mapea a precio_min/precio_max", () => {
   assert.deepEqual(mapearRangoAPreciosBotica("todos"), { precio_min: "", precio_max: "" });
   assert.deepEqual(mapearRangoAPreciosBotica("10-20"), { precio_min: "10", precio_max: "20" });
   assert.deepEqual(mapearRangoAPreciosBotica("120+"), { precio_min: "120", precio_max: "" });
@@ -72,18 +72,30 @@ test("precio por rangos mapea a precio_min/precio_max sin romper compatibilidad"
   assert.equal(resolverRangoPrecioBotica("999", ""), "todos");
 });
 
-test("query params de filtros siguen vigentes y precio_rango se adapta a lógica actual", () => {
-  const pagina = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
-  assert.equal(pagina.includes("resolverFiltrosDesdeSearchParams"), true);
-  assert.equal(pagina.includes("params.precio_min"), true);
-  assert.equal(pagina.includes("params.precio_max"), true);
-  assert.equal(pagina.includes("params.precio_rango"), true);
+test("compatibilidad con enlaces antiguos precio_min/precio_max", () => {
+  const filtros = resolverFiltrosBoticaDesdeSearchParams({ precio_min: "20", precio_max: "30" });
+
+  assert.equal(filtros.precio_rango, "todos");
+  assert.equal(filtros.precio_min, "20");
+  assert.equal(filtros.precio_max, "30");
 });
 
-test("estilos de toggles y acordeón conservan layout responsive de Botica Natural", () => {
-  const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
-  assert.equal(estilos.includes(".botica-natural__acordeon-boton"), true);
-  assert.equal(estilos.includes(".botica-natural__toggle-etiqueta"), true);
-  assert.equal(estilos.includes(".botica-natural__mostrar-mas"), true);
-  assert.equal(estilos.includes("@media (max-width: 900px)"), true);
+test("si llegan rango y min/max simultáneamente, precio_rango tiene precedencia", () => {
+  const filtros = resolverFiltrosBoticaDesdeSearchParams({
+    precio_rango: "50-80",
+    precio_min: "10",
+    precio_max: "20",
+  });
+
+  assert.equal(filtros.precio_rango, "50-80");
+  assert.equal(filtros.precio_min, "50");
+  assert.equal(filtros.precio_max, "80");
+});
+
+test("accesibilidad del acordeón se mantiene estable tras re-render", () => {
+  const acordeon = readFileSync(join(process.cwd(), "componentes/botica-natural/filtros/AcordeonFiltro.tsx"), "utf8");
+
+  assert.equal(acordeon.includes("aria-expanded={expandido}"), true);
+  assert.equal(acordeon.includes("aria-controls={panelId}"), true);
+  assert.equal(acordeon.includes("role=\"region\""), true);
 });

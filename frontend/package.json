@@ -32,7 +32,7 @@
     "test:tarot": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/tarot-contenido.test.ts contenido/tarot/arcanosTarot.ts && node .tmp-tests/tests/tarot-contenido.test.js",
     "test:home-raiz": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/home-raiz-secciones.test.ts contenido/home/seccionesPrincipales.ts && node .tmp-tests/tests/home-raiz-secciones.test.js",
     "clean:tmp-tests": "node -e \"require('fs').rmSync('.tmp-tests', { recursive: true, force: true })\"",
-    "test:botica-natural": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/botica-natural.test.ts && node .tmp-tests/botica-natural.test.js",
+    "test:botica-natural": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/botica-natural.test.ts contenido/catalogo/filtrosBoticaNatural.ts contenido/catalogo/precioRangosBoticaNatural.ts componentes/botica-natural/filtros/estadoVisualFiltros.ts && node .tmp-tests/tests/botica-natural.test.js",
     "test:admin-acceso": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/admin-acceso.test.ts infraestructura/configuracion/adminUrl.ts infraestructura/configuracion/adminRedirect.ts && node .tmp-tests/tests/admin-acceso.test.js",
     "test:backoffice": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/backoffice-admin.test.ts infraestructura/api/backoffice.ts && node .tmp-tests/tests/backoffice-admin.test.js",
     "test:backoffice-flujos": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/backoffice-flujos.test.ts infraestructura/api/backoffice.ts && node .tmp-tests/tests/backoffice-flujos.test.js",
@@ -40,7 +40,8 @@
     "test:backoffice-layout": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/backoffice-layout-botones.test.ts && node .tmp-tests/backoffice-layout-botones.test.js",
     "test:productos-relacionados": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/productos-relacionados.test.ts && node .tmp-tests/productos-relacionados.test.js",
     "test:backoffice-auth-debug": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --outDir .tmp-tests tests/backoffice-auth-debug.test.ts && node .tmp-tests/backoffice-auth-debug.test.js",
-    "test:debug-logs": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/debug-log-viewer.test.ts && node .tmp-tests/debug-log-viewer.test.js"
+    "test:debug-logs": "npm run clean:tmp-tests && tsc --module commonjs --target es2020 --outDir .tmp-tests tests/debug-log-viewer.test.ts && node .tmp-tests/debug-log-viewer.test.js",
+    "gate:botica-natural": "npm run lint -- --file app/botica-natural/page.tsx --file componentes/botica-natural/ListadoProductosBoticaNatural.tsx --file componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx --file contenido/catalogo/filtrosBoticaNatural.ts && npm run test:botica-natural && npm run test:catalogo"
   },
   "dependencies": {
     "next": "14.2.35",
