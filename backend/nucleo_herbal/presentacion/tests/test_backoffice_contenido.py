@@ -13,6 +13,7 @@ from django.test import Client, TestCase
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import ErrorImagenWebP, guardar_imagen_fila
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, PlantaModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
 from backend.nucleo_herbal.presentacion.backoffice_auth import crear_token_backoffice
+from backend.nucleo_herbal.presentacion.backoffice_views.productos_contrato import CAMPOS_PERSISTIDOS_PRODUCTO, normalizar_payload_producto
 
 
 class BackofficeContenidoTests(TestCase):
@@ -401,6 +402,61 @@ class BackofficeContenidoTests(TestCase):
         self.assertEqual(producto.categoria_visible, "inciensos")
         self.assertEqual(producto.beneficios_secundarios, "energia,calma")
 
+    def test_contrato_producto_normalizado_coincide_con_campos_persistidos(self):
+        payload = {
+            "sku": "SKU-CONTRATO-1",
+            "nombre": "Contrato Botica",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "inciensos",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "precio_numerico": "7.08",
+            "beneficio_principal": "calma",
+            "beneficios_secundarios": ["energia", "calma"],
+            "formato_comercial": "resina",
+            "modo_uso": "sahumado",
+            "publicado": False,
+        }
+
+        normalizado = normalizar_payload_producto(payload)
+
+        self.assertEqual(tuple(normalizado.campos_normalizados.keys()), CAMPOS_PERSISTIDOS_PRODUCTO)
+        self.assertEqual(normalizado.campos_normalizados["precio_visible"], "7,08 €")
+        self.assertEqual(normalizado.campos_normalizados["categoria_visible"], "inciensos")
+
+    def test_create_y_edit_comparten_normalizacion_critica(self):
+        payload_base = {
+            "nombre": "Producto coherente",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "inciensos",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "precio_numerico": "9.50",
+            "beneficio_principal": "calma",
+            "beneficios_secundarios": ["energia", "calma"],
+            "formato_comercial": "resina",
+            "modo_uso": "sahumado",
+            "publicado": True,
+        }
+
+        respuesta_crear = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload_base), content_type="application/json", **self._auth())
+        self.assertEqual(respuesta_crear.status_code, 200)
+        producto_id = respuesta_crear.json()["item"]["id"]
+
+        respuesta_editar = self.client.post(
+            "/api/v1/backoffice/productos/guardar/",
+            data=json.dumps({**payload_base, "id": producto_id, "nombre": "Producto coherente editado"}),
+            content_type="application/json",
+            **self._auth(),
+        )
+
+        self.assertEqual(respuesta_editar.status_code, 200)
+        item = respuesta_editar.json()["item"]
+        self.assertEqual(item["precio_visible"], "9,50 €")
+        self.assertEqual(item["categoria_visible"], "inciensos")
+        self.assertEqual(item["beneficios_secundarios"], "energia,calma")
+        self.assertTrue(item["publicado"])
+
     def test_error_de_respuesta_hace_rollback_y_no_deja_producto_visible(self):
         total_antes = ProductoModelo.objects.count()
         payload = {
@@ -457,4 +513,3 @@ class BackofficeContenidoTests(TestCase):
         self.assertEqual(logs.records[0].operation_id, "req-123")
         self.assertEqual(logs.records[0].modo, "crear")
         self.assertEqual(logs.records[-1].errores_validacion["planta_id"], "Selecciona una planta asociada.")
-

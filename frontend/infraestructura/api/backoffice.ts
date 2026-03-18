@@ -41,6 +41,12 @@ export type ResultadoListado = { estado: "ok"; items: Record<string, unknown>[] 
 
 export type PlantaAsociable = { id: string; nombre: string };
 
+function formatearErroresValidacion(errores?: Record<string, string>): string {
+  if (!errores) return "";
+  const entradas = Object.entries(errores).filter(([, mensaje]) => Boolean(mensaje));
+  return entradas.map(([campo, mensaje]) => `${campo}: ${mensaje}`).join(" · ");
+}
+
 function cabecerasConToken(token?: string, json = true): HeadersInit {
   const base: Record<string, string> = { Accept: "application/json" };
   if (json) base["Content-Type"] = "application/json";
@@ -91,9 +97,16 @@ export async function obtenerPlantasAsociables(token?: string): Promise<PlantaAs
 export async function guardarRegistroAdmin(modulo: ModuloAdmin, payload: Record<string, unknown>, token?: string): Promise<Record<string, unknown>> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/${modulo}/guardar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify(payload) });
   if (!r.ok) {
-    const data = (await r.json().catch(() => ({ detalle: "No se pudo guardar" }))) as { detalle?: string; errores?: Record<string, string> };
+    const data = (await r.json().catch(() => ({ detalle: "No se pudo guardar" }))) as {
+      detalle?: string;
+      errores?: Record<string, string>;
+      operation_id?: string;
+    };
     const detalle = data.detalle || "No se pudo guardar";
-    throw new Error(detalle);
+    const errores = formatearErroresValidacion(data.errores);
+    const operationId = data.operation_id ? ` (operation_id: ${data.operation_id})` : "";
+    const mensaje = [detalle, errores].filter(Boolean).join(" · ");
+    throw new Error(`${mensaje || "No se pudo guardar"}${operationId}`);
   }
   const data = (await r.json()) as { item: Record<string, unknown> };
   return data.item;
