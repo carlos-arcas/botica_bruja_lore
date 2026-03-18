@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ImagenProductoBoticaNatural } from "@/componentes/botica-natural/ImagenProductoBoticaNatural";
 import { BotonAgregarCarrito } from "@/componentes/catalogo/cesta/BotonAgregarCarrito";
 import type { ProductoSeccionPublica } from "@/infraestructura/api/herbal";
 
@@ -32,11 +33,14 @@ export function FichaProductoBoticaNatural({ producto }: Props): JSX.Element {
 
       <article className="botica-natural__ficha">
         <section className="botica-natural__ficha-media" aria-label={`Imagen de ${producto.nombre}`}>
-          {producto.imagen_url ? (
-            <img src={producto.imagen_url} alt={producto.nombre} className="botica-natural__imagen-ficha" />
-          ) : (
-            <div className="botica-natural__imagen-ficha botica-natural__imagen--fallback" aria-hidden="true" />
-          )}
+          <ImagenProductoBoticaNatural
+            src={producto.imagen_url}
+            alt={producto.nombre}
+            className="botica-natural__imagen-ficha"
+            sizes="(max-width: 900px) 100vw, 50vw"
+            prioridad
+            variante="ficha"
+          />
         </section>
 
         <section className="botica-natural__ficha-contenido">

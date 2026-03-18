@@ -721,6 +721,7 @@ button:focus-visible {
 
 .botica-natural__media-enlace {
   display: block;
+  position: relative;
   text-decoration: none;
   cursor: pointer;
 }

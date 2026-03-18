@@ -145,3 +145,17 @@ test("en móvil se mantiene flujo de filtros sin rail sticky", () => {
   assert.equal(estilos.includes(".botica-natural__rail-filtros"), true);
   assert.equal(estilos.includes("position: static;"), true);
 });
+
+
+test("cards y ficha reutilizan next/image con fallback visual sin romper el layout", () => {
+  const tarjeta = leer("componentes/botica-natural/TarjetaProductoBoticaNatural.tsx");
+  const ficha = leer("componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx");
+  const relacionados = leer("componentes/catalogo/relacionados/BloqueProductosRelacionados.tsx");
+  const imagen = leer("componentes/botica-natural/ImagenProductoBoticaNatural.tsx");
+
+  assert.equal(tarjeta.includes("ImagenProductoBoticaNatural"), true);
+  assert.equal(ficha.includes('variante="ficha"'), true);
+  assert.equal(relacionados.includes("ImagenProductoBoticaNatural"), true);
+  assert.equal(imagen.includes('botica-natural__imagen--fallback'), true);
+  assert.equal(imagen.includes("loader={({ src: origen }) => origen}"), true);
+});
