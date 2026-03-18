@@ -1,3 +1,4 @@
+import { ContenedorPaginaComercial } from "@/componentes/shell/ContenedorPaginaComercial";
 import type { Metadata } from "next";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -48,7 +49,7 @@ export default function PaginaColecciones({ searchParams }: Props): JSX.Element 
   });
 
   return (
-    <main className="contenedor-home">
+    <ContenedorPaginaComercial>
       {schemasLanding.length > 0 ? <JsonLd id="schema-landing-colecciones" data={schemasLanding} /> : null}
       <section className="bloque-home">
         <p className="hero-portada__eyebrow">{INTRO_LISTADO_COLECCIONES.eyebrow}</p>
@@ -84,6 +85,6 @@ export default function PaginaColecciones({ searchParams }: Props): JSX.Element 
           ))}
         </div>
       </section>
-    </main>
+    </ContenedorPaginaComercial>
   );
 }
