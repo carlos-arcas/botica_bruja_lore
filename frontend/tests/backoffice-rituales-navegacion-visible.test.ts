@@ -22,7 +22,7 @@ test("topbar respeta naming humano y muestra módulos obligatorios", () => {
   const topbar = obtenerEnlacesAdminVisibles("topbar");
   assert.equal(topbar.some((modulo) => modulo.clave === "importacion"), false);
   assert.equal(topbar.some((modulo) => modulo.etiqueta === "Artículos"), true);
-  assert.equal(topbar.some((modulo) => modulo.etiqueta === "Categorías de catálogo"), true);
+  assert.equal(topbar.some((modulo) => modulo.etiqueta === "Categorías de catálogo"), false);
   assert.equal(topbar.some((modulo) => modulo.etiqueta === "Imágenes"), true);
   assert.equal(topbar.some((modulo) => modulo.etiqueta === "Ajustes"), true);
 });

@@ -42,7 +42,7 @@ test("importación abre diálogo grande y mantiene staging por filas", () => {
 test("listado de registros mantiene edición por diálogo y publicar/despublicar", () => {
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
 
-  assert.match(componente, /setRegistroEdicion\(\{ \.\.\.item \}\)/);
+  assert.match(componente, /setRegistroEdicion\(prepararRegistroEdicion\(modulo, campos, item\)\)/);
   assert.match(componente, /role="dialog"/);
   assert.match(componente, /Cerrar/);
   assert.match(componente, /cambiarPublicacionAdmin/);

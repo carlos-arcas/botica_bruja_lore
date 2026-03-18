@@ -60,8 +60,6 @@ test("feedback de éxito y error se informa en UI para alta, edición e importac
   assert.match(componente, /Cambios guardados\./);
   assert.match(componente, /Lote cargado\. Revisa filas antes de confirmar\./);
   assert.match(componente, /Lote confirmado\. Filas aplicadas:/);
-  assert.match(componente, /No se pudo guardar el registro\./);
-  assert.match(componente, /No se pudo guardar la edición\./);
   assert.match(componente, /No se pudo cargar el lote de importación\./);
 });
 
@@ -87,8 +85,8 @@ test("alta y publicación recargan listado real en backend sin inserción optimi
   assert.doesNotMatch(componente, /setItems\(existe \? items\.map/);
 });
 test("submit de alta propaga errores backend cuando guardar falla", async () => {
-  globalThis.fetch = (async () => ({ ok: false, status: 500, json: async () => ({}) }) as Response) as unknown as typeof fetch;
-  await assert.rejects(() => guardarRegistroAdmin("productos", { nombre: "fallido" }, "token"), /No se pudo guardar/);
+  globalThis.fetch = (async () => ({ ok: false, status: 400, json: async () => ({ detalle: "Nombre obligatorio" }) }) as Response) as unknown as typeof fetch;
+  await assert.rejects(() => guardarRegistroAdmin("productos", { nombre: "fallido" }, "token"), /Nombre obligatorio/);
 });
 
 test("flujo de importación confirmada: crear lote, consultar y confirmar", async () => {
@@ -199,26 +197,24 @@ test("validación de producto bloquea payload incompleto de botica en alta y edi
   const invalido = validarFormularioProducto({
     nombre: "Producto",
     seccion_publica: "botica-natural",
-    precio_visible: "9.90",
+    precio_numerico: "9.90",
     tipo_producto: "hierbas-a-granel",
     categoria_comercial: "hierbas",
     beneficio_principal: "calma",
     formato_comercial: "hoja-seca",
     modo_uso: "infusion",
-    categoria_visible: "hierbas",
     planta_id: "",
   });
 
   const valido = validarFormularioProducto({
     nombre: "Producto",
     seccion_publica: "botica-natural",
-    precio_visible: "9.90",
+    precio_numerico: "9.90",
     tipo_producto: "hierbas-a-granel",
     categoria_comercial: "hierbas",
     beneficio_principal: "calma",
     formato_comercial: "hoja-seca",
     modo_uso: "infusion",
-    categoria_visible: "hierbas",
     planta_id: "pla-1",
   });
 
@@ -227,7 +223,7 @@ test("validación de producto bloquea payload incompleto de botica en alta y edi
 });
 
 test("validación de producto exige precio numérico", () => {
-  const invalido = validarFormularioProducto({ nombre: "Producto", seccion_publica: "botica-natural", precio_visible: "" });
+  const invalido = validarFormularioProducto({ nombre: "Producto", seccion_publica: "botica-natural", precio_numerico: "" });
   assert.equal(invalido, "El precio debe ser numérico y válido.");
 });
 

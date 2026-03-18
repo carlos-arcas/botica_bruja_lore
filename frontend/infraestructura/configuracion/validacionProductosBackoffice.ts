@@ -4,7 +4,6 @@ const CAMPOS_BOTICA_OBLIGATORIOS: Array<{ clave: string; etiqueta: string }> = [
   { clave: "beneficio_principal", etiqueta: "beneficio principal" },
   { clave: "formato_comercial", etiqueta: "formato comercial" },
   { clave: "modo_uso", etiqueta: "modo de uso" },
-  { clave: "categoria_visible", etiqueta: "categoría visible" },
 ];
 
 function texto(valor: unknown): string {
@@ -19,7 +18,7 @@ function precioValido(valor: unknown): boolean {
 export function validarFormularioProducto(formulario: Record<string, unknown>): string | null {
   if (!texto(formulario.nombre)) return "El producto requiere nombre.";
   if (!texto(formulario.seccion_publica)) return "Debes seleccionar la sección pública del producto.";
-  if (!texto(formulario.precio_visible) || !precioValido(formulario.precio_visible)) {
+  if (!texto(formulario.precio_numerico) || !precioValido(formulario.precio_numerico)) {
     return "El precio debe ser numérico y válido.";
   }
 
@@ -33,4 +32,3 @@ export function validarFormularioProducto(formulario: Record<string, unknown>): 
   }
   return null;
 }
-

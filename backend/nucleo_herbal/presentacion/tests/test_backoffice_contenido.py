@@ -4,6 +4,8 @@ import io
 import json
 from unittest.mock import patch
 
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
@@ -33,6 +35,7 @@ class BackofficeContenidoTests(TestCase):
 
 
     def test_producto_botica_normaliza_tipo_producto_legacy_en_guardado(self):
+        PlantaModelo.objects.create(id="pla-legacy", slug="pla-legacy", nombre="Planta legacy")
         payload = {
             "sku": "SKU-LEGACY",
             "nombre": "Producto Legacy Botica",
@@ -42,6 +45,7 @@ class BackofficeContenidoTests(TestCase):
             "seccion_publica": "botica-natural",
             "descripcion_corta": "x",
             "precio_visible": "9.99",
+            "planta_id": "pla-legacy",
             "publicado": True,
         }
 
@@ -365,3 +369,92 @@ class BackofficeContenidoTests(TestCase):
 
         listado = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/").json()["productos"]
         self.assertGreaterEqual(len(listado), 7)
+
+
+    def test_precio_visible_y_categoria_visible_se_derivan_del_contrato_normalizado(self):
+        payload = {
+            "sku": "SKU-DERIVA-1",
+            "nombre": "Producto Derivado",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "inciensos",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "precio_numerico": "7.08",
+            "beneficio_principal": "calma",
+            "beneficios_secundarios": ["energia", "calma"],
+            "formato_comercial": "resina",
+            "modo_uso": "sahumado",
+            "categoria_visible": "rituales",
+            "publicado": False,
+        }
+
+        respuesta = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+
+        self.assertEqual(respuesta.status_code, 200)
+        item = respuesta.json()["item"]
+        self.assertEqual(item["precio_numerico"], "7.08")
+        self.assertEqual(item["precio_visible"], "7,08 €")
+        self.assertEqual(item["categoria_visible"], "inciensos")
+        producto = ProductoModelo.objects.get(id=item["id"])
+        self.assertEqual(producto.precio_numerico, Decimal("7.08"))
+        self.assertEqual(producto.precio_visible, "7,08 €")
+        self.assertEqual(producto.categoria_visible, "inciensos")
+        self.assertEqual(producto.beneficios_secundarios, "energia,calma")
+
+    def test_error_de_respuesta_hace_rollback_y_no_deja_producto_visible(self):
+        total_antes = ProductoModelo.objects.count()
+        payload = {
+            "sku": "SKU-ROLLBACK-1",
+            "nombre": "Producto rollback",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "inciensos",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "precio_numerico": "9.50",
+            "beneficio_principal": "calma",
+            "beneficios_secundarios": ["energia"],
+            "formato_comercial": "resina",
+            "modo_uso": "sahumado",
+            "publicado": True,
+            "__forzar_error_respuesta__": True,
+        }
+
+        respuesta = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+
+        self.assertEqual(respuesta.status_code, 500)
+        self.assertEqual(ProductoModelo.objects.count(), total_antes)
+        self.assertFalse(ProductoModelo.objects.filter(sku="SKU-ROLLBACK-1").exists())
+
+    def test_logging_estructurado_incluye_operation_id_modo_y_errores(self):
+        payload = {
+            "sku": "SKU-LOG-1",
+            "nombre": "Producto log",
+            "tipo_producto": "hierbas-a-granel",
+            "categoria_comercial": "hierbas",
+            "seccion_publica": "botica-natural",
+            "precio_numerico": "4.20",
+            "beneficio_principal": "calma",
+            "beneficios_secundarios": ["energia"],
+            "formato_comercial": "hoja-seca",
+            "modo_uso": "infusion",
+            "publicado": True,
+        }
+
+        with self.assertLogs("backend.nucleo_herbal.presentacion.backoffice_views.productos", level="INFO") as logs:
+            respuesta = self.client.post(
+                "/api/v1/backoffice/productos/guardar/",
+                data=json.dumps(payload),
+                content_type="application/json",
+                HTTP_X_REQUEST_ID="req-123",
+                **self._auth(),
+            )
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.json()["operation_id"], "req-123")
+        salida = "\n".join(logs.output)
+        self.assertIn("backoffice_producto_guardar_inicio", salida)
+        self.assertIn("backoffice_producto_validacion_fallida", salida)
+        self.assertEqual(logs.records[0].operation_id, "req-123")
+        self.assertEqual(logs.records[0].modo, "crear")
+        self.assertEqual(logs.records[-1].errores_validacion["planta_id"], "Selecciona una planta asociada.")
+

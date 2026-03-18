@@ -17,7 +17,7 @@ const SECCIONES = [
 const CAMPOS_COMUNES = [
   { clave: "nombre", etiqueta: "Nombre" },
   { clave: "descripcion_corta", etiqueta: "Descripción corta", tipo: "textarea" as const },
-  { clave: "precio_visible", etiqueta: "Precio visible", tipo: "precio" as const },
+  { clave: "precio_numerico", etiqueta: "Precio base", tipo: "precio" as const },
   { clave: "imagen_url", etiqueta: "Imagen", tipo: "imagen" as const },
   { clave: "publicado", etiqueta: "Publicado", tipo: "checkbox" as const },
 ];
@@ -25,14 +25,13 @@ const CAMPOS_COMUNES = [
 const COLUMNAS_OBLIGATORIAS = ["nombre", "seccion_publica", "tipo_producto", "categoria_comercial"];
 const COLUMNAS_OPCIONALES = [
   "descripcion_corta",
-  "precio_visible",
+  "precio_numerico",
   "imagen_url",
   "publicado",
   "beneficio_principal",
   "beneficios_secundarios",
   "formato_comercial",
   "modo_uso",
-  "categoria_visible",
 ];
 
 function construirOpcionesPlantas(plantas: PlantaAsociable[]): { etiqueta: string; valor: string }[] {
@@ -65,7 +64,6 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
         { clave: "beneficios_secundarios", etiqueta: "Beneficios secundarios", tipo: "multi_select" as const, opciones: BENEFICIOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
         { clave: "formato_comercial", etiqueta: "Formato comercial", tipo: "select" as const, opciones: FORMATOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
         { clave: "modo_uso", etiqueta: "Modo de uso", tipo: "select" as const, opciones: MODOS_USO_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
-        { clave: "categoria_visible", etiqueta: "Categoría visible", tipo: "select" as const, opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
         { clave: "tipo_producto", etiqueta: "Tipo de producto", tipo: "select" as const, opciones: [{ etiqueta: "Hierbas a granel", valor: "hierbas-a-granel" }, { etiqueta: "Inciensos y sahumerios", valor: "inciensos-y-sahumerios" }, { etiqueta: "Herramientas rituales", valor: "herramientas-rituales" }] },
         { clave: "categoria_comercial", etiqueta: "Categoría comercial interna", tipo: "select" as const, opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
         { clave: "planta_id", etiqueta: "Planta asociada", tipo: "select" as const, opciones: construirOpcionesPlantas(plantas) },
