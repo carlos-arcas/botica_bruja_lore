@@ -13,7 +13,13 @@ from django.test import Client, TestCase
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import ErrorImagenWebP, guardar_imagen_fila
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, PlantaModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
 from backend.nucleo_herbal.presentacion.backoffice_auth import crear_token_backoffice
-from backend.nucleo_herbal.presentacion.backoffice_views.productos_contrato import CAMPOS_PERSISTIDOS_PRODUCTO, CAMPOS_UI_CANONICOS_PRODUCTO, normalizar_payload_producto
+from backend.nucleo_herbal.presentacion.backoffice_views.productos_contrato import (
+    CAMPOS_CONTRATO_ENTRADA,
+    CAMPOS_LEGACY_TOLERADOS_PRODUCTO,
+    CAMPOS_PERSISTIDOS_PRODUCTO,
+    CAMPOS_UI_CANONICOS_PRODUCTO,
+    normalizar_payload_producto,
+)
 
 
 class BackofficeContenidoTests(TestCase):
@@ -425,6 +431,14 @@ class BackofficeContenidoTests(TestCase):
         self.assertEqual(normalizado.campos_normalizados["categoria_visible"], "inciensos")
         self.assertNotIn("precio_visible", CAMPOS_UI_CANONICOS_PRODUCTO)
         self.assertNotIn("categoria_visible", CAMPOS_UI_CANONICOS_PRODUCTO)
+
+    def test_contrato_producto_separa_campos_canonicos_y_legacy_tolerados(self):
+        self.assertIn("precio_numerico", CAMPOS_UI_CANONICOS_PRODUCTO)
+        self.assertIn("precio_visible", CAMPOS_LEGACY_TOLERADOS_PRODUCTO)
+        self.assertIn("categoria_visible", CAMPOS_LEGACY_TOLERADOS_PRODUCTO)
+        self.assertNotIn("precio_visible", CAMPOS_UI_CANONICOS_PRODUCTO)
+        self.assertNotIn("categoria_visible", CAMPOS_UI_CANONICOS_PRODUCTO)
+        self.assertEqual(CAMPOS_CONTRATO_ENTRADA, CAMPOS_UI_CANONICOS_PRODUCTO | CAMPOS_LEGACY_TOLERADOS_PRODUCTO)
 
     def test_payload_legacy_tolerado_se_registra_sin_romper_guardado(self):
         payload = {

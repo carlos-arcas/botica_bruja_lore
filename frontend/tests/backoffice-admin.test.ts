@@ -104,6 +104,13 @@ test("el payload moderno de productos no envía campos derivados", () => {
   assert.equal(payload.precio_numerico, "7.08");
 });
 
+test("la UI de productos muestra Categoría comercial y no la etiqueta legacy interna", () => {
+  const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
+
+  assert.match(modulo, /Categoría comercial/);
+  assert.doesNotMatch(modulo, /Categoría comercial interna/);
+});
+
 test("el formulario de productos no expone categoria_visible en el módulo moderno", () => {
   const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
 
