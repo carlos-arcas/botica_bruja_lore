@@ -17,6 +17,18 @@ function construirUrlBackoffice(ruta: string): string {
 export type ModuloAdmin = "productos" | "rituales" | "editorial" | "secciones";
 export type EstadoImagenImportacion = "optimizada" | "pendiente" | "ausente";
 
+export type ResumenImportacion = {
+  total: number;
+  validas: number;
+  warnings: number;
+  invalidas: number;
+  descartadas: number;
+  confirmadas: number;
+  con_imagen: number;
+  sin_imagen: number;
+  seleccionadas: number;
+};
+
 export type FilaImportacion = {
   id: number;
   numero: number;
@@ -28,9 +40,14 @@ export type FilaImportacion = {
   imagen: string;
   estado_imagen: EstadoImagenImportacion;
   resultado_confirmacion: string;
+  identificador: string;
+  titulo: string;
+  tipo: string;
+  resumen_datos: string;
 };
 
-export type DetalleImportacion = { lote: Record<string, unknown>; filas: FilaImportacion[] };
+export type DetalleImportacion = { lote: Record<string, unknown>; resumen: ResumenImportacion; filas: FilaImportacion[] };
+export type ResultadoConfirmacionImportacion = { confirmadas: number; detalle: DetalleImportacion };
 
 export type EstadoAccesoBackoffice =
   | { estado: "autorizado"; usuario: { username: string; is_staff: boolean; is_superuser: boolean } }
@@ -132,16 +149,27 @@ export async function obtenerLoteImportacion(loteId: number, token?: string): Pr
   return (await r.json()) as DetalleImportacion;
 }
 
-export async function confirmarLoteImportacion(loteId: number, filasIds: number[], token?: string): Promise<number> {
+export async function confirmarLoteImportacion(loteId: number, filasIds: number[], token?: string): Promise<ResultadoConfirmacionImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/confirmar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ filas_ids: filasIds }) });
   if (!r.ok) throw new Error("Error confirmando lote");
-  const data = (await r.json()) as { confirmadas: number };
-  return data.confirmadas;
+  return (await r.json()) as ResultadoConfirmacionImportacion;
 }
 
-export async function revalidarLoteImportacion(loteId: number, token?: string): Promise<void> {
+export async function confirmarValidasLoteImportacion(loteId: number, token?: string): Promise<ResultadoConfirmacionImportacion> {
+  const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/confirmar-validas/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
+  if (!r.ok) throw new Error("Error confirmando filas válidas");
+  return (await r.json()) as ResultadoConfirmacionImportacion;
+}
+
+export async function revalidarLoteImportacion(loteId: number, token?: string): Promise<{ revalidado: boolean; detalle: DetalleImportacion }> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/revalidar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
   if (!r.ok) throw new Error("Error revalidando lote");
+  return (await r.json()) as { revalidado: boolean; detalle: DetalleImportacion };
+}
+
+export async function cancelarLoteImportacion(loteId: number, token?: string): Promise<void> {
+  const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/cancelar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
+  if (!r.ok) throw new Error("Error cancelando lote");
 }
 
 export async function cambiarSeleccionFilaImportacion(loteId: number, filaId: number, seleccionado: boolean, token?: string): Promise<FilaImportacion> {
@@ -189,6 +217,11 @@ export async function subirImagenBackoffice(imagen: File, prefijo: string, token
   }
   const data = (await r.json()) as { imagen_url: string };
   return data.imagen_url;
+}
+
+export async function descargarPlantillaImportacion(entidad: "productos" | "rituales" | "articulos_editoriales" | "secciones_publicas", formato: "csv" | "xlsx", token?: string): Promise<Blob> {
+  const modulo = entidad === "articulos_editoriales" ? "editorial" : entidad === "secciones_publicas" ? "secciones" : entidad;
+  return descargarExportacionAdmin(modulo, "plantilla", formato, token);
 }
 
 export async function descargarExportacionAdmin(modulo: ModuloAdmin, tipo: "plantilla" | "inventario", formato: "csv" | "xlsx", token?: string, seccion = ""): Promise<Blob> {

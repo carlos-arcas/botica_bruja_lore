@@ -95,8 +95,8 @@ test("flujo de importación confirmada: crear lote, consultar y confirmar", asyn
     const url = String(input);
     llamadas.push(url);
     if (url.endsWith("/importacion/lotes/")) return { ok: true, json: async () => ({ lote_id: 22 }) } as Response;
-    if (url.endsWith("/importacion/lotes/22/")) return { ok: true, json: async () => ({ lote: { id: 22 }, filas: [{ id: 1, seleccionado: true }] }) } as Response;
-    return { ok: true, json: async () => ({ confirmadas: 1 }) } as Response;
+    if (url.endsWith("/importacion/lotes/22/")) return { ok: true, json: async () => ({ lote: { id: 22 }, resumen: { total: 1, validas: 1, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 0, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "valida", imagen: "", estado_imagen: "ausente", resultado_confirmacion: "" }] }) } as Response;
+    return { ok: true, json: async () => ({ confirmadas: 1, detalle: { lote: { id: 22 }, resumen: { total: 1, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 1, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "confirmada", imagen: "", estado_imagen: "ausente", resultado_confirmacion: "ok" }] } }) } as Response;
   }) as unknown as typeof fetch;
 
   const formData = new FormData();
@@ -107,7 +107,7 @@ test("flujo de importación confirmada: crear lote, consultar y confirmar", asyn
 
   assert.equal(loteId, 22);
   assert.equal(detalle.lote.id, 22);
-  assert.equal(confirmadas, 1);
+  assert.equal(confirmadas.confirmadas, 1);
   assert.equal(llamadas.length, 3);
 });
 
@@ -117,7 +117,7 @@ test("importación permite revalidar, seleccionar, descartar y gestionar imagen 
     const url = String(input);
     llamadas.push(url);
     const method = String(init?.method ?? "GET");
-    if (url.includes("/revalidar/")) return { ok: true, json: async () => ({ revalidado: true }) } as Response;
+    if (url.includes("/revalidar/")) return { ok: true, json: async () => ({ revalidado: true, detalle: { lote: { id: 10 }, resumen: { total: 1, validas: 1, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 0, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [] } }) } as Response;
     if (url.includes("/seleccion/")) return { ok: true, json: async () => ({ fila: { id: 9, seleccionado: true } }) } as Response;
     if (url.includes("/descartar/")) return { ok: true, json: async () => ({ fila: { id: 9, estado: "descartada" } }) } as Response;
     if (url.includes("/imagen/eliminar/")) return { ok: true, json: async () => ({ fila: { id: 9, imagen: "" } }) } as Response;
