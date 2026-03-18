@@ -71,6 +71,7 @@ def _contexto_log(
     normalizado: dict | None = None,
     errores: dict | None = None,
     campos_desconocidos: tuple[str, ...] | None = None,
+    campos_legacy: tuple[str, ...] | None = None,
     operation_id: str | None = None,
 ) -> dict:
     return {
@@ -84,6 +85,7 @@ def _contexto_log(
         "campos_recibidos": sorted(data.keys()),
         "campos_normalizados": sorted((normalizado or {}).keys()),
         "campos_desconocidos": list(campos_desconocidos or tuple(sorted(set(data.keys()) - CAMPOS_CONTRATO_ENTRADA))),
+        "campos_legacy": list(campos_legacy or ()),
         "errores_validacion": errores or {},
     }
 
@@ -143,9 +145,12 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
             modo=normalizado.modo,
             normalizado=campos_persistencia,
             campos_desconocidos=normalizado.campos_desconocidos,
+            campos_legacy=normalizado.campos_legacy_detectados,
             operation_id=operation_id,
         )
         LOGGER.info("backoffice_producto_payload_normalizado", extra=contexto)
+        if normalizado.campos_legacy_detectados:
+            LOGGER.info("payload_legacy_detectado", extra=contexto)
         with transaction.atomic():
             if existente:
                 for clave, valor in campos_persistencia.items():

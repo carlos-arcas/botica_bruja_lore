@@ -36,7 +36,7 @@ VALORES_FORMATO = opciones_a_valores(FORMATOS_BOTICA)
 VALORES_MODO_USO = opciones_a_valores(MODOS_USO_BOTICA)
 VALORES_CATEGORIA_VISIBLE = opciones_a_valores(CATEGORIAS_VISIBLES_BOTICA)
 
-CAMPOS_CONTRATO_ENTRADA = {
+CAMPOS_UI_CANONICOS_PRODUCTO = {
     "id",
     "sku",
     "slug",
@@ -48,18 +48,21 @@ CAMPOS_CONTRATO_ENTRADA = {
     "descripcion_corta",
     "imagen_url",
     "precio_numerico",
-    "precio_visible",
     "seccion_publica",
     "orden_publicacion",
     "beneficio_principal",
     "beneficios_secundarios",
     "formato_comercial",
     "modo_uso",
+    "__forzar_error_respuesta__",
+}
+CAMPOS_LEGACY_TOLERADOS_PRODUCTO = {
+    "precio_visible",
     "categoria_visible",
     "formato_peso",
     "formato_peso_personalizado",
-    "__forzar_error_respuesta__",
 }
+CAMPOS_CONTRATO_ENTRADA = CAMPOS_UI_CANONICOS_PRODUCTO | CAMPOS_LEGACY_TOLERADOS_PRODUCTO
 
 CAMPOS_DERIVADOS_PRODUCTO = {"precio_visible", "categoria_visible"}
 CAMPOS_PERSISTIDOS_PRODUCTO = (
@@ -94,6 +97,7 @@ class ProductoNormalizado:
     modo: str
     campos_normalizados: dict[str, object]
     campos_desconocidos: tuple[str, ...]
+    campos_legacy_detectados: tuple[str, ...]
 
 
 def _a_slug_catalogo(valor: str) -> str:
@@ -222,9 +226,12 @@ def normalizar_payload_producto(data: dict[str, object]) -> ProductoNormalizado:
         "publicado": publicado,
         "orden_publicacion": int(data.get("orden_publicacion", 100) or 100),
     }
-    campos_desconocidos = tuple(sorted(set(data) - CAMPOS_CONTRATO_ENTRADA))
+    claves = set(data)
+    campos_desconocidos = tuple(sorted(claves - CAMPOS_CONTRATO_ENTRADA))
+    campos_legacy_detectados = tuple(sorted(claves & CAMPOS_LEGACY_TOLERADOS_PRODUCTO))
     return ProductoNormalizado(
         modo="editar" if data.get("id") else "crear",
         campos_normalizados=normalizado,
         campos_desconocidos=campos_desconocidos,
+        campos_legacy_detectados=campos_legacy_detectados,
     )
