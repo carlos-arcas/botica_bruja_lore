@@ -486,7 +486,13 @@ button:focus-visible {
     box-shadow 160ms ease;
 }
 
-.tarjeta-seccion-principal:hover,
+.tarjeta-seccion-principal:hover {
+  transform: translateY(-3px);
+  border-color: #c5a57f;
+  background: #f8eedf;
+  box-shadow: 0 16px 28px rgba(86, 62, 37, 0.12);
+}
+
 .tarjeta-seccion-principal:focus-visible {
   transform: translateY(-3px);
   border-color: #c5a57f;

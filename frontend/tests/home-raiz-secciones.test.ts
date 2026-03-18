@@ -86,7 +86,14 @@ test("la tarjeta principal usa media uniforme, sin recorte y con microinteraccio
   assert.equal(bloqueImagen.includes("height: auto;"), true);
   assert.equal(bloqueImagen.includes("object-fit: cover;"), false);
   assert.equal(configuracionCard.includes("CONFIGURACION_IMAGEN_CARD_HOME"), true);
-  assert.match(estilos, /\.tarjeta-seccion-principal:hover,\s*\.tarjeta-seccion-principal:focus-visible/);
+  const bloqueHover = estilos.split(".tarjeta-seccion-principal:hover {")[1]?.split(".tarjeta-seccion-principal:focus-visible {")[0] ?? "";
+  const bloqueFocusVisible = estilos.split(".tarjeta-seccion-principal:focus-visible {")[1]?.split(".tarjeta-seccion-principal__media {")[0] ?? "";
+  assert.match(estilos, /\.tarjeta-seccion-principal:hover\s*\{/);
+  assert.match(estilos, /\.tarjeta-seccion-principal:focus-visible\s*\{/);
+  assert.equal(bloqueHover.includes("outline:"), false);
+  assert.equal(bloqueHover.includes("outline-offset:"), false);
+  assert.equal(bloqueFocusVisible.includes("outline: 2px solid"), true);
+  assert.equal(bloqueFocusVisible.includes("outline-offset: 3px;"), true);
   assert.match(estilos, /\.tarjeta-seccion-principal:hover \.tarjeta-seccion-principal__imagen,/);
   assert.match(estilos, /\.tarjeta-seccion-principal:hover \.tarjeta-seccion-principal__titulo,/);
   assert.match(estilos, /@media \(prefers-reduced-motion: reduce\)/);
