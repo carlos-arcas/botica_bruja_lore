@@ -228,9 +228,9 @@ export function ModuloCrudContextualAdmin({
     try {
       await accion();
       setError("");
-    } catch {
+    } catch (error) {
       setOk("");
-      setError(mensajeError);
+      setError(error instanceof Error && error.message ? error.message : mensajeError);
     }
   };
 
@@ -242,7 +242,8 @@ export function ModuloCrudContextualAdmin({
 
   const onGuardarAlta = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const errorValidacion = validarFormulario?.(formAlta);
+    const payloadValidacion = construirPayloadSegunTipo(tipoPayload, formAlta, seccionSeleccionada);
+    const errorValidacion = validarFormulario?.(payloadValidacion);
     if (errorValidacion) return setError(errorValidacion);
     await ejecutarAccion(async () => {
       await guardar(formAlta);
@@ -254,6 +255,9 @@ export function ModuloCrudContextualAdmin({
   const onGuardarEdicion = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!registroEdicion) return;
+    const payloadValidacion = construirPayloadSegunTipo(tipoPayload, registroEdicion, seccionSeleccionada);
+    const errorValidacion = validarFormulario?.(payloadValidacion);
+    if (errorValidacion) return setError(errorValidacion);
     await ejecutarAccion(async () => {
       await guardar(registroEdicion);
       setRegistroEdicion(null);

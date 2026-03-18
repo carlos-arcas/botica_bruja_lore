@@ -3,7 +3,7 @@ import { MODULOS_NAVEGACION_ADMIN, ModuloNavegacionAdmin } from "../../infraestr
 export type VarianteEnlaceAdmin = "topbar" | "tarjetas";
 
 function permiteModuloEnVariante(modulo: ModuloNavegacionAdmin, variante: VarianteEnlaceAdmin): boolean {
-  if (modulo.clave === "dashboard" || modulo.clave === "importacion") {
+  if (modulo.clave === "dashboard" || modulo.clave === "importacion" || modulo.clave === "secciones") {
     return false;
   }
   if (variante === "tarjetas" && (modulo.clave === "ajustes" || modulo.clave === "imagenes")) {

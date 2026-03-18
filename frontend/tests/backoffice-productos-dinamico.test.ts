@@ -23,13 +23,13 @@ test("formulario renderiza grupos visuales y evita pila plana de campos", () => 
   assert.match(componente, /className="admin-formulario-amplio admin-formulario-vertical"/);
 });
 
-test("precio visible es numérico y muestra símbolo euro en UI", () => {
+test("precio base es numérico y muestra símbolo euro en UI", () => {
   const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
   const camposFormulario = readFileSync("componentes/admin/CamposFormularioAdmin.tsx", "utf8");
-  assert.match(modulo, /precio_visible", etiqueta: "Precio visible", tipo: "precio"/);
-    assert.match(camposFormulario, /className="admin-input-precio"/);
+  assert.match(modulo, /precio_numerico", etiqueta: "Precio base", tipo: "precio"/);
+  assert.match(camposFormulario, /className="admin-input-precio"/);
   assert.match(camposFormulario, />€<\/span>/);
-  });
+});
 
 test("Velas e Incienso obliga tipo por combo/select", () => {
   const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");

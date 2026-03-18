@@ -90,7 +90,11 @@ export async function obtenerPlantasAsociables(token?: string): Promise<PlantaAs
 
 export async function guardarRegistroAdmin(modulo: ModuloAdmin, payload: Record<string, unknown>, token?: string): Promise<Record<string, unknown>> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/${modulo}/guardar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify(payload) });
-  if (!r.ok) throw new Error("No se pudo guardar");
+  if (!r.ok) {
+    const data = (await r.json().catch(() => ({ detalle: "No se pudo guardar" }))) as { detalle?: string; errores?: Record<string, string> };
+    const detalle = data.detalle || "No se pudo guardar";
+    throw new Error(detalle);
+  }
   const data = (await r.json()) as { item: Record<string, unknown> };
   return data.item;
 }

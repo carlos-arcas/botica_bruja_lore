@@ -25,7 +25,7 @@ test("Botica separa atributos reales de catálogo", () => {
   assert.match(productos, /beneficios_secundarios/);
   assert.match(productos, /formato_comercial/);
   assert.match(productos, /modo_uso/);
-  assert.match(productos, /categoria_visible/);
+  assert.doesNotMatch(productos, /clave: "categoria_visible"/);
 });
 
 test("botones principales del admin usan variantes visuales y no estilo navegador por defecto", () => {
