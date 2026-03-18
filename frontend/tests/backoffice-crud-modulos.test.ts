@@ -15,7 +15,7 @@ test("cada pestaña admin monta CRUD contextual con herramientas secundarias", (
   assert.match(secciones, /ModuloCrudContextualAdmin/);
 
   assert.match(componente, /Herramientas/);
-  assert.match(componente, /className="admin-disposicion-crud"/);
+  assert.match(componente, /admin-disposicion-crud/);
   assert.match(componente, /className="admin-columna-herramientas"/);
   assert.match(componente, />Importar<\/button>/);
   assert.match(componente, /plantilla CSV/i);
@@ -88,6 +88,11 @@ test("regresión módulos: productos, rituales, artículos y categorías siguen 
   assert.match(rituales, /titulo="Rituales"/);
   assert.match(editorial, /titulo="Artículos"/);
   assert.match(secciones, /titulo="Categorías de catálogo"/);
+});
+
+test("dashboard admin ya no navega por tarjeta a categorías de catálogo", () => {
+  const modulos = readFileSync("infraestructura/configuracion/modulosAdmin.ts", "utf8");
+  assert.doesNotMatch(modulos, /clave: "secciones"/);
 });
 
 

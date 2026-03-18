@@ -61,6 +61,26 @@ CAMPOS_CONTRATO_ENTRADA = {
     "__forzar_error_respuesta__",
 }
 
+CAMPOS_DERIVADOS_PRODUCTO = {"precio_visible", "categoria_visible"}
+CAMPOS_PERSISTIDOS_PRODUCTO = (
+    "nombre",
+    "tipo_producto",
+    "categoria_comercial",
+    "seccion_publica",
+    "descripcion_corta",
+    "precio_numerico",
+    "precio_visible",
+    "imagen_url",
+    "beneficio_principal",
+    "beneficios_secundarios",
+    "formato_comercial",
+    "modo_uso",
+    "categoria_visible",
+    "planta_id",
+    "publicado",
+    "orden_publicacion",
+)
+
 
 class ErrorValidacionProducto(ValueError):
     def __init__(self, detalle: str, *, errores: dict[str, str] | None = None) -> None:

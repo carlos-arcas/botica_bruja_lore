@@ -12,7 +12,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import Pla
 
 from .auth import usuario_staff
 from .identificadores import generar_id_si_falta, generar_slug_unico
-from .productos_contrato import ErrorValidacionProducto, normalizar_payload_producto
+from .productos_contrato import CAMPOS_CONTRATO_ENTRADA, ErrorValidacionProducto, normalizar_payload_producto
 from .shared import json_no_autorizado, json_payload, to_bool
 
 LOGGER = logging.getLogger(__name__)
@@ -62,18 +62,28 @@ def producto_dict(obj: ProductoModelo) -> dict:
     }
 
 
-def _contexto_log(*, request: HttpRequest, usuario: object, data: dict, modo: str, normalizado: dict | None = None, errores: dict | None = None, operation_id: str | None = None) -> dict:
+def _contexto_log(
+    *,
+    request: HttpRequest,
+    usuario: object,
+    data: dict,
+    modo: str,
+    normalizado: dict | None = None,
+    errores: dict | None = None,
+    campos_desconocidos: tuple[str, ...] | None = None,
+    operation_id: str | None = None,
+) -> dict:
     return {
         "operation_id": operation_id or request.headers.get("X-Request-ID", str(uuid4())),
         "modo": modo,
         "producto_id": str(data.get("id", "")),
         "sku": str((normalizado or {}).get("sku") or data.get("sku", "")),
-        "slug": str(data.get("slug", "")),
+        "slug": str((normalizado or {}).get("slug") or data.get("slug", "")),
         "nombre": str((normalizado or {}).get("nombre") or data.get("nombre", "")),
         "usuario": getattr(usuario, "username", ""),
         "campos_recibidos": sorted(data.keys()),
         "campos_normalizados": sorted((normalizado or {}).keys()),
-        "campos_desconocidos": sorted(set(data.keys()) - {"id", "sku", "slug", "nombre", "tipo_producto", "categoria_comercial", "publicado", "planta_id", "descripcion_corta", "imagen_url", "precio_numerico", "precio_visible", "seccion_publica", "orden_publicacion", "beneficio_principal", "beneficios_secundarios", "formato_comercial", "modo_uso", "categoria_visible", "formato_peso", "formato_peso_personalizado", "__forzar_error_respuesta__"}),
+        "campos_desconocidos": list(campos_desconocidos or tuple(sorted(set(data.keys()) - CAMPOS_CONTRATO_ENTRADA))),
         "errores_validacion": errores or {},
     }
 
@@ -125,18 +135,28 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
         sku = _generar_sku_unico(sku_base, existente.id if existente else None)
         slug_base = str(data.get("slug", "")).strip() or str(normalizado.campos_normalizados["nombre"])
         slug = generar_slug_unico(ProductoModelo, slug_base, existente.id if existente else None)
-        campos_persistencia = {**normalizado.campos_normalizados, "sku": sku}
-        contexto = _contexto_log(request=request, usuario=usuario, data=data, modo=normalizado.modo, normalizado=campos_persistencia, operation_id=operation_id)
+        campos_persistencia = {**normalizado.campos_normalizados, "sku": sku, "slug": slug}
+        contexto = _contexto_log(
+            request=request,
+            usuario=usuario,
+            data=data,
+            modo=normalizado.modo,
+            normalizado=campos_persistencia,
+            campos_desconocidos=normalizado.campos_desconocidos,
+            operation_id=operation_id,
+        )
         LOGGER.info("backoffice_producto_payload_normalizado", extra=contexto)
         with transaction.atomic():
             if existente:
                 for clave, valor in campos_persistencia.items():
+                    if clave == "slug":
+                        continue
                     setattr(existente, clave, valor)
                 existente.slug = slug
                 existente.save()
                 obj = existente
             else:
-                obj = ProductoModelo.objects.create(id=generar_id_si_falta(None), slug=slug, **campos_persistencia)
+                obj = ProductoModelo.objects.create(id=generar_id_si_falta(None), **campos_persistencia)
             contexto["producto_id"] = obj.id
             contexto["slug"] = obj.slug
             LOGGER.info("backoffice_producto_persistencia_ok", extra=contexto)
