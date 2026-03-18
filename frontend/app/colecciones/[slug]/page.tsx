@@ -1,3 +1,4 @@
+import { ContenedorPaginaComercial } from "@/componentes/shell/ContenedorPaginaComercial";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -54,7 +55,7 @@ export default function PaginaDetalleColeccion({ params }: Props): JSX.Element {
   const schemasFicha = construirSchemasFichaColeccion(producto);
 
   return (
-    <main className="contenedor-home">
+    <ContenedorPaginaComercial>
       {schemasFicha.length > 0 ? <JsonLd id="schema-ficha" data={schemasFicha} /> : null}
       <FichaProductoCatalogo producto={producto} />
       <BloqueGuiasRelacionadas
@@ -62,6 +63,6 @@ export default function PaginaDetalleColeccion({ params }: Props): JSX.Element {
         descripcion="Complementa esta ficha con contexto editorial para enlazar intención, uso cotidiano y siguiente paso de navegación."
         guias={guiasRelacionadas}
       />
-    </main>
+    </ContenedorPaginaComercial>
   );
 }

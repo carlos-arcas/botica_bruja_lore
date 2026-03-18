@@ -1,3 +1,4 @@
+import { ContenedorPaginaComercial } from "@/componentes/shell/ContenedorPaginaComercial";
 import { notFound } from "next/navigation";
 
 import { FichaProductoBoticaNatural } from "@/componentes/botica-natural/detalle/FichaProductoBoticaNatural";
@@ -16,18 +17,18 @@ export default async function PaginaDetalleProductoBoticaNatural({ params }: Pro
 
   if (resultado.estado === "error") {
     return (
-      <main className="contenedor-home">
+      <ContenedorPaginaComercial>
         <section className="bloque-home bloque-home--error">
           <h1>No se pudo cargar la ficha de producto</h1>
           <p>{resultado.mensaje}</p>
         </section>
-      </main>
+      </ContenedorPaginaComercial>
     );
   }
 
   return (
-    <main className="contenedor-home">
+    <ContenedorPaginaComercial>
       <FichaProductoBoticaNatural producto={resultado.producto} />
-    </main>
+    </ContenedorPaginaComercial>
   );
 }

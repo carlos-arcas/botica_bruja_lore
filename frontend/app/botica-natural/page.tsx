@@ -1,3 +1,4 @@
+import { ContenedorPaginaComercial } from "@/componentes/shell/ContenedorPaginaComercial";
 import { ListadoProductosBoticaNatural } from "@/componentes/botica-natural/ListadoProductosBoticaNatural";
 import { PanelFiltrosBoticaNatural } from "@/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural";
 import { resolverFiltrosBoticaDesdeSearchParams } from "@/contenido/catalogo/filtrosBoticaNatural";
@@ -19,7 +20,7 @@ export default async function PaginaBoticaNatural({
 
   if (resultado.estado === "error") {
     return (
-      <main className="contenedor-home">
+      <ContenedorPaginaComercial>
         <section aria-label="Catálogo Botica Natural" className="botica-natural__bloque">
           <header className="botica-natural__cabecera">
             <h1>Botica Natural</h1>
@@ -31,12 +32,12 @@ export default async function PaginaBoticaNatural({
             <p>{resultado.mensaje}</p>
           </section>
         </section>
-      </main>
+      </ContenedorPaginaComercial>
     );
   }
 
   return (
-    <main className="contenedor-home">
+    <ContenedorPaginaComercial>
       <section aria-label="Catálogo Botica Natural" className="botica-natural__layout-catalogo">
         <aside className="botica-natural__rail-filtros" aria-label="Filtros de Botica Natural">
           <h2>Filtrar catálogo</h2>
@@ -50,6 +51,6 @@ export default async function PaginaBoticaNatural({
           <ListadoProductosBoticaNatural productos={resultado.productos} />
         </section>
       </section>
-    </main>
+    </ContenedorPaginaComercial>
   );
 }
