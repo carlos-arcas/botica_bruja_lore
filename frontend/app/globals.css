@@ -479,13 +479,21 @@ button:focus-visible {
   border: 1px solid var(--borde-editorial);
   background: var(--fondo-editorial-suave);
   box-shadow: 0 1px 0 rgba(93, 76, 56, 0.1);
-  transition: transform 140ms ease, border-color 140ms ease, background-color 140ms ease;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
-.tarjeta-seccion-principal:hover {
-  transform: translateY(-1px);
+.tarjeta-seccion-principal:hover,
+.tarjeta-seccion-principal:focus-visible {
+  transform: translateY(-3px);
   border-color: #c5a57f;
-  background: #f6ebd6;
+  background: #f8eedf;
+  box-shadow: 0 16px 28px rgba(86, 62, 37, 0.12);
+  outline: 2px solid rgba(140, 90, 60, 0.22);
+  outline-offset: 3px;
 }
 
 .tarjeta-seccion-principal__media {
@@ -499,6 +507,15 @@ button:focus-visible {
   width: 100%;
   height: auto;
   z-index: 0;
+  transform-origin: center;
+  filter: saturate(0.98) brightness(0.985) contrast(0.985);
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.tarjeta-seccion-principal:hover .tarjeta-seccion-principal__imagen,
+.tarjeta-seccion-principal:focus-visible .tarjeta-seccion-principal__imagen {
+  transform: scale(1.018);
+  filter: saturate(1.03) brightness(1.01) contrast(1.01);
 }
 
 .tarjeta-seccion-principal__titulo {
@@ -517,6 +534,27 @@ button:focus-visible {
   line-height: 1.2;
   background: linear-gradient(180deg, var(--fondo-editorial-suave), var(--fondo-editorial));
   border-top: 1px solid rgba(107, 83, 55, 0.2);
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.tarjeta-seccion-principal:hover .tarjeta-seccion-principal__titulo,
+.tarjeta-seccion-principal:focus-visible .tarjeta-seccion-principal__titulo {
+  color: #2f2217;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tarjeta-seccion-principal,
+  .tarjeta-seccion-principal__imagen,
+  .tarjeta-seccion-principal__titulo {
+    transition-duration: 0ms;
+  }
+
+  .tarjeta-seccion-principal:hover,
+  .tarjeta-seccion-principal:focus-visible,
+  .tarjeta-seccion-principal:hover .tarjeta-seccion-principal__imagen,
+  .tarjeta-seccion-principal:focus-visible .tarjeta-seccion-principal__imagen {
+    transform: none;
+  }
 }
 
 @media (min-width: 768px) {

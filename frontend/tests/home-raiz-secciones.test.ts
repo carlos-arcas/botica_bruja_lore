@@ -56,7 +56,7 @@ test("el contrato card -> hero está centralizado y consistente", () => {
   }
 });
 
-test("la tarjeta principal usa media uniforme y renderizado sin recorte", () => {
+test("la tarjeta principal usa media uniforme, sin recorte y con microinteracciones accesibles", () => {
   const tarjeta = readFileSync(
     join(process.cwd(), "componentes/home/TarjetaSeccionPrincipal.tsx"),
     "utf8",
@@ -66,21 +66,31 @@ test("la tarjeta principal usa media uniforme y renderizado sin recorte", () => 
     "utf8",
   );
   const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+  const bloqueTarjeta = estilos.split(".tarjeta-seccion-principal {")[1]?.split("@media (min-width: 768px)")[0] ?? "";
 
   assert.equal(tarjeta.includes('className="tarjeta-seccion-principal__item"'), true);
+  assert.equal(tarjeta.includes('className="tarjeta-seccion-principal"'), true);
   assert.equal(tarjeta.includes('className="tarjeta-seccion-principal__media"'), true);
+  assert.equal(tarjeta.includes('className="tarjeta-seccion-principal__titulo"'), true);
+  assert.equal(tarjeta.includes("aria-label={titulo}"), true);
   assert.equal(tarjeta.includes("fill"), false);
   assert.equal(tarjeta.includes("width={CONFIGURACION_IMAGEN_CARD_HOME.width}"), true);
   assert.equal(tarjeta.includes("height={CONFIGURACION_IMAGEN_CARD_HOME.height}"), true);
+  assert.equal(tarjeta.includes("sizes={CONFIGURACION_IMAGEN_CARD_HOME.sizes}"), true);
   assert.equal(estilos.includes(".tarjeta-seccion-principal__media"), true);
   assert.equal(estilos.includes("--ancho-base-card-home"), true);
-  assert.equal(estilos.includes("aspect-ratio"), false);
-  assert.equal(estilos.includes("height: auto;"), true);
+  assert.equal(bloqueTarjeta.includes("aspect-ratio"), false);
+  assert.equal(bloqueTarjeta.includes("background: rgba("), false);
   const bloqueImagen = estilos.split(".tarjeta-seccion-principal__imagen")[1] ?? "";
   assert.equal(bloqueImagen.includes("width: 100%;"), true);
   assert.equal(bloqueImagen.includes("height: auto;"), true);
   assert.equal(bloqueImagen.includes("object-fit: cover;"), false);
   assert.equal(configuracionCard.includes("CONFIGURACION_IMAGEN_CARD_HOME"), true);
+  assert.match(estilos, /\.tarjeta-seccion-principal:hover,\s*\.tarjeta-seccion-principal:focus-visible/);
+  assert.match(estilos, /\.tarjeta-seccion-principal:hover \.tarjeta-seccion-principal__imagen,/);
+  assert.match(estilos, /\.tarjeta-seccion-principal:hover \.tarjeta-seccion-principal__titulo,/);
+  assert.match(estilos, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(estilos, /grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, var\(--ancho-base-card-home\)\), var\(--ancho-base-card-home\)\)\);/);
 });
 
 test("el hero de sección renderiza imagen en flujo sin fill ni cover", () => {
@@ -93,6 +103,7 @@ test("el hero de sección renderiza imagen en flujo sin fill ni cover", () => {
     "utf8",
   );
   const estilos = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+  const bloqueHero = estilos.split(".hero-portada__imagen {")[1]?.split(".hero-portada--con-fondo .hero-portada__contenido")[0] ?? "";
 
   assert.equal(heroSeccion.includes("fill"), false);
   assert.equal(heroSeccion.includes("objectFit"), false);
@@ -101,9 +112,9 @@ test("el hero de sección renderiza imagen en flujo sin fill ni cover", () => {
   assert.equal(estilos.includes("--ancho-base-hero-seccion"), true);
   assert.equal(estilos.includes("max-width: var(--ancho-base-hero-seccion);"), true);
   assert.equal(estilos.includes(".hero-portada__imagen"), true);
-  assert.equal(estilos.includes("height: auto;"), true);
-  assert.equal(estilos.includes("object-fit: cover;"), false);
-  assert.equal(estilos.includes("aspect-ratio"), false);
+  assert.equal(bloqueHero.includes("height: auto;"), true);
+  assert.equal(bloqueHero.includes("object-fit: cover;"), false);
+  assert.equal(bloqueHero.includes("aspect-ratio"), false);
   assert.equal(configuracionHeroSeccion.includes("CONFIGURACION_HERO_SECCION"), true);
 });
 
@@ -117,9 +128,8 @@ test("la home raíz solo compone hero principal + rejilla de secciones", () => {
   assert.equal(pagina.includes("<CtaFinalHome />"), false);
 });
 
-test("las páginas de sección usan su hero correspondiente", () => {
-  const paginasSeccion: Array<{ ruta: string; id: string }> = [
-    { ruta: "app/botica-natural/page.tsx", id: "botica-natural" },
+test("las páginas de sección mantienen su entrada principal sin romper la jerarquía actual", () => {
+  const paginasConHero: Array<{ ruta: string; id: string }> = [
     { ruta: "app/velas-e-incienso/page.tsx", id: "velas-e-incienso" },
     { ruta: "app/minerales-y-energia/page.tsx", id: "minerales-y-energia" },
     { ruta: "app/herramientas-esotericas/page.tsx", id: "herramientas-esotericas" },
@@ -128,8 +138,13 @@ test("las páginas de sección usan su hero correspondiente", () => {
     { ruta: "app/agenda-mistica/page.tsx", id: "agenda-mistica" },
   ];
 
-  for (const paginaSeccion of paginasSeccion) {
+  for (const paginaSeccion of paginasConHero) {
     const pagina = readFileSync(join(process.cwd(), paginaSeccion.ruta), "utf8");
     assert.equal(pagina.includes(`idSeccion="${paginaSeccion.id}"`), true);
   }
+
+  const paginaBoticaNatural = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
+  assert.equal(paginaBoticaNatural.includes("<ListadoProductosBoticaNatural"), true);
+  assert.equal(paginaBoticaNatural.includes("<PanelFiltrosBoticaNatural"), true);
+  assert.equal(paginaBoticaNatural.includes("Botica Natural"), true);
 });
