@@ -23,6 +23,7 @@ import {
   subirImagenBackoffice,
 } from "@/infraestructura/api/backoffice";
 import { construirPayloadRitual } from "@/infraestructura/configuracion/adminRituales";
+import { construirPayloadCanonicoProducto } from "@/infraestructura/configuracion/contratoProductosBackoffice";
 
 type OpcionContexto = { etiqueta: string; valor: string };
 type TipoPayloadAdmin = "rituales" | "editorial" | "secciones" | "productos";
@@ -108,15 +109,7 @@ async function validarCabeceraCsv(archivo: File, columnasObligatorias: string[])
 function construirPayloadSegunTipo(tipoPayload: TipoPayloadAdmin, formulario: Record<string, unknown>, seccionSeleccionada: string): Record<string, unknown> {
   if (tipoPayload === "rituales") return construirPayloadRitual(formulario);
   if (tipoPayload === "productos") {
-    const formatoPeso = String(formulario.formato_peso ?? "");
-    const formatoPersonalizado = String(formulario.formato_peso_personalizado ?? "").trim();
-    const formatoFinal = formatoPeso === "personalizado" && formatoPersonalizado ? formatoPersonalizado : formatoPeso;
-    return {
-      ...formulario,
-      seccion_publica: seccionSeleccionada,
-      categoria_comercial: String(formulario.categoria_comercial ?? "").trim() || formatoFinal,
-      orden_publicacion: 100,
-    };
+    return construirPayloadCanonicoProducto(formulario, seccionSeleccionada);
   }
   return formulario;
 }

@@ -4,6 +4,8 @@ import { test } from "node:test";
 
 import { extraerTokenBackoffice, obtenerProductosAdmin } from "../infraestructura/api/backoffice";
 
+import { CAMPOS_UI_CANONICOS_PRODUCTO, construirPayloadCanonicoProducto } from "../infraestructura/configuracion/contratoProductosBackoffice";
+
 test("renderiza rutas principales del backoffice en App Router", () => {
   const dashboard = readFileSync("app/admin/(panel)/page.tsx", "utf8");
   const productos = readFileSync("app/admin/(panel)/productos/page.tsx", "utf8");
@@ -72,4 +74,38 @@ test("refresh mantiene acceso mientras sesión siga válida", () => {
 test("parsea token de cookie frontend para guard server-side", () => {
   const token = extraerTokenBackoffice("foo=1; botica_backoffice_session=abc123; bar=2");
   assert.equal(token, "abc123");
+});
+
+
+test("el contrato canónico de productos excluye campos derivados legacy", () => {
+  assert.equal(CAMPOS_UI_CANONICOS_PRODUCTO.includes("categoria_visible" as never), false);
+  assert.equal(CAMPOS_UI_CANONICOS_PRODUCTO.includes("precio_visible" as never), false);
+});
+
+test("el payload moderno de productos no envía campos derivados", () => {
+  const payload = construirPayloadCanonicoProducto(
+    {
+      id: "prod-1",
+      nombre: "Producto",
+      tipo_producto: "inciensos-y-sahumerios",
+      categoria_comercial: "inciensos",
+      seccion_publica: "botica-natural",
+      precio_numerico: "7.08",
+      precio_visible: "7,08 €",
+      categoria_visible: "rituales",
+      beneficio_principal: "calma",
+      beneficios_secundarios: ["energia", "calma"],
+    },
+    "botica-natural",
+  );
+
+  assert.equal("categoria_visible" in payload, false);
+  assert.equal("precio_visible" in payload, false);
+  assert.equal(payload.precio_numerico, "7.08");
+});
+
+test("el formulario de productos no expone categoria_visible en el módulo moderno", () => {
+  const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
+
+  assert.doesNotMatch(modulo, /categoria_visible/);
 });

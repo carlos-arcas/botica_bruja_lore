@@ -65,7 +65,7 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
         { clave: "formato_comercial", etiqueta: "Formato comercial", tipo: "select" as const, opciones: FORMATOS_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
         { clave: "modo_uso", etiqueta: "Modo de uso", tipo: "select" as const, opciones: MODOS_USO_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
         { clave: "tipo_producto", etiqueta: "Tipo de producto", tipo: "select" as const, opciones: [{ etiqueta: "Hierbas a granel", valor: "hierbas-a-granel" }, { etiqueta: "Inciensos y sahumerios", valor: "inciensos-y-sahumerios" }, { etiqueta: "Herramientas rituales", valor: "herramientas-rituales" }] },
-        { clave: "categoria_comercial", etiqueta: "Categoría comercial interna", tipo: "select" as const, opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
+        { clave: "categoria_comercial", etiqueta: "Categoría comercial", tipo: "select" as const, opciones: CATEGORIAS_VISIBLES_BOTICA.map((it) => ({ etiqueta: it.etiqueta, valor: it.valor })) },
         { clave: "planta_id", etiqueta: "Planta asociada", tipo: "select" as const, opciones: construirOpcionesPlantas(plantas) },
       ],
       "velas-e-incienso": [

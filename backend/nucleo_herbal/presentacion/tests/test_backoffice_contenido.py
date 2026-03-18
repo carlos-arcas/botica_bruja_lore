@@ -13,7 +13,7 @@ from django.test import Client, TestCase
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import ErrorImagenWebP, guardar_imagen_fila
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, PlantaModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
 from backend.nucleo_herbal.presentacion.backoffice_auth import crear_token_backoffice
-from backend.nucleo_herbal.presentacion.backoffice_views.productos_contrato import CAMPOS_PERSISTIDOS_PRODUCTO, normalizar_payload_producto
+from backend.nucleo_herbal.presentacion.backoffice_views.productos_contrato import CAMPOS_PERSISTIDOS_PRODUCTO, CAMPOS_UI_CANONICOS_PRODUCTO, normalizar_payload_producto
 
 
 class BackofficeContenidoTests(TestCase):
@@ -423,6 +423,42 @@ class BackofficeContenidoTests(TestCase):
         self.assertEqual(tuple(normalizado.campos_normalizados.keys()), CAMPOS_PERSISTIDOS_PRODUCTO)
         self.assertEqual(normalizado.campos_normalizados["precio_visible"], "7,08 €")
         self.assertEqual(normalizado.campos_normalizados["categoria_visible"], "inciensos")
+        self.assertNotIn("precio_visible", CAMPOS_UI_CANONICOS_PRODUCTO)
+        self.assertNotIn("categoria_visible", CAMPOS_UI_CANONICOS_PRODUCTO)
+
+    def test_payload_legacy_tolerado_se_registra_sin_romper_guardado(self):
+        payload = {
+            "sku": "SKU-LEGACY-LOG-1",
+            "nombre": "Producto legacy tolerado",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "inciensos",
+            "seccion_publica": "botica-natural",
+            "descripcion_corta": "x",
+            "precio_visible": "9.50",
+            "precio_numerico": "9.50",
+            "beneficio_principal": "calma",
+            "beneficios_secundarios": ["energia"],
+            "formato_comercial": "resina",
+            "modo_uso": "sahumado",
+            "categoria_visible": "rituales",
+            "publicado": False,
+        }
+
+        with self.assertLogs("backend.nucleo_herbal.presentacion.backoffice_views.productos", level="INFO") as logs:
+            respuesta = self.client.post(
+                "/api/v1/backoffice/productos/guardar/",
+                data=json.dumps(payload),
+                content_type="application/json",
+                **self._auth(),
+            )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertIn("payload_legacy_detectado", "\n".join(logs.output))
+        registro_legacy = next(record for record in logs.records if record.msg == "payload_legacy_detectado")
+        self.assertEqual(registro_legacy.campos_legacy, ["categoria_visible", "precio_visible"])
+        item = respuesta.json()["item"]
+        self.assertEqual(item["precio_visible"], "9,50 €")
+        self.assertEqual(item["categoria_visible"], "inciensos")
 
     def test_create_y_edit_comparten_normalizacion_critica(self):
         payload_base = {
