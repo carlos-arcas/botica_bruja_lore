@@ -1,8 +1,8 @@
 import base64
-import io
 import json
 import os
 import unittest
+from pathlib import Path
 
 try:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.configuracion_django.settings")
@@ -62,6 +62,24 @@ class TestImportacionMasivaBackoffice(TestCase):
         response = self.client.get("/admin/importacion-masiva/")
         self.assertNotEqual(response.status_code, 200)
         self.assertIn("/admin/login/", response.url)
+
+    def test_rutas_legacy_de_plantilla_tambien_quedan_fuera_de_servicio(self):
+        response = self.client.get("/admin/importacion-masiva/plantilla/productos/csv/")
+        self.assertNotEqual(response.status_code, 200)
+        self.assertIn("/admin/login/", response.url)
+
+    def test_urls_django_no_declara_imports_ni_rutas_legacy(self):
+        contenido = Path("backend/configuracion_django/urls.py").read_text(encoding="utf-8")
+        self.assertNotIn("importacion_masiva_view", contenido)
+        self.assertNotIn("descargar_plantilla_view", contenido)
+        self.assertNotIn("importacion-masiva", contenido)
+
+    def test_contrato_moderno_mantiene_entrada_humana_next(self):
+        contenido = Path("frontend/infraestructura/configuracion/modulosAdmin.ts").read_text(encoding="utf-8")
+        self.assertIn('href: "/admin/importacion"', contenido)
+
+    def test_no_queda_template_django_activo_para_importacion_legacy(self):
+        self.assertFalse(Path("backend/templates/admin/persistencia_django/importacion_masiva.html").exists())
 
     def test_detalle_serializa_resumen_y_filas(self):
         lote_id = self._crear_lote(
