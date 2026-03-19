@@ -11,3 +11,7 @@ class NotificadorPostPagoPedido(ABC):
     @abstractmethod
     def enviar_confirmacion_pago(self, pedido: Pedido, operation_id: str) -> None:
         """Envía la confirmación mínima al cliente tras pago confirmado."""
+
+    @abstractmethod
+    def enviar_confirmacion_envio(self, pedido: Pedido, operation_id: str) -> None:
+        """Envía la confirmación mínima al cliente tras marcar un envío."""

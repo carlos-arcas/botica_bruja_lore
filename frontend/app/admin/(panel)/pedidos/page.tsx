@@ -4,9 +4,15 @@ import { ModuloPedidosAdmin } from "@/componentes/admin/ModuloPedidosAdmin";
 import { obtenerListadoAdmin } from "@/infraestructura/api/backoffice";
 import { NOMBRE_COOKIE_BACKOFFICE } from "@/infraestructura/auth/configuracion";
 
-export default async function AdminPedidosPage(): Promise<JSX.Element> {
+type Props = {
+  searchParams?: { estado?: string };
+};
+
+export default async function AdminPedidosPage({ searchParams }: Props): Promise<JSX.Element> {
   const token = cookies().get(NOMBRE_COOKIE_BACKOFFICE)?.value;
-  const resultado = await obtenerListadoAdmin("pedidos", new URLSearchParams(), token);
+  const query = new URLSearchParams();
+  if (searchParams?.estado) query.set("estado", searchParams.estado);
+  const resultado = await obtenerListadoAdmin("pedidos", query, token);
   const items = resultado.estado === "ok" ? resultado.items : [];
-  return <ModuloPedidosAdmin token={token} itemsIniciales={items} />;
+  return <ModuloPedidosAdmin token={token} itemsIniciales={items} estadoActivo={searchParams?.estado ?? ""} />;
 }

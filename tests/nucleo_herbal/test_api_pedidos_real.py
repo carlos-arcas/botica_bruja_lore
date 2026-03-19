@@ -44,6 +44,8 @@ class TestApiPedidosReal(DjangoTestCase):
         self.assertEqual(pedido["resumen"]["subtotal"], "18.00")
         self.assertEqual(pedido["pago"]["id_externo_pago"], None)
         self.assertFalse(pedido["email_post_pago_enviado"])
+        self.assertEqual(pedido["expedicion"]["transportista"], "")
+        self.assertEqual(pedido["expedicion"]["fecha_envio"], None)
 
     def test_direccion_entrega_es_obligatoria(self) -> None:
         payload = _payload_base()

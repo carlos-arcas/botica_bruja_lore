@@ -670,3 +670,17 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
 - El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
 - Pendiente para el siguiente bloque: expedición real, tracking, incidencias, SLA operativos y automatización de estados posteriores.
+
+## Actualización operación física y expedición v1.2
+- Capacidad: **Operación física mínima post-pago con expedición y entrega**.
+- Estado: **DONE**.
+- Implementación activa:
+  - backend real con transición `pagado -> preparando -> enviado -> entregado` y persistencia de expedición/tracking;
+  - backoffice Next/Django con filtros por estado y acciones operativas para preparar, enviar y entregar;
+  - email transaccional mínimo de envío y logging estructurado para hitos operativos;
+  - visibilidad pública en `/pedido/[id_pedido]` del estado, tracking y mensaje de seguimiento.
+- Decisión operativa explícita:
+  1. `transportista` es obligatorio al marcar `enviado`;
+  2. `codigo_seguimiento` también lo es salvo `envio_sin_seguimiento=True`;
+  3. no se permiten saltos directos a `enviado` o `entregado` fuera de la secuencia controlada.
+- Pendiente para el siguiente bloque: incidencias operativas y postventa básica (cancelación operativa acotada, reintentos logísticos y trazabilidad de incidencias) sin abrir todavía devoluciones complejas ni logística enterprise.

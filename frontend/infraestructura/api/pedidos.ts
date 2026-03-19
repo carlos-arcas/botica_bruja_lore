@@ -1,5 +1,16 @@
 import { PayloadPedido } from "../../contenido/catalogo/checkoutReal";
 
+export type ExpedicionPedido = {
+  transportista: string;
+  codigo_seguimiento: string;
+  envio_sin_seguimiento: boolean;
+  fecha_preparacion: string | null;
+  fecha_envio: string | null;
+  fecha_entrega: string | null;
+  observaciones_operativas: string;
+  email_envio_enviado: boolean;
+};
+
 export type PedidoCreado = {
   id_pedido: string;
   estado: string;
@@ -42,6 +53,7 @@ export type PedidoCreado = {
     id_externo_pago?: string;
     url_pago?: string;
   };
+  expedicion: ExpedicionPedido;
 };
 
 export type PagoPedido = {
@@ -64,17 +76,13 @@ export async function crearPedidoPublico(payload: PayloadPedido): Promise<{ esta
 
 export async function obtenerPedidoPublico(idPedido: string): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {
   const idNormalizado = idPedido.trim();
-  if (!idNormalizado) {
-    return { estado: "error", mensaje: "Falta el identificador del pedido real." };
-  }
+  if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
   return enviarPedido(`${API_BASE_URL}/api/v1/pedidos/${encodeURIComponent(idNormalizado)}/`, { method: "GET", cache: "no-store" });
 }
 
 export async function iniciarPagoPedido(idPedido: string): Promise<{ estado: "ok"; pago: PagoPedido } | { estado: "error"; mensaje: string }> {
   const idNormalizado = idPedido.trim();
-  if (!idNormalizado) {
-    return { estado: "error", mensaje: "Falta el identificador del pedido real." };
-  }
+  if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
   return enviarPago(`${API_BASE_URL}/api/v1/pedidos/${encodeURIComponent(idNormalizado)}/iniciar-pago/`, { method: "POST" });
 }
 
@@ -86,30 +94,21 @@ export function construirUrlRetornoPedido(idPedido: string, retorno: Exclude<Ret
 
 async function enviarPedido(url: string, init: RequestInit): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {
   const respuesta = await enviar(url, init);
-  if (respuesta.estado === "error") {
-    return respuesta;
-  }
+  if (respuesta.estado === "error") return respuesta;
   return { estado: "ok", pedido: respuesta.data.pedido as PedidoCreado };
 }
 
 async function enviarPago(url: string, init: RequestInit): Promise<{ estado: "ok"; pago: PagoPedido } | { estado: "error"; mensaje: string }> {
   const respuesta = await enviar(url, init);
-  if (respuesta.estado === "error") {
-    return respuesta;
-  }
+  if (respuesta.estado === "error") return respuesta;
   return { estado: "ok", pago: respuesta.data.pago as PagoPedido };
 }
 
 async function enviar(url: string, init: RequestInit): Promise<{ estado: "ok"; data: Record<string, unknown> } | { estado: "error"; mensaje: string }> {
   try {
-    const respuesta = await fetch(url, {
-      ...init,
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-    });
+    const respuesta = await fetch(url, { ...init, headers: { "Content-Type": "application/json", Accept: "application/json" } });
     const data = await respuesta.json();
-    if (!respuesta.ok) {
-      return { estado: "error", mensaje: data?.detalle ?? "No se pudo completar el checkout real." };
-    }
+    if (!respuesta.ok) return { estado: "error", mensaje: data?.detalle ?? "No se pudo completar el checkout real." };
     return { estado: "ok", data: data as Record<string, unknown> };
   } catch {
     return { estado: "error", mensaje: "No pudimos conectar con la API del checkout real." };

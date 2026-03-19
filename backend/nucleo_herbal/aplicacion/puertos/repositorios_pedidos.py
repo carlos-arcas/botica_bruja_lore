@@ -25,5 +25,5 @@ class RepositorioPedidos(ABC):
         """Registra un evento de webhook y devuelve False si ya existía."""
 
     @abstractmethod
-    def listar(self, *, solo_pagados: bool = False) -> tuple[Pedido, ...]:
+    def listar(self, *, estados: tuple[str, ...] = (), solo_pagados: bool = False) -> tuple[Pedido, ...]:
         """Lista pedidos reales para operación administrativa mínima."""

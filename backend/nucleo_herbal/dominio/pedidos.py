@@ -118,6 +118,15 @@ class Pedido:
     requiere_revision_manual: bool = False
     email_post_pago_enviado: bool = False
     fecha_email_post_pago: datetime | None = None
+    transportista: str = ""
+    codigo_seguimiento: str = ""
+    envio_sin_seguimiento: bool = False
+    fecha_preparacion: datetime | None = None
+    fecha_envio: datetime | None = None
+    fecha_entrega: datetime | None = None
+    observaciones_operativas: str = ""
+    email_envio_enviado: bool = False
+    fecha_email_envio: datetime | None = None
 
     def __post_init__(self) -> None:
         if not self.id_pedido.strip():
@@ -136,6 +145,9 @@ class Pedido:
             raise ErrorDominio("Un pedido pagado requiere estado_pago='pagado'.")
         if self.fecha_email_post_pago and not self.email_post_pago_enviado:
             raise ErrorDominio("La fecha de email post-pago requiere email_post_pago_enviado=True.")
+        if self.fecha_email_envio and not self.email_envio_enviado:
+            raise ErrorDominio("La fecha de email de envío requiere email_envio_enviado=True.")
+        self._validar_operacion_fisica()
 
     @property
     def subtotal(self) -> Decimal:
@@ -149,26 +161,14 @@ class Pedido:
 
     def registrar_intencion_pago(self, proveedor: ProveedorPago, id_externo_pago: str, url_pago: str | None, estado_pago: EstadoPago) -> "Pedido":
         self.puede_iniciar_pago()
-        return replace(
-            self,
-            proveedor_pago=proveedor,
-            id_externo_pago=id_externo_pago,
-            url_pago=url_pago,
-            estado_pago=estado_pago,
-        )
+        return replace(self, proveedor_pago=proveedor, id_externo_pago=id_externo_pago, url_pago=url_pago, estado_pago=estado_pago)
 
     def marcar_pagado(self, fecha_confirmacion: datetime) -> "Pedido":
         if self.estado == "pagado" and self.estado_pago == "pagado":
             return self
         if self.estado != "pendiente_pago":
             raise ErrorDominio("Solo un pedido pendiente de pago puede pasar a pagado.")
-        return replace(
-            self,
-            estado="pagado",
-            estado_pago="pagado",
-            fecha_pago_confirmado=fecha_confirmacion,
-            requiere_revision_manual=True,
-        )
+        return replace(self, estado="pagado", estado_pago="pagado", fecha_pago_confirmado=fecha_confirmacion, requiere_revision_manual=True)
 
     def registrar_fallo_pago(self) -> "Pedido":
         if self.estado == "pagado":
@@ -185,10 +185,50 @@ class Pedido:
             return self
         return replace(self, email_post_pago_enviado=True, fecha_email_post_pago=fecha_envio)
 
-    def marcar_preparando(self) -> "Pedido":
+    def marcar_email_envio_enviado(self, fecha_envio: datetime) -> "Pedido":
+        if self.email_envio_enviado:
+            return self
+        return replace(self, email_envio_enviado=True, fecha_email_envio=fecha_envio)
+
+    def marcar_preparando(self, fecha_preparacion: datetime) -> "Pedido":
         if self.estado != "pagado":
             raise ErrorDominio("Solo un pedido pagado puede pasar a preparando.")
-        return replace(self, estado="preparando", requiere_revision_manual=False)
+        return replace(self, estado="preparando", requiere_revision_manual=False, fecha_preparacion=fecha_preparacion)
+
+    def marcar_enviado(self, *, fecha_envio: datetime, transportista: str, codigo_seguimiento: str = "", envio_sin_seguimiento: bool = False, observaciones_operativas: str | None = None) -> "Pedido":
+        if self.estado != "preparando":
+            raise ErrorDominio("Solo un pedido preparando puede pasar a enviado.")
+        return replace(
+            self,
+            estado="enviado",
+            transportista=transportista.strip(),
+            codigo_seguimiento=codigo_seguimiento.strip(),
+            envio_sin_seguimiento=envio_sin_seguimiento,
+            fecha_preparacion=self.fecha_preparacion or fecha_envio,
+            fecha_envio=fecha_envio,
+            observaciones_operativas=_combinar_observaciones(self.observaciones_operativas, observaciones_operativas),
+        )
+
+    def marcar_entregado(self, fecha_entrega: datetime, observaciones_operativas: str | None = None) -> "Pedido":
+        if self.estado != "enviado":
+            raise ErrorDominio("Solo un pedido enviado puede pasar a entregado.")
+        return replace(self, estado="entregado", fecha_entrega=fecha_entrega, observaciones_operativas=_combinar_observaciones(self.observaciones_operativas, observaciones_operativas))
+
+    def _validar_operacion_fisica(self) -> None:
+        if self.estado in {"preparando", "enviado", "entregado"} and self.fecha_preparacion is None:
+            raise ErrorDominio("La operativa física requiere fecha_preparacion desde preparando.")
+        if self.estado in {"enviado", "entregado"}:
+            self._validar_expedicion()
+        if self.estado == "entregado" and self.fecha_entrega is None:
+            raise ErrorDominio("Un pedido entregado requiere fecha_entrega.")
+
+    def _validar_expedicion(self) -> None:
+        if not self.transportista.strip():
+            raise ErrorDominio("El envío requiere transportista.")
+        if self.fecha_envio is None:
+            raise ErrorDominio("El envío requiere fecha_envio.")
+        if not self.envio_sin_seguimiento and not self.codigo_seguimiento.strip():
+            raise ErrorDominio("El envío requiere código de seguimiento o marcar envío sin seguimiento.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,5 +256,10 @@ class PayloadPedido:
             raise ErrorDominio("El payload requiere moneda.")
 
 
+
 def _hay_texto(valor: str | None) -> bool:
     return bool(valor and valor.strip())
+
+
+def _combinar_observaciones(actual: str, nueva: str | None) -> str:
+    return nueva.strip() if nueva is not None else actual

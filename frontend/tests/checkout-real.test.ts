@@ -65,7 +65,7 @@ test("cliente API de pedidos reales usa la ruta nueva /api/v1/pedidos/", async (
     llamadas.push(url);
     return {
       ok: true,
-      json: async () => ({ pedido: { id_pedido: "PED-1", estado: "pendiente_pago", estado_pago: "pendiente", canal_checkout: "web_invitado", moneda: "EUR", subtotal: "9.90", requiere_revision_manual: false, email_post_pago_enviado: false, cliente: { email_contacto: "real@test.dev", nombre_contacto: "Lore", telefono_contacto: "600", es_invitado: true }, direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", linea_2: "", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", observaciones: "" }, resumen: { cantidad_total_items: 1, subtotal: "9.90" }, lineas: [], notas_cliente: "", pago: {} } }),
+      json: async () => ({ pedido: { id_pedido: "PED-1", estado: "pendiente_pago", estado_pago: "pendiente", canal_checkout: "web_invitado", moneda: "EUR", subtotal: "9.90", requiere_revision_manual: false, email_post_pago_enviado: false, cliente: { email_contacto: "real@test.dev", nombre_contacto: "Lore", telefono_contacto: "600", es_invitado: true }, direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", linea_2: "", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", observaciones: "" }, resumen: { cantidad_total_items: 1, subtotal: "9.90" }, lineas: [], notas_cliente: "", pago: {}, expedicion: { transportista: "", codigo_seguimiento: "", envio_sin_seguimiento: false, fecha_preparacion: null, fecha_envio: null, fecha_entrega: null, observaciones_operativas: "", email_envio_enviado: false } } }),
     } as Response;
   }) as typeof fetch;
 

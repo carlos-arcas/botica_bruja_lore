@@ -64,6 +64,15 @@ __all__ = [
     "actualizar_seleccion_fila_importacion_backoffice",
     "descartar_fila_importacion_backoffice",
     "subir_imagen_backoffice",
+    "listado_pedidos_backoffice",
+    "marcar_pedido_preparando_backoffice",
+    "marcar_pedido_enviado_backoffice",
+    "marcar_pedido_entregado_backoffice",
 ]
 
-from .pedidos import listado_pedidos_backoffice, marcar_pedido_preparando_backoffice
+from .pedidos import (
+    listado_pedidos_backoffice,
+    marcar_pedido_enviado_backoffice,
+    marcar_pedido_entregado_backoffice,
+    marcar_pedido_preparando_backoffice,
+)

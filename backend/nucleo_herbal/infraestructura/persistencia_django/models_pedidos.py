@@ -25,6 +25,15 @@ class PedidoRealModelo(models.Model):
     requiere_revision_manual = models.BooleanField(default=False)
     email_post_pago_enviado = models.BooleanField(default=False)
     fecha_email_post_pago = models.DateTimeField(null=True, blank=True)
+    transportista = models.CharField(max_length=120, blank=True, default="")
+    codigo_seguimiento = models.CharField(max_length=120, blank=True, default="")
+    envio_sin_seguimiento = models.BooleanField(default=False)
+    fecha_preparacion = models.DateTimeField(null=True, blank=True)
+    fecha_envio = models.DateTimeField(null=True, blank=True)
+    fecha_entrega = models.DateTimeField(null=True, blank=True)
+    observaciones_operativas = models.TextField(blank=True, default="")
+    email_envio_enviado = models.BooleanField(default=False)
+    fecha_email_envio = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "nucleo_pedido"

@@ -35,6 +35,15 @@ class RepositorioPedidosORM(RepositorioPedidos):
                 "requiere_revision_manual": pedido.requiere_revision_manual,
                 "email_post_pago_enviado": pedido.email_post_pago_enviado,
                 "fecha_email_post_pago": pedido.fecha_email_post_pago,
+                "transportista": pedido.transportista,
+                "codigo_seguimiento": pedido.codigo_seguimiento,
+                "envio_sin_seguimiento": pedido.envio_sin_seguimiento,
+                "fecha_preparacion": pedido.fecha_preparacion,
+                "fecha_envio": pedido.fecha_envio,
+                "fecha_entrega": pedido.fecha_entrega,
+                "observaciones_operativas": pedido.observaciones_operativas,
+                "email_envio_enviado": pedido.email_envio_enviado,
+                "fecha_email_envio": pedido.fecha_email_envio,
             },
         )
         modelo.lineas.all().delete()
@@ -56,19 +65,17 @@ class RepositorioPedidosORM(RepositorioPedidos):
     def guardar_evento_webhook(self, proveedor_pago: str, id_evento: str, payload_crudo: str) -> bool:
         try:
             with transaction.atomic():
-                EventoWebhookPagoModelo.objects.create(
-                    proveedor_pago=proveedor_pago,
-                    id_evento=id_evento,
-                    payload_crudo=payload_crudo,
-                )
+                EventoWebhookPagoModelo.objects.create(proveedor_pago=proveedor_pago, id_evento=id_evento, payload_crudo=payload_crudo)
         except IntegrityError:
             return False
         return True
 
-    def listar(self, *, solo_pagados: bool = False) -> tuple[Pedido, ...]:
+    def listar(self, *, estados: tuple[str, ...] = (), solo_pagados: bool = False) -> tuple[Pedido, ...]:
         queryset = PedidoRealModelo.objects.prefetch_related("lineas").order_by("-fecha_creacion")
         if solo_pagados:
             queryset = queryset.filter(estado__in=("pagado", "preparando"))
+        if estados:
+            queryset = queryset.filter(estado__in=estados)
         return tuple(self._a_pedido(modelo) for modelo in queryset[:120])
 
     def _reconstruir(self, id_pedido: str) -> Pedido:
@@ -97,6 +104,15 @@ class RepositorioPedidosORM(RepositorioPedidos):
             requiere_revision_manual=modelo.requiere_revision_manual,
             email_post_pago_enviado=modelo.email_post_pago_enviado,
             fecha_email_post_pago=modelo.fecha_email_post_pago,
+            transportista=modelo.transportista,
+            codigo_seguimiento=modelo.codigo_seguimiento,
+            envio_sin_seguimiento=modelo.envio_sin_seguimiento,
+            fecha_preparacion=modelo.fecha_preparacion,
+            fecha_envio=modelo.fecha_envio,
+            fecha_entrega=modelo.fecha_entrega,
+            observaciones_operativas=modelo.observaciones_operativas,
+            email_envio_enviado=modelo.email_envio_enviado,
+            fecha_email_envio=modelo.fecha_email_envio,
             notas_cliente=modelo.notas_cliente,
             moneda=modelo.moneda,
         )

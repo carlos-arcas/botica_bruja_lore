@@ -274,3 +274,12 @@ Estos aspectos pueden evolucionar por ciclo sin romper la base, siempre que no c
 - El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
 - El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
 - Pendiente para el siguiente bloque: expedición real, tracking, incidencias, SLA operativos y automatización de estados posteriores.
+
+## Actualización operación física y expedición v1.2
+- El agregado `Pedido` ya cubre el ciclo operativo mínimo `pagado -> preparando -> enviado -> entregado` con fechas explícitas de preparación, envío y entrega.
+- Datos de expedición activos en backend/API pública: `transportista`, `codigo_seguimiento`, `envio_sin_seguimiento`, `fecha_preparacion`, `fecha_envio`, `fecha_entrega`, `observaciones_operativas`, `email_envio_enviado`.
+- Política operativa vigente: al marcar `enviado` el transportista es obligatorio; el tracking también lo es salvo que staff marque explícitamente `envio_sin_seguimiento=True`.
+- El backoffice real ya lista pedidos por estado y permite marcar `preparando`, `enviado` y `entregado`, incluyendo captura manual de tracking, transportista y observaciones operativas.
+- `/pedido/[id_pedido]` ya muestra estado operativo, tracking/transportista cuando existe y mensajes de seguimiento para no dejar al cliente a ciegas después del pago.
+- El email transaccional mínimo de envío ya se dispara al pasar a `enviado`, con guardas razonables para evitar duplicados.
+- Sigue fuera de alcance en esta fase: devoluciones complejas, fraude, stock duro, SLA avanzados, multi-almacén y logística enterprise.
