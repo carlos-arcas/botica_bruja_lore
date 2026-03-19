@@ -1,4 +1,6 @@
 import * as assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { test } from "node:test";
 
 import {
@@ -15,6 +17,15 @@ import {
   validarCamposRegistroDemo,
 } from "../contenido/cuenta_demo/estadoCuentaDemo";
 import { resolverRetornoCuentaDemo } from "../contenido/cuenta_demo/retornoCuentaDemo";
+import {
+  guardarPedidoRecienteDemo,
+  leerPedidoRecienteDemo,
+  limpiarPedidoRecienteDemo,
+  pedidoRecientePerteneceASesion,
+} from "../contenido/cuenta_demo/pedidoRecienteDemo";
+
+const archivoAreaCuentaDemo = readFileSync(join(process.cwd(), "componentes/cuenta_demo/AreaCuentaDemo.tsx"), "utf8");
+const archivoHistorialCuentaDemo = readFileSync(join(process.cwd(), "componentes/cuenta_demo/HistorialPedidosDemo.tsx"), "utf8");
 
 test("validarCamposRegistroDemo detecta campos inválidos", () => {
   const errores = validarCamposRegistroDemo({ email: "demo", nombre_visible: "", clave_acceso_demo: "1" });
@@ -203,7 +214,6 @@ test("limpiarSesionCuentaDemo elimina sesión persistida", () => {
   global.window = originalWindow;
 });
 
-
 test("resolverRetornoCuentaDemo devuelve /encargo cuando el retorno es válido", () => {
   assert.equal(resolverRetornoCuentaDemo("/encargo"), "/encargo");
 });
@@ -212,4 +222,61 @@ test("resolverRetornoCuentaDemo ignora returnTo externo o inválido", () => {
   assert.equal(resolverRetornoCuentaDemo("https://evil.test"), null);
   assert.equal(resolverRetornoCuentaDemo("//evil.test"), null);
   assert.equal(resolverRetornoCuentaDemo("/cuenta-demo"), null);
+});
+
+test("la cuenta demo detecta el pedido reciente guardado para la misma sesión", () => {
+  const originalWindow = global.window;
+  const storage = new Map<string, string>();
+
+  global.window = {
+    localStorage: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    },
+  } as Window & typeof globalThis;
+
+  guardarPedidoRecienteDemo("PD-701", { id_usuario: "usr-10", email: "demo@botica.test", nombre_visible: "Demo" });
+  const pedido = leerPedidoRecienteDemo();
+
+  assert.equal(pedidoRecientePerteneceASesion(pedido, { id_usuario: "usr-10", email: "demo@botica.test", nombre_visible: "Demo" }), true);
+  global.window = originalWindow;
+});
+
+test("la cuenta demo no rompe continuidad si el pedido reciente no corresponde a la sesión", () => {
+  const pertenece = pedidoRecientePerteneceASesion(
+    { idPedido: "PD-702", idUsuario: "usr-11", creadoEn: "2026-03-19T10:00:00.000Z" },
+    { id_usuario: "usr-10", email: "demo@botica.test", nombre_visible: "Demo" },
+  );
+
+  assert.equal(pertenece, false);
+});
+
+test("limpiarPedidoRecienteDemo permite consumir una sola vez la continuidad en cuenta demo", () => {
+  const originalWindow = global.window;
+  const storage = new Map<string, string>();
+
+  global.window = {
+    localStorage: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    },
+  } as Window & typeof globalThis;
+
+  guardarPedidoRecienteDemo("PD-703", { id_usuario: "usr-10", email: "demo@botica.test", nombre_visible: "Demo" });
+  limpiarPedidoRecienteDemo();
+
+  assert.equal(leerPedidoRecienteDemo(), null);
+  global.window = originalWindow;
+});
+
+test("el historial de cuenta demo resalta el último pedido creado cuando existe", () => {
+  assert.equal(archivoHistorialCuentaDemo.includes("Último pedido creado"), true);
+  assert.equal(archivoHistorialCuentaDemo.includes("itemHistorialReciente"), true);
+});
+
+test("la cuenta demo muestra continuidad contextual sin romper el historial existente", () => {
+  assert.equal(archivoAreaCuentaDemo.includes("HistorialPedidosDemo historial={historial} pedidoReciente={pedidoReciente}"), true);
+  assert.equal(archivoAreaCuentaDemo.includes("limpiarPedidoRecienteDemo();"), true);
 });

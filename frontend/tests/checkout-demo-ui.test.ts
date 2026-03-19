@@ -13,6 +13,11 @@ const archivoBloque = readFileSync(
   "utf8",
 );
 
+const archivoRecibo = readFileSync(
+  join(process.cwd(), "componentes/catalogo/encargo/ReciboPedidoDemo.tsx"),
+  "utf8",
+);
+
 test("checkout demo elimina el input manual de id_usuario", () => {
   assert.equal(archivoFlujo.includes("name=\"idUsuarioDemo\""), false);
   assert.equal(archivoFlujo.includes("ID de usuario demo"), false);
@@ -30,4 +35,22 @@ test("checkout demo mantiene continuidad con retorno seguro y sin recuperar cons
   assert.equal(archivoFlujo.includes("returnTo=%2Fencargo"), false);
   assert.equal(archivoFlujo.includes("consentimiento: false"), true);
   assert.equal(archivoFlujo.includes("router.push(construirRutaCuentaDemoConRetornoSeguro"), true);
+});
+
+
+test("el recibo demo muestra CTA contextual hacia cuenta demo con sesión activa", () => {
+  assert.equal(archivoRecibo.includes("Ver este pedido en mi cuenta demo"), true);
+  assert.equal(archivoRecibo.includes("pedidoRecientePerteneceASesion"), true);
+  assert.equal(archivoRecibo.includes(`href="/cuenta-demo"`), true);
+});
+
+test("el checkout demo guarda continuidad post-checkout sin tocar el contrato de PedidoDemo", () => {
+  assert.equal(archivoFlujo.includes("guardarPedidoRecienteDemo(resultado.pedido.id_pedido"), true);
+  assert.equal(archivoFlujo.includes("router.push(construirRutaReciboPedidoDemo"), true);
+});
+
+test("el recibo público sigue contemplando uso sin sesión demo", () => {
+  assert.equal(archivoRecibo.includes("!mostrarCtaCuenta && haySesionDemo"), true);
+  assert.equal(archivoRecibo.includes("EstadoVacio"), true);
+  assert.equal(archivoRecibo.includes("EstadoError"), true);
 });
