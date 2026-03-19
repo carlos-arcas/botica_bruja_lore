@@ -29,6 +29,8 @@ export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
   { etiqueta: "Calendario ritual", href: "/calendario-ritual", coincidencia: "exacta" },
   { etiqueta: "Cesta ritual", href: "/cesta", coincidencia: "exacta" },
   { etiqueta: "Encargo", href: "/encargo", coincidencia: "exacta" },
+  { etiqueta: "Acceso", href: "/acceso", coincidencia: "exacta" },
+  { etiqueta: "Mi cuenta", href: "/mi-cuenta", coincidencia: "prefijo" },
   { etiqueta: "Cuenta demo", href: "/cuenta-demo", coincidencia: "exacta" },
 ];
 

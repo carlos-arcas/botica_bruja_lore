@@ -1,5 +1,6 @@
 """Modelos ORM mínimos del núcleo herbal para Ciclo 1 y 2."""
 
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -264,6 +265,24 @@ class CuentaDemoModelo(models.Model):
         ordering = ("email",)
         verbose_name = "cuenta demo"
         verbose_name_plural = "cuentas demo"
+
+    def __str__(self) -> str:
+        return self.email
+
+
+class CuentaClienteModelo(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.PROTECT, related_name="cuenta_cliente")
+    email = models.EmailField(max_length=254, unique=True)
+    nombre_visible = models.CharField(max_length=120)
+    email_verificado = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_cuenta_cliente"
+        ordering = ("email",)
+        verbose_name = "cuenta cliente"
+        verbose_name_plural = "cuentas cliente"
 
     def __str__(self) -> str:
         return self.email

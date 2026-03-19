@@ -48,11 +48,7 @@ export type PedidoCreado = {
     subtotal: string;
   }>;
   notas_cliente: string;
-  pago: {
-    proveedor_pago?: string;
-    id_externo_pago?: string;
-    url_pago?: string;
-  };
+  pago: { proveedor_pago?: string; id_externo_pago?: string; url_pago?: string };
   expedicion: ExpedicionPedido;
 };
 
@@ -68,22 +64,22 @@ export type PagoPedido = {
 
 export type RetornoPago = "success" | "cancel" | null;
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
+const API_BASE_URL = "/api/pedidos";
 
 export async function crearPedidoPublico(payload: PayloadPedido): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {
-  return enviarPedido(`${API_BASE_URL}/api/v1/pedidos/`, { method: "POST", body: JSON.stringify(payload) });
+  return enviarPedido(API_BASE_URL, { method: "POST", body: JSON.stringify(payload) });
 }
 
 export async function obtenerPedidoPublico(idPedido: string): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {
   const idNormalizado = idPedido.trim();
   if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
-  return enviarPedido(`${API_BASE_URL}/api/v1/pedidos/${encodeURIComponent(idNormalizado)}/`, { method: "GET", cache: "no-store" });
+  return enviarPedido(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}`, { method: "GET", cache: "no-store" });
 }
 
 export async function iniciarPagoPedido(idPedido: string): Promise<{ estado: "ok"; pago: PagoPedido } | { estado: "error"; mensaje: string }> {
   const idNormalizado = idPedido.trim();
   if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
-  return enviarPago(`${API_BASE_URL}/api/v1/pedidos/${encodeURIComponent(idNormalizado)}/iniciar-pago/`, { method: "POST" });
+  return enviarPago(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}/iniciar-pago`, { method: "POST" });
 }
 
 export function construirUrlRetornoPedido(idPedido: string, retorno: Exclude<RetornoPago, null>, sessionId?: string | null): string {
@@ -94,14 +90,12 @@ export function construirUrlRetornoPedido(idPedido: string, retorno: Exclude<Ret
 
 async function enviarPedido(url: string, init: RequestInit): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {
   const respuesta = await enviar(url, init);
-  if (respuesta.estado === "error") return respuesta;
-  return { estado: "ok", pedido: respuesta.data.pedido as PedidoCreado };
+  return respuesta.estado === "error" ? respuesta : { estado: "ok", pedido: respuesta.data.pedido as PedidoCreado };
 }
 
 async function enviarPago(url: string, init: RequestInit): Promise<{ estado: "ok"; pago: PagoPedido } | { estado: "error"; mensaje: string }> {
   const respuesta = await enviar(url, init);
-  if (respuesta.estado === "error") return respuesta;
-  return { estado: "ok", pago: respuesta.data.pago as PagoPedido };
+  return respuesta.estado === "error" ? respuesta : { estado: "ok", pago: respuesta.data.pago as PagoPedido };
 }
 
 async function enviar(url: string, init: RequestInit): Promise<{ estado: "ok"; data: Record<string, unknown> } | { estado: "error"; mensaje: string }> {

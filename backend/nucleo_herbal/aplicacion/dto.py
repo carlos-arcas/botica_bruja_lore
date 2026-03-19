@@ -141,6 +141,23 @@ class ResultadoAutenticacionDemoDTO:
     cuenta: CuentaDemoDTO
 
 
+@dataclass(frozen=True, slots=True)
+class CuentaClienteDTO:
+    id_usuario: str
+    email: str
+    nombre_visible: str
+    activo: bool
+    email_verificado: bool
+    fecha_creacion: object
+    fecha_actualizacion: object
+
+
+@dataclass(frozen=True, slots=True)
+class ResultadoSesionClienteDTO:
+    autenticado: bool
+    cuenta: CuentaClienteDTO | None = None
+
+
 
 @dataclass(frozen=True, slots=True)
 class RitualCalendarioDTO:

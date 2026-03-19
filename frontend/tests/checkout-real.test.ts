@@ -80,7 +80,7 @@ test("cliente API de pedidos reales usa la ruta nueva /api/v1/pedidos/", async (
   });
 
   assert.equal(resultado.estado, "ok");
-  assert.equal(llamadas[0].endsWith("/api/v1/pedidos/"), true);
+  assert.equal(llamadas[0].endsWith("/api/pedidos"), true);
 });
 
 test("frontend real consume la nueva API de pago", async () => {
@@ -99,7 +99,7 @@ test("frontend real consume la nueva API de pago", async () => {
   if (resultado.estado === "ok") {
     assert.equal(resultado.pago.proveedor_pago, "stripe");
   }
-  assert.equal(llamadas[0].endsWith("/api/v1/pedidos/PED-1/iniciar-pago/"), true);
+  assert.equal(llamadas[0].endsWith("/api/pedidos/PED-1/iniciar-pago"), true);
 });
 
 test("frontend construye retornos success y cancel para la pantalla de pedido", () => {

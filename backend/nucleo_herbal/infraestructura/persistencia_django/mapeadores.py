@@ -1,11 +1,13 @@
 """Mapeadores de ORM Django a entidades de dominio."""
 
 from ...dominio.entidades import Intencion, Planta, Producto
+from ...dominio.cuentas_cliente import CuentaCliente
 from ...dominio.cuentas_demo import CuentaDemo, CredencialCuentaDemo, PerfilCuentaDemo
 from ...dominio.calendario_ritual import ReglaCalendario
 from ...dominio.pedidos_demo import LineaPedido, PedidoDemo
 from ...dominio.rituales import Ritual
 from .models import (
+    CuentaClienteModelo,
     CuentaDemoModelo,
     IntencionModelo,
     LineaPedidoModelo,
@@ -70,12 +72,8 @@ def a_ritual(modelo: RitualModelo) -> Ritual:
         a_intencion(item)
         for item in modelo.intenciones.filter(es_publica=True).order_by("nombre")
     )
-    ids_plantas = tuple(
-        modelo.plantas_relacionadas.order_by("nombre").values_list("id", flat=True)
-    )
-    ids_productos = tuple(
-        modelo.productos_relacionados.order_by("nombre").values_list("id", flat=True)
-    )
+    ids_plantas = tuple(modelo.plantas_relacionadas.order_by("nombre").values_list("id", flat=True))
+    ids_productos = tuple(modelo.productos_relacionados.order_by("nombre").values_list("id", flat=True))
     return Ritual(
         id=modelo.id,
         slug=modelo.slug,
@@ -85,10 +83,6 @@ def a_ritual(modelo: RitualModelo) -> Ritual:
         ids_plantas_relacionadas=ids_plantas,
         ids_productos_relacionados=ids_productos,
     )
-
-
-
-
 
 
 def a_regla_calendario(modelo: ReglaCalendarioModelo) -> ReglaCalendario:
@@ -113,6 +107,21 @@ def a_datos_regla_calendario(regla: ReglaCalendario) -> dict[str, object]:
         "activa": regla.activa,
     }
 
+
+def a_cuenta_cliente(modelo: CuentaClienteModelo) -> CuentaCliente:
+    usuario = modelo.usuario
+    return CuentaCliente(
+        id_usuario=str(usuario.id),
+        email=modelo.email,
+        nombre_visible=modelo.nombre_visible,
+        hash_password=usuario.password,
+        activo=usuario.is_active,
+        email_verificado=modelo.email_verificado,
+        fecha_creacion=modelo.fecha_creacion,
+        fecha_actualizacion=modelo.fecha_actualizacion,
+    )
+
+
 def a_cuenta_demo(modelo: CuentaDemoModelo) -> CuentaDemo:
     return CuentaDemo(
         id_usuario=modelo.id_usuario,
@@ -128,6 +137,7 @@ def a_datos_cuenta_demo(cuenta: CuentaDemo) -> dict[str, object]:
         "nombre_visible": cuenta.perfil.nombre_visible,
         "clave_acceso_demo": cuenta.credencial.clave_acceso_demo,
     }
+
 
 def a_pedido_demo(modelo: PedidoDemoModelo) -> PedidoDemo:
     lineas = tuple(a_linea_pedido(linea) for linea in modelo.lineas.order_by("id"))
