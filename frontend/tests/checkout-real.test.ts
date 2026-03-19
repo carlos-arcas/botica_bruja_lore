@@ -7,7 +7,7 @@ import {
   construirPayloadPedidoReal,
   validarCheckoutReal,
 } from "../contenido/catalogo/checkoutReal";
-import { crearPedidoPublico, iniciarPagoPedido } from "../infraestructura/api/pedidos";
+import { construirUrlRetornoPedido, crearPedidoPublico, iniciarPagoPedido } from "../infraestructura/api/pedidos";
 
 test("checkout real usa un payload propio y separado del demo", () => {
   const inicial = construirEstadoInicialCheckoutReal("tarot-bosque-interior");
@@ -65,7 +65,7 @@ test("cliente API de pedidos reales usa la ruta nueva /api/v1/pedidos/", async (
     llamadas.push(url);
     return {
       ok: true,
-      json: async () => ({ pedido: { id_pedido: "PED-1", estado: "pendiente_pago", estado_pago: "pendiente", canal_checkout: "web_invitado", moneda: "EUR", subtotal: "9.90", cliente: { email_contacto: "real@test.dev", nombre_contacto: "Lore", telefono_contacto: "600", es_invitado: true }, direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", linea_2: "", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", observaciones: "" }, resumen: { cantidad_total_items: 1, subtotal: "9.90" }, lineas: [], notas_cliente: "", pago: {} } }),
+      json: async () => ({ pedido: { id_pedido: "PED-1", estado: "pendiente_pago", estado_pago: "pendiente", canal_checkout: "web_invitado", moneda: "EUR", subtotal: "9.90", requiere_revision_manual: false, email_post_pago_enviado: false, cliente: { email_contacto: "real@test.dev", nombre_contacto: "Lore", telefono_contacto: "600", es_invitado: true }, direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", linea_2: "", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", observaciones: "" }, resumen: { cantidad_total_items: 1, subtotal: "9.90" }, lineas: [], notas_cliente: "", pago: {} } }),
     } as Response;
   }) as typeof fetch;
 
@@ -100,4 +100,9 @@ test("frontend real consume la nueva API de pago", async () => {
     assert.equal(resultado.pago.proveedor_pago, "stripe");
   }
   assert.equal(llamadas[0].endsWith("/api/v1/pedidos/PED-1/iniciar-pago/"), true);
+});
+
+test("frontend construye retornos success y cancel para la pantalla de pedido", () => {
+  assert.equal(construirUrlRetornoPedido("PED-1", "success", "cs_123"), "/pedido/PED-1?retorno_pago=success&session_id=cs_123");
+  assert.equal(construirUrlRetornoPedido("PED-1", "cancel"), "/pedido/PED-1?retorno_pago=cancel");
 });

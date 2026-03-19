@@ -10,6 +10,7 @@ from ...aplicacion.casos_de_uso import (
     ObtenerRelacionesHerbalesPorIntencion,
     ObtenerResolucionComercialMinimaDePlanta,
 )
+from ...aplicacion.casos_de_uso_backoffice_pedidos import ListarPedidosBackoffice, MarcarPedidoPreparando
 from ...aplicacion.casos_de_uso_calendario_ritual import ConsultarCalendarioRitualPorFecha
 from ...aplicacion.casos_de_uso_cuentas_demo import (
     AutenticarCuentaDemo,
@@ -21,8 +22,9 @@ from ...aplicacion.casos_de_uso_email_demo import (
     ComponerEmailDemoPedido,
     ObtenerEmailDemoPedidoPorId,
 )
-from ...aplicacion.casos_de_uso_pedidos import ObtenerPedidoPorId, RegistrarPedido
 from ...aplicacion.casos_de_uso_pago_pedidos import IniciarPagoPedido, ProcesarWebhookPagoPedido
+from ...aplicacion.casos_de_uso_pedidos import ObtenerPedidoPorId, RegistrarPedido
+from ...aplicacion.casos_de_uso_post_pago_pedidos import ProcesarPostPagoPedido
 from ...aplicacion.casos_de_uso_pedidos_demo import (
     ObtenerPedidoDemoPorId,
     RegistrarPedidoDemo,
@@ -35,16 +37,17 @@ from ...aplicacion.casos_de_uso_rituales import (
     ObtenerRitualesRelacionadosDePlantaPorSlug,
     ObtenerRitualesRelacionadosPorIntencion,
 )
+from ...infraestructura.notificaciones_email import NotificadorEmailPostPago
+from ...infraestructura.pagos_stripe import construir_pasarela_pago_stripe
 from ...infraestructura.persistencia_django.repositorios import (
     ProveedorHistorialPedidosDemoORM,
     RepositorioCuentasDemoORM,
-    RepositorioReglasCalendarioORM,
+    RepositorioPedidosDemoORM,
     RepositorioPlantasORM,
     RepositorioProductosORM,
-    RepositorioPedidosDemoORM,
+    RepositorioReglasCalendarioORM,
     RepositorioRitualesORM,
 )
-from ...infraestructura.pagos_stripe import construir_pasarela_pago_stripe
 from ...infraestructura.persistencia_django.repositorios_pedidos import RepositorioPedidosORM
 
 
@@ -79,8 +82,6 @@ class ServiciosPublicosPedidos:
     obtener_pedido: ObtenerPedidoPorId
 
 
-
-
 @dataclass(frozen=True, slots=True)
 class ServiciosPublicosPagoPedidos:
     iniciar_pago: IniciarPagoPedido
@@ -100,6 +101,12 @@ class ServiciosPublicosCuentaDemo:
     autenticar_cuenta_demo: AutenticarCuentaDemo
     obtener_perfil_cuenta_demo: ObtenerPerfilCuentaDemo
     obtener_historial_cuenta_demo: ObtenerHistorialPedidosDemoCuenta
+
+
+@dataclass(frozen=True, slots=True)
+class ServiciosBackofficePedidos:
+    listar_pedidos: ListarPedidosBackoffice
+    marcar_preparando: MarcarPedidoPreparando
 
 
 def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
@@ -152,14 +159,22 @@ def construir_servicios_publicos_pedidos() -> ServiciosPublicosPedidos:
     )
 
 
-
 def construir_servicios_publicos_pago_pedidos() -> ServiciosPublicosPagoPedidos:
     repositorio = RepositorioPedidosORM()
     pasarela = construir_pasarela_pago_stripe()
+    procesador_post_pago = ProcesarPostPagoPedido(
+        repositorio_pedidos=repositorio,
+        notificador=NotificadorEmailPostPago(),
+    )
     return ServiciosPublicosPagoPedidos(
         iniciar_pago=IniciarPagoPedido(repositorio_pedidos=repositorio, pasarela_pago=pasarela),
-        procesar_webhook=ProcesarWebhookPagoPedido(repositorio_pedidos=repositorio, pasarela_pago=pasarela),
+        procesar_webhook=ProcesarWebhookPagoPedido(
+            repositorio_pedidos=repositorio,
+            pasarela_pago=pasarela,
+            procesador_post_pago=procesador_post_pago,
+        ),
     )
+
 
 def construir_servicios_publicos_pedidos_demo() -> ServiciosPublicosPedidosDemo:
     repositorio = RepositorioPedidosDemoORM()
@@ -186,4 +201,12 @@ def construir_servicios_publicos_cuenta_demo() -> ServiciosPublicosCuentaDemo:
             repositorio_cuentas_demo=repositorio_cuentas_demo,
             proveedor_historial_pedidos_demo=proveedor_historial,
         ),
+    )
+
+
+def construir_servicios_backoffice_pedidos() -> ServiciosBackofficePedidos:
+    repositorio = RepositorioPedidosORM()
+    return ServiciosBackofficePedidos(
+        listar_pedidos=ListarPedidosBackoffice(repositorio_pedidos=repositorio),
+        marcar_preparando=MarcarPedidoPreparando(repositorio_pedidos=repositorio),
     )

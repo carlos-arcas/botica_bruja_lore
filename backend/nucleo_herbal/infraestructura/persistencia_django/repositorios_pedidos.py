@@ -32,6 +32,9 @@ class RepositorioPedidosORM(RepositorioPedidos):
                 "direccion_entrega": _serializar_direccion(pedido.direccion_entrega),
                 "fecha_creacion": pedido.fecha_creacion,
                 "fecha_pago_confirmado": pedido.fecha_pago_confirmado,
+                "requiere_revision_manual": pedido.requiere_revision_manual,
+                "email_post_pago_enviado": pedido.email_post_pago_enviado,
+                "fecha_email_post_pago": pedido.fecha_email_post_pago,
             },
         )
         modelo.lineas.all().delete()
@@ -62,8 +65,16 @@ class RepositorioPedidosORM(RepositorioPedidos):
             return False
         return True
 
+    def listar(self, *, solo_pagados: bool = False) -> tuple[Pedido, ...]:
+        queryset = PedidoRealModelo.objects.prefetch_related("lineas").order_by("-fecha_creacion")
+        if solo_pagados:
+            queryset = queryset.filter(estado__in=("pagado", "preparando"))
+        return tuple(self._a_pedido(modelo) for modelo in queryset[:120])
+
     def _reconstruir(self, id_pedido: str) -> Pedido:
-        modelo = PedidoRealModelo.objects.prefetch_related("lineas").get(id_pedido=id_pedido)
+        return self._a_pedido(PedidoRealModelo.objects.prefetch_related("lineas").get(id_pedido=id_pedido))
+
+    def _a_pedido(self, modelo: PedidoRealModelo) -> Pedido:
         return Pedido(
             id_pedido=modelo.id_pedido,
             estado=modelo.estado,
@@ -83,6 +94,9 @@ class RepositorioPedidosORM(RepositorioPedidos):
             direccion_entrega=_a_direccion(modelo.direccion_entrega),
             fecha_creacion=modelo.fecha_creacion,
             fecha_pago_confirmado=modelo.fecha_pago_confirmado,
+            requiere_revision_manual=modelo.requiere_revision_manual,
+            email_post_pago_enviado=modelo.email_post_pago_enviado,
+            fecha_email_post_pago=modelo.fecha_email_post_pago,
             notas_cliente=modelo.notas_cliente,
             moneda=modelo.moneda,
         )

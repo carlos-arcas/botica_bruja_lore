@@ -115,6 +115,9 @@ class Pedido:
     id_externo_pago: str | None = None
     url_pago: str | None = None
     fecha_pago_confirmado: datetime | None = None
+    requiere_revision_manual: bool = False
+    email_post_pago_enviado: bool = False
+    fecha_email_post_pago: datetime | None = None
 
     def __post_init__(self) -> None:
         if not self.id_pedido.strip():
@@ -131,6 +134,8 @@ class Pedido:
             raise ErrorDominio("El pedido requiere moneda.")
         if self.estado == "pagado" and self.estado_pago != "pagado":
             raise ErrorDominio("Un pedido pagado requiere estado_pago='pagado'.")
+        if self.fecha_email_post_pago and not self.email_post_pago_enviado:
+            raise ErrorDominio("La fecha de email post-pago requiere email_post_pago_enviado=True.")
 
     @property
     def subtotal(self) -> Decimal:
@@ -157,12 +162,33 @@ class Pedido:
             return self
         if self.estado != "pendiente_pago":
             raise ErrorDominio("Solo un pedido pendiente de pago puede pasar a pagado.")
-        return replace(self, estado="pagado", estado_pago="pagado", fecha_pago_confirmado=fecha_confirmacion)
+        return replace(
+            self,
+            estado="pagado",
+            estado_pago="pagado",
+            fecha_pago_confirmado=fecha_confirmacion,
+            requiere_revision_manual=True,
+        )
 
     def registrar_fallo_pago(self) -> "Pedido":
         if self.estado == "pagado":
             return self
         return replace(self, estado_pago="fallido")
+
+    def registrar_cancelacion_pago(self) -> "Pedido":
+        if self.estado == "pagado":
+            return self
+        return replace(self, estado_pago="cancelado")
+
+    def marcar_email_post_pago_enviado(self, fecha_envio: datetime) -> "Pedido":
+        if self.email_post_pago_enviado:
+            return self
+        return replace(self, email_post_pago_enviado=True, fecha_email_post_pago=fecha_envio)
+
+    def marcar_preparando(self) -> "Pedido":
+        if self.estado != "pagado":
+            raise ErrorDominio("Solo un pedido pagado puede pasar a preparando.")
+        return replace(self, estado="preparando", requiere_revision_manual=False)
 
 
 @dataclass(frozen=True, slots=True)

@@ -26,15 +26,19 @@ from .backoffice_views import (
     guardar_ritual_backoffice,
     guardar_seccion_backoffice,
     listado_editorial_backoffice,
+    listado_pedidos_backoffice,
     listado_productos_backoffice,
     listado_plantas_asociables_backoffice,
     listado_rituales_backoffice,
+    marcar_pedido_preparando_backoffice,
     listado_secciones_backoffice,
 )
 
 urlpatterns = [
     path("estado/", estado_backoffice, name="backoffice-estado"),
     path("productos/", listado_productos_backoffice, name="backoffice-productos"),
+    path("pedidos/", listado_pedidos_backoffice, name="backoffice-pedidos"),
+    path("pedidos/<str:pedido_id>/preparando/", marcar_pedido_preparando_backoffice, name="backoffice-pedido-preparando"),
     path("productos/plantas-asociables/", listado_plantas_asociables_backoffice, name="backoffice-productos-plantas-asociables"),
     path("productos/guardar/", guardar_producto_backoffice, name="backoffice-producto-guardar"),
     path("productos/<str:producto_id>/publicacion/", cambiar_publicacion_producto_backoffice, name="backoffice-producto-publicacion"),

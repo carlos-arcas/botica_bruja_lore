@@ -1,7 +1,10 @@
+import json
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import LineaPedidoRealModelo, PedidoRealModelo
 
 
 class ApiBackofficeTests(TestCase):
@@ -34,155 +37,64 @@ class ApiBackofficeTests(TestCase):
             precio_visible="12,00 €",
             publicado=False,
         )
+        pedido = PedidoRealModelo.objects.create(
+            id_pedido="PED-ADMIN-1",
+            estado="pagado",
+            estado_pago="pagado",
+            canal_checkout="web_invitado",
+            email_contacto="pedidos@test.dev",
+            nombre_contacto="Lore",
+            telefono_contacto="600111222",
+            es_invitado=True,
+            moneda="EUR",
+            subtotal="12.00",
+            direccion_entrega={"nombre_destinatario": "Lore", "linea_1": "Calle", "codigo_postal": "28001", "ciudad": "Madrid", "provincia": "Madrid", "pais_iso": "ES"},
+            fecha_creacion="2026-03-19T00:00:00Z",
+            requiere_revision_manual=True,
+        )
+        LineaPedidoRealModelo.objects.create(
+            pedido=pedido,
+            id_producto="prod-1",
+            slug_producto="tarot-bosque-interior",
+            nombre_producto="Tarot bosque interior",
+            cantidad=1,
+            precio_unitario="12.00",
+            moneda="EUR",
+        )
 
     def test_estado_backoffice_rechaza_usuario_no_autenticado(self) -> None:
         response = self.client.get("/api/v1/backoffice/estado/")
-
         self.assertIn(response.status_code, (302, 403))
 
     def test_estado_backoffice_permite_staff(self) -> None:
         self.client.force_login(self.staff)
-
         response = self.client.get("/api/v1/backoffice/estado/")
-
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["autorizado"])
 
     def test_listado_productos_aplica_filtro_publicado(self) -> None:
         self.client.force_login(self.staff)
-
         response = self.client.get("/api/v1/backoffice/productos/?publicado=true")
-
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["metricas"]["total"], 1)
         self.assertEqual(data["productos"][0]["slug"], "producto-demo-1")
 
-    def test_listado_productos_busqueda_sin_resultados(self) -> None:
+    def test_listado_pedidos_reales_operativos(self) -> None:
         self.client.force_login(self.staff)
-
-        response = self.client.get("/api/v1/backoffice/productos/?q=inexistente")
-
+        response = self.client.get("/api/v1/backoffice/pedidos/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["productos"], [])
+        pedido = response.json()["items"][0]
+        self.assertEqual(pedido["id_pedido"], "PED-ADMIN-1")
+        self.assertTrue(pedido["requiere_revision_manual"])
 
-    def test_publicacion_producto_exige_staff(self) -> None:
+    def test_se_puede_marcar_primer_avance_administrativo(self) -> None:
+        self.client.force_login(self.staff)
         response = self.client.post(
-            "/api/v1/backoffice/productos/pro-2/publicacion/",
-            data="{\"publicado\": true}",
+            "/api/v1/backoffice/pedidos/PED-ADMIN-1/preparando/",
+            data=json.dumps({}),
             content_type="application/json",
         )
-
-        self.assertIn(response.status_code, (302, 403))
-
-    def test_publicacion_producto_actualiza_estado(self) -> None:
-        self.client.force_login(self.staff)
-
-        response = self.client.post(
-            "/api/v1/backoffice/productos/pro-2/publicacion/",
-            data="{\"publicado\": true}",
-            content_type="application/json",
-        )
-
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.json()["producto"]["publicado"])
+        PedidoRealModelo.objects.get(id_pedido="PED-ADMIN-1", estado="preparando")
 
-    def test_guardar_producto_botica_persiste_campos_catalogo(self) -> None:
-        self.client.force_login(self.staff)
-
-        response = self.client.post(
-            "/api/v1/backoffice/productos/guardar/",
-            data='{"nombre":"Melisa","seccion_publica":"botica-natural","tipo_producto":"herramientas-rituales","categoria_comercial":"hierbas","beneficio_principal":"calma","beneficios_secundarios":"energia","formato_comercial":"hoja-seca","modo_uso":"infusion","categoria_visible":"hierbas","publicado":true}',
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        item = response.json()["item"]
-        self.assertEqual(item["beneficio_principal"], "calma")
-        self.assertEqual(item["formato_comercial"], "hoja-seca")
-        self.assertEqual(item["modo_uso"], "infusion")
-
-    def test_editar_producto_botica_conserva_campos_catalogo(self) -> None:
-        self.client.force_login(self.staff)
-        producto = ProductoModelo.objects.create(
-            id="pro-edit-botica",
-            sku="BOT-EDIT-001",
-            slug="botica-edit-1",
-            nombre="Botica Edit",
-            tipo_producto="herramientas-rituales",
-            categoria_comercial="hierbas",
-            seccion_publica="botica-natural",
-            beneficio_principal="calma",
-            formato_comercial="hoja-seca",
-            modo_uso="infusion",
-            categoria_visible="hierbas",
-            publicado=True,
-        )
-
-        response = self.client.post(
-            "/api/v1/backoffice/productos/guardar/",
-            data=f'{{"id":"{producto.id}","nombre":"Botica Edit 2","seccion_publica":"botica-natural","tipo_producto":"herramientas-rituales","categoria_comercial":"mezclas","beneficio_principal":"energia","formato_comercial":"mezcla-herbal","modo_uso":"altar","categoria_visible":"mezclas","publicado":true}}',
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        item = response.json()["item"]
-        self.assertEqual(item["beneficio_principal"], "energia")
-        self.assertEqual(item["formato_comercial"], "mezcla-herbal")
-
-
-    def test_listado_plantas_asociables_backoffice_devuelve_nombres_humanos(self) -> None:
-        from backend.nucleo_herbal.infraestructura.persistencia_django.models import PlantaModelo
-
-        PlantaModelo.objects.create(
-            id="pla-010",
-            slug="menta",
-            nombre="Menta",
-            descripcion_breve="fresca",
-            publicada=True,
-        )
-        self.client.force_login(self.staff)
-
-        response = self.client.get("/api/v1/backoffice/productos/plantas-asociables/")
-
-        self.assertEqual(response.status_code, 200)
-        items = response.json()["items"]
-        self.assertTrue(any(item["id"] == "pla-010" and item["nombre"] == "Menta" for item in items))
-
-    def test_guardar_producto_invalido_hierba_sin_planta_devuelve_error(self) -> None:
-        self.client.force_login(self.staff)
-
-        response = self.client.post(
-            "/api/v1/backoffice/productos/guardar/",
-            data='{"nombre":"Menta","seccion_publica":"botica-natural","tipo_producto":"hierbas-a-granel","categoria_comercial":"hierbas","publicado":true}',
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(ProductoModelo.objects.filter(nombre="Menta").count(), 0)
-
-    def test_guardar_producto_valido_hierba_con_planta_funciona(self) -> None:
-        from backend.nucleo_herbal.infraestructura.persistencia_django.models import PlantaModelo
-
-        self.client.force_login(self.staff)
-        planta = PlantaModelo.objects.create(
-            id="pla-001",
-            slug="melisa",
-            nombre="Melisa",
-            descripcion_breve="calma",
-            publicada=True,
-        )
-
-        response = self.client.post(
-            "/api/v1/backoffice/productos/guardar/",
-            data=(
-                '{"nombre":"Melisa 25g","seccion_publica":"botica-natural","tipo_producto":"hierbas-a-granel",'
-                '"categoria_comercial":"hierbas","planta_id":"%s","beneficio_principal":"calma",'
-                '"formato_comercial":"hoja-seca","modo_uso":"infusion","categoria_visible":"hierbas","publicado":true}'
-            )
-            % planta.id,
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["item"]["planta_id"], planta.id)

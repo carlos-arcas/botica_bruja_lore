@@ -144,3 +144,11 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Frontend activo: botón **Pagar ahora** en `/pedido/[id_pedido]` para redirigir al checkout hospedado del PSP.
 - Coexistencia preservada: `PedidoDemo` y `/api/v1/pedidos-demo/` continúan como legacy controlado.
 - Siguiente bloque recomendado: post-pago operativo v1.1 con cancelación explícita, email transaccional real, conciliación/manual review mínima y primer cierre administrativo del pedido pagado.
+
+
+## Actualización post-pago operativo v1.1
+- El checkout real ya expone retornos `success` y `cancel` hacia `/pedido/[id_pedido]` con estado visible y siguiente acción recomendada.
+- Cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook: persiste transición, envía email transaccional mínimo e incrementa trazabilidad operativa.
+- El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
+- El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
+- Pendiente para el siguiente bloque: expedición real, tracking, incidencias, SLA operativos y automatización de estados posteriores.

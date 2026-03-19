@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
 
 from ..dominio.excepciones import ErrorDominio
 from .casos_de_uso import ErrorAplicacionLookup
+from .casos_de_uso_post_pago_pedidos import ProcesarPostPagoPedido
 from .dto_pago_pedidos import EventoPagoNormalizadoDTO, IntencionPagoPedidoDTO
 from .puertos.pasarela_pago import PuertoPasarelaPago
 from .puertos.repositorios_pedidos import RepositorioPedidos
@@ -53,6 +53,7 @@ class IniciarPagoPedido:
 class ProcesarWebhookPagoPedido:
     repositorio_pedidos: RepositorioPedidos
     pasarela_pago: PuertoPasarelaPago
+    procesador_post_pago: ProcesarPostPagoPedido
 
     def ejecutar(self, payload: bytes, firma: str | None, operation_id: str) -> dict[str, object]:
         evento = self.pasarela_pago.validar_webhook(payload, firma)
@@ -73,12 +74,13 @@ class ProcesarWebhookPagoPedido:
 
     def _aplicar_evento(self, evento: EventoPagoNormalizadoDTO, pedido, operation_id: str) -> dict[str, object]:
         if evento.estado_pago == "pagado":
-            actualizado = pedido.marcar_pagado(datetime.now(tz=UTC))
-            self.repositorio_pedidos.guardar(actualizado)
-            logger.info("pago_real_transicion_pagado", extra=_extra_pago(operation_id, actualizado, "ok", evento.tipo_evento, pedido.estado))
+            actualizado = self.procesador_post_pago.ejecutar(pedido, operation_id, evento.tipo_evento)
             return {"resultado": "pagado", "id_pedido": actualizado.id_pedido, "tipo_evento": evento.tipo_evento}
-        actualizado = pedido.registrar_fallo_pago()
-        self.repositorio_pedidos.guardar(actualizado)
+        if evento.estado_pago == "cancelado":
+            actualizado = self.repositorio_pedidos.guardar(pedido.registrar_cancelacion_pago())
+            logger.info("pago_real_evento_cancelado", extra=_extra_pago(operation_id, actualizado, "ok", evento.tipo_evento, pedido.estado))
+            return {"resultado": "cancelado", "id_pedido": actualizado.id_pedido, "tipo_evento": evento.tipo_evento}
+        actualizado = self.repositorio_pedidos.guardar(pedido.registrar_fallo_pago())
         logger.info("pago_real_evento_no_exitoso", extra=_extra_pago(operation_id, actualizado, "ok", evento.tipo_evento, pedido.estado))
         return {"resultado": "ignorado", "id_pedido": actualizado.id_pedido, "tipo_evento": evento.tipo_evento}
 
@@ -89,11 +91,12 @@ def _extra_pago(operation_id: str, pedido, resultado: str, tipo_evento: str | No
         "pedido_id": pedido.id_pedido,
         "proveedor_pago": pedido.proveedor_pago,
         "id_externo_pago": pedido.id_externo_pago,
+        "email_contacto": pedido.cliente.email,
         "moneda": pedido.moneda,
         "importe": str(pedido.subtotal),
         "estado_anterior": estado_anterior or pedido.estado,
         "estado_nuevo": pedido.estado,
-        "tipo_evento": tipo_evento,
+        "evento": tipo_evento,
         "resultado": resultado,
     }
 
@@ -104,11 +107,12 @@ def _extra_evento(operation_id: str, evento: EventoPagoNormalizadoDTO, resultado
         "pedido_id": evento.id_pedido,
         "proveedor_pago": evento.proveedor_pago,
         "id_externo_pago": evento.id_externo_pago,
+        "email_contacto": None,
         "moneda": evento.moneda,
         "importe": str(evento.importe),
         "estado_anterior": "pendiente_pago",
         "estado_nuevo": "pendiente_pago",
-        "tipo_evento": evento.tipo_evento,
+        "evento": evento.tipo_evento,
         "resultado": resultado,
     }
 

@@ -55,3 +55,39 @@ def webhook_pago_stripe(request: HttpRequest) -> JsonResponse:
         logger.warning("pago_real_webhook_rechazado", extra={"operation_id": operation_id, "pedido_id": None, "resultado": "error", "error": str(error_dominio), "proveedor_pago": "stripe"})
         return JsonResponse({"detalle": str(error_dominio)}, status=400)
     return JsonResponse(resultado, status=200)
+
+
+def retorno_pago_success(request: HttpRequest, id_pedido: str) -> JsonResponse:
+    operation_id = request.headers.get("X-Operation-Id", "").strip() or str(uuid4())
+    logger.info(
+        "pago_real_retorno_success",
+        extra={
+            "operation_id": operation_id,
+            "pedido_id": id_pedido,
+            "id_externo_pago": request.GET.get("session_id", ""),
+            "email_contacto": None,
+            "estado_anterior": None,
+            "estado_nuevo": None,
+            "evento": "retorno_success",
+            "resultado": "ok",
+        },
+    )
+    return JsonResponse({"retorno": "success", "pedido_id": id_pedido, "session_id": request.GET.get("session_id")})
+
+
+def retorno_pago_cancel(request: HttpRequest, id_pedido: str) -> JsonResponse:
+    operation_id = request.headers.get("X-Operation-Id", "").strip() or str(uuid4())
+    logger.info(
+        "pago_real_retorno_cancel",
+        extra={
+            "operation_id": operation_id,
+            "pedido_id": id_pedido,
+            "id_externo_pago": request.GET.get("session_id", ""),
+            "email_contacto": None,
+            "estado_anterior": None,
+            "estado_nuevo": None,
+            "evento": "retorno_cancel",
+            "resultado": "ok",
+        },
+    )
+    return JsonResponse({"retorno": "cancel", "pedido_id": id_pedido, "session_id": request.GET.get("session_id")})
