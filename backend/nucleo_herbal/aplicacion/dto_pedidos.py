@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 
 
@@ -39,6 +40,18 @@ class LineaPedidoRealDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class ExpedicionPedidoDTO:
+    transportista: str
+    codigo_seguimiento: str
+    envio_sin_seguimiento: bool
+    fecha_preparacion: datetime | None
+    fecha_envio: datetime | None
+    fecha_entrega: datetime | None
+    observaciones_operativas: str
+    email_envio_enviado: bool
+
+
+@dataclass(frozen=True, slots=True)
 class PedidoRealDTO:
     id_pedido: str
     estado: str
@@ -55,3 +68,4 @@ class PedidoRealDTO:
     direccion_entrega: DireccionEntregaDTO
     lineas: tuple[LineaPedidoRealDTO, ...]
     notas_cliente: str
+    expedicion: ExpedicionPedidoDTO

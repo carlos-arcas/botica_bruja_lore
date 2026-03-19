@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from ..dominio.pedidos import PayloadPedido, Pedido
 from .casos_de_uso import ErrorAplicacionLookup
-from .dto_pedidos import ClientePedidoDTO, DireccionEntregaDTO, LineaPedidoRealDTO, PedidoRealDTO
+from .dto_pedidos import ClientePedidoDTO, DireccionEntregaDTO, ExpedicionPedidoDTO, LineaPedidoRealDTO, PedidoRealDTO
 from .puertos.repositorios_pedidos import RepositorioPedidos
 
 logger = logging.getLogger(__name__)
@@ -96,6 +96,16 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
             for linea in pedido.lineas
         ),
         notas_cliente=pedido.notas_cliente,
+        expedicion=ExpedicionPedidoDTO(
+            transportista=pedido.transportista,
+            codigo_seguimiento=pedido.codigo_seguimiento,
+            envio_sin_seguimiento=pedido.envio_sin_seguimiento,
+            fecha_preparacion=pedido.fecha_preparacion,
+            fecha_envio=pedido.fecha_envio,
+            fecha_entrega=pedido.fecha_entrega,
+            observaciones_operativas=pedido.observaciones_operativas,
+            email_envio_enviado=pedido.email_envio_enviado,
+        ),
     )
 
 

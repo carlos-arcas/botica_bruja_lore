@@ -10,7 +10,12 @@ from ...aplicacion.casos_de_uso import (
     ObtenerRelacionesHerbalesPorIntencion,
     ObtenerResolucionComercialMinimaDePlanta,
 )
-from ...aplicacion.casos_de_uso_backoffice_pedidos import ListarPedidosBackoffice, MarcarPedidoPreparando
+from ...aplicacion.casos_de_uso_backoffice_pedidos import (
+    ListarPedidosBackoffice,
+    MarcarPedidoEntregado,
+    MarcarPedidoEnviado,
+    MarcarPedidoPreparando,
+)
 from ...aplicacion.casos_de_uso_calendario_ritual import ConsultarCalendarioRitualPorFecha
 from ...aplicacion.casos_de_uso_cuentas_demo import (
     AutenticarCuentaDemo,
@@ -107,6 +112,8 @@ class ServiciosPublicosCuentaDemo:
 class ServiciosBackofficePedidos:
     listar_pedidos: ListarPedidosBackoffice
     marcar_preparando: MarcarPedidoPreparando
+    marcar_enviado: MarcarPedidoEnviado
+    marcar_entregado: MarcarPedidoEntregado
 
 
 def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
@@ -206,7 +213,10 @@ def construir_servicios_publicos_cuenta_demo() -> ServiciosPublicosCuentaDemo:
 
 def construir_servicios_backoffice_pedidos() -> ServiciosBackofficePedidos:
     repositorio = RepositorioPedidosORM()
+    notificador = NotificadorEmailPostPago()
     return ServiciosBackofficePedidos(
         listar_pedidos=ListarPedidosBackoffice(repositorio_pedidos=repositorio),
         marcar_preparando=MarcarPedidoPreparando(repositorio_pedidos=repositorio),
+        marcar_enviado=MarcarPedidoEnviado(repositorio_pedidos=repositorio, notificador=notificador),
+        marcar_entregado=MarcarPedidoEntregado(repositorio_pedidos=repositorio),
     )

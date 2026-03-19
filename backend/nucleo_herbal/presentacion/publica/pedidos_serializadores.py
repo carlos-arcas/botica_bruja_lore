@@ -5,6 +5,10 @@ from __future__ import annotations
 from ...aplicacion.dto_pedidos import PedidoRealDTO
 
 
+def _serializar_fecha(valor: object) -> str | None:
+    return None if valor is None else valor.isoformat()
+
+
 def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
     return {
         "id_pedido": dto.id_pedido,
@@ -37,6 +41,16 @@ def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
             "proveedor_pago": dto.proveedor_pago,
             "id_externo_pago": dto.id_externo_pago,
             "url_pago": dto.url_pago,
+        },
+        "expedicion": {
+            "transportista": dto.expedicion.transportista,
+            "codigo_seguimiento": dto.expedicion.codigo_seguimiento,
+            "envio_sin_seguimiento": dto.expedicion.envio_sin_seguimiento,
+            "fecha_preparacion": _serializar_fecha(dto.expedicion.fecha_preparacion),
+            "fecha_envio": _serializar_fecha(dto.expedicion.fecha_envio),
+            "fecha_entrega": _serializar_fecha(dto.expedicion.fecha_entrega),
+            "observaciones_operativas": dto.expedicion.observaciones_operativas,
+            "email_envio_enviado": dto.expedicion.email_envio_enviado,
         },
         "resumen": {
             "cantidad_total_items": sum(linea.cantidad for linea in dto.lineas),

@@ -58,6 +58,13 @@ export type ResultadoListado = { estado: "ok"; items: Record<string, unknown>[] 
 
 export type PlantaAsociable = { id: string; nombre: string };
 
+export type PayloadEnvioPedido = {
+  transportista: string;
+  codigo_seguimiento: string;
+  envio_sin_seguimiento: boolean;
+  observaciones_operativas: string;
+};
+
 function formatearErroresValidacion(errores?: Record<string, string>): string {
   if (!errores) return "";
   const entradas = Object.entries(errores).filter(([, mensaje]) => Boolean(mensaje));
@@ -241,8 +248,20 @@ export async function obtenerProductosAdmin(query: URLSearchParams, token?: stri
 
 
 export async function marcarPedidoPreparando(id: string, token?: string): Promise<Record<string, unknown>> {
-  const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/pedidos/${id}/preparando/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
-  if (!r.ok) throw new Error("No se pudo marcar el pedido como preparando");
+  return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/preparando/`, {}, token, "No se pudo marcar el pedido como preparando");
+}
+
+export async function marcarPedidoEnviado(id: string, payload: PayloadEnvioPedido, token?: string): Promise<Record<string, unknown>> {
+  return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/enviado/`, payload, token, "No se pudo marcar el pedido como enviado");
+}
+
+export async function marcarPedidoEntregado(id: string, observaciones_operativas: string, token?: string): Promise<Record<string, unknown>> {
+  return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/entregado/`, { observaciones_operativas }, token, "No se pudo marcar el pedido como entregado");
+}
+
+async function ejecutarAccionPedido(ruta: string, payload: Record<string, unknown>, token: string | undefined, mensajeError: string): Promise<Record<string, unknown>> {
+  const r = await fetch(construirUrlBackoffice(ruta), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify(payload) });
+  if (!r.ok) throw new Error(mensajeError);
   const data = (await r.json()) as { item: Record<string, unknown> };
   return data.item;
 }
