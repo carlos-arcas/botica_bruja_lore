@@ -31,6 +31,7 @@ import {
   limpiarBorradorCheckoutDemo,
 } from "@/contenido/catalogo/estadoCheckoutDemo";
 import { leerSesionCuentaDemo } from "@/contenido/cuenta_demo/estadoCuentaDemo";
+import { guardarPedidoRecienteDemo } from "@/contenido/cuenta_demo/pedidoRecienteDemo";
 import { construirRutaReciboPedidoDemo } from "@/contenido/catalogo/postCheckoutDemo";
 import { crearPedidoDemoPublico, PedidoDemoCreado } from "@/infraestructura/api/pedidosDemo";
 
@@ -105,6 +106,7 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
       return;
     }
 
+    guardarPedidoRecienteDemo(resultado.pedido.id_pedido, estadoIdentificacion.cuentaActiva);
     limpiarBorradorCheckoutDemo();
     setEstadoEnvio("ok");
     setPedidoCreado(resultado.pedido);

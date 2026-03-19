@@ -20,6 +20,13 @@ import {
   validarCamposRegistroDemo,
 } from "@/contenido/cuenta_demo/estadoCuentaDemo";
 import { resolverRetornoCuentaDemo } from "@/contenido/cuenta_demo/retornoCuentaDemo";
+import { FormularioAccesoDemo, FormularioRegistroDemo } from "@/componentes/cuenta_demo/FormulariosCuentaDemo";
+import { HistorialPedidosDemo } from "@/componentes/cuenta_demo/HistorialPedidosDemo";
+import {
+  limpiarPedidoRecienteDemo,
+  leerPedidoRecienteDemo,
+  pedidoRecientePerteneceASesion,
+} from "@/contenido/cuenta_demo/pedidoRecienteDemo";
 
 import estilos from "./areaCuentaDemo.module.css";
 
@@ -33,6 +40,11 @@ type Props = {
   returnTo?: string | null;
 };
 
+type PedidoRecienteUI = {
+  idPedido: string;
+  disponibleEnHistorial: boolean;
+};
+
 export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
   const [campos, setCampos] = useState<CamposCuentaDemo>(CAMPOS_INICIALES);
   const [idUsuarioActivo, setIdUsuarioActivo] = useState<string | null>(null);
@@ -41,6 +53,7 @@ export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [errores, setErrores] = useState<string[]>([]);
   const [cargando, setCargando] = useState(false);
+  const [pedidoReciente, setPedidoReciente] = useState<PedidoRecienteUI | null>(null);
   const router = useRouter();
   const retornoSeguro = useMemo(() => resolverRetornoCuentaDemo(returnTo), [returnTo]);
 
@@ -57,6 +70,22 @@ export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
       void cargarCuenta(idUsuarioActivo, setCargando, setErrores, setPerfil, setHistorial);
     }
   }, [idUsuarioActivo]);
+
+  useEffect(() => {
+    const cuentaDemo = leerSesionCuentaDemo();
+    const pedidoGuardado = leerPedidoRecienteDemo();
+    if (!pedidoRecientePerteneceASesion(pedidoGuardado, cuentaDemo)) {
+      if (pedidoGuardado) {
+        limpiarPedidoRecienteDemo();
+      }
+      setPedidoReciente(null);
+      return;
+    }
+
+    const disponibleEnHistorial = historial.some((pedido) => pedido.id_pedido === pedidoGuardado.idPedido);
+    setPedidoReciente({ idPedido: pedidoGuardado.idPedido, disponibleEnHistorial });
+    limpiarPedidoRecienteDemo();
+  }, [historial]);
 
   const haySesion = useMemo(() => Boolean(idUsuarioActivo), [idUsuarioActivo]);
   const actualizarCampo = (campo: keyof CamposCuentaDemo, valor: string): void => {
@@ -113,9 +142,11 @@ export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
 
   const onSalirDemo = (): void => {
     limpiarSesionCuentaDemo();
+    limpiarPedidoRecienteDemo();
     setIdUsuarioActivo(null);
     setPerfil(null);
     setHistorial([]);
+    setPedidoReciente(null);
     setMensaje("Sesión demo cerrada.");
   };
 
@@ -127,20 +158,8 @@ export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
       {retornoSeguro && <p className={estilos.estado}>Al completar el acceso volverás automáticamente a tu checkout demo en {retornoSeguro}.</p>}
 
       <div className={estilos.rejilla}>
-        <form className={estilos.panel} onSubmit={onRegistrar} noValidate>
-          <h2>Registro demo</h2>
-          <CampoTexto etiqueta="Email" value={campos.email} onChange={(valor) => actualizarCampo("email", valor)} type="email" />
-          <CampoTexto etiqueta="Nombre visible" value={campos.nombre_visible} onChange={(valor) => actualizarCampo("nombre_visible", valor)} />
-          <CampoTexto etiqueta="Clave demo" value={campos.clave_acceso_demo} onChange={(valor) => actualizarCampo("clave_acceso_demo", valor)} type="password" />
-          <button className="boton boton--principal" type="submit" disabled={cargando}>Crear cuenta demo</button>
-        </form>
-
-        <form className={estilos.panel} onSubmit={onAutenticar} noValidate>
-          <h2>Acceso demo</h2>
-          <CampoTexto etiqueta="Email" value={campos.email} onChange={(valor) => actualizarCampo("email", valor)} type="email" />
-          <CampoTexto etiqueta="Clave demo" value={campos.clave_acceso_demo} onChange={(valor) => actualizarCampo("clave_acceso_demo", valor)} type="password" />
-          <button className="boton boton--secundario" type="submit" disabled={cargando}>Entrar con cuenta demo</button>
-        </form>
+        <FormularioRegistroDemo campos={campos} cargando={cargando} onActualizarCampo={actualizarCampo} onSubmit={onRegistrar} />
+        <FormularioAccesoDemo campos={campos} cargando={cargando} onActualizarCampo={actualizarCampo} onSubmit={onAutenticar} />
       </div>
 
       {cargando && <p className={estilos.estado}>Cargando área de cuenta demo…</p>}
@@ -158,36 +177,10 @@ export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
           <p><strong>Nombre visible:</strong> {perfil.nombre_visible}</p>
 
           <h3>Historial de pedidos demo</h3>
-          {historial.length === 0 ? (
-            <p className={estilos.estado}>Aún no hay pedidos demo asociados a tu cuenta.</p>
-          ) : (
-            <ul className={estilos.historial}>
-              {historial.map((pedido) => (
-                <li key={pedido.id_pedido}>
-                  <strong>{pedido.id_pedido}</strong> · {pedido.estado} · {pedido.resumen.cantidad_total_items} items · subtotal demo {pedido.resumen.subtotal_demo}
-                </li>
-              ))}
-            </ul>
-          )}
+          <HistorialPedidosDemo historial={historial} pedidoReciente={pedidoReciente} />
         </article>
       )}
     </section>
-  );
-}
-
-type CampoTextoProps = {
-  etiqueta: string;
-  value: string;
-  onChange: (valor: string) => void;
-  type?: "text" | "email" | "password";
-};
-
-function CampoTexto({ etiqueta, value, onChange, type = "text" }: CampoTextoProps): JSX.Element {
-  return (
-    <label className={estilos.campo}>
-      {etiqueta}
-      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} />
-    </label>
   );
 }
 
