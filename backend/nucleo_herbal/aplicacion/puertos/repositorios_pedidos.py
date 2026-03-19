@@ -27,3 +27,11 @@ class RepositorioPedidos(ABC):
     @abstractmethod
     def listar(self, *, estados: tuple[str, ...] = (), solo_pagados: bool = False) -> tuple[Pedido, ...]:
         """Lista pedidos reales para operación administrativa mínima."""
+
+    @abstractmethod
+    def listar_por_id_usuario(self, id_usuario: str) -> tuple[Pedido, ...]:
+        """Lista pedidos reales asociados a un usuario real."""
+
+    @abstractmethod
+    def obtener_por_id_y_usuario(self, *, id_pedido: str, id_usuario: str) -> Pedido | None:
+        """Recupera un pedido solo si pertenece al usuario indicado."""

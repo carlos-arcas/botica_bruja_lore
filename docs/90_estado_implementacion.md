@@ -38,7 +38,7 @@ Los estados oficiales de proyecto y capacidad son:
 - Calendario ritual: **Prompts 1–3 implementados (dominio/aplicación + persistencia/API + frontend editorial mínimo con gate)**.
 - Quality gate y CI canónica: **activos** con workflow `Quality Gate` en GitHub Actions (`push` + `pull_request`).
 
-Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta pedido demo y continuidad en cuenta demo, con trazabilidad de prompts 1–4 del Ciclo 4 y prompts 1–3 del Ciclo 5 para calendario ritual (dominio/aplicación + persistencia/API + frontend editorial mínimo).
+Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta checkout/pago reales, operación física mínima y ahora cuenta real v1 con área privada y pedidos asociados, manteniendo `CuentaDemo` como legado explícito y compatible.
 
 ## 5. Estado por capacidades
 | Capacidad | Estado actual | Ciclo asociado | Evidencia / referencia | Notas operativas |
@@ -65,6 +65,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 | Historial de pedidos demo | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Favoritos | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Recordatorios | PLANIFICADO | Ciclo 4–5 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
+| Cuenta real v1 (`CuentaCliente`) | DONE | Evolución ecommerce real | `backend/nucleo_herbal/dominio/cuentas_cliente.py`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`, `frontend/app/mi-cuenta/page.tsx`, `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`, `tests/nucleo_herbal/test_api_cuentas_cliente.py` | Registro/login/logout reales con sesión backend, pedidos asociados y coexistencia explícita con `CuentaDemo` legacy. |
 | Calendario ritual | DONE | Ciclo 5 | `backend/nucleo_herbal/dominio/calendario_ritual.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_calendario_ritual.py`, `backend/nucleo_herbal/presentacion/publica/views.py`, `frontend/app/calendario-ritual/page.tsx`, `frontend/infraestructura/api/calendarioRitual.ts`, `frontend/tests/calendario-ritual.test.ts`, `docs/ciclos/ciclo_05_calendario_editorial.md` | Prompts 1–3 oficiales cubiertos (dominio/aplicación + persistencia/API + frontend/gate mínimo). |
 
 ## 6. Último ciclo cerrado
@@ -684,3 +685,18 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   2. `codigo_seguimiento` también lo es salvo `envio_sin_seguimiento=True`;
   3. no se permiten saltos directos a `enviado` o `entregado` fuera de la secuencia controlada.
 - Pendiente para el siguiente bloque: incidencias operativas y postventa básica (cancelación operativa acotada, reintentos logísticos y trazabilidad de incidencias) sin abrir todavía devoluciones complejas ni logística enterprise.
+
+
+## 8.3 Cuenta real v1 y legado demo controlado
+- Capacidad: **Cuenta real v1 usable para cliente final**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - dominio y puertos: `backend/nucleo_herbal/dominio/cuentas_cliente.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_cuentas_cliente.py`;
+  - persistencia y auth segura: `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_cuentas_cliente.py`, migración `0018_cuenta_cliente_real_v1.py`;
+  - API pública real: `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`;
+  - frontend canónico: `/registro`, `/acceso`, `/mi-cuenta`, `/mi-cuenta/pedidos`;
+  - tests: `tests/nucleo_herbal/test_api_cuentas_cliente.py`, `tests/nucleo_herbal/test_entidades_cuentas_cliente.py`, `tests/nucleo_herbal/test_documentacion_cuenta_real_v1.py`.
+- Regla activa:
+  1. `CuentaDemo` queda congelada como compatibilidad demo, no como base del producto final.
+  2. Todo pedido real autenticado se vincula automáticamente al usuario real.
+  3. El siguiente incremento debe cerrar identidad/cliente v1.1: verificación email, recuperación de contraseña y direcciones.

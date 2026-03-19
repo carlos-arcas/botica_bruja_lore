@@ -78,6 +78,22 @@ class RepositorioPedidosORM(RepositorioPedidos):
             queryset = queryset.filter(estado__in=estados)
         return tuple(self._a_pedido(modelo) for modelo in queryset[:120])
 
+    def listar_por_id_usuario(self, id_usuario: str) -> tuple[Pedido, ...]:
+        queryset = (
+            PedidoRealModelo.objects.prefetch_related("lineas")
+            .filter(id_usuario=id_usuario.strip())
+            .order_by("-fecha_creacion")
+        )
+        return tuple(self._a_pedido(modelo) for modelo in queryset[:60])
+
+    def obtener_por_id_y_usuario(self, *, id_pedido: str, id_usuario: str) -> Pedido | None:
+        modelo = (
+            PedidoRealModelo.objects.prefetch_related("lineas")
+            .filter(id_pedido=id_pedido, id_usuario=id_usuario.strip())
+            .first()
+        )
+        return None if modelo is None else self._a_pedido(modelo)
+
     def _reconstruir(self, id_pedido: str) -> Pedido:
         return self._a_pedido(PedidoRealModelo.objects.prefetch_related("lineas").get(id_pedido=id_pedido))
 

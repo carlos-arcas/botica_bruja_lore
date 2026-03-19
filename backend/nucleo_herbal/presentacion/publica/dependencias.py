@@ -17,6 +17,13 @@ from ...aplicacion.casos_de_uso_backoffice_pedidos import (
     MarcarPedidoPreparando,
 )
 from ...aplicacion.casos_de_uso_calendario_ritual import ConsultarCalendarioRitualPorFecha
+from ...aplicacion.casos_de_uso_cuentas_cliente import (
+    AutenticarCuentaCliente,
+    ListarPedidosCuentaCliente,
+    ObtenerPedidoCuentaCliente,
+    ObtenerSesionCuentaCliente,
+    RegistrarCuentaCliente,
+)
 from ...aplicacion.casos_de_uso_cuentas_demo import (
     AutenticarCuentaDemo,
     ObtenerHistorialPedidosDemoCuenta,
@@ -53,6 +60,7 @@ from ...infraestructura.persistencia_django.repositorios import (
     RepositorioReglasCalendarioORM,
     RepositorioRitualesORM,
 )
+from ...infraestructura.persistencia_django.repositorios_cuentas_cliente import RepositorioCuentasClienteORM
 from ...infraestructura.persistencia_django.repositorios_pedidos import RepositorioPedidosORM
 
 
@@ -99,6 +107,16 @@ class ServiciosPublicosPedidosDemo:
     obtener_pedido_demo: ObtenerPedidoDemoPorId
     obtener_email_demo_pedido: ObtenerEmailDemoPedidoPorId
 
+
+
+
+@dataclass(frozen=True, slots=True)
+class ServiciosPublicosCuentaCliente:
+    registrar_cuenta_cliente: RegistrarCuentaCliente
+    autenticar_cuenta_cliente: AutenticarCuentaCliente
+    obtener_sesion_cuenta_cliente: ObtenerSesionCuentaCliente
+    listar_pedidos_cuenta_cliente: ListarPedidosCuentaCliente
+    obtener_pedido_cuenta_cliente: ObtenerPedidoCuentaCliente
 
 @dataclass(frozen=True, slots=True)
 class ServiciosPublicosCuentaDemo:
@@ -191,6 +209,24 @@ def construir_servicios_publicos_pedidos_demo() -> ServiciosPublicosPedidosDemo:
         obtener_email_demo_pedido=ObtenerEmailDemoPedidoPorId(
             repositorio_pedidos_demo=repositorio,
             componer_email_demo=ComponerEmailDemoPedido(),
+        ),
+    )
+
+
+def construir_servicios_publicos_cuenta_cliente() -> ServiciosPublicosCuentaCliente:
+    repositorio_cuentas = RepositorioCuentasClienteORM()
+    repositorio_pedidos = RepositorioPedidosORM()
+    return ServiciosPublicosCuentaCliente(
+        registrar_cuenta_cliente=RegistrarCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        autenticar_cuenta_cliente=AutenticarCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        obtener_sesion_cuenta_cliente=ObtenerSesionCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        listar_pedidos_cuenta_cliente=ListarPedidosCuentaCliente(
+            repositorio_cuentas_cliente=repositorio_cuentas,
+            repositorio_pedidos=repositorio_pedidos,
+        ),
+        obtener_pedido_cuenta_cliente=ObtenerPedidoCuentaCliente(
+            repositorio_cuentas_cliente=repositorio_cuentas,
+            repositorio_pedidos=repositorio_pedidos,
         ),
     )
 

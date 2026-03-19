@@ -152,3 +152,13 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
 - El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
 - Pendiente para el siguiente bloque: expedición real, tracking, incidencias, SLA operativos y automatización de estados posteriores.
+
+
+## Actualización cuenta real v1
+- Estado técnico: **DONE** para cuenta real v1 basada en sesión backend + hash seguro de Django.
+- Contrato canónico activo: `CuentaCliente` separada de `CuentaDemo`, con email único, nombre visible, `activo`, `email_verificado`, timestamps y password hash persistido en `auth_user` + `nucleo_cuenta_cliente`.
+- Rutas activas: `POST /api/v1/cuenta/registro/`, `POST /api/v1/cuenta/login/`, `POST /api/v1/cuenta/logout/`, `GET /api/v1/cuenta/sesion/`, `GET /api/v1/cuenta/pedidos/`, `GET /api/v1/cuenta/pedidos/{id_pedido}/`.
+- Asociación operativa: si existe sesión autenticada real, `POST /api/v1/pedidos/` fuerza `canal_checkout=web_autenticado` y vincula el pedido al `usuario_id` real sin pasar por `CuentaDemo`.
+- Frontend canónico activo: `/registro`, `/acceso`, `/mi-cuenta`, `/mi-cuenta/pedidos`.
+- Legado preservado: `/cuenta-demo` y `/api/v1/cuentas-demo/` permanecen operativos como compatibilidad explícita y congelada.
+- Siguiente bloque recomendado: identidad/cliente v1.1 (verificación de email, recuperación de contraseña, libreta de direcciones y consolidación de checkout autenticado UX-first).

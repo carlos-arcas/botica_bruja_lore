@@ -27,6 +27,20 @@ def crear_pedido(request: HttpRequest) -> JsonResponse:
         _log_error(operation_id, payload.get("canal_checkout"), payload.get("email_contacto"), error)
         return error
     try:
+        if request.user.is_authenticated:
+            payload = dict(payload)
+            payload["id_usuario"] = str(request.user.id)
+            payload["canal_checkout"] = "web_autenticado"
+            logger.info(
+                "pedido_real_asociado_a_usuario_autenticado",
+                extra={
+                    "operation_id": operation_id,
+                    "flujo": "checkout_real_v1",
+                    "usuario_id": str(request.user.id),
+                    "email": request.user.email,
+                    "resultado": "ok",
+                },
+            )
         pedido_payload = construir_payload_pedido(payload)
         pedido = construir_servicios_publicos_pedidos().registrar_pedido.ejecutar(
             pedido_payload,

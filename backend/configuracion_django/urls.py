@@ -70,6 +70,10 @@ urlpatterns = [
         include("backend.nucleo_herbal.presentacion.publica.urls_cuentas_demo"),
     ),
     path(
+        "api/v1/cuenta/",
+        include("backend.nucleo_herbal.presentacion.publica.urls_cuentas_cliente"),
+    ),
+    path(
         "api/v1/calendario-ritual/",
         include("backend.nucleo_herbal.presentacion.publica.urls_calendario_ritual"),
     ),

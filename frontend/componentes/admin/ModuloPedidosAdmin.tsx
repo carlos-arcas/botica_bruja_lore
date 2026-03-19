@@ -15,13 +15,20 @@ type Props = {
 
 const ESTADOS = ["", "pagado", "preparando", "enviado", "entregado"];
 
+function payloadEnvioInicial(): PayloadEnvioPedido {
+  return { transportista: "", codigo_seguimiento: "", envio_sin_seguimiento: false, observaciones_operativas: "" };
+}
+
 export function ModuloPedidosAdmin({ token, itemsIniciales, estadoActivo = "" }: Props): JSX.Element {
   const [items, setItems] = useState(itemsIniciales);
   const [mensaje, setMensaje] = useState("");
   const [formularios, setFormularios] = useState<Record<string, PayloadEnvioPedido>>({});
 
   const actualizar = (idPedido: string, campo: keyof PayloadEnvioPedido, valor: string | boolean): void => {
-    setFormularios((previo) => ({ ...previo, [idPedido]: { transportista: "", codigo_seguimiento: "", envio_sin_seguimiento: false, observaciones_operativas: "", ...previo[idPedido], [campo]: valor } }));
+    setFormularios((previo) => {
+      const actual = previo[idPedido] ?? payloadEnvioInicial();
+      return { ...previo, [idPedido]: { ...actual, [campo]: valor } };
+    });
   };
   const reemplazar = (actualizado: PedidoAdmin, mensajeOk: string): void => {
     setItems((previos) => previos.map((item) => (item.id_pedido === actualizado.id_pedido ? actualizado : item)));
@@ -42,7 +49,7 @@ export function ModuloPedidosAdmin({ token, itemsIniciales, estadoActivo = "" }:
       {mensaje && <p>{mensaje}</p>}
       <div className="admin-tarjetas">
         {items.map((item) => {
-          const form = formularios[item.id_pedido] ?? { transportista: "", codigo_seguimiento: "", envio_sin_seguimiento: false, observaciones_operativas: "" };
+          const form = formularios[item.id_pedido] ?? payloadEnvioInicial();
           const expedicion = item.expedicion ?? {};
           return (
             <article key={String(item.id_pedido)} className="admin-card">

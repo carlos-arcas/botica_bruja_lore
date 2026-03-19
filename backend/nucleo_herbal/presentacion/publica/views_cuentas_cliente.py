@@ -1,0 +1,152 @@
+"""Views HTTP para autenticación y área de cuenta real."""
+
+from __future__ import annotations
+
+import json
+from uuid import uuid4
+
+from django.contrib.auth import get_user_model, login, logout
+from django.contrib.auth.models import AnonymousUser
+from django.http import HttpRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
+from ...aplicacion.casos_de_uso_cuentas_cliente import ErrorAutenticacionCliente
+from ...dominio.excepciones import ErrorDominio
+from .cuentas_cliente_serializadores import (
+    serializar_cuenta_cliente,
+    serializar_pedidos_cuenta,
+    serializar_sesion_cliente,
+)
+from .dependencias import construir_servicios_publicos_cuenta_cliente
+from .logs_cuenta_cliente import log_evento_cuenta
+from .respuestas_json import json_no_autorizado, json_no_encontrado, json_validacion
+
+User = get_user_model()
+
+
+@csrf_exempt
+def registrar_cuenta_cliente(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"detalle": "Método no permitido."}, status=405)
+    operation_id = _operation_id(request)
+    payload, error = _leer_payload_json(request)
+    if error is not None:
+        log_evento_cuenta(evento="cuenta_real_registro", operation_id=operation_id, email=None, usuario_id=None, resultado="error", error=error.content.decode())
+        return error
+    email = _texto(payload, "email")
+    try:
+        cuenta = construir_servicios_publicos_cuenta_cliente().registrar_cuenta_cliente.ejecutar(
+            email=email,
+            nombre_visible=_texto(payload, "nombre_visible"),
+            password_plano=_texto(payload, "password"),
+        )
+    except ErrorDominio as exc:
+        log_evento_cuenta(evento="cuenta_real_registro", operation_id=operation_id, email=email, usuario_id=None, resultado="error", error=str(exc))
+        return json_validacion(str(exc))
+    login(request, User.objects.get(id=cuenta.id_usuario))
+    log_evento_cuenta(evento="cuenta_real_registro", operation_id=operation_id, email=cuenta.email, usuario_id=cuenta.id_usuario, resultado="ok")
+    return JsonResponse({"cuenta": serializar_cuenta_cliente(cuenta)}, status=201)
+
+
+@csrf_exempt
+def login_cuenta_cliente(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"detalle": "Método no permitido."}, status=405)
+    operation_id = _operation_id(request)
+    payload, error = _leer_payload_json(request)
+    if error is not None:
+        log_evento_cuenta(evento="cuenta_real_login", operation_id=operation_id, email=None, usuario_id=None, resultado="error", error=error.content.decode())
+        return error
+    email = _texto(payload, "email")
+    try:
+        cuenta = construir_servicios_publicos_cuenta_cliente().autenticar_cuenta_cliente.ejecutar(
+            email=email,
+            password_plano=_texto(payload, "password"),
+        )
+    except (ErrorAutenticacionCliente, ErrorDominio) as exc:
+        log_evento_cuenta(evento="cuenta_real_login", operation_id=operation_id, email=email, usuario_id=None, resultado="credenciales_invalidas", error=str(exc))
+        return json_no_autorizado("Credenciales inválidas.")
+    login(request, User.objects.get(id=cuenta.id_usuario))
+    log_evento_cuenta(evento="cuenta_real_login", operation_id=operation_id, email=cuenta.email, usuario_id=cuenta.id_usuario, resultado="ok")
+    return JsonResponse({"cuenta": serializar_cuenta_cliente(cuenta)})
+
+
+@csrf_exempt
+def logout_cuenta_cliente(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"detalle": "Método no permitido."}, status=405)
+    operation_id = _operation_id(request)
+    usuario = request.user if request.user.is_authenticated else None
+    logout(request)
+    log_evento_cuenta(evento="cuenta_real_logout", operation_id=operation_id, email=getattr(usuario, "email", None), usuario_id=str(usuario.id) if usuario else None, resultado="ok")
+    return JsonResponse({"logout": True})
+
+
+def sesion_actual_cuenta_cliente(request: HttpRequest) -> JsonResponse:
+    operation_id = _operation_id(request)
+    if not request.user.is_authenticated:
+        log_evento_cuenta(evento="cuenta_real_sesion", operation_id=operation_id, email=None, usuario_id=None, resultado="anonimo")
+        return JsonResponse(serializar_sesion_cliente(type("Sesion", (), {"autenticado": False, "cuenta": None})()))
+    try:
+        sesion = construir_servicios_publicos_cuenta_cliente().obtener_sesion_cuenta_cliente.ejecutar(id_usuario=str(request.user.id))
+    except ErrorAplicacionLookup as exc:
+        log_evento_cuenta(evento="cuenta_real_sesion", operation_id=operation_id, email=request.user.email, usuario_id=str(request.user.id), resultado="error", error=str(exc))
+        return json_no_encontrado(str(exc))
+    log_evento_cuenta(evento="cuenta_real_sesion", operation_id=operation_id, email=request.user.email, usuario_id=str(request.user.id), resultado="ok")
+    return JsonResponse(serializar_sesion_cliente(sesion))
+
+
+def pedidos_cuenta_cliente(request: HttpRequest) -> JsonResponse:
+    usuario_id, error = _usuario_autenticado(request)
+    if error is not None:
+        return error
+    operation_id = _operation_id(request)
+    try:
+        pedidos = construir_servicios_publicos_cuenta_cliente().listar_pedidos_cuenta_cliente.ejecutar(id_usuario=usuario_id)
+    except ErrorAplicacionLookup as exc:
+        log_evento_cuenta(evento="cuenta_real_pedidos", operation_id=operation_id, email=request.user.email, usuario_id=usuario_id, resultado="error", error=str(exc))
+        return json_no_encontrado(str(exc))
+    log_evento_cuenta(evento="cuenta_real_pedidos", operation_id=operation_id, email=request.user.email, usuario_id=usuario_id, resultado="ok")
+    return JsonResponse({"pedidos": serializar_pedidos_cuenta(pedidos)})
+
+
+def detalle_pedido_cuenta_cliente(request: HttpRequest, id_pedido: str) -> JsonResponse:
+    usuario_id, error = _usuario_autenticado(request)
+    if error is not None:
+        return error
+    operation_id = _operation_id(request)
+    try:
+        pedido = construir_servicios_publicos_cuenta_cliente().obtener_pedido_cuenta_cliente.ejecutar(id_usuario=usuario_id, id_pedido=id_pedido)
+    except ErrorAplicacionLookup as exc:
+        log_evento_cuenta(evento="cuenta_real_detalle_pedido", operation_id=operation_id, email=request.user.email, usuario_id=usuario_id, resultado="error", error=str(exc))
+        return json_no_encontrado(str(exc))
+    log_evento_cuenta(evento="cuenta_real_detalle_pedido", operation_id=operation_id, email=request.user.email, usuario_id=usuario_id, resultado="ok")
+    return JsonResponse({"pedido": serializar_pedidos_cuenta((pedido,))[0]})
+
+
+def _usuario_autenticado(request: HttpRequest) -> tuple[str, JsonResponse | None]:
+    if isinstance(request.user, AnonymousUser) or not request.user.is_authenticated:
+        return "", json_no_autorizado("Debes iniciar sesión con una cuenta real.")
+    return str(request.user.id), None
+
+
+def _operation_id(request: HttpRequest) -> str:
+    return request.headers.get("X-Operation-Id", "").strip() or str(uuid4())
+
+
+def _leer_payload_json(request: HttpRequest) -> tuple[dict, JsonResponse | None]:
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return {}, json_validacion("JSON inválido.")
+    if not isinstance(payload, dict):
+        return {}, json_validacion("El payload debe ser un objeto JSON.")
+    return payload, None
+
+
+def _texto(payload: dict, campo: str) -> str:
+    valor = payload.get(campo)
+    if not isinstance(valor, str) or not valor.strip():
+        raise ErrorDominio(f"El campo '{campo}' es obligatorio y debe ser texto.")
+    return valor.strip()
