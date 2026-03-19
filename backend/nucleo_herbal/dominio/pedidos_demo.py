@@ -9,6 +9,9 @@ from decimal import Decimal
 from .excepciones import ErrorDominio
 
 ESTADOS_PEDIDO_DEMO_VALIDOS = {"creado", "confirmado", "cancelado_demo"}
+MARCA_CONTRATO_PEDIDO_DEMO = "legado_controlado"
+RUTA_API_PEDIDOS_DEMO = "/api/v1/pedidos-demo/"
+RUTA_FRONT_PEDIDO_DEMO = "/pedido-demo/[id_pedido]"
 CANALES_PEDIDO_DEMO_VALIDOS = {"invitado", "autenticado"}
 
 
