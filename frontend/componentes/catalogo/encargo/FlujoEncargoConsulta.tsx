@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { PRODUCTOS_CATALOGO } from "@/contenido/catalogo/catalogo";
@@ -22,11 +21,15 @@ import {
   CanalCheckoutDemo,
   construirLineasPedidoDemo,
   construirPayloadPedidoDemo,
+  resolverEstadoIdentificacionCheckoutDemo,
   validarCheckoutDemo,
 } from "@/contenido/catalogo/checkoutDemo";
+import { leerSesionCuentaDemo } from "@/contenido/cuenta_demo/estadoCuentaDemo";
 import { construirRutaReciboPedidoDemo } from "@/contenido/catalogo/postCheckoutDemo";
 import { crearPedidoDemoPublico, PedidoDemoCreado } from "@/infraestructura/api/pedidosDemo";
 
+import { BloqueIdentificacionCheckoutDemo } from "./BloqueIdentificacionCheckoutDemo";
+import { ResumenEnvioEncargoDemo } from "./ResumenEnvioEncargoDemo";
 import estilos from "./flujoEncargoConsulta.module.css";
 
 type Props = {
@@ -41,8 +44,8 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
   const [resumen, setResumen] = useState<string>("");
   const [mensajeCopia, setMensajeCopia] = useState<string>("");
   const [mensajeCanal, setMensajeCanal] = useState<string>("");
-  const [canalCheckout, setCanalCheckout] = useState<CanalCheckoutDemo>("invitado");
-  const [idUsuarioDemo, setIdUsuarioDemo] = useState<string>("");
+  const [cuentaDemoActiva, setCuentaDemoActiva] = useState(() => leerSesionCuentaDemo());
+  const [continuarComoInvitado, setContinuarComoInvitado] = useState<boolean>(() => !leerSesionCuentaDemo());
   const [estadoEnvio, setEstadoEnvio] = useState<"idle" | "enviando" | "error" | "ok">("idle");
   const [mensajeEnvio, setMensajeEnvio] = useState<string>("");
   const [pedidoCreado, setPedidoCreado] = useState<PedidoDemoCreado | null>(null);
@@ -50,11 +53,24 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
   const router = useRouter();
   const configuracionCanal = useMemo(() => obtenerConfiguracionContactoPublico(), []);
   const estadoCanal = useMemo(() => resolverEstadoCanalContacto(configuracionCanal), [configuracionCanal]);
+  const estadoIdentificacion = useMemo(
+    () => resolverEstadoIdentificacionCheckoutDemo(cuentaDemoActiva, continuarComoInvitado),
+    [continuarComoInvitado, cuentaDemoActiva],
+  );
+  const canalCheckout: CanalCheckoutDemo = estadoIdentificacion.canalActivo;
 
   const productoSeleccionado = useMemo(
     () => PRODUCTOS_CATALOGO.find((producto) => producto.slug === datos.productoSlug) ?? null,
     [datos.productoSlug],
   );
+
+  useEffect(() => {
+    const cuenta = leerSesionCuentaDemo();
+    setCuentaDemoActiva(cuenta);
+    if (cuenta?.email && !datos.email.trim()) {
+      setDatos((previo) => ({ ...previo, email: cuenta.email, nombre: previo.nombre || cuenta.nombre_visible }));
+    }
+  }, []);
 
   const actualizarCampo = (campo: keyof DatosConsulta, valor: string | boolean): void => {
     setDatos((previo) => ({ ...previo, [campo]: valor }));
@@ -69,7 +85,7 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
     );
     const nuevosErrores = {
       ...validarSolicitudConsulta(datos),
-      ...validarCheckoutDemo(canalCheckout, idUsuarioDemo, lineas),
+      ...validarCheckoutDemo(canalCheckout, estadoIdentificacion.cuentaActiva, lineas),
     };
     setErrores(nuevosErrores);
     setMensajeCopia("");
@@ -85,7 +101,7 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
     setResumen(construirResumenConsulta(datos, productoSeleccionado));
     setEstadoEnvio("enviando");
 
-    const payload = construirPayloadPedidoDemo(datos.email, canalCheckout, lineas, idUsuarioDemo);
+    const payload = construirPayloadPedidoDemo(datos.email, canalCheckout, lineas, estadoIdentificacion.cuentaActiva);
     const resultado = await crearPedidoDemoPublico(payload);
 
     if (resultado.estado === "error") {
@@ -151,6 +167,18 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
         )}
       </article>
 
+      <BloqueIdentificacionCheckoutDemo
+        canalActivo={canalCheckout}
+        cuentaDemo={cuentaDemoActiva}
+        onContinuarComoInvitado={() => setContinuarComoInvitado(true)}
+        onUsarCuentaDemo={() => {
+          setContinuarComoInvitado(false);
+          if (cuentaDemoActiva?.email) {
+            setDatos((previo) => ({ ...previo, email: previo.email || cuentaDemoActiva.email }));
+          }
+        }}
+      />
+
       <form className={estilos.formulario} onSubmit={enviarConsulta} noValidate>
         <label>
           Nombre
@@ -189,30 +217,7 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
         </label>
         {errores.email && <p id="error-contacto" className={estilos.error}>{errores.email}</p>}
 
-        <label>
-          Canal de compra demo
-          <select
-            name="canalCheckout"
-            value={canalCheckout}
-            onChange={(event) => setCanalCheckout(event.target.value as CanalCheckoutDemo)}
-          >
-            <option value="invitado">Invitado</option>
-            <option value="autenticado">Autenticado (demo)</option>
-          </select>
-        </label>
-
-        {canalCheckout === "autenticado" && (
-          <label>
-            ID de usuario demo
-            <input
-              name="idUsuarioDemo"
-              value={idUsuarioDemo}
-              onChange={(event) => setIdUsuarioDemo(event.target.value)}
-              aria-invalid={Boolean(errores.idUsuario)}
-              aria-describedby={errores.idUsuario ? "error-id-usuario" : undefined}
-            />
-          </label>
-        )}
+        <input type="hidden" name="canalCheckout" value={canalCheckout} readOnly />
         {errores.idUsuario && <p id="error-id-usuario" className={estilos.error}>{errores.idUsuario}</p>}
 
         <label>
@@ -272,70 +277,21 @@ export function FlujoEncargoConsulta({ slugPreseleccionado, cestaPreseleccionada
 
       {estadoEnvio === "error" && <p className={estilos.error}>{mensajeEnvio}</p>}
 
-      {estadoEnvio === "ok" && pedidoCreado && (
-        <article className={estilos.resumenFinal} aria-live="polite">
-          <h2>Pedido demo creado</h2>
-          <p className={estilos.estado}>ID: {pedidoCreado.id_pedido}</p>
-          <p>Estado inicial: {pedidoCreado.estado}</p>
-          <p>
-            Resumen inmediato: {pedidoCreado.resumen.cantidad_total_items} unidades · Subtotal demo {pedidoCreado.resumen.subtotal_demo} €.
-          </p>
-        </article>
-      )}
-
-      {resumen && (
-        <article className={estilos.resumenFinal} aria-live="polite">
-          <h2>Resumen listo</h2>
-          <p className={estilos.estadoCanal}>{estadoCanal.descripcion}</p>
-          <p className={estilos.disponibilidad}>
-            {estadoCanal.disponible ? "Canal disponible" : "Canal no disponible"}
-          </p>
-          <pre>{resumen}</pre>
-          <div className={estilos.ctasResumen}>
-            {estadoCanal.canales.map((canal) => {
-              const href = obtenerEnlaceCanal(canal.tipo);
-              if (!href) {
-                return (
-                  <button
-                    key={canal.tipo}
-                    type="button"
-                    className="boton boton--principal"
-                    onClick={() => registrarIntentoCanal(canal.tipo)}
-                  >
-                    {canal.etiqueta}
-                  </button>
-                );
-              }
-
-              return (
-                <a
-                  key={canal.tipo}
-                  className="boton boton--principal"
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {canal.etiqueta}
-                </a>
-              );
-            })}
-            <button type="button" className="boton boton--secundario" onClick={copiarResumen}>
-              {estadoCanal.ctaSecundaria}
-            </button>
-          </div>
-          {mensajeCanal && <p className={estilos.error}>{mensajeCanal}</p>}
-          {mensajeCopia && <p className={estilos.estado}>{mensajeCopia}</p>}
-        </article>
-      )}
-
-      <div className={estilos.accionesSecundarias}>
-        <Link href="/colecciones" className="boton boton--secundario">Volver al catálogo</Link>
-        {productoSeleccionado && (
-          <Link href={`/colecciones/${productoSeleccionado.slug}`} className="boton boton--secundario">
-            Regresar a la ficha
-          </Link>
-        )}
-      </div>
+      <ResumenEnvioEncargoDemo
+        estadoCanalDescripcion={estadoCanal.descripcion}
+        estadoCanalDisponible={estadoCanal.disponible}
+        canales={estadoCanal.canales}
+        construirHrefCanal={obtenerEnlaceCanal}
+        onIntentoCanal={registrarIntentoCanal}
+        onCopiarResumen={copiarResumen}
+        ctaSecundaria={estadoCanal.ctaSecundaria}
+        mensajeCanal={mensajeCanal}
+        mensajeCopia={mensajeCopia}
+        resumen={resumen}
+        estadoEnvio={estadoEnvio}
+        pedidoCreado={pedidoCreado}
+        productoSlug={productoSeleccionado?.slug}
+      />
     </section>
   );
 }

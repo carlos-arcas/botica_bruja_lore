@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   construirLineasPedidoDemo,
   construirPayloadPedidoDemo,
+  resolverEstadoIdentificacionCheckoutDemo,
   resolverCantidadCheckout,
   validarCheckoutDemo,
 } from "../contenido/catalogo/checkoutDemo";
@@ -32,13 +33,13 @@ test("construirLineasPedidoDemo cae a producto individual y normaliza cantidad",
 });
 
 test("validarCheckoutDemo exige id_usuario para canal autenticado", () => {
-  const errores = validarCheckoutDemo("autenticado", "", []);
+  const errores = validarCheckoutDemo("autenticado", null, []);
 
   assert.ok(errores.idUsuario);
   assert.ok(errores.lineas);
 });
 
-test("construirPayloadPedidoDemo añade id_usuario en autenticado", () => {
+test("construirPayloadPedidoDemo añade id_usuario en autenticado con sesión demo activa", () => {
   const payload = construirPayloadPedidoDemo(
     "demo@botica.test",
     "autenticado",
@@ -51,10 +52,39 @@ test("construirPayloadPedidoDemo añade id_usuario en autenticado", () => {
         precio_unitario_demo: "14.90",
       },
     ],
-    "usr-100",
+    { id_usuario: "usr-100", email: "demo@botica.test", nombre_visible: "Lore" },
   );
 
   assert.equal(payload.id_usuario, "usr-100");
+});
+
+test("construirPayloadPedidoDemo no envía id_usuario en invitado aunque exista sesión", () => {
+  const payload = construirPayloadPedidoDemo(
+    "demo@botica.test",
+    "invitado",
+    [],
+    { id_usuario: "usr-100", email: "demo@botica.test", nombre_visible: "Lore" },
+  );
+
+  assert.equal("id_usuario" in payload, false);
+});
+
+test("resolverEstadoIdentificacionCheckoutDemo detecta sesión demo activa y hace prefill de email", () => {
+  const estado = resolverEstadoIdentificacionCheckoutDemo(
+    { id_usuario: "usr-100", email: "demo@botica.test", nombre_visible: "Lore" },
+    false,
+  );
+
+  assert.equal(estado.canalActivo, "autenticado");
+  assert.equal(estado.emailPrefill, "demo@botica.test");
+  assert.equal(estado.cuentaActiva?.nombre_visible, "Lore");
+});
+
+test("resolverEstadoIdentificacionCheckoutDemo preserva camino invitado sin sesión", () => {
+  const estado = resolverEstadoIdentificacionCheckoutDemo(null, true);
+
+  assert.equal(estado.canalActivo, "invitado");
+  assert.equal(estado.emailPrefill, "");
 });
 
 test("resolverCantidadCheckout aplica fallback seguro", () => {

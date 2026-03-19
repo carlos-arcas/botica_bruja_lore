@@ -8,6 +8,9 @@ import {
   registrarCuentaDemo,
 } from "../infraestructura/api/cuentasDemo";
 import {
+  guardarSesionCuentaDemo,
+  leerSesionCuentaDemo,
+  limpiarSesionCuentaDemo,
   validarCamposAutenticacionDemo,
   validarCamposRegistroDemo,
 } from "../contenido/cuenta_demo/estadoCuentaDemo";
@@ -157,4 +160,44 @@ test("obtenerPerfilCuentaDemo devuelve error de API en no encontrado", async () 
     assert.equal(resultado.codigo, 404);
   }
   global.fetch = originalFetch;
+});
+
+test("leerSesionCuentaDemo recupera sesión guardada para reutilizarla en checkout", () => {
+  const originalWindow = global.window;
+  const storage = new Map<string, string>();
+
+  global.window = {
+    localStorage: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    },
+  } as Window & typeof globalThis;
+
+  guardarSesionCuentaDemo({ id_usuario: "usr-10", email: "demo@botica.test", nombre_visible: "Demo" });
+  const cuenta = leerSesionCuentaDemo();
+
+  assert.equal(cuenta?.id_usuario, "usr-10");
+  assert.equal(cuenta?.email, "demo@botica.test");
+
+  global.window = originalWindow;
+});
+
+test("limpiarSesionCuentaDemo elimina sesión persistida", () => {
+  const originalWindow = global.window;
+  const storage = new Map<string, string>();
+
+  global.window = {
+    localStorage: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    },
+  } as Window & typeof globalThis;
+
+  guardarSesionCuentaDemo({ id_usuario: "usr-10", email: "demo@botica.test", nombre_visible: "Demo" });
+  limpiarSesionCuentaDemo();
+
+  assert.equal(leerSesionCuentaDemo(), null);
+  global.window = originalWindow;
 });
