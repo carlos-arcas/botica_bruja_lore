@@ -7,7 +7,7 @@ import {
   construirPayloadPedidoReal,
   validarCheckoutReal,
 } from "../contenido/catalogo/checkoutReal";
-import { crearPedidoPublico } from "../infraestructura/api/pedidos";
+import { crearPedidoPublico, iniciarPagoPedido } from "../infraestructura/api/pedidos";
 
 test("checkout real usa un payload propio y separado del demo", () => {
   const inicial = construirEstadoInicialCheckoutReal("tarot-bosque-interior");
@@ -65,7 +65,7 @@ test("cliente API de pedidos reales usa la ruta nueva /api/v1/pedidos/", async (
     llamadas.push(url);
     return {
       ok: true,
-      json: async () => ({ pedido: { id_pedido: "PED-1", estado: "pendiente_pago", canal_checkout: "web_invitado", moneda: "EUR", subtotal: "9.90", cliente: { email_contacto: "real@test.dev", nombre_contacto: "Lore", telefono_contacto: "600", es_invitado: true }, direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", linea_2: "", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", observaciones: "" }, resumen: { cantidad_total_items: 1, subtotal: "9.90" }, lineas: [], notas_cliente: "" } }),
+      json: async () => ({ pedido: { id_pedido: "PED-1", estado: "pendiente_pago", estado_pago: "pendiente", canal_checkout: "web_invitado", moneda: "EUR", subtotal: "9.90", cliente: { email_contacto: "real@test.dev", nombre_contacto: "Lore", telefono_contacto: "600", es_invitado: true }, direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", linea_2: "", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", observaciones: "" }, resumen: { cantidad_total_items: 1, subtotal: "9.90" }, lineas: [], notas_cliente: "", pago: {} } }),
     } as Response;
   }) as typeof fetch;
 
@@ -81,4 +81,23 @@ test("cliente API de pedidos reales usa la ruta nueva /api/v1/pedidos/", async (
 
   assert.equal(resultado.estado, "ok");
   assert.equal(llamadas[0].endsWith("/api/v1/pedidos/"), true);
+});
+
+test("frontend real consume la nueva API de pago", async () => {
+  const llamadas: string[] = [];
+  globalThis.fetch = (async (url: string) => {
+    llamadas.push(url);
+    return {
+      ok: true,
+      json: async () => ({ pago: { id_pedido: "PED-1", proveedor_pago: "stripe", id_externo_pago: "cs_test_123", estado_pago: "requiere_accion", moneda: "EUR", importe: "9.90", url_pago: "https://checkout.stripe.test/cs_test_123" } }),
+    } as Response;
+  }) as typeof fetch;
+
+  const resultado = await iniciarPagoPedido("PED-1");
+
+  assert.equal(resultado.estado, "ok");
+  if (resultado.estado === "ok") {
+    assert.equal(resultado.pago.proveedor_pago, "stripe");
+  }
+  assert.equal(llamadas[0].endsWith("/api/v1/pedidos/PED-1/iniciar-pago/"), true);
 });

@@ -218,6 +218,11 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "").strip().rstrip("/")
+STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY", "").strip()
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "").strip()
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
+PAYMENT_SUCCESS_URL = os.getenv("PAYMENT_SUCCESS_URL", "").strip()
+PAYMENT_CANCEL_URL = os.getenv("PAYMENT_CANCEL_URL", "").strip()
 
 if not DEBUG:
     SESSION_COOKIE_SECURE = True

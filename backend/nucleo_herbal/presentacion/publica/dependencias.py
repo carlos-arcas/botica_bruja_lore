@@ -22,6 +22,7 @@ from ...aplicacion.casos_de_uso_email_demo import (
     ObtenerEmailDemoPedidoPorId,
 )
 from ...aplicacion.casos_de_uso_pedidos import ObtenerPedidoPorId, RegistrarPedido
+from ...aplicacion.casos_de_uso_pago_pedidos import IniciarPagoPedido, ProcesarWebhookPagoPedido
 from ...aplicacion.casos_de_uso_pedidos_demo import (
     ObtenerPedidoDemoPorId,
     RegistrarPedidoDemo,
@@ -43,6 +44,7 @@ from ...infraestructura.persistencia_django.repositorios import (
     RepositorioPedidosDemoORM,
     RepositorioRitualesORM,
 )
+from ...infraestructura.pagos_stripe import construir_pasarela_pago_stripe
 from ...infraestructura.persistencia_django.repositorios_pedidos import RepositorioPedidosORM
 
 
@@ -75,6 +77,14 @@ class ServiciosPublicosCalendarioRitual:
 class ServiciosPublicosPedidos:
     registrar_pedido: RegistrarPedido
     obtener_pedido: ObtenerPedidoPorId
+
+
+
+
+@dataclass(frozen=True, slots=True)
+class ServiciosPublicosPagoPedidos:
+    iniciar_pago: IniciarPagoPedido
+    procesar_webhook: ProcesarWebhookPagoPedido
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,6 +151,15 @@ def construir_servicios_publicos_pedidos() -> ServiciosPublicosPedidos:
         obtener_pedido=ObtenerPedidoPorId(repositorio_pedidos=repositorio),
     )
 
+
+
+def construir_servicios_publicos_pago_pedidos() -> ServiciosPublicosPagoPedidos:
+    repositorio = RepositorioPedidosORM()
+    pasarela = construir_pasarela_pago_stripe()
+    return ServiciosPublicosPagoPedidos(
+        iniciar_pago=IniciarPagoPedido(repositorio_pedidos=repositorio, pasarela_pago=pasarela),
+        procesar_webhook=ProcesarWebhookPagoPedido(repositorio_pedidos=repositorio, pasarela_pago=pasarela),
+    )
 
 def construir_servicios_publicos_pedidos_demo() -> ServiciosPublicosPedidosDemo:
     repositorio = RepositorioPedidosDemoORM()

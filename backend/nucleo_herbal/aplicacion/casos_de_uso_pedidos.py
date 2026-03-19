@@ -23,6 +23,7 @@ class RegistrarPedido:
         pedido = Pedido(
             id_pedido=_generar_id_pedido(),
             estado="pendiente_pago",
+            estado_pago="pendiente",
             canal_checkout=payload.canal_checkout,
             cliente=payload.cliente,
             lineas=payload.lineas,
@@ -56,9 +57,13 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
     return PedidoRealDTO(
         id_pedido=pedido.id_pedido,
         estado=pedido.estado,
+        estado_pago=pedido.estado_pago,
         canal_checkout=pedido.canal_checkout,
         moneda=pedido.moneda,
         subtotal=pedido.subtotal,
+        proveedor_pago=pedido.proveedor_pago,
+        id_externo_pago=pedido.id_externo_pago,
+        url_pago=pedido.url_pago,
         cliente=ClientePedidoDTO(
             email=pedido.cliente.email,
             nombre_contacto=pedido.cliente.nombre_contacto,

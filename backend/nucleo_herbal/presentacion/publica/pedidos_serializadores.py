@@ -9,6 +9,7 @@ def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
     return {
         "id_pedido": dto.id_pedido,
         "estado": dto.estado,
+        "estado_pago": dto.estado_pago,
         "canal_checkout": dto.canal_checkout,
         "moneda": dto.moneda,
         "subtotal": str(dto.subtotal),
@@ -30,6 +31,11 @@ def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
             "observaciones": dto.direccion_entrega.observaciones,
         },
         "notas_cliente": dto.notas_cliente,
+        "pago": {
+            "proveedor_pago": dto.proveedor_pago,
+            "id_externo_pago": dto.id_externo_pago,
+            "url_pago": dto.url_pago,
+        },
         "resumen": {
             "cantidad_total_items": sum(linea.cantidad for linea in dto.lineas),
             "subtotal": str(dto.subtotal),

@@ -60,12 +60,15 @@ El núcleo real deja de llamarse demo y pasa a declararse con estos elementos ca
 | `precio_unitario_demo` | `precio_unitario` |
 | `subtotal_demo` | `subtotal` |
 
-### 4.3 Campos faltantes para ecommerce real v1
+### 4.3 Campos mínimos activos para ecommerce real v1 con pago
 - `direccion_entrega`
 - `moneda`
 - `cliente.es_invitado`
-- `id_externo_pago` (reservado, todavía sin PSP)
-- `fecha_creacion` con semántica de pedido real
+- `estado_pago`
+- `proveedor_pago`
+- `id_externo_pago`
+- `url_pago`
+- `fecha_creacion` y `fecha_pago_confirmado`
 
 ### 4.4 Estados mínimos reales v1
 1. `pendiente_pago`
@@ -108,8 +111,8 @@ La estrategia oficial es **coexistencia con capa anti-corrupción**.
 - estrategia incremental con anti-corrupción.
 
 ### Fuera de alcance ahora
-- PSP/Stripe real;
-- cobro real;
+- devoluciones/reembolsos;
+- fraude;
 - fiscalidad completa;
 - stock real;
 - transportistas reales;
@@ -131,3 +134,13 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Estado inicial real: `pendiente_pago`.
 - El flujo demo legado (`/api/v1/pedidos-demo/`, `/encargo`, `/pedido-demo/[id_pedido]`) permanece operativo como compatibilidad controlada.
 - Siguiente bloque recomendado: integrar intento de pago real desacoplado (PSP + intención de pago + transición `pendiente_pago` → `pagado`) sin romper la persistencia y la dirección ya consolidadas.
+
+
+## 9. Implementación activa — pago real v1
+- Estado técnico: **DONE** para primera capa operativa de pago real.
+- PSP real v1 activo: **Stripe** mediante puerto desacoplado `PuertoPasarelaPago`.
+- Rutas nuevas activas: `POST /api/v1/pedidos/{id_pedido}/iniciar-pago/` y `POST /api/v1/pedidos/webhooks/stripe/`.
+- Persistencia activa: referencia externa `id_externo_pago`, `proveedor_pago`, `estado_pago`, `url_pago`, `fecha_pago_confirmado` y tabla de idempotencia de webhooks.
+- Frontend activo: botón **Pagar ahora** en `/pedido/[id_pedido]` para redirigir al checkout hospedado del PSP.
+- Coexistencia preservada: `PedidoDemo` y `/api/v1/pedidos-demo/` continúan como legacy controlado.
+- Siguiente bloque recomendado: post-pago operativo v1.1 con cancelación explícita, email transaccional real, conciliación/manual review mínima y primer cierre administrativo del pedido pagado.
