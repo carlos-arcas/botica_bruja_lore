@@ -52,7 +52,13 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
   };
 
   const refrescarDetalle = async (id: number) => setDetalle(await obtenerLoteImportacion(id, token));
-  const actualizarFila = (actualizada: FilaImportacion) => detalle && setDetalle({ ...detalle, filas: detalle.filas.map((fila) => fila.id === actualizada.id ? actualizada : fila) });
+  const actualizarFila = (actualizada: FilaImportacion): void => {
+    if (!detalle) return;
+    setDetalle({
+      ...detalle,
+      filas: detalle.filas.map((fila) => fila.id === actualizada.id ? actualizada : fila),
+    });
+  };
 
   const subir = (event: FormEvent<HTMLFormElement>) => void ejecutarAccion(async () => {
     event.preventDefault();
@@ -86,10 +92,22 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
     setEstado({ cargando: false, ok: "Importación cancelada. El lote staging fue eliminado.", error: "" });
   }, "No se pudo cancelar la importación.");
 
-  const cambiarSeleccion = (fila: FilaImportacion) => loteId ? ejecutarAccion(async () => actualizarFila(await cambiarSeleccionFilaImportacion(loteId, fila.id, !fila.seleccionado, token)), "No se pudo actualizar la selección.") : Promise.resolve();
-  const descartarFila = (fila: FilaImportacion) => loteId ? ejecutarAccion(async () => actualizarFila(await descartarFilaImportacion(loteId, fila.id, token)), "No se pudo descartar la fila.") : Promise.resolve();
-  const eliminarImagen = (fila: FilaImportacion) => loteId ? ejecutarAccion(async () => actualizarFila(await eliminarImagenFilaImportacion(loteId, fila.id, token)), "No se pudo quitar la imagen.") : Promise.resolve();
-  const adjuntarImagen = (fila: FilaImportacion, archivo?: File) => loteId && archivo ? ejecutarAccion(async () => actualizarFila(await adjuntarImagenFilaImportacion(loteId, fila.id, archivo, token)), "No se pudo adjuntar la imagen.") : Promise.resolve();
+  const cambiarSeleccion = (fila: FilaImportacion) => loteId ? ejecutarAccion(async () => {
+    const actualizada = await cambiarSeleccionFilaImportacion(loteId, fila.id, !fila.seleccionado, token);
+    actualizarFila(actualizada);
+  }, "No se pudo actualizar la selección.") : Promise.resolve();
+  const descartarFila = (fila: FilaImportacion) => loteId ? ejecutarAccion(async () => {
+    const actualizada = await descartarFilaImportacion(loteId, fila.id, token);
+    actualizarFila(actualizada);
+  }, "No se pudo descartar la fila.") : Promise.resolve();
+  const eliminarImagen = (fila: FilaImportacion) => loteId ? ejecutarAccion(async () => {
+    const actualizada = await eliminarImagenFilaImportacion(loteId, fila.id, token);
+    actualizarFila(actualizada);
+  }, "No se pudo quitar la imagen.") : Promise.resolve();
+  const adjuntarImagen = (fila: FilaImportacion, archivo?: File) => loteId && archivo ? ejecutarAccion(async () => {
+    const actualizada = await adjuntarImagenFilaImportacion(loteId, fila.id, archivo, token);
+    actualizarFila(actualizada);
+  }, "No se pudo adjuntar la imagen.") : Promise.resolve();
 
   const descargar = async (tipo: "inventario", formato: "csv" | "xlsx") => {
     const modulo = entidad === "articulos_editoriales" ? "editorial" : entidad === "secciones_publicas" ? "secciones" : entidad;
