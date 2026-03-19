@@ -9,6 +9,12 @@ import {
   validarCheckoutDemo,
 } from "../contenido/catalogo/checkoutDemo";
 import { construirRutaReciboPedidoDemo, resolverIdPedidoDesdeRuta } from "../contenido/catalogo/postCheckoutDemo";
+import {
+  construirRutaCuentaDemoConRetornoSeguro,
+  guardarBorradorCheckoutDemo,
+  leerBorradorCheckoutDemo,
+  limpiarBorradorCheckoutDemo,
+} from "../contenido/catalogo/estadoCheckoutDemo";
 import { crearPedidoDemoPublico, obtenerEmailDemoPedidoPublico, obtenerPedidoDemoPublico } from "../infraestructura/api/pedidosDemo";
 
 test("construirLineasPedidoDemo usa selección múltiple de cesta cuando existe", () => {
@@ -97,6 +103,70 @@ test("construirRutaReciboPedidoDemo genera ruta estable por URL", () => {
 
 test("resolverIdPedidoDesdeRuta retorna null en vacío", () => {
   assert.equal(resolverIdPedidoDesdeRuta("   "), null);
+});
+
+
+test("guardar y leer borrador de checkout demo preserva intención y resetea consentimiento", () => {
+  const originalWindow = global.window;
+  const storage = new Map<string, string>();
+
+  global.window = {
+    localStorage: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    },
+  } as Window & typeof globalThis;
+
+  guardarBorradorCheckoutDemo({
+    nombre: "Lore",
+    email: "demo@botica.test",
+    telefono: "600123123",
+    productoSlug: "vela-intencion-clara",
+    cantidad: "2 unidades",
+    mensaje: "Quiero conservar esta intención para volver al checkout.",
+    consentimiento: true,
+  }, true);
+
+  const borrador = leerBorradorCheckoutDemo();
+
+  assert.equal(borrador?.datos.productoSlug, "vela-intencion-clara");
+  assert.equal(borrador?.datos.consentimiento, false);
+  assert.equal(borrador?.continuarComoInvitado, true);
+
+  global.window = originalWindow;
+});
+
+test("limpiarBorradorCheckoutDemo elimina residuos tras pedido exitoso", () => {
+  const originalWindow = global.window;
+  const storage = new Map<string, string>();
+
+  global.window = {
+    localStorage: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    },
+  } as Window & typeof globalThis;
+
+  guardarBorradorCheckoutDemo({
+    nombre: "Lore",
+    email: "demo@botica.test",
+    telefono: "600123123",
+    productoSlug: "vela-intencion-clara",
+    cantidad: "2 unidades",
+    mensaje: "Seguimos con el checkout demo sin perder el formulario.",
+    consentimiento: false,
+  }, false);
+  limpiarBorradorCheckoutDemo();
+
+  assert.equal(leerBorradorCheckoutDemo(), null);
+  global.window = originalWindow;
+});
+
+test("construirRutaCuentaDemoConRetornoSeguro solo permite retorno interno", () => {
+  assert.equal(construirRutaCuentaDemoConRetornoSeguro("/encargo"), "/cuenta-demo?returnTo=%2Fencargo");
+  assert.equal(construirRutaCuentaDemoConRetornoSeguro("https://evil.test"), "/cuenta-demo?returnTo=%2Fcuenta-demo");
 });
 
 test("crearPedidoDemoPublico devuelve éxito con respuesta API", async () => {

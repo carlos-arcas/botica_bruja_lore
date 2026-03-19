@@ -14,6 +14,7 @@ import {
   validarCamposAutenticacionDemo,
   validarCamposRegistroDemo,
 } from "../contenido/cuenta_demo/estadoCuentaDemo";
+import { resolverRetornoCuentaDemo } from "../contenido/cuenta_demo/retornoCuentaDemo";
 
 test("validarCamposRegistroDemo detecta campos inválidos", () => {
   const errores = validarCamposRegistroDemo({ email: "demo", nombre_visible: "", clave_acceso_demo: "1" });
@@ -200,4 +201,15 @@ test("limpiarSesionCuentaDemo elimina sesión persistida", () => {
 
   assert.equal(leerSesionCuentaDemo(), null);
   global.window = originalWindow;
+});
+
+
+test("resolverRetornoCuentaDemo devuelve /encargo cuando el retorno es válido", () => {
+  assert.equal(resolverRetornoCuentaDemo("/encargo"), "/encargo");
+});
+
+test("resolverRetornoCuentaDemo ignora returnTo externo o inválido", () => {
+  assert.equal(resolverRetornoCuentaDemo("https://evil.test"), null);
+  assert.equal(resolverRetornoCuentaDemo("//evil.test"), null);
+  assert.equal(resolverRetornoCuentaDemo("/cuenta-demo"), null);
 });

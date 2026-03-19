@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   PedidoDemoHistorial,
@@ -18,6 +19,7 @@ import {
   validarCamposAutenticacionDemo,
   validarCamposRegistroDemo,
 } from "@/contenido/cuenta_demo/estadoCuentaDemo";
+import { resolverRetornoCuentaDemo } from "@/contenido/cuenta_demo/retornoCuentaDemo";
 
 import estilos from "./areaCuentaDemo.module.css";
 
@@ -27,7 +29,11 @@ const CAMPOS_INICIALES: CamposCuentaDemo = {
   clave_acceso_demo: "",
 };
 
-export function AreaCuentaDemo(): JSX.Element {
+type Props = {
+  returnTo?: string | null;
+};
+
+export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
   const [campos, setCampos] = useState<CamposCuentaDemo>(CAMPOS_INICIALES);
   const [idUsuarioActivo, setIdUsuarioActivo] = useState<string | null>(null);
   const [perfil, setPerfil] = useState<PerfilCuentaDemo | null>(null);
@@ -35,6 +41,8 @@ export function AreaCuentaDemo(): JSX.Element {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [errores, setErrores] = useState<string[]>([]);
   const [cargando, setCargando] = useState(false);
+  const router = useRouter();
+  const retornoSeguro = useMemo(() => resolverRetornoCuentaDemo(returnTo), [returnTo]);
 
   useEffect(() => {
     const cuenta = leerSesionCuentaDemo();
@@ -45,14 +53,12 @@ export function AreaCuentaDemo(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (!idUsuarioActivo) {
-      return;
+    if (idUsuarioActivo) {
+      void cargarCuenta(idUsuarioActivo, setCargando, setErrores, setPerfil, setHistorial);
     }
-    void cargarCuenta(idUsuarioActivo);
   }, [idUsuarioActivo]);
 
   const haySesion = useMemo(() => Boolean(idUsuarioActivo), [idUsuarioActivo]);
-
   const actualizarCampo = (campo: keyof CamposCuentaDemo, valor: string): void => {
     setCampos((previo) => ({ ...previo, [campo]: valor }));
   };
@@ -69,7 +75,6 @@ export function AreaCuentaDemo(): JSX.Element {
     setCargando(true);
     const resultado = await registrarCuentaDemo(campos);
     setCargando(false);
-
     if (resultado.estado === "error") {
       setErrores([resultado.mensaje]);
       return;
@@ -77,8 +82,9 @@ export function AreaCuentaDemo(): JSX.Element {
 
     guardarSesionCuentaDemo(resultado.cuenta);
     setIdUsuarioActivo(resultado.cuenta.id_usuario);
-    setMensaje("Cuenta demo creada. Ya puedes consultar tu perfil e historial.");
+    setMensaje(mensajeAutenticacion(retornoSeguro, true));
     setErrores([]);
+    navegarSiHayRetorno(router, retornoSeguro);
   };
 
   const onAutenticar = async (event: React.FormEvent): Promise<void> => {
@@ -93,7 +99,6 @@ export function AreaCuentaDemo(): JSX.Element {
     setCargando(true);
     const resultado = await autenticarCuentaDemo({ email: campos.email, clave_acceso_demo: campos.clave_acceso_demo });
     setCargando(false);
-
     if (resultado.estado === "error") {
       setErrores([resultado.mensaje]);
       return;
@@ -101,8 +106,9 @@ export function AreaCuentaDemo(): JSX.Element {
 
     guardarSesionCuentaDemo(resultado.cuenta);
     setIdUsuarioActivo(resultado.cuenta.id_usuario);
-    setMensaje("Acceso demo correcto. Cargando tu área de cuenta.");
+    setMensaje(mensajeAutenticacion(retornoSeguro, false));
     setErrores([]);
+    navegarSiHayRetorno(router, retornoSeguro);
   };
 
   const onSalirDemo = (): void => {
@@ -113,67 +119,33 @@ export function AreaCuentaDemo(): JSX.Element {
     setMensaje("Sesión demo cerrada.");
   };
 
-  const cargarCuenta = async (idUsuario: string): Promise<void> => {
-    setCargando(true);
-    const [perfilResultado, historialResultado] = await Promise.all([
-      obtenerPerfilCuentaDemo(idUsuario),
-      obtenerHistorialCuentaDemo(idUsuario),
-    ]);
-    setCargando(false);
-
-    if (perfilResultado.estado === "error") {
-      setErrores([perfilResultado.mensaje]);
-      return;
-    }
-
-    if (historialResultado.estado === "error") {
-      setErrores([historialResultado.mensaje]);
-      return;
-    }
-
-    setPerfil(perfilResultado.perfil);
-    setHistorial(historialResultado.pedidos);
-    setErrores([]);
-  };
-
   return (
     <section className="bloque-home" aria-labelledby="titulo-cuenta-demo">
       <p className={estilos.eyebrow}>Área privada mínima · entorno demo</p>
       <h1 id="titulo-cuenta-demo">Cuenta demo con continuidad post-checkout</h1>
       <p className={estilos.aviso}>No es autenticación productiva real: no usa sesión segura, cookies ni JWT.</p>
+      {retornoSeguro && <p className={estilos.estado}>Al completar el acceso volverás automáticamente a tu checkout demo en {retornoSeguro}.</p>}
 
       <div className={estilos.rejilla}>
         <form className={estilos.panel} onSubmit={onRegistrar} noValidate>
           <h2>Registro demo</h2>
           <CampoTexto etiqueta="Email" value={campos.email} onChange={(valor) => actualizarCampo("email", valor)} type="email" />
           <CampoTexto etiqueta="Nombre visible" value={campos.nombre_visible} onChange={(valor) => actualizarCampo("nombre_visible", valor)} />
-          <CampoTexto
-            etiqueta="Clave demo"
-            value={campos.clave_acceso_demo}
-            onChange={(valor) => actualizarCampo("clave_acceso_demo", valor)}
-            type="password"
-          />
+          <CampoTexto etiqueta="Clave demo" value={campos.clave_acceso_demo} onChange={(valor) => actualizarCampo("clave_acceso_demo", valor)} type="password" />
           <button className="boton boton--principal" type="submit" disabled={cargando}>Crear cuenta demo</button>
         </form>
 
         <form className={estilos.panel} onSubmit={onAutenticar} noValidate>
           <h2>Acceso demo</h2>
           <CampoTexto etiqueta="Email" value={campos.email} onChange={(valor) => actualizarCampo("email", valor)} type="email" />
-          <CampoTexto
-            etiqueta="Clave demo"
-            value={campos.clave_acceso_demo}
-            onChange={(valor) => actualizarCampo("clave_acceso_demo", valor)}
-            type="password"
-          />
+          <CampoTexto etiqueta="Clave demo" value={campos.clave_acceso_demo} onChange={(valor) => actualizarCampo("clave_acceso_demo", valor)} type="password" />
           <button className="boton boton--secundario" type="submit" disabled={cargando}>Entrar con cuenta demo</button>
         </form>
       </div>
 
       {cargando && <p className={estilos.estado}>Cargando área de cuenta demo…</p>}
       {mensaje && <p className={estilos.exito}>{mensaje}</p>}
-      {errores.map((error) => (
-        <p key={error} className={estilos.error}>{error}</p>
-      ))}
+      {errores.map((error) => <p key={error} className={estilos.error}>{error}</p>)}
 
       {haySesion && perfil && (
         <article className={estilos.panel}>
@@ -217,4 +189,45 @@ function CampoTexto({ etiqueta, value, onChange, type = "text" }: CampoTextoProp
       <input type={type} value={value} onChange={(event) => onChange(event.target.value)} />
     </label>
   );
+}
+
+function mensajeAutenticacion(retornoSeguro: string | null, esRegistro: boolean): string {
+  if (retornoSeguro) {
+    return esRegistro ? "Cuenta demo creada. Volviendo a tu checkout demo." : "Acceso demo correcto. Volviendo a tu checkout demo.";
+  }
+  return esRegistro ? "Cuenta demo creada. Ya puedes consultar tu perfil e historial." : "Acceso demo correcto. Cargando tu área de cuenta.";
+}
+
+function navegarSiHayRetorno(router: ReturnType<typeof useRouter>, retornoSeguro: string | null): void {
+  if (retornoSeguro) {
+    router.push(retornoSeguro);
+  }
+}
+
+async function cargarCuenta(
+  idUsuario: string,
+  setCargando: (valor: boolean) => void,
+  setErrores: (errores: string[]) => void,
+  setPerfil: (perfil: PerfilCuentaDemo | null) => void,
+  setHistorial: (historial: PedidoDemoHistorial[]) => void,
+): Promise<void> {
+  setCargando(true);
+  const [perfilResultado, historialResultado] = await Promise.all([
+    obtenerPerfilCuentaDemo(idUsuario),
+    obtenerHistorialCuentaDemo(idUsuario),
+  ]);
+  setCargando(false);
+
+  if (perfilResultado.estado === "error") {
+    setErrores([perfilResultado.mensaje]);
+    return;
+  }
+  if (historialResultado.estado === "error") {
+    setErrores([historialResultado.mensaje]);
+    return;
+  }
+
+  setPerfil(perfilResultado.perfil);
+  setHistorial(historialResultado.pedidos);
+  setErrores([]);
 }

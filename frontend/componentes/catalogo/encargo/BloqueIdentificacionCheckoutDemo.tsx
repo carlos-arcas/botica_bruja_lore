@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 import { CuentaDemo } from "@/infraestructura/api/cuentasDemo";
 import { CanalCheckoutDemo } from "@/contenido/catalogo/checkoutDemo";
 
@@ -11,6 +9,7 @@ type Props = {
   canalActivo: CanalCheckoutDemo;
   cuentaDemo: CuentaDemo | null;
   onContinuarComoInvitado: () => void;
+  onIrCuentaDemo: () => void;
   onUsarCuentaDemo: () => void;
 };
 
@@ -18,6 +17,7 @@ export function BloqueIdentificacionCheckoutDemo({
   canalActivo,
   cuentaDemo,
   onContinuarComoInvitado,
+  onIrCuentaDemo,
   onUsarCuentaDemo,
 }: Props): JSX.Element {
   if (cuentaDemo && canalActivo === "autenticado") {
@@ -31,7 +31,9 @@ export function BloqueIdentificacionCheckoutDemo({
           <button type="button" className="boton boton--secundario" onClick={onContinuarComoInvitado}>
             Continuar como invitado
           </button>
-          <Link href="/cuenta-demo" className="boton boton--secundario">Gestionar cuenta demo</Link>
+          <button type="button" className="boton boton--secundario" onClick={onIrCuentaDemo}>
+            Gestionar cuenta demo
+          </button>
         </div>
       </article>
     );
@@ -50,9 +52,9 @@ export function BloqueIdentificacionCheckoutDemo({
             Usar cuenta demo activa
           </button>
         ) : (
-          <Link href="/cuenta-demo?returnTo=%2Fencargo" className="boton boton--secundario">
+          <button type="button" className="boton boton--secundario" onClick={onIrCuentaDemo}>
             Entrar / crear cuenta demo
-          </Link>
+          </button>
         )}
       </div>
     </article>

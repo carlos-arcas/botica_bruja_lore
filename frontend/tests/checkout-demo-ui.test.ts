@@ -21,5 +21,13 @@ test("checkout demo elimina el input manual de id_usuario", () => {
 test("checkout demo muestra estado claro de cuenta autenticada y mantiene CTA invitado", () => {
   assert.equal(archivoBloque.includes("Estás comprando como"), true);
   assert.equal(archivoBloque.includes("Continuar como invitado"), true);
-  assert.equal(archivoBloque.includes("/cuenta-demo?returnTo=%2Fencargo"), true);
+  assert.equal(archivoFlujo.includes("guardarBorradorCheckoutDemo"), true);
+  assert.equal(archivoFlujo.includes("limpiarBorradorCheckoutDemo"), true);
+  assert.equal(archivoFlujo.includes("construirRutaCuentaDemoConRetornoSeguro"), true);
+});
+
+test("checkout demo mantiene continuidad con retorno seguro y sin recuperar consentimiento marcado", () => {
+  assert.equal(archivoFlujo.includes("returnTo=%2Fencargo"), false);
+  assert.equal(archivoFlujo.includes("consentimiento: false"), true);
+  assert.equal(archivoFlujo.includes("router.push(construirRutaCuentaDemoConRetornoSeguro"), true);
 });
