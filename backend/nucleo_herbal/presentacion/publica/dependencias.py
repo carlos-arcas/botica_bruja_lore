@@ -21,6 +21,7 @@ from ...aplicacion.casos_de_uso_email_demo import (
     ComponerEmailDemoPedido,
     ObtenerEmailDemoPedidoPorId,
 )
+from ...aplicacion.casos_de_uso_pedidos import ObtenerPedidoPorId, RegistrarPedido
 from ...aplicacion.casos_de_uso_pedidos_demo import (
     ObtenerPedidoDemoPorId,
     RegistrarPedidoDemo,
@@ -42,6 +43,7 @@ from ...infraestructura.persistencia_django.repositorios import (
     RepositorioPedidosDemoORM,
     RepositorioRitualesORM,
 )
+from ...infraestructura.persistencia_django.repositorios_pedidos import RepositorioPedidosORM
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,6 +69,12 @@ class ServiciosPublicosRituales:
 @dataclass(frozen=True, slots=True)
 class ServiciosPublicosCalendarioRitual:
     consultar_por_fecha: ConsultarCalendarioRitualPorFecha
+
+
+@dataclass(frozen=True, slots=True)
+class ServiciosPublicosPedidos:
+    registrar_pedido: RegistrarPedido
+    obtener_pedido: ObtenerPedidoPorId
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +131,14 @@ def construir_servicios_publicos_calendario_ritual() -> ServiciosPublicosCalenda
             repositorio_reglas=RepositorioReglasCalendarioORM(),
             repositorio_rituales=RepositorioRitualesORM(),
         )
+    )
+
+
+def construir_servicios_publicos_pedidos() -> ServiciosPublicosPedidos:
+    repositorio = RepositorioPedidosORM()
+    return ServiciosPublicosPedidos(
+        registrar_pedido=RegistrarPedido(repositorio_pedidos=repositorio),
+        obtener_pedido=ObtenerPedidoPorId(repositorio_pedidos=repositorio),
     )
 
 

@@ -1,0 +1,42 @@
+.eyebrow {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6d5a64;
+}
+
+.formulario {
+  display: grid;
+  gap: 1rem;
+}
+
+.formulario fieldset {
+  border: 1px solid rgba(109, 90, 100, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.formulario label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.formulario input,
+.formulario select,
+.formulario textarea {
+  border: 1px solid rgba(109, 90, 100, 0.25);
+  border-radius: 8px;
+  padding: 0.7rem 0.8rem;
+}
+
+.error {
+  color: #8f2237;
+  margin: 0;
+}
+
+.resumenProducto {
+  margin: 0;
+  color: #4b3d45;
+}

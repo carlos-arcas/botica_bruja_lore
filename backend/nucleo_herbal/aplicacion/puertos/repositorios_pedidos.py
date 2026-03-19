@@ -1,0 +1,17 @@
+"""Puertos de persistencia para el agregado Pedido real."""
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+
+from ...dominio.pedidos import Pedido
+
+
+class RepositorioPedidos(ABC):
+    @abstractmethod
+    def guardar(self, pedido: Pedido) -> Pedido:
+        """Persiste un pedido real y devuelve el agregado reconstruido."""
+
+    @abstractmethod
+    def obtener_por_id(self, id_pedido: str) -> Pedido | None:
+        """Recupera un pedido real por identificador."""

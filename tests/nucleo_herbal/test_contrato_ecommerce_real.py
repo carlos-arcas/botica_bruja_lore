@@ -7,6 +7,7 @@ from backend.nucleo_herbal.dominio.pedidos import (
     CANALES_CHECKOUT_VALIDOS,
     ESTRATEGIA_CONVIVENCIA_PEDIDOS,
     ESTADOS_PEDIDO_VALIDOS,
+    RUTA_API_PEDIDOS,
     ClientePedido,
     DireccionEntrega,
     LineaPedido,
@@ -18,20 +19,28 @@ from backend.nucleo_herbal.dominio.pedidos_demo import LineaPedido as LineaPedid
 
 
 class ContratoEcommerceRealTests(TestCase):
-    def test_contrato_canonico_real_define_estados_y_canales_minimos(self) -> None:
+    def test_contrato_canonico_real_define_estados_canales_y_ruta(self) -> None:
         self.assertEqual(
             ESTADOS_PEDIDO_VALIDOS,
             ("pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado"),
         )
         self.assertEqual(CANALES_CHECKOUT_VALIDOS, ("web_invitado", "web_autenticado", "backoffice"))
+        self.assertEqual(RUTA_API_PEDIDOS, "/api/v1/pedidos/")
 
-    def test_payload_y_pedido_real_requieren_direccion_y_cliente(self) -> None:
-        cliente = ClientePedido(id_cliente="USR-1", email="lore@test.dev", es_invitado=False)
+    def test_payload_y_pedido_real_requieren_direccion_y_contacto(self) -> None:
+        cliente = ClientePedido(
+            id_cliente="USR-1",
+            email="lore@test.dev",
+            nombre_contacto="Lore",
+            telefono_contacto="600111222",
+            es_invitado=False,
+        )
         direccion = DireccionEntrega(
             nombre_destinatario="Lore",
             linea_1="Calle Luna 1",
             codigo_postal="28001",
             ciudad="Madrid",
+            provincia="Madrid",
         )
         linea = LineaPedido(
             id_producto="PRO-1",
@@ -46,6 +55,7 @@ class ContratoEcommerceRealTests(TestCase):
             cliente=cliente,
             direccion_entrega=direccion,
             lineas=(linea,),
+            notas_cliente="Entregar por la tarde.",
         )
         pedido = Pedido(
             id_pedido="PED-1",
@@ -54,10 +64,12 @@ class ContratoEcommerceRealTests(TestCase):
             cliente=cliente,
             direccion_entrega=direccion,
             lineas=(linea,),
+            notas_cliente="Entregar por la tarde.",
         )
 
         self.assertEqual(payload.direccion_entrega.ciudad, "Madrid")
         self.assertEqual(pedido.subtotal, Decimal("10.00"))
+        self.assertEqual(pedido.cliente.telefono_contacto, "600111222")
 
     def test_adaptador_demo_convive_sin_romper_y_marca_origen_legacy(self) -> None:
         pedido_demo = PedidoDemo(
@@ -87,6 +99,7 @@ class ContratoEcommerceRealTests(TestCase):
         self.assertEqual(MARCA_CONTRATO_PEDIDO_DEMO, "legado_controlado")
         self.assertEqual(RUTA_API_PEDIDOS_DEMO, "/api/v1/pedidos-demo/")
         self.assertEqual(ESTRATEGIA_CONVIVENCIA_PEDIDOS["modo"], "anti_corrupcion")
+        self.assertEqual(ESTRATEGIA_CONVIVENCIA_PEDIDOS["ruta_objetivo"], "/api/v1/pedidos/")
 
     def test_documentacion_refleja_la_transicion_demo_a_real(self) -> None:
         migracion = Path("docs/17_migracion_ecommerce_real.md").read_text()
@@ -94,4 +107,5 @@ class ContratoEcommerceRealTests(TestCase):
 
         self.assertIn("Contrato canónico real", migracion)
         self.assertIn("`PedidoDemo` sigue operativo sólo como **legacy controlado**", migracion)
-        self.assertIn("Base arquitectónica de migración ecommerce real", estado)
+        self.assertIn("/api/v1/pedidos/", migracion)
+        self.assertIn("Checkout real v1 en coexistencia", estado)

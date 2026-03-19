@@ -315,3 +315,6 @@ class ImportacionFilaModelo(models.Model):
         ordering = ("numero_fila_original", "id")
         verbose_name = "fila de importación"
         verbose_name_plural = "filas de importación"
+
+
+from .models_pedidos import LineaPedidoRealModelo, PedidoRealModelo

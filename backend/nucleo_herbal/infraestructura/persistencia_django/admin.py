@@ -7,7 +7,9 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
     CuentaDemoModelo,
     IntencionModelo,
     LineaPedidoModelo,
+    LineaPedidoRealModelo,
     PedidoDemoModelo,
+    PedidoRealModelo,
     PlantaModelo,
     ProductoModelo,
     RitualModelo,
@@ -318,3 +320,20 @@ class ImportacionFilaAdmin(admin.ModelAdmin):
     list_display = ("id", "lote", "numero_fila_original", "estado", "seleccionado")
     list_filter = ("estado", "seleccionado")
     readonly_fields = ("lote", "numero_fila_original", "datos", "errores", "warnings", "estado", "imagen", "resultado_confirmacion")
+
+
+class LineaPedidoRealInline(admin.TabularInline):
+    model = LineaPedidoRealModelo
+    extra = 0
+    can_delete = False
+    readonly_fields = ("id_producto", "slug_producto", "nombre_producto", "cantidad", "precio_unitario", "moneda")
+
+
+@admin.register(PedidoRealModelo)
+class PedidoRealAdmin(admin.ModelAdmin):
+    list_display = ("id_pedido", "estado", "canal_checkout", "email_contacto", "subtotal", "moneda", "fecha_creacion")
+    search_fields = ("id_pedido", "email_contacto", "nombre_contacto")
+    list_filter = ("estado", "canal_checkout", "es_invitado", "moneda")
+    ordering = ("-fecha_creacion",)
+    readonly_fields = ("fecha_creacion", "direccion_entrega")
+    inlines = (LineaPedidoRealInline,)
