@@ -1,6 +1,7 @@
 import { ItemEncargoPreseleccionado } from "./cestaRitual";
 import { CANTIDAD_MAXIMA_CESTA, CANTIDAD_MINIMA_CESTA } from "./cestaRitual";
 import { PRODUCTOS_CATALOGO, ProductoCatalogo } from "./catalogo";
+import { CuentaDemo } from "../../infraestructura/api/cuentasDemo";
 
 export type CanalCheckoutDemo = "invitado" | "autenticado";
 
@@ -20,6 +21,11 @@ export type PayloadPedidoDemo = {
 };
 
 export type ErroresCheckoutDemo = Partial<Record<"lineas" | "canal" | "idUsuario", string>>;
+export type EstadoIdentificacionCheckoutDemo = {
+  canalActivo: CanalCheckoutDemo;
+  cuentaActiva: CuentaDemo | null;
+  emailPrefill: string;
+};
 
 export function construirLineasPedidoDemo(
   itemsPreseleccionados: ItemEncargoPreseleccionado[],
@@ -42,10 +48,10 @@ export function construirPayloadPedidoDemo(
   email: string,
   canal: CanalCheckoutDemo,
   lineas: LineaPedidoDemoPayload[],
-  idUsuario?: string,
+  cuentaDemo?: CuentaDemo | null,
 ): PayloadPedidoDemo {
-  if (canal === "autenticado" && idUsuario?.trim()) {
-    return { email: email.trim(), canal, lineas, id_usuario: idUsuario.trim() };
+  if (canal === "autenticado" && cuentaDemo?.id_usuario.trim()) {
+    return { email: email.trim(), canal, lineas, id_usuario: cuentaDemo.id_usuario.trim() };
   }
 
   return { email: email.trim(), canal, lineas };
@@ -53,7 +59,7 @@ export function construirPayloadPedidoDemo(
 
 export function validarCheckoutDemo(
   canal: CanalCheckoutDemo,
-  idUsuario: string,
+  cuentaDemo: CuentaDemo | null,
   lineas: LineaPedidoDemoPayload[],
 ): ErroresCheckoutDemo {
   const errores: ErroresCheckoutDemo = {};
@@ -66,11 +72,26 @@ export function validarCheckoutDemo(
     errores.canal = "Selecciona un canal de compra válido.";
   }
 
-  if (canal === "autenticado" && !idUsuario.trim()) {
-    errores.idUsuario = "Para canal autenticado debes indicar un identificador de usuario demo.";
+  if (canal === "autenticado" && !cuentaDemo?.id_usuario.trim()) {
+    errores.idUsuario = "Necesitas una sesión activa de cuenta demo para comprar en modo autenticado.";
   }
 
   return errores;
+}
+
+export function resolverEstadoIdentificacionCheckoutDemo(
+  cuentaDemo: CuentaDemo | null,
+  continuarComoInvitado: boolean,
+): EstadoIdentificacionCheckoutDemo {
+  if (cuentaDemo && !continuarComoInvitado) {
+    return {
+      canalActivo: "autenticado",
+      cuentaActiva: cuentaDemo,
+      emailPrefill: cuentaDemo.email.trim(),
+    };
+  }
+
+  return { canalActivo: "invitado", cuentaActiva: cuentaDemo, emailPrefill: "" };
 }
 
 export function resolverCantidadCheckout(valor: string): number {
