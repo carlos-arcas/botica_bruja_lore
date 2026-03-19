@@ -54,6 +54,7 @@ class TestRepositorioPedidosReal(DjangoTestCase):
         self.assertIsNotNone(recuperado)
         assert recuperado is not None
         self.assertEqual(recuperado.estado, "pendiente_pago")
+        self.assertEqual(recuperado.estado_pago, "pendiente")
         self.assertEqual(recuperado.cliente.id_cliente, "USR-1")
         self.assertEqual(recuperado.direccion_entrega.codigo_postal, "28001")
         self.assertEqual(recuperado.subtotal, Decimal("18.00"))

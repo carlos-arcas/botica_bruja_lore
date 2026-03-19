@@ -42,9 +42,13 @@ class LineaPedidoRealDTO:
 class PedidoRealDTO:
     id_pedido: str
     estado: str
+    estado_pago: str
     canal_checkout: str
     moneda: str
     subtotal: Decimal
+    proveedor_pago: str | None
+    id_externo_pago: str | None
+    url_pago: str | None
     cliente: ClientePedidoDTO
     direccion_entrega: DireccionEntregaDTO
     lineas: tuple[LineaPedidoRealDTO, ...]

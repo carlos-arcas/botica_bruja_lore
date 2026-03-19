@@ -13,6 +13,7 @@ from backend.nucleo_herbal.dominio.pedidos import (
     LineaPedido,
     PayloadPedido,
     Pedido,
+    ESTADOS_PAGO_VALIDOS,
 )
 from backend.nucleo_herbal.dominio.pedidos_demo import MARCA_CONTRATO_PEDIDO_DEMO, PedidoDemo, RUTA_API_PEDIDOS_DEMO
 from backend.nucleo_herbal.dominio.pedidos_demo import LineaPedido as LineaPedidoDemo
@@ -26,6 +27,7 @@ class ContratoEcommerceRealTests(TestCase):
         )
         self.assertEqual(CANALES_CHECKOUT_VALIDOS, ("web_invitado", "web_autenticado", "backoffice"))
         self.assertEqual(RUTA_API_PEDIDOS, "/api/v1/pedidos/")
+        self.assertEqual(ESTADOS_PAGO_VALIDOS, ("pendiente", "requiere_accion", "pagado", "fallido", "cancelado"))
 
     def test_payload_y_pedido_real_requieren_direccion_y_contacto(self) -> None:
         cliente = ClientePedido(
@@ -70,6 +72,7 @@ class ContratoEcommerceRealTests(TestCase):
         self.assertEqual(payload.direccion_entrega.ciudad, "Madrid")
         self.assertEqual(pedido.subtotal, Decimal("10.00"))
         self.assertEqual(pedido.cliente.telefono_contacto, "600111222")
+        self.assertEqual(pedido.estado_pago, "pendiente")
 
     def test_adaptador_demo_convive_sin_romper_y_marca_origen_legacy(self) -> None:
         pedido_demo = PedidoDemo(
@@ -109,3 +112,4 @@ class ContratoEcommerceRealTests(TestCase):
         self.assertIn("`PedidoDemo` sigue operativo sólo como **legacy controlado**", migracion)
         self.assertIn("/api/v1/pedidos/", migracion)
         self.assertIn("Checkout real v1 en coexistencia", estado)
+        self.assertIn("pago real v1", migracion.lower())

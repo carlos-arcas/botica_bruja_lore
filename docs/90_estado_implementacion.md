@@ -101,11 +101,26 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   2. Toda nueva semántica transaccional real debe entrar por `Pedido`.
   3. La retirada de rutas demo será incremental y con coexistencia temporal.
 
+## 8.2 Pago real v1 sobre Pedido
+- Capacidad: **Pago real v1 desacoplado del dominio**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - puerto `backend/nucleo_herbal/aplicacion/puertos/pasarela_pago.py`;
+  - adaptador Stripe `backend/nucleo_herbal/infraestructura/pagos_stripe.py`;
+  - caso de uso `backend/nucleo_herbal/aplicacion/casos_de_uso_pago_pedidos.py`;
+  - rutas `POST /api/v1/pedidos/{id_pedido}/iniciar-pago/` y `POST /api/v1/pedidos/webhooks/stripe/`;
+  - frontend de continuación en `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`.
+- Regla activa:
+  1. El dominio sigue desacoplado de Stripe.
+  2. El flujo demo legacy no se toca para cobro real.
+  3. El siguiente incremento debe cerrar post-pago operativo y gestión administrativa del pedido pagado.
+
 ## 9. Próximos movimientos recomendados
 1. Ejecutar validación de cierre técnico de Ciclo 5 con `python scripts/check_release_gate.py` en cada incremento posterior.
 2. Preservar trazabilidad estado↔roadmap para evitar reabrir capacidades ya cerradas de Ciclos 3 y 4.
 3. No abrir nuevas capacidades sin contrato explícito del siguiente ciclo.
 4. Checkout real v1 en coexistencia: DONE para contrato, ruta API, persistencia y frontend dedicado sin romper el flujo demo legado.
+5. Pago real v1: DONE para intención Stripe desacoplada, webhook mínimo seguro, transición `pendiente_pago` → `pagado` e idempotencia básica.
 
 ## 10. Reencauce de control por ciclos (actualización de gobierno)
 - Diagnóstico oficial: **C (deriva detectada)**.

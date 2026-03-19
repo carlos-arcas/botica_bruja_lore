@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Literal
@@ -10,7 +10,9 @@ from typing import Literal
 from .excepciones import ErrorDominio
 
 EstadoPedido = Literal["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado"]
+EstadoPago = Literal["pendiente", "requiere_accion", "pagado", "fallido", "cancelado"]
 CanalCheckout = Literal["web_invitado", "web_autenticado", "backoffice"]
+ProveedorPago = Literal["stripe"]
 
 ESTADOS_PEDIDO_VALIDOS: tuple[EstadoPedido, ...] = (
     "pendiente_pago",
@@ -20,6 +22,7 @@ ESTADOS_PEDIDO_VALIDOS: tuple[EstadoPedido, ...] = (
     "entregado",
     "cancelado",
 )
+ESTADOS_PAGO_VALIDOS: tuple[EstadoPago, ...] = ("pendiente", "requiere_accion", "pagado", "fallido", "cancelado")
 CANALES_CHECKOUT_VALIDOS: tuple[CanalCheckout, ...] = ("web_invitado", "web_autenticado", "backoffice")
 RUTA_API_PEDIDOS = "/api/v1/pedidos/"
 
@@ -107,22 +110,59 @@ class Pedido:
     fecha_creacion: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
     notas_cliente: str = ""
     moneda: str = "EUR"
+    estado_pago: EstadoPago = "pendiente"
+    proveedor_pago: ProveedorPago | None = None
+    id_externo_pago: str | None = None
+    url_pago: str | None = None
+    fecha_pago_confirmado: datetime | None = None
 
     def __post_init__(self) -> None:
         if not self.id_pedido.strip():
             raise ErrorDominio("El pedido requiere identificador.")
         if self.estado not in ESTADOS_PEDIDO_VALIDOS:
             raise ErrorDominio("El pedido requiere estado real válido.")
+        if self.estado_pago not in ESTADOS_PAGO_VALIDOS:
+            raise ErrorDominio("El pedido requiere estado de pago válido.")
         if self.canal_checkout not in CANALES_CHECKOUT_VALIDOS:
             raise ErrorDominio("El pedido requiere canal de checkout válido.")
         if not self.lineas:
             raise ErrorDominio("El pedido requiere al menos una línea.")
         if not self.moneda.strip():
             raise ErrorDominio("El pedido requiere moneda.")
+        if self.estado == "pagado" and self.estado_pago != "pagado":
+            raise ErrorDominio("Un pedido pagado requiere estado_pago='pagado'.")
 
     @property
     def subtotal(self) -> Decimal:
         return sum((linea.subtotal for linea in self.lineas), Decimal("0"))
+
+    def puede_iniciar_pago(self) -> None:
+        if self.estado == "pagado" or self.estado_pago == "pagado":
+            raise ErrorDominio("El pedido ya está pagado.")
+        if self.estado != "pendiente_pago":
+            raise ErrorDominio("El pedido no está en un estado compatible para iniciar pago.")
+
+    def registrar_intencion_pago(self, proveedor: ProveedorPago, id_externo_pago: str, url_pago: str | None, estado_pago: EstadoPago) -> "Pedido":
+        self.puede_iniciar_pago()
+        return replace(
+            self,
+            proveedor_pago=proveedor,
+            id_externo_pago=id_externo_pago,
+            url_pago=url_pago,
+            estado_pago=estado_pago,
+        )
+
+    def marcar_pagado(self, fecha_confirmacion: datetime) -> "Pedido":
+        if self.estado == "pagado" and self.estado_pago == "pagado":
+            return self
+        if self.estado != "pendiente_pago":
+            raise ErrorDominio("Solo un pedido pendiente de pago puede pasar a pagado.")
+        return replace(self, estado="pagado", estado_pago="pagado", fecha_pago_confirmado=fecha_confirmacion)
+
+    def registrar_fallo_pago(self) -> "Pedido":
+        if self.estado == "pagado":
+            return self
+        return replace(self, estado_pago="fallido")
 
 
 @dataclass(frozen=True, slots=True)

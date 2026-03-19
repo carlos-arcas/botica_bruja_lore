@@ -15,3 +15,11 @@ class RepositorioPedidos(ABC):
     @abstractmethod
     def obtener_por_id(self, id_pedido: str) -> Pedido | None:
         """Recupera un pedido real por identificador."""
+
+    @abstractmethod
+    def obtener_por_pago_externo(self, proveedor_pago: str, id_externo_pago: str) -> Pedido | None:
+        """Recupera un pedido por referencia externa de pago."""
+
+    @abstractmethod
+    def guardar_evento_webhook(self, proveedor_pago: str, id_evento: str, payload_crudo: str) -> bool:
+        """Registra un evento de webhook y devuelve False si ya existía."""

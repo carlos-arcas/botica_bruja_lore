@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
 from ...aplicacion.puertos.repositorios_pedidos import RepositorioPedidos
 from ...dominio.pedidos import ClientePedido, DireccionEntrega, LineaPedido, Pedido
-from .models_pedidos import LineaPedidoRealModelo, PedidoRealModelo
+from .models_pedidos import EventoWebhookPagoModelo, LineaPedidoRealModelo, PedidoRealModelo
 
 
 class RepositorioPedidosORM(RepositorioPedidos):
@@ -16,6 +16,10 @@ class RepositorioPedidosORM(RepositorioPedidos):
             id_pedido=pedido.id_pedido,
             defaults={
                 "estado": pedido.estado,
+                "estado_pago": pedido.estado_pago,
+                "proveedor_pago": pedido.proveedor_pago or "",
+                "id_externo_pago": pedido.id_externo_pago or "",
+                "url_pago": pedido.url_pago or "",
                 "canal_checkout": pedido.canal_checkout,
                 "email_contacto": pedido.cliente.email,
                 "nombre_contacto": pedido.cliente.nombre_contacto,
@@ -27,21 +31,11 @@ class RepositorioPedidosORM(RepositorioPedidos):
                 "notas_cliente": pedido.notas_cliente,
                 "direccion_entrega": _serializar_direccion(pedido.direccion_entrega),
                 "fecha_creacion": pedido.fecha_creacion,
+                "fecha_pago_confirmado": pedido.fecha_pago_confirmado,
             },
         )
         modelo.lineas.all().delete()
-        LineaPedidoRealModelo.objects.bulk_create([
-            LineaPedidoRealModelo(
-                pedido=modelo,
-                id_producto=linea.id_producto,
-                slug_producto=linea.slug_producto,
-                nombre_producto=linea.nombre_producto,
-                cantidad=linea.cantidad,
-                precio_unitario=linea.precio_unitario,
-                moneda=linea.moneda,
-            )
-            for linea in pedido.lineas
-        ])
+        LineaPedidoRealModelo.objects.bulk_create([_a_modelo_linea(modelo, linea) for linea in pedido.lineas])
         return self._reconstruir(modelo.id_pedido)
 
     def obtener_por_id(self, id_pedido: str) -> Pedido | None:
@@ -50,11 +44,33 @@ class RepositorioPedidosORM(RepositorioPedidos):
         except PedidoRealModelo.DoesNotExist:
             return None
 
+    def obtener_por_pago_externo(self, proveedor_pago: str, id_externo_pago: str) -> Pedido | None:
+        if not proveedor_pago or not id_externo_pago:
+            return None
+        modelo = PedidoRealModelo.objects.filter(proveedor_pago=proveedor_pago, id_externo_pago=id_externo_pago).first()
+        return None if modelo is None else self._reconstruir(modelo.id_pedido)
+
+    def guardar_evento_webhook(self, proveedor_pago: str, id_evento: str, payload_crudo: str) -> bool:
+        try:
+            with transaction.atomic():
+                EventoWebhookPagoModelo.objects.create(
+                    proveedor_pago=proveedor_pago,
+                    id_evento=id_evento,
+                    payload_crudo=payload_crudo,
+                )
+        except IntegrityError:
+            return False
+        return True
+
     def _reconstruir(self, id_pedido: str) -> Pedido:
         modelo = PedidoRealModelo.objects.prefetch_related("lineas").get(id_pedido=id_pedido)
         return Pedido(
             id_pedido=modelo.id_pedido,
             estado=modelo.estado,
+            estado_pago=modelo.estado_pago,
+            proveedor_pago=modelo.proveedor_pago or None,
+            id_externo_pago=modelo.id_externo_pago or None,
+            url_pago=modelo.url_pago or None,
             canal_checkout=modelo.canal_checkout,
             cliente=ClientePedido(
                 id_cliente=modelo.id_usuario,
@@ -66,9 +82,22 @@ class RepositorioPedidosORM(RepositorioPedidos):
             lineas=tuple(_a_linea(linea) for linea in modelo.lineas.order_by("id")),
             direccion_entrega=_a_direccion(modelo.direccion_entrega),
             fecha_creacion=modelo.fecha_creacion,
+            fecha_pago_confirmado=modelo.fecha_pago_confirmado,
             notas_cliente=modelo.notas_cliente,
             moneda=modelo.moneda,
         )
+
+
+def _a_modelo_linea(modelo: PedidoRealModelo, linea: LineaPedido) -> LineaPedidoRealModelo:
+    return LineaPedidoRealModelo(
+        pedido=modelo,
+        id_producto=linea.id_producto,
+        slug_producto=linea.slug_producto,
+        nombre_producto=linea.nombre_producto,
+        cantidad=linea.cantidad,
+        precio_unitario=linea.precio_unitario,
+        moneda=linea.moneda,
+    )
 
 
 def _a_linea(modelo: LineaPedidoRealModelo) -> LineaPedido:

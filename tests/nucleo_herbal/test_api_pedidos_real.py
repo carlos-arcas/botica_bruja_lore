@@ -27,6 +27,7 @@ class TestApiPedidosReal(DjangoTestCase):
         pedido = response.json()["pedido"]
         self.assertTrue(pedido["id_pedido"].startswith("PED-"))
         self.assertEqual(pedido["estado"], "pendiente_pago")
+        self.assertEqual(pedido["estado_pago"], "pendiente")
         self.assertEqual(pedido["direccion_entrega"]["ciudad"], "Madrid")
         self.assertEqual(pedido["cliente"]["es_invitado"], True)
         self.assertTrue(PedidoRealModelo.objects.filter(id_pedido=pedido["id_pedido"]).exists())
@@ -41,6 +42,7 @@ class TestApiPedidosReal(DjangoTestCase):
         pedido = detalle.json()["pedido"]
         self.assertEqual(pedido["id_pedido"], id_pedido)
         self.assertEqual(pedido["resumen"]["subtotal"], "18.00")
+        self.assertEqual(pedido["pago"]["id_externo_pago"], None)
 
     def test_direccion_entrega_es_obligatoria(self) -> None:
         payload = _payload_base()
