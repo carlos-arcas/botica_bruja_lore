@@ -121,3 +121,13 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 2. endpoint `/api/v1/pedidos/` coexistiendo con `/api/v1/pedidos-demo/`;
 3. persistencia real inicial de `Pedido` y `DireccionEntrega`;
 4. creación/autovinculación de cuenta real/invitado sin reutilizar `CuentaDemo`.
+
+
+## 8. Implementación activa — checkout real v1
+- Estado técnico: **DONE** para checkout real v1 inicial en coexistencia.
+- Ruta canónica activa: `/api/v1/pedidos/`.
+- Contrato HTTP real activo: `email_contacto`, `nombre_contacto`, `telefono_contacto`, `lineas`, `canal_checkout`, `direccion_entrega`, `notas_cliente`, `id_usuario` opcional y `moneda`.
+- Persistencia real activa: agregado `Pedido` en `nucleo_pedido` + líneas en `nucleo_linea_pedido`.
+- Estado inicial real: `pendiente_pago`.
+- El flujo demo legado (`/api/v1/pedidos-demo/`, `/encargo`, `/pedido-demo/[id_pedido]`) permanece operativo como compatibilidad controlada.
+- Siguiente bloque recomendado: integrar intento de pago real desacoplado (PSP + intención de pago + transición `pendiente_pago` → `pagado`) sin romper la persistencia y la dirección ya consolidadas.

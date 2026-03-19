@@ -9,14 +9,7 @@ from typing import Literal
 
 from .excepciones import ErrorDominio
 
-EstadoPedido = Literal[
-    "pendiente_pago",
-    "pagado",
-    "preparando",
-    "enviado",
-    "entregado",
-    "cancelado",
-]
+EstadoPedido = Literal["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado"]
 CanalCheckout = Literal["web_invitado", "web_autenticado", "backoffice"]
 
 ESTADOS_PEDIDO_VALIDOS: tuple[EstadoPedido, ...] = (
@@ -27,19 +20,16 @@ ESTADOS_PEDIDO_VALIDOS: tuple[EstadoPedido, ...] = (
     "entregado",
     "cancelado",
 )
-CANALES_CHECKOUT_VALIDOS: tuple[CanalCheckout, ...] = (
-    "web_invitado",
-    "web_autenticado",
-    "backoffice",
-)
+CANALES_CHECKOUT_VALIDOS: tuple[CanalCheckout, ...] = ("web_invitado", "web_autenticado", "backoffice")
+RUTA_API_PEDIDOS = "/api/v1/pedidos/"
 
 ESTRATEGIA_CONVIVENCIA_PEDIDOS = {
     "contrato_canonico": "Pedido",
     "legado_demo": "PedidoDemo",
     "modo": "anti_corrupcion",
     "ruta_legacy": "/api/v1/pedidos-demo/",
-    "ruta_objetivo": "/api/v1/pedidos/",
-    "estado": "planificado_para_coexistencia_controlada",
+    "ruta_objetivo": RUTA_API_PEDIDOS,
+    "estado": "coexistencia_checkout_real_v1",
 }
 
 
@@ -52,29 +42,33 @@ class DireccionEntrega:
     ciudad: str = ""
     provincia: str = ""
     pais_iso: str = "ES"
-    telefono: str = ""
+    observaciones: str = ""
 
     def __post_init__(self) -> None:
-        if not self.nombre_destinatario.strip():
-            raise ErrorDominio("La dirección de entrega requiere destinatario.")
-        if not self.linea_1.strip():
-            raise ErrorDominio("La dirección de entrega requiere línea principal.")
-        if not self.ciudad.strip():
-            raise ErrorDominio("La dirección de entrega requiere ciudad.")
-        if not self.pais_iso.strip():
-            raise ErrorDominio("La dirección de entrega requiere país ISO.")
+        for campo, valor in (
+            ("destinatario", self.nombre_destinatario),
+            ("línea principal", self.linea_1),
+            ("código postal", self.codigo_postal),
+            ("ciudad", self.ciudad),
+            ("provincia", self.provincia),
+            ("país ISO", self.pais_iso),
+        ):
+            if not valor.strip():
+                raise ErrorDominio(f"La dirección de entrega requiere {campo}.")
 
 
 @dataclass(frozen=True, slots=True)
 class ClientePedido:
     id_cliente: str | None
     email: str
-    nombre_visible: str = ""
+    nombre_contacto: str
+    telefono_contacto: str
     es_invitado: bool = True
 
     def __post_init__(self) -> None:
-        if not self.email.strip():
-            raise ErrorDominio("El cliente del pedido requiere email.")
+        for campo, valor in (("email", self.email), ("nombre de contacto", self.nombre_contacto), ("teléfono de contacto", self.telefono_contacto)):
+            if not valor.strip():
+                raise ErrorDominio(f"El cliente del pedido requiere {campo}.")
         if not self.es_invitado and not _hay_texto(self.id_cliente):
             raise ErrorDominio("El cliente autenticado requiere identificador.")
 
@@ -89,18 +83,13 @@ class LineaPedido:
     moneda: str = "EUR"
 
     def __post_init__(self) -> None:
-        if not self.id_producto.strip():
-            raise ErrorDominio("La línea requiere id de producto.")
-        if not self.slug_producto.strip():
-            raise ErrorDominio("La línea requiere slug de producto.")
-        if not self.nombre_producto.strip():
-            raise ErrorDominio("La línea requiere nombre de producto.")
+        for campo, valor in (("id de producto", self.id_producto), ("slug de producto", self.slug_producto), ("nombre de producto", self.nombre_producto), ("moneda", self.moneda)):
+            if not valor.strip():
+                raise ErrorDominio(f"La línea requiere {campo}.")
         if self.cantidad <= 0:
             raise ErrorDominio("La línea requiere cantidad mayor que cero.")
         if self.precio_unitario < Decimal("0"):
             raise ErrorDominio("La línea requiere precio unitario no negativo.")
-        if not self.moneda.strip():
-            raise ErrorDominio("La línea requiere moneda.")
 
     @property
     def subtotal(self) -> Decimal:
@@ -116,6 +105,8 @@ class Pedido:
     lineas: tuple[LineaPedido, ...]
     direccion_entrega: DireccionEntrega
     fecha_creacion: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
+    notas_cliente: str = ""
+    moneda: str = "EUR"
 
     def __post_init__(self) -> None:
         if not self.id_pedido.strip():
@@ -126,6 +117,8 @@ class Pedido:
             raise ErrorDominio("El pedido requiere canal de checkout válido.")
         if not self.lineas:
             raise ErrorDominio("El pedido requiere al menos una línea.")
+        if not self.moneda.strip():
+            raise ErrorDominio("El pedido requiere moneda.")
 
     @property
     def subtotal(self) -> Decimal:
@@ -145,12 +138,16 @@ class PayloadPedido:
     cliente: ClientePedido
     direccion_entrega: DireccionEntrega
     lineas: tuple[LineaPedido, ...]
+    notas_cliente: str = ""
+    moneda: str = "EUR"
 
     def __post_init__(self) -> None:
         if self.canal_checkout not in CANALES_CHECKOUT_VALIDOS:
             raise ErrorDominio("El payload requiere canal real válido.")
         if not self.lineas:
             raise ErrorDominio("El payload requiere al menos una línea.")
+        if not self.moneda.strip():
+            raise ErrorDominio("El payload requiere moneda.")
 
 
 def _hay_texto(valor: str | None) -> bool:

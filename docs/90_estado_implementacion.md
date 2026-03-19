@@ -105,6 +105,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 1. Ejecutar validación de cierre técnico de Ciclo 5 con `python scripts/check_release_gate.py` en cada incremento posterior.
 2. Preservar trazabilidad estado↔roadmap para evitar reabrir capacidades ya cerradas de Ciclos 3 y 4.
 3. No abrir nuevas capacidades sin contrato explícito del siguiente ciclo.
+4. Checkout real v1 en coexistencia: DONE para contrato, ruta API, persistencia y frontend dedicado sin romper el flujo demo legado.
 
 ## 10. Reencauce de control por ciclos (actualización de gobierno)
 - Diagnóstico oficial: **C (deriva detectada)**.
@@ -631,3 +632,18 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Tests añadidos/ajustados:
   - `frontend/tests/tarot-contenido.test.ts` (estructura + helpers + metadata);
   - `frontend/tests/shell-global.test.ts` (enlace global a `/tarot`).
+
+
+## 19. Checkout real v1 en coexistencia
+- Capacidad: **Checkout real v1 en coexistencia controlada con legado demo**.
+- Estado: **DONE**.
+- Implementación activa:
+  - contrato canónico + validación en `backend/nucleo_herbal/dominio/pedidos.py` y `backend/nucleo_herbal/presentacion/publica/payload_pedidos.py`;
+  - API real en `backend/nucleo_herbal/presentacion/publica/urls_pedidos.py` y `views_pedidos.py`;
+  - persistencia real en `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py` y `repositorios_pedidos.py`;
+  - frontend real desacoplado del demo en `frontend/app/checkout/page.tsx`, `frontend/componentes/catalogo/checkout-real/` e `frontend/infraestructura/api/pedidos.ts`.
+- Regla de convivencia activa:
+  1. `/api/v1/pedidos-demo/` y `/encargo` siguen como legado controlado.
+  2. `/api/v1/pedidos/` y `/checkout` son el camino canónico nuevo.
+  3. No se introduce PSP todavía; el estado inicial sigue siendo `pendiente_pago`.
+- Siguiente bloque recomendado: **intención de pago real + transición de estados de pago** sobre el agregado `Pedido`, manteniendo la coexistencia con el legado demo hasta cerrar migración comercial completa.

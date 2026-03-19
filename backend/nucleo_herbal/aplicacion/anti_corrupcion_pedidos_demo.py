@@ -28,13 +28,17 @@ def adaptar_pedido_demo_a_detalle_pedido(pedido_demo: PedidoDemo) -> DetallePedi
             cliente=ClientePedido(
                 id_cliente=pedido_demo.id_usuario,
                 email=pedido_demo.email_contacto,
+                nombre_contacto="pendiente_migracion",
+                telefono_contacto="pendiente_migracion",
                 es_invitado=pedido_demo.canal_compra == "invitado",
             ),
             lineas=tuple(_mapear_linea(linea) for linea in pedido_demo.lineas),
             direccion_entrega=DireccionEntrega(
                 nombre_destinatario="pendiente_migracion",
                 linea_1="pendiente_migracion",
+                codigo_postal="pendiente_migracion",
                 ciudad="pendiente_migracion",
+                provincia="pendiente_migracion",
             ),
         ),
         origen_contrato="demo_legacy",
