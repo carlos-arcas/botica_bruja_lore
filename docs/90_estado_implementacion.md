@@ -89,6 +89,18 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 1. No se detectan bloqueos técnicos/documentales para declarar Ciclo 5 cerrable tras Prompt 3.
 2. La activación de nuevas capacidades debe entrar exclusivamente por roadmap oficial siguiente, evitando frentes paralelos.
 
+## 8.1 Transición formal demo → real
+- Capacidad: **Base arquitectónica de migración ecommerce real**.
+- Estado: **EN_PROGRESO**.
+- Evidencia implementada:
+  - contrato canónico real en `backend/nucleo_herbal/dominio/pedidos.py`;
+  - adaptador anti-corrupción inicial en `backend/nucleo_herbal/aplicacion/anti_corrupcion_pedidos_demo.py`;
+  - decisión documental y mapa de migración en `docs/17_migracion_ecommerce_real.md`.
+- Regla activa:
+  1. `PedidoDemo` queda congelado como legado controlado.
+  2. Toda nueva semántica transaccional real debe entrar por `Pedido`.
+  3. La retirada de rutas demo será incremental y con coexistencia temporal.
+
 ## 9. Próximos movimientos recomendados
 1. Ejecutar validación de cierre técnico de Ciclo 5 con `python scripts/check_release_gate.py` en cada incremento posterior.
 2. Preservar trazabilidad estado↔roadmap para evitar reabrir capacidades ya cerradas de Ciclos 3 y 4.
