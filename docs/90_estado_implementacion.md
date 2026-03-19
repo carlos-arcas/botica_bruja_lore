@@ -662,3 +662,11 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   2. `/api/v1/pedidos/` y `/checkout` son el camino canónico nuevo.
   3. No se introduce PSP todavía; el estado inicial sigue siendo `pendiente_pago`.
 - Siguiente bloque recomendado: **intención de pago real + transición de estados de pago** sobre el agregado `Pedido`, manteniendo la coexistencia con el legado demo hasta cerrar migración comercial completa.
+
+
+## Actualización post-pago operativo v1.1
+- El checkout real ya expone retornos `success` y `cancel` hacia `/pedido/[id_pedido]` con estado visible y siguiente acción recomendada.
+- Cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook: persiste transición, envía email transaccional mínimo e incrementa trazabilidad operativa.
+- El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
+- El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
+- Pendiente para el siguiente bloque: expedición real, tracking, incidencias, SLA operativos y automatización de estados posteriores.

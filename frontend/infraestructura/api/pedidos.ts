@@ -7,6 +7,8 @@ export type PedidoCreado = {
   canal_checkout: string;
   moneda: string;
   subtotal: string;
+  requiere_revision_manual: boolean;
+  email_post_pago_enviado: boolean;
   cliente: {
     email_contacto: string;
     nombre_contacto: string;
@@ -52,6 +54,8 @@ export type PagoPedido = {
   url_pago?: string;
 };
 
+export type RetornoPago = "success" | "cancel" | null;
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
 
 export async function crearPedidoPublico(payload: PayloadPedido): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {
@@ -72,6 +76,12 @@ export async function iniciarPagoPedido(idPedido: string): Promise<{ estado: "ok
     return { estado: "error", mensaje: "Falta el identificador del pedido real." };
   }
   return enviarPago(`${API_BASE_URL}/api/v1/pedidos/${encodeURIComponent(idNormalizado)}/iniciar-pago/`, { method: "POST" });
+}
+
+export function construirUrlRetornoPedido(idPedido: string, retorno: Exclude<RetornoPago, null>, sessionId?: string | null): string {
+  const query = new URLSearchParams({ retorno_pago: retorno });
+  if (sessionId) query.set("session_id", sessionId);
+  return `/pedido/${encodeURIComponent(idPedido)}?${query.toString()}`;
 }
 
 async function enviarPedido(url: string, init: RequestInit): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {

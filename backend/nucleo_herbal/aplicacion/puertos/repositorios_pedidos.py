@@ -23,3 +23,7 @@ class RepositorioPedidos(ABC):
     @abstractmethod
     def guardar_evento_webhook(self, proveedor_pago: str, id_evento: str, payload_crudo: str) -> bool:
         """Registra un evento de webhook y devuelve False si ya existía."""
+
+    @abstractmethod
+    def listar(self, *, solo_pagados: bool = False) -> tuple[Pedido, ...]:
+        """Lista pedidos reales para operación administrativa mínima."""

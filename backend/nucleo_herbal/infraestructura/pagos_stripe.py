@@ -99,8 +99,8 @@ def construir_pasarela_pago_stripe() -> PasarelaPagoStripe:
 def _payload_checkout_session(pedido: Pedido, config: ConfiguracionStripe) -> dict[str, str]:
     payload = {
         "mode": "payment",
-        "success_url": config.success_url,
-        "cancel_url": config.cancel_url,
+        "success_url": _resolver_url_retorno(config.success_url, pedido.id_pedido),
+        "cancel_url": _resolver_url_retorno(config.cancel_url, pedido.id_pedido),
         "client_reference_id": pedido.id_pedido,
         "metadata[id_pedido]": pedido.id_pedido,
         "metadata[operation]": "checkout_real_v1",
@@ -113,6 +113,10 @@ def _payload_checkout_session(pedido: Pedido, config: ConfiguracionStripe) -> di
         payload[f"{base}[price_data][product_data][name]"] = linea.nombre_producto
     return payload
 
+
+
+def _resolver_url_retorno(template: str, id_pedido: str) -> str:
+    return template.replace("{ID_PEDIDO}", id_pedido).replace("{CHECKOUT_SESSION_ID}", "{CHECKOUT_SESSION_ID}")
 
 def _validar_firma_stripe(payload: bytes, firma: str | None, secreto: str) -> None:
     if not firma:
@@ -137,7 +141,12 @@ def _normalizar_evento(evento: dict[str, object]) -> EventoPagoNormalizadoDTO:
     id_pedido = str(metadata.get("id_pedido") or objeto.get("client_reference_id") or "").strip()
     id_externo = str(objeto.get("id", "")).strip()
     tipo_evento = str(evento.get("type", "")).strip()
-    estado_pago = "pagado" if tipo_evento == "checkout.session.completed" and objeto.get("payment_status") == "paid" else "fallido"
+    if tipo_evento == "checkout.session.completed" and objeto.get("payment_status") == "paid":
+        estado_pago = "pagado"
+    elif tipo_evento == "checkout.session.expired":
+        estado_pago = "cancelado"
+    else:
+        estado_pago = "fallido"
     if not id_pedido or not id_externo or not tipo_evento:
         raise ErrorDominio("El webhook de Stripe no trae los datos mínimos requeridos.")
     importe = Decimal(str((objeto.get("amount_total") or 0) / 100))

@@ -22,6 +22,9 @@ class PedidoRealModelo(models.Model):
     direccion_entrega = models.JSONField(default=dict)
     fecha_creacion = models.DateTimeField()
     fecha_pago_confirmado = models.DateTimeField(null=True, blank=True)
+    requiere_revision_manual = models.BooleanField(default=False)
+    email_post_pago_enviado = models.BooleanField(default=False)
+    fecha_email_post_pago = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "nucleo_pedido"

@@ -49,6 +49,8 @@ class PedidoRealDTO:
     proveedor_pago: str | None
     id_externo_pago: str | None
     url_pago: str | None
+    requiere_revision_manual: bool
+    email_post_pago_enviado: bool
     cliente: ClientePedidoDTO
     direccion_entrega: DireccionEntregaDTO
     lineas: tuple[LineaPedidoRealDTO, ...]

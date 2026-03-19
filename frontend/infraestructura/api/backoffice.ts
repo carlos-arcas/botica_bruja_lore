@@ -14,7 +14,7 @@ function construirUrlBackoffice(ruta: string): string {
   return `${resolverBaseBackoffice(true)}${normalizada}`;
 }
 
-export type ModuloAdmin = "productos" | "rituales" | "editorial" | "secciones";
+export type ModuloAdmin = "productos" | "pedidos" | "rituales" | "editorial" | "secciones";
 export type EstadoImagenImportacion = "optimizada" | "pendiente" | "ausente";
 
 export type ResumenImportacion = {
@@ -237,4 +237,12 @@ export async function obtenerProductosAdmin(query: URLSearchParams, token?: stri
   if (resultado.estado !== "ok") return resultado;
   const productos = resultado.items;
   return { estado: "ok", productos, metricas: { total: productos.length, publicados: productos.filter((p) => p.publicado).length, borrador: productos.filter((p) => !p.publicado).length } };
+}
+
+
+export async function marcarPedidoPreparando(id: string, token?: string): Promise<Record<string, unknown>> {
+  const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/pedidos/${id}/preparando/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
+  if (!r.ok) throw new Error("No se pudo marcar el pedido como preparando");
+  const data = (await r.json()) as { item: Record<string, unknown> };
+  return data.item;
 }

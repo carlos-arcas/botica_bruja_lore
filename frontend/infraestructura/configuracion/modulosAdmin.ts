@@ -1,5 +1,5 @@
 export type ModuloNavegacionAdmin = {
-  clave: "dashboard" | "productos" | "rituales" | "editorial" | "secciones" | "importacion" | "imagenes" | "ajustes";
+  clave: "dashboard" | "productos" | "pedidos" | "rituales" | "editorial" | "secciones" | "importacion" | "imagenes" | "ajustes";
   href: string;
   etiqueta: string;
   descripcion?: string;
@@ -8,6 +8,7 @@ export type ModuloNavegacionAdmin = {
 export const MODULOS_NAVEGACION_ADMIN: ModuloNavegacionAdmin[] = [
   { clave: "dashboard", href: "/admin", etiqueta: "Dashboard", descripcion: "Estado general del backoffice." },
   { clave: "productos", href: "/admin/productos", etiqueta: "Productos", descripcion: "Catálogo comercial, publicación y orden." },
+  { clave: "pedidos", href: "/admin/pedidos", etiqueta: "Pedidos", descripcion: "Operación mínima de pedidos pagados y preparación." },
   { clave: "rituales", href: "/admin/rituales", etiqueta: "Rituales", descripcion: "Rutas rituales y relaciones con plantas." },
   { clave: "editorial", href: "/admin/editorial", etiqueta: "Artículos", descripcion: "Artículos, hubs y contenidos públicos." },
   { clave: "importacion", href: "/admin/importacion", etiqueta: "Importación masiva", descripcion: "Entrada operativa para cargas bulk." },

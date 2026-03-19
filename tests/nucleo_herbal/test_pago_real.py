@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from backend.nucleo_herbal.aplicacion.casos_de_uso import ErrorAplicacionLookup
 from backend.nucleo_herbal.aplicacion.casos_de_uso_pago_pedidos import IniciarPagoPedido
+from backend.nucleo_herbal.aplicacion.casos_de_uso_post_pago_pedidos import ProcesarPostPagoPedido
 from backend.nucleo_herbal.aplicacion.puertos.pasarela_pago import PuertoPasarelaPago
 from backend.nucleo_herbal.dominio.pedidos import ClientePedido, DireccionEntrega, LineaPedido, Pedido
 from backend.nucleo_herbal.infraestructura.pagos_stripe import ConfiguracionStripe, PasarelaPagoStripe
@@ -19,8 +20,8 @@ class PagoRealTests(TestCase):
                 api_key_secreta="sk_test_123",
                 webhook_secret="whsec_123",
                 public_key="pk_test_123",
-                success_url="https://example.com/success",
-                cancel_url="https://example.com/cancel",
+                success_url="https://example.com/pedido/{ID_PEDIDO}?retorno_pago=success&session_id={CHECKOUT_SESSION_ID}",
+                cancel_url="https://example.com/pedido/{ID_PEDIDO}?retorno_pago=cancel",
             )
         )
         self.assertEqual(adaptador.proveedor, "stripe")
@@ -36,6 +37,16 @@ class PagoRealTests(TestCase):
         with self.assertRaisesRegex(Exception, "ya está pagado"):
             IniciarPagoPedido(repositorio_pedidos=repositorio, pasarela_pago=Mock()).ejecutar(pedido.id_pedido, "op-test")
 
+    def test_procesador_post_pago_no_duplica_email_si_ya_consta_enviado(self) -> None:
+        pedido = _pedido_base(estado="pagado", estado_pago="pagado")
+        pedido = pedido.marcar_email_post_pago_enviado(pedido.fecha_creacion)
+        repositorio = Mock(guardar=Mock(side_effect=lambda actual: actual))
+        notificador = Mock()
+
+        resultado = ProcesarPostPagoPedido(repositorio_pedidos=repositorio, notificador=notificador)._enviar_email_si_aplica(pedido, "op-test", "checkout.session.completed")
+
+        self.assertTrue(resultado.email_post_pago_enviado)
+        notificador.enviar_confirmacion_pago.assert_not_called()
 
 
 def _pedido_base(estado: str = "pendiente_pago", estado_pago: str = "pendiente") -> Pedido:

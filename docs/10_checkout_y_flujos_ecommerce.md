@@ -266,3 +266,11 @@ Toda interfaz y comunicación debe mantener transparencia: experiencia completa 
 6. Plantilla final de email demo (copy, layout, tono), manteniendo bloques mínimos definidos.
 
 Estos aspectos pueden evolucionar por ciclo sin romper la base, siempre que no contradigan las decisiones congeladas ni la verdad documental vigente.
+
+
+## Actualización post-pago operativo v1.1
+- El checkout real ya expone retornos `success` y `cancel` hacia `/pedido/[id_pedido]` con estado visible y siguiente acción recomendada.
+- Cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook: persiste transición, envía email transaccional mínimo e incrementa trazabilidad operativa.
+- El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
+- El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
+- Pendiente para el siguiente bloque: expedición real, tracking, incidencias, SLA operativos y automatización de estados posteriores.
