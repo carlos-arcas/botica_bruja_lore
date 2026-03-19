@@ -9,10 +9,14 @@ export const metadata: Metadata = construirMetadataSeo({
   indexable: false,
 });
 
-export default function PaginaCuentaDemo(): JSX.Element {
+type Props = {
+  searchParams?: { returnTo?: string };
+};
+
+export default function PaginaCuentaDemo({ searchParams }: Props): JSX.Element {
   return (
     <main className="contenedor-home">
-      <AreaCuentaDemo />
+      <AreaCuentaDemo returnTo={searchParams?.returnTo ?? null} />
     </main>
   );
 }
