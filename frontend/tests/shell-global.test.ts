@@ -22,12 +22,12 @@ test("navegación principal expone accesos comerciales clave", () => {
   assert.equal(rutas.includes("/guias"), true);
   assert.equal(rutas.includes("/tarot"), true);
   assert.equal(rutas.includes("/encargo"), true);
+  assert.equal(NAVEGACION_PRINCIPAL.some((enlace) => enlace.etiqueta === "Mi selección"), true);
 });
 
 test("esRutaActiva resuelve coincidencia exacta y por prefijo", () => {
   const colecciones = NAVEGACION_PRINCIPAL[1]!;
   const inicio = NAVEGACION_PRINCIPAL[0]!;
-
   const laBotica = NAVEGACION_PRINCIPAL[2]!;
 
   assert.equal(esRutaActiva("/colecciones", colecciones), true);
@@ -38,11 +38,11 @@ test("esRutaActiva resuelve coincidencia exacta y por prefijo", () => {
   assert.equal(esRutaActiva("/la-botica/historia", laBotica), false);
 });
 
-test("contador de cesta muestra fallback correcto", () => {
+test("contador de selección muestra fallback correcto", () => {
   assert.equal(debeMostrarContadorCesta(0), false);
   assert.equal(debeMostrarContadorCesta(3), true);
-  assert.equal(construirTextoContadorCesta(1), "1 unidad en cesta");
-  assert.equal(construirTextoContadorCesta(2), "2 unidades en cesta");
+  assert.equal(construirTextoContadorCesta(1), "1 unidad en mi selección");
+  assert.equal(construirTextoContadorCesta(2), "2 unidades en mi selección");
 });
 
 test("footer mantiene enlaces de continuidad editorial-comercial", () => {

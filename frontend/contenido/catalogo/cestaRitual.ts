@@ -1,4 +1,5 @@
 import { PRODUCTOS_CATALOGO, ProductoCatalogo } from "./catalogo";
+import { LineaSeleccionEncargo, resolverLineasSeleccionEncargo } from "./seleccionEncargo";
 
 export const CANTIDAD_MINIMA_CESTA = 1;
 export const CANTIDAD_MAXIMA_CESTA = 12;
@@ -27,39 +28,24 @@ export function agregarProducto(cesta: CestaRitual, slug: string, cantidad = CAN
   const existente = cesta.lineas.find((linea) => linea.slug === slug);
 
   if (!existente) {
-    return {
-      lineas: [...cesta.lineas, crearLinea(slug, cantidadLimpia)],
-    };
+    return { lineas: [...cesta.lineas, crearLinea(slug, cantidadLimpia)] };
   }
 
   return {
-    lineas: cesta.lineas.map((linea) => {
-      if (linea.slug !== slug) {
-        return linea;
-      }
-
-      return crearLinea(slug, normalizarCantidad(linea.cantidad + cantidadLimpia));
-    }),
+    lineas: cesta.lineas.map((linea) => (linea.slug === slug
+      ? crearLinea(slug, normalizarCantidad(linea.cantidad + cantidadLimpia))
+      : linea)),
   };
 }
 
 export function quitarProducto(cesta: CestaRitual, slug: string): CestaRitual {
-  return {
-    lineas: cesta.lineas.filter((linea) => linea.slug !== slug),
-  };
+  return { lineas: cesta.lineas.filter((linea) => linea.slug !== slug) };
 }
 
 export function actualizarCantidad(cesta: CestaRitual, slug: string, cantidad: number): CestaRitual {
   const cantidadLimpia = normalizarCantidad(cantidad);
-
   return {
-    lineas: cesta.lineas.map((linea) => {
-      if (linea.slug !== slug) {
-        return linea;
-      }
-
-      return crearLinea(slug, cantidadLimpia);
-    }),
+    lineas: cesta.lineas.map((linea) => (linea.slug === slug ? crearLinea(slug, cantidadLimpia) : linea)),
   };
 }
 
@@ -102,21 +88,23 @@ export function deserializarCesta(serializado: string | null | undefined): Cesta
       return crearCestaVacia();
     }
 
-    const lineas = objeto.lineas
-      .map(deserializarLinea)
-      .filter((linea): linea is LineaCestaRitual => linea !== null);
-
-    return { lineas };
+    return {
+      lineas: objeto.lineas.map(deserializarLinea).filter((linea): linea is LineaCestaRitual => linea !== null),
+    };
   } catch {
     return crearCestaVacia();
   }
 }
 
 export function convertirCestaAItemsEncargo(cesta: CestaRitual): ItemEncargoPreseleccionado[] {
-  return cesta.lineas.map((linea) => ({
-    slug: linea.slug,
-    cantidad: linea.cantidad,
-  }));
+  return cesta.lineas.map((linea) => ({ slug: linea.slug, cantidad: linea.cantidad }));
+}
+
+export function convertirCestaALineasSeleccion(
+  cesta: CestaRitual,
+  productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO,
+): LineaSeleccionEncargo[] {
+  return resolverLineasSeleccionEncargo(cesta, productos);
 }
 
 export function serializarItemsEncargo(items: ItemEncargoPreseleccionado[]): string {
@@ -134,23 +122,7 @@ export function deserializarItemsEncargo(serializado: string | null | undefined)
       return [];
     }
 
-    return objeto
-      .map((item) => {
-        if (!item || typeof item !== "object") {
-          return null;
-        }
-
-        const registro = item as { slug?: unknown; cantidad?: unknown };
-        if (typeof registro.slug !== "string") {
-          return null;
-        }
-
-        return {
-          slug: registro.slug,
-          cantidad: normalizarCantidad(Number(registro.cantidad)),
-        };
-      })
-      .filter((item): item is ItemEncargoPreseleccionado => item !== null);
+    return objeto.map(deserializarItemEncargo).filter((item): item is ItemEncargoPreseleccionado => item !== null);
   } catch {
     return [];
   }
@@ -164,16 +136,10 @@ export function construirResumenItemsEncargo(
     return "";
   }
 
-  return items
-    .map((item) => {
-      const producto = productos.find((registro) => registro.slug === item.slug);
-      if (!producto) {
-        return `${item.cantidad} x Producto fuera de catálogo (${item.slug})`;
-      }
-
-      return `${item.cantidad} x ${producto.nombre}`;
-    })
-    .join("\n");
+  return items.map((item) => {
+    const producto = productos.find((registro) => registro.slug === item.slug);
+    return producto ? `${item.cantidad} x ${producto.nombre}` : `${item.cantidad} x Producto fuera de catálogo (${item.slug})`;
+  }).join("\n");
 }
 
 function deserializarLinea(linea: unknown): LineaCestaRitual | null {
@@ -193,12 +159,21 @@ function deserializarLinea(linea: unknown): LineaCestaRitual | null {
   };
 }
 
+function deserializarItemEncargo(item: unknown): ItemEncargoPreseleccionado | null {
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+
+  const registro = item as { slug?: unknown; cantidad?: unknown };
+  if (typeof registro.slug !== "string") {
+    return null;
+  }
+
+  return { slug: registro.slug, cantidad: normalizarCantidad(Number(registro.cantidad)) };
+}
+
 function crearLinea(slug: string, cantidad: number): LineaCestaRitual {
-  return {
-    slug,
-    cantidad,
-    actualizadoEn: new Date().toISOString(),
-  };
+  return { slug, cantidad, actualizadoEn: new Date().toISOString() };
 }
 
 function normalizarCantidad(cantidad: number): number {
@@ -212,10 +187,5 @@ function normalizarCantidad(cantidad: number): number {
 function convertirPrecioVisibleANumero(precioVisible: string): number {
   const limpio = precioVisible.replace(/[^0-9,]/g, "").replace(",", ".");
   const numero = Number.parseFloat(limpio);
-
-  if (!Number.isFinite(numero)) {
-    return 0;
-  }
-
-  return numero;
+  return Number.isFinite(numero) ? numero : 0;
 }

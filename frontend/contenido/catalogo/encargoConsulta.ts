@@ -1,10 +1,7 @@
-import {
-  ItemEncargoPreseleccionado,
-  construirResumenItemsEncargo,
-  deserializarItemsEncargo,
-} from "./cestaRitual";
+import { ItemEncargoPreseleccionado, construirResumenItemsEncargo, deserializarItemsEncargo } from "./cestaRitual";
 import { PRODUCTOS_CATALOGO, ProductoCatalogo } from "./catalogo";
 import { obtenerProductoPorSlug } from "./detalleCatalogo";
+import { LineaSeleccionEncargo, construirResumenHumanoSeleccion } from "./seleccionEncargo";
 
 export const MENSAJES_VALIDACION = {
   nombre: "Comparte tu nombre para preparar la consulta.",
@@ -13,6 +10,8 @@ export const MENSAJES_VALIDACION = {
   mensaje: "Cuéntanos brevemente tu intención o contexto.",
   consentimiento: "Necesitamos tu confirmación para gestionar esta solicitud.",
 } as const;
+
+export type ModoConsulta = "producto" | "seleccion";
 
 export type DatosConsulta = {
   nombre: string;
@@ -25,42 +24,44 @@ export type DatosConsulta = {
 };
 
 export type ContextoPreseleccionConsulta = {
+  modo: ModoConsulta;
   productoPreseleccionado: ProductoCatalogo | null;
   itemsPreseleccionados: ItemEncargoPreseleccionado[];
 };
 
 export type ErroresConsulta = Partial<Record<keyof DatosConsulta, string>>;
 
-export function resolverProductoPreseleccionado(
-  slug: string | null,
-  productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO,
-): ProductoCatalogo | null {
-  if (!slug) {
-    return null;
-  }
-
-  return obtenerProductoPorSlug(slug, productos);
+export function resolverProductoPreseleccionado(slug: string | null, productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO): ProductoCatalogo | null {
+  return slug ? obtenerProductoPorSlug(slug, productos) : null;
 }
 
 export function resolverContextoPreseleccionado(
   slug: string | null,
   cestaSerializada: string | null,
+  origen: string | null = null,
 ): ContextoPreseleccionConsulta {
+  const itemsPreseleccionados = deserializarItemsEncargo(cestaSerializada);
+  const modo = origen === "seleccion" || itemsPreseleccionados.length > 0 ? "seleccion" : "producto";
+
   return {
+    modo,
     productoPreseleccionado: resolverProductoPreseleccionado(slug),
-    itemsPreseleccionados: deserializarItemsEncargo(cestaSerializada),
+    itemsPreseleccionados,
   };
 }
 
-export function construirEstadoInicialConsulta(contexto: ContextoPreseleccionConsulta): DatosConsulta {
-  if (contexto.itemsPreseleccionados.length > 0) {
+export function construirEstadoInicialConsulta(
+  contexto: ContextoPreseleccionConsulta,
+  lineasSeleccion: LineaSeleccionEncargo[] = [],
+): DatosConsulta {
+  if (contexto.modo === "seleccion") {
     return {
       nombre: "",
       email: "",
       telefono: "",
-      productoSlug: contexto.itemsPreseleccionados[0].slug,
-      cantidad: "Selección múltiple desde cesta",
-      mensaje: construirResumenItemsEncargo(contexto.itemsPreseleccionados),
+      productoSlug: "",
+      cantidad: "A definir durante la revisión artesanal",
+      mensaje: construirResumenHumanoSeleccion(lineasSeleccion),
       consentimiento: false,
     };
   }
@@ -76,25 +77,21 @@ export function construirEstadoInicialConsulta(contexto: ContextoPreseleccionCon
   };
 }
 
-export function validarSolicitudConsulta(datos: DatosConsulta): ErroresConsulta {
+export function validarSolicitudConsulta(datos: DatosConsulta, modo: ModoConsulta): ErroresConsulta {
   const errores: ErroresConsulta = {};
 
   if (datos.nombre.trim().length < 2) {
     errores.nombre = MENSAJES_VALIDACION.nombre;
   }
-
   if (!tieneContactoValido(datos.email, datos.telefono)) {
     errores.email = MENSAJES_VALIDACION.contacto;
   }
-
-  if (!datos.productoSlug.trim()) {
+  if (modo === "producto" && !datos.productoSlug.trim()) {
     errores.productoSlug = MENSAJES_VALIDACION.producto;
   }
-
   if (datos.mensaje.trim().length < 12) {
     errores.mensaje = MENSAJES_VALIDACION.mensaje;
   }
-
   if (!datos.consentimiento) {
     errores.consentimiento = MENSAJES_VALIDACION.consentimiento;
   }
@@ -102,15 +99,22 @@ export function validarSolicitudConsulta(datos: DatosConsulta): ErroresConsulta 
   return errores;
 }
 
-export function construirResumenConsulta(datos: DatosConsulta, producto: ProductoCatalogo | null): string {
-  const nombreProducto = producto?.nombre ?? "Producto pendiente de selección";
+export function construirResumenConsulta(
+  datos: DatosConsulta,
+  producto: ProductoCatalogo | null,
+  modo: ModoConsulta,
+  lineasSeleccion: LineaSeleccionEncargo[] = [],
+): string {
   const contacto = datos.email.trim() || `Teléfono: ${datos.telefono.trim()}`;
+  const bloqueSeleccion = modo === "seleccion"
+    ? `Selección: ${construirResumenHumanoSeleccion(lineasSeleccion) || construirResumenItemsEncargo(lineasSeleccion.map(({ slug, cantidad }) => ({ slug: slug ?? "pieza-sin-slug", cantidad })))}`
+    : `Producto: ${producto?.nombre ?? "Producto pendiente de selección"}`;
 
   return [
     "Consulta de encargo · La Botica de la Bruja Lore",
     `Nombre: ${datos.nombre.trim()}`,
     `Contacto: ${contacto}`,
-    `Producto: ${nombreProducto}`,
+    bloqueSeleccion,
     `Cantidad/Formato: ${datos.cantidad.trim() || "A convenir"}`,
     `Intención: ${datos.mensaje.trim()}`,
   ].join("\n");
@@ -121,14 +125,9 @@ function tieneContactoValido(email: string, telefono: string): boolean {
 }
 
 function esEmailValido(email: string): boolean {
-  if (!email) {
-    return false;
-  }
-
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return Boolean(email) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function esTelefonoValido(telefono: string): boolean {
-  const digitos = telefono.replace(/\D/g, "");
-  return digitos.length >= 9;
+  return telefono.replace(/\D/g, "").length >= 9;
 }

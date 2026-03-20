@@ -5,7 +5,7 @@ import { FlujoEncargoConsulta } from "@/componentes/catalogo/encargo/FlujoEncarg
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 type Props = {
-  searchParams?: { producto?: string; cesta?: string };
+  searchParams?: { producto?: string; cesta?: string; origen?: string };
 };
 
 export const metadata: Metadata = construirMetadataSeo({
@@ -17,7 +17,7 @@ export const metadata: Metadata = construirMetadataSeo({
 export default function PaginaEncargo({ searchParams }: Props): JSX.Element {
   return (
     <main className="contenedor-home">
-      <FlujoEncargoConsulta slugPreseleccionado={searchParams?.producto} cestaPreseleccionada={searchParams?.cesta} />
+      <FlujoEncargoConsulta slugPreseleccionado={searchParams?.producto} cestaPreseleccionada={searchParams?.cesta} origenPreseleccionado={searchParams?.origen} />
       <section className="bloque-home">
         <h2>Antes de enviar tu solicitud</h2>
         <p>
@@ -39,7 +39,7 @@ export default function PaginaEncargo({ searchParams }: Props): JSX.Element {
         </p>
         <div className="hero-portada__acciones">
           <Link href="/colecciones" className="boton boton--secundario">Explorar colecciones</Link>
-          <Link href="/cesta" className="boton boton--secundario">Revisar cesta ritual</Link>
+          <Link href="/cesta" className="boton boton--secundario">Revisar selección</Link>
         </div>
       </section>
     </main>
