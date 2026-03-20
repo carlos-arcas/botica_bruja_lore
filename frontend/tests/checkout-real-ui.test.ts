@@ -23,3 +23,9 @@ test("recibo real permite iniciar o continuar el pago real sin tocar el flujo de
   assert.equal(archivoRecibo.includes("iniciarPagoPedido"), true);
   assert.equal(archivoRecibo.includes("Stripe preparado para iniciar"), true);
 });
+
+
+test("checkout real muestra bloqueo explícito cuando hay líneas visibles no comprables", () => {
+  assert.equal(archivoFlujo.includes("El pedido real queda bloqueado porque tu selección visible incluye líneas no comprables."), true);
+  assert.equal(archivoFlujo.includes("Separa esas piezas como consulta manual antes de continuar con el pago."), true);
+});

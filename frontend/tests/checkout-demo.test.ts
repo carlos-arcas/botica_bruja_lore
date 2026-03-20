@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   construirLineasPedidoDemo,
   construirPayloadPedidoDemo,
+  construirResultadoLineasPedidoDemo,
   resolverEstadoIdentificacionCheckoutDemo,
   resolverCantidadCheckout,
   validarCheckoutDemo,
@@ -65,6 +66,70 @@ test("construirLineasPedidoDemo cae a producto individual y normaliza cantidad",
   assert.equal(lineas.length, 1);
   assert.equal(lineas[0]?.slug_producto, "vela-intencion-clara");
   assert.equal(lineas[0]?.cantidad, 3);
+});
+
+
+test("checkout demo bloquea selección mixta cuando una línea visible queda fuera del contrato final", () => {
+  const resultado = construirResultadoLineasPedidoDemo(
+    [
+      crearItemSeleccionado("infusion-bruma-lavanda", 1),
+      {
+        id_linea: "libre-001",
+        tipo_linea: "fuera_catalogo" as const,
+        slug: null,
+        id_producto: null,
+        nombre: "Atado herbal a medida",
+        cantidad: 1,
+        formato: "ramillete artesanal",
+        imagen_url: null,
+        referencia_economica: {
+          etiqueta: "Sin referencia económica",
+          valor: null,
+        },
+        notas_origen: "Petición manual.",
+      },
+    ],
+    "vela-intencion-clara",
+    "1 unidad",
+  );
+
+  assert.equal(resultado.lineasConvertibles.length, 1);
+  assert.equal(resultado.lineasNoConvertibles.length, 1);
+  assert.match(
+    validarCheckoutDemo("invitado", null, resultado).lineas ?? "",
+    /No podemos enviar este pedido demo/,
+  );
+});
+
+test("checkout demo no fabrica pedidos vacíos cuando toda la selección es no catalogable", () => {
+  const resultado = construirResultadoLineasPedidoDemo(
+    [
+      {
+        id_linea: "libre-001",
+        tipo_linea: "fuera_catalogo" as const,
+        slug: null,
+        id_producto: null,
+        nombre: "Atado herbal a medida",
+        cantidad: 2,
+        formato: "ramillete artesanal",
+        imagen_url: null,
+        referencia_economica: {
+          etiqueta: "Sin referencia económica",
+          valor: null,
+        },
+        notas_origen: "Petición manual.",
+      },
+    ],
+    "",
+    "2 unidades",
+  );
+
+  assert.equal(resultado.lineasConvertibles.length, 0);
+  assert.equal(resultado.lineasNoConvertibles.length, 1);
+  assert.match(
+    validarCheckoutDemo("invitado", null, resultado).lineas ?? "",
+    /Atado herbal a medida/,
+  );
 });
 
 test("validarCheckoutDemo exige id_usuario para canal autenticado", () => {

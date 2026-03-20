@@ -71,3 +71,9 @@ test("el recibo público sigue contemplando uso sin sesión demo", () => {
   assert.equal(archivoRecibo.includes("EstadoVacio"), true);
   assert.equal(archivoRecibo.includes("EstadoError"), true);
 });
+
+
+test("checkout demo hace visible el bloqueo honesto de líneas no convertibles", () => {
+  assert.equal(archivoFlujo.includes("Esta selección no se enviará como pedido demo completo"), true);
+  assert.equal(archivoFlujo.includes("Mantén estas piezas como consulta artesanal"), true);
+});
