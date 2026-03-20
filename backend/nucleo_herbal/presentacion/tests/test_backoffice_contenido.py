@@ -8,12 +8,13 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase
+from django.test import Client, RequestFactory, TestCase
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import ErrorImagenWebP, ErrorValidacionImagen, guardar_imagen_fila
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, PlantaModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
 from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.presentacion.backoffice_auth import crear_token_backoffice
+from backend.nucleo_herbal.presentacion.backoffice_views.importacion_helpers import json_importacion, operation_id
 from backend.nucleo_herbal.presentacion.backoffice_views.productos_contrato import (
     CAMPOS_CONTRATO_ENTRADA,
     CAMPOS_LEGACY_TOLERADOS_PRODUCTO,
@@ -33,6 +34,17 @@ class BackofficeContenidoTests(TestCase):
     def _auth(self, staff: bool = True) -> dict[str, str]:
         user = self.staff if staff else self.no_staff
         return {"HTTP_AUTHORIZATION": f"Bearer {crear_token_backoffice(user)}"}
+
+    def test_operation_id_se_cachea_por_request_sin_header(self):
+        request = RequestFactory().get("/api/v1/backoffice/importacion/lotes/1/")
+
+        primero = operation_id(request)
+        segundo = operation_id(request)
+        respuesta = json_importacion("fallo", 400, request)
+
+        self.assertEqual(primero, segundo)
+        cuerpo = json.loads(respuesta.content)
+        self.assertEqual(cuerpo["operation_id"], primero)
 
     def _crear_lote_csv(self) -> int:
         contenido = "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,imagen_url,publicado,orden_publicacion\nSKU-NEW,new-prod,Nuevo 2,te,cat,botica-natural,desc,8.99,,true,2\n"
@@ -261,6 +273,36 @@ class BackofficeContenidoTests(TestCase):
         self.assertEqual(r3.status_code, 200)
         self.assertEqual(r3.json()["fila"]["estado"], "descartada")
 
+    def test_importacion_sin_x_request_id_mantiene_operation_id_en_success_y_not_found(self):
+        lote = self._crear_lote_csv()
+
+        detalle = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote}/", **self._auth())
+        self.assertEqual(detalle.status_code, 200)
+        operation_id_detalle = detalle.json()["operation_id"]
+        self.assertTrue(operation_id_detalle)
+
+        confirmar = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote}/confirmar-validas/",
+            data=json.dumps({}),
+            content_type="application/json",
+            **self._auth(),
+        )
+        self.assertEqual(confirmar.status_code, 200)
+        self.assertEqual(confirmar.json()["operation_id"], confirmar.json()["detalle"]["operation_id"])
+
+        lote_no_encontrado = self.client.get("/api/v1/backoffice/importacion/lotes/999999/", **self._auth())
+        self.assertEqual(lote_no_encontrado.status_code, 404)
+        self.assertTrue(lote_no_encontrado.json()["operation_id"])
+
+        fila_no_encontrada = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote}/filas/999999/seleccion/",
+            data=json.dumps({"seleccionado": True}),
+            content_type="application/json",
+            **self._auth(),
+        )
+        self.assertEqual(fila_no_encontrada.status_code, 404)
+        self.assertTrue(fila_no_encontrada.json()["operation_id"])
+
     def test_importacion_errores_y_exitos_incluyen_operation_id(self):
         respuesta_archivo = self.client.post(
             "/api/v1/backoffice/importacion/lotes/",
@@ -404,33 +446,37 @@ class BackofficeContenidoTests(TestCase):
 
     @patch("backend.nucleo_herbal.presentacion.backoffice_views.importacion.guardar_imagen_fila")
     def test_importacion_errores_imagen_reutilizan_operation_id_en_logs_y_respuesta(self, guardar_mock):
-        guardar_mock.side_effect = ErrorValidacionImagen("Formato de imagen inválido.")
         lote = self._crear_lote_csv()
         fila_id = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote}/", **self._auth()).json()["filas"][0]["id"]
 
+        def fallar_validacion(*_args, **_kwargs):
+            raise ErrorValidacionImagen("Formato de imagen inválido.")
+
+        guardar_mock.side_effect = fallar_validacion
         with self.assertLogs("backend.nucleo_herbal.presentacion.backoffice_views.importacion_helpers", level="INFO") as logs:
             respuesta = self.client.post(
                 f"/api/v1/backoffice/importacion/lotes/{lote}/filas/{fila_id}/imagen/",
                 data={"imagen": SimpleUploadedFile("foto.png", b"img-bytes", content_type="image/png")},
-                HTTP_X_REQUEST_ID="imp-log-1",
                 **self._auth(),
             )
 
         self.assertEqual(respuesta.status_code, 422)
-        self.assertEqual(respuesta.json()["operation_id"], "imp-log-1")
-        self.assertEqual(logs.records[0].operation_id, "imp-log-1")
+        self.assertEqual(respuesta.json()["operation_id"], logs.records[0].operation_id)
         self.assertEqual(logs.records[0].resultado, "error")
         self.assertEqual(logs.records[0].error, "Formato de imagen inválido.")
 
-        guardar_mock.side_effect = ErrorImagenWebP("No fue posible convertir la imagen a WebP.")
-        respuesta_webp = self.client.post(
-            f"/api/v1/backoffice/importacion/lotes/{lote}/filas/{fila_id}/imagen/",
-            data={"imagen": SimpleUploadedFile("foto.png", b"img-bytes", content_type="image/png")},
-            HTTP_X_REQUEST_ID="imp-webp-1",
-            **self._auth(),
-        )
+        def fallar_webp(*_args, **_kwargs):
+            raise ErrorImagenWebP("No fue posible convertir la imagen a WebP.")
+
+        guardar_mock.side_effect = fallar_webp
+        with self.assertLogs("backend.nucleo_herbal.presentacion.backoffice_views.importacion_helpers", level="INFO") as logs_webp:
+            respuesta_webp = self.client.post(
+                f"/api/v1/backoffice/importacion/lotes/{lote}/filas/{fila_id}/imagen/",
+                data={"imagen": SimpleUploadedFile("foto.png", b"img-bytes", content_type="image/png")},
+                **self._auth(),
+            )
         self.assertEqual(respuesta_webp.status_code, 422)
-        self.assertEqual(respuesta_webp.json()["operation_id"], "imp-webp-1")
+        self.assertEqual(respuesta_webp.json()["operation_id"], logs_webp.records[0].operation_id)
 
     @patch("backend.nucleo_herbal.presentacion.backoffice_views.importacion.guardar_imagen_fila")
     def test_error_claro_si_falla_conversion_webp_en_fila(self, guardar_mock):

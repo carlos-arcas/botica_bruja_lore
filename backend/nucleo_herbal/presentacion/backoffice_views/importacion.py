@@ -47,10 +47,11 @@ def crear_lote_importacion_backoffice(request: HttpRequest) -> JsonResponse:
 def detalle_lote_importacion_backoffice(request: HttpRequest, lote_id: int) -> JsonResponse:
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
-    lote = lote_por_usuario(request, lote_id)
+    operation_id_actual = operation_id(request)
+    lote = lote_por_usuario(request, lote_id, operation_id_actual=operation_id_actual)
     if isinstance(lote, JsonResponse):
         return lote
-    return JsonResponse(serializar_detalle_lote(lote, operation_id(request)))
+    return JsonResponse(serializar_detalle_lote(lote, operation_id_actual))
 
 
 @csrf_exempt
@@ -67,10 +68,10 @@ def confirmar_validas_lote_importacion_backoffice(request: HttpRequest, lote_id:
 def revalidar_lote_importacion_backoffice(request: HttpRequest, lote_id: int) -> JsonResponse:
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    lote = lote_por_usuario(request, lote_id)
+    operation_id_actual = operation_id(request)
+    lote = lote_por_usuario(request, lote_id, operation_id_actual=operation_id_actual)
     if isinstance(lote, JsonResponse):
         return lote
-    operation_id_actual = operation_id(request)
     filas = list(lote.filas.exclude(estado=ImportacionFilaModelo.ESTADO_CONFIRMADA))
     for fila in filas:
         revalidar_fila(lote, fila, lote.usuario)
@@ -82,10 +83,10 @@ def revalidar_lote_importacion_backoffice(request: HttpRequest, lote_id: int) ->
 def cancelar_lote_importacion_backoffice(request: HttpRequest, lote_id: int) -> JsonResponse:
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    lote = lote_por_usuario(request, lote_id)
+    operation_id_actual = operation_id(request)
+    lote = lote_por_usuario(request, lote_id, operation_id_actual=operation_id_actual)
     if isinstance(lote, JsonResponse):
         return lote
-    operation_id_actual = operation_id(request)
     filas = lote.filas.count()
     usuario = lote.usuario
     lote.delete()
@@ -97,10 +98,10 @@ def cancelar_lote_importacion_backoffice(request: HttpRequest, lote_id: int) -> 
 def descartar_filas_importacion_backoffice(request: HttpRequest, lote_id: int) -> JsonResponse:
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    lote = lote_por_usuario(request, lote_id)
+    operation_id_actual = operation_id(request)
+    lote = lote_por_usuario(request, lote_id, operation_id_actual=operation_id_actual)
     if isinstance(lote, JsonResponse):
         return lote
-    operation_id_actual = operation_id(request)
     ids = json_payload(request).get("filas_ids") or []
     lote.filas.filter(id__in=ids).exclude(estado=ImportacionFilaModelo.ESTADO_CONFIRMADA).update(
         estado=ImportacionFilaModelo.ESTADO_DESCARTADA,
@@ -133,10 +134,10 @@ def eliminar_imagen_fila_importacion_backoffice(request: HttpRequest, lote_id: i
 def confirmar_lote(request: HttpRequest, lote_id: int, alcance: str) -> JsonResponse:
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    lote = lote_por_usuario(request, lote_id)
+    operation_id_actual = operation_id(request)
+    lote = lote_por_usuario(request, lote_id, operation_id_actual=operation_id_actual)
     if isinstance(lote, JsonResponse):
         return lote
-    operation_id_actual = operation_id(request)
     ids = set(json_payload(request).get("filas_ids") or [])
     filas = filas_objetivo_confirmacion(lote, alcance, ids)
     confirmadas = sum(confirmar_fila(lote, fila, lote.usuario) for fila in filas)
@@ -147,10 +148,10 @@ def confirmar_lote(request: HttpRequest, lote_id: int, alcance: str) -> JsonResp
 def operar_fila(request: HttpRequest, lote_id: int, fila_id: int, accion: str) -> JsonResponse:
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    fila = fila_por_usuario(request, lote_id, fila_id)
+    operation_id_actual = operation_id(request)
+    fila = fila_por_usuario(request, lote_id, fila_id, operation_id_actual=operation_id_actual)
     if isinstance(fila, JsonResponse):
         return fila
-    operation_id_actual = operation_id(request)
     if accion == "seleccion":
         fila.seleccionado = bool(json_payload(request).get("seleccionado"))
         fila.save(update_fields=["seleccionado"])
@@ -165,12 +166,12 @@ def operar_fila(request: HttpRequest, lote_id: int, fila_id: int, accion: str) -
     else:
         archivo = request.FILES.get("imagen")
         if archivo is None:
-            return json_importacion("Imagen requerida.", 400, request)
+            return json_importacion("Imagen requerida.", 400, request, operation_id_actual=operation_id_actual)
         try:
             fila.imagen = guardar_imagen_fila(archivo, fila.id)
         except (ErrorImagenWebP, ErrorValidacionImagen) as error:
             log_importacion("imagen_adjuntar", fila.lote.usuario, fila.lote, filas_afectadas=1, resultado="error", operation_id_actual=operation_id_actual, error=str(error))
-            return json_importacion(str(error), 422, request)
+            return json_importacion(str(error), 422, request, operation_id_actual=operation_id_actual)
         fila.resultado_confirmacion = estado_imagen_staging(fila.datos, fila.imagen)
         fila.save(update_fields=["imagen", "resultado_confirmacion"])
     log_importacion(accion, fila.lote.usuario, fila.lote, filas_afectadas=1, resultado="ok", operation_id_actual=operation_id_actual)
