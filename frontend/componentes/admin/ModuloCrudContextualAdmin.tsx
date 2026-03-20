@@ -169,9 +169,10 @@ function BloqueCampos({ modulo, grupo, formulario, onCambio, controlImagen }: { 
 
 
 function resolverMensajeTablaVacia(estado: EstadoListadoAdmin, hayFiltro: boolean): string {
+  if (hayFiltro) return "No hay registros visibles con el filtro actual.";
   if (estado.tipo === "vacio") return estado.mensaje;
   if (estado.tipo === "denegado" || estado.tipo === "error") return estado.detalle;
-  return hayFiltro ? "No hay registros visibles con el filtro actual." : "No hay registros disponibles en este momento.";
+  return "No hay registros disponibles en este momento.";
 }
 
 function prepararRegistroEdicion(modulo: ModuloAdmin, campos: ConfigCampo[], item: Record<string, unknown>): Record<string, unknown> {
