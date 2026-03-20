@@ -167,13 +167,26 @@ def _validar_publicacion(tipo_producto: str, categoria_comercial: str, planta_id
     if not categoria_comercial.strip():
         raise ErrorValidacionProducto("Categoría comercial obligatoria.", errores={"categoria_comercial": "Debes indicar una categoría comercial."})
     if tipo_producto == "hierbas-a-granel" and not planta_id:
+        if publicado:
+            raise ErrorValidacionProducto(
+                "No se puede publicar una hierba a granel sin planta asociada.",
+                errores={"planta_id": "Selecciona una planta asociada."},
+            )
         raise ErrorValidacionProducto(
             "Los productos de hierbas a granel requieren planta asociada para catálogo público.",
             errores={"planta_id": "Selecciona una planta asociada."},
         )
-    if publicado and tipo_producto == "hierbas-a-granel" and not planta_id:
-        raise ErrorValidacionProducto("No se puede publicar una hierba a granel sin planta asociada.", errores={"planta_id": "La publicación requiere planta asociada."})
 
+
+
+
+def validar_publicacion_producto_existente(producto: object, publicar: bool) -> None:
+    _validar_publicacion(
+        str(getattr(producto, "tipo_producto", "") or "").strip(),
+        str(getattr(producto, "categoria_comercial", "") or "").strip(),
+        str(getattr(producto, "planta_id", "") or "").strip(),
+        publicar,
+    )
 
 def normalizar_payload_producto(data: dict[str, object]) -> ProductoNormalizado:
     nombre = str(data.get("nombre", "")).strip()

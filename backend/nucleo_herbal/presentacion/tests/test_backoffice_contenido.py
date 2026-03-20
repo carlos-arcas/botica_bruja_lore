@@ -334,6 +334,101 @@ class BackofficeContenidoTests(TestCase):
         respuesta_valida = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(edicion_valida), content_type="application/json", **self._auth())
         self.assertEqual(respuesta_valida.status_code, 200)
 
+    def test_publicacion_producto_invalido_devuelve_detalle_errores_y_operation_id(self):
+        producto = ProductoModelo.objects.create(
+            id="prod-invalido-publicacion",
+            sku="SKU-PUB-INV",
+            slug="prod-invalido-publicacion",
+            nombre="Hierba inválida",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="hierbas",
+            seccion_publica="botica-natural",
+            beneficio_principal="calma",
+            beneficios_secundarios="energia",
+            formato_comercial="hoja-seca",
+            modo_uso="infusion",
+            categoria_visible="hierbas",
+            precio_visible="4,20 €",
+            publicado=False,
+        )
+
+        respuesta = self.client.post(
+            f"/api/v1/backoffice/productos/{producto.id}/publicacion/",
+            data=json.dumps({"publicado": True}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="pub-req-1",
+            **self._auth(),
+        )
+
+        self.assertEqual(respuesta.status_code, 400)
+        cuerpo = respuesta.json()
+        self.assertIn("planta", cuerpo["detalle"].lower())
+        self.assertEqual(cuerpo["errores"]["planta_id"], "Selecciona una planta asociada.")
+        self.assertEqual(cuerpo["operation_id"], "pub-req-1")
+        producto.refresh_from_db()
+        self.assertFalse(producto.publicado)
+
+    def test_despublicacion_producto_invalido_existente_sigue_permitida(self):
+        producto = ProductoModelo.objects.create(
+            id="prod-invalido-despublicacion",
+            sku="SKU-PUB-DES",
+            slug="prod-invalido-despublicacion",
+            nombre="Hierba inválida publicada",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="hierbas",
+            seccion_publica="botica-natural",
+            beneficio_principal="calma",
+            beneficios_secundarios="energia",
+            formato_comercial="hoja-seca",
+            modo_uso="infusion",
+            categoria_visible="hierbas",
+            precio_visible="4,20 €",
+            publicado=True,
+        )
+
+        respuesta = self.client.post(
+            f"/api/v1/backoffice/productos/{producto.id}/publicacion/",
+            data=json.dumps({"publicado": False}),
+            content_type="application/json",
+            **self._auth(),
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        producto.refresh_from_db()
+        self.assertFalse(producto.publicado)
+
+    def test_publicacion_producto_valido_funciona(self):
+        PlantaModelo.objects.create(id="pla-pub-ok", slug="melisa-pub-ok", nombre="Melisa")
+        producto = ProductoModelo.objects.create(
+            id="prod-valido-publicacion",
+            sku="SKU-PUB-OK",
+            slug="prod-valido-publicacion",
+            nombre="Hierba válida",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="hierbas",
+            seccion_publica="botica-natural",
+            beneficio_principal="calma",
+            beneficios_secundarios="energia",
+            formato_comercial="hoja-seca",
+            modo_uso="infusion",
+            categoria_visible="hierbas",
+            precio_visible="4,20 €",
+            planta_id="pla-pub-ok",
+            publicado=False,
+        )
+
+        respuesta = self.client.post(
+            f"/api/v1/backoffice/productos/{producto.id}/publicacion/",
+            data=json.dumps({"publicado": True}),
+            content_type="application/json",
+            **self._auth(),
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.json()["item"]["publicado"])
+        producto.refresh_from_db()
+        self.assertTrue(producto.publicado)
+
     def test_guardado_botica_invalido_bloquea_publicacion(self):
         payload = {
             "sku": "SKU-INV-1",

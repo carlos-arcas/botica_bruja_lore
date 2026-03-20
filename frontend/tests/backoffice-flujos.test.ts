@@ -84,6 +84,24 @@ test("alta y publicación recargan listado real en backend sin inserción optimi
   assert.match(componente, /await recargarListadoReal\(\)/);
   assert.doesNotMatch(componente, /setItems\(existe \? items\.map/);
 });
+test("publish/unpublish propaga detalle backend cuando toggle falla", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 400, json: async () => ({ detalle: "No se puede publicar una hierba a granel sin planta asociada.", operation_id: "op-123" }) }) as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => cambiarPublicacionAdmin("productos", "p-1", true, "token"), /No se puede publicar una hierba a granel sin planta asociada\..*operation_id: op-123/);
+});
+
+test("publish/unpublish incluye errores de validación del backend en el mensaje", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 400, json: async () => ({ detalle: "Publicación inválida", errores: { planta_id: "Selecciona una planta asociada." } }) }) as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => cambiarPublicacionAdmin("productos", "p-1", true, "token"), /Publicación inválida · planta_id: Selecciona una planta asociada\./);
+});
+
+test("publish/unpublish mantiene fallback seguro si backend no devuelve JSON", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 500, json: async () => { throw new Error("sin json"); } }) as unknown as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => cambiarPublicacionAdmin("productos", "p-1", true, "token"), /No se pudo actualizar publicación/);
+});
+
 test("submit de alta propaga errores backend cuando guardar falla", async () => {
   globalThis.fetch = (async () => ({ ok: false, status: 400, json: async () => ({ detalle: "Nombre obligatorio" }) }) as Response) as unknown as typeof fetch;
   await assert.rejects(() => guardarRegistroAdmin("productos", { nombre: "fallido" }, "token"), /Nombre obligatorio/);

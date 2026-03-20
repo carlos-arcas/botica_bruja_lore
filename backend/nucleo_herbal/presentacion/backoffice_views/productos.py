@@ -12,7 +12,12 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import Pla
 
 from .auth import usuario_staff
 from .identificadores import generar_id_si_falta, generar_slug_unico
-from .productos_contrato import CAMPOS_CONTRATO_ENTRADA, ErrorValidacionProducto, normalizar_payload_producto
+from .productos_contrato import (
+    CAMPOS_CONTRATO_ENTRADA,
+    ErrorValidacionProducto,
+    normalizar_payload_producto,
+    validar_publicacion_producto_existente,
+)
 from .shared import json_no_autorizado, json_payload, to_bool
 
 LOGGER = logging.getLogger(__name__)
@@ -188,16 +193,35 @@ def cambiar_publicacion_producto_backoffice(request: HttpRequest, producto_id: s
     usuario = usuario_staff(request)
     if usuario is None:
         return json_no_autorizado()
+    payload = json_payload(request)
+    operation_id = request.headers.get("X-Request-ID", str(uuid4()))
+    contexto = _contexto_log(request=request, usuario=usuario, data={**payload, "id": producto_id}, modo="publicacion", operation_id=operation_id)
+    LOGGER.info("backoffice_producto_publicacion_inicio", extra=contexto)
     try:
-        payload = json_payload(request)
         publicar = to_bool(payload, "publicado")
         producto = ProductoModelo.objects.get(id=producto_id)
+        contexto.update({
+            "producto_id": producto.id,
+            "sku": producto.sku,
+            "slug": producto.slug,
+            "nombre": producto.nombre,
+        })
+        if publicar:
+            validar_publicacion_producto_existente(producto, publicar=True)
         producto.publicado = publicar
         producto.save(update_fields=["publicado"])
-        LOGGER.info("backoffice_producto_publicacion", extra={"usuario": usuario.username, "producto": producto.id, "publicado": publicar})
+        LOGGER.info("backoffice_producto_publicacion_ok", extra={**contexto, "publicado": publicar})
         item = producto_dict(producto)
-        return JsonResponse({"item": item, "producto": item})
+        return JsonResponse({"item": item, "producto": item, "operation_id": operation_id})
     except ProductoModelo.DoesNotExist:
-        return JsonResponse({"detalle": "Producto no encontrado."}, status=404)
+        LOGGER.warning("backoffice_producto_publicacion_no_encontrado", extra=contexto)
+        return JsonResponse({"detalle": "Producto no encontrado.", "operation_id": operation_id}, status=404)
+    except ErrorValidacionProducto as exc:
+        LOGGER.warning(
+            "backoffice_producto_publicacion_validacion_fallida",
+            extra={**contexto, "errores_validacion": exc.errores, "publicado": payload.get("publicado"), "exception_class": exc.__class__.__name__, "exception_message": exc.detalle},
+        )
+        return JsonResponse({"detalle": exc.detalle, "errores": exc.errores, "operation_id": operation_id}, status=400)
     except ValueError as exc:
-        return JsonResponse({"detalle": str(exc)}, status=400)
+        LOGGER.warning("backoffice_producto_publicacion_payload_invalido", extra={**contexto, "exception_class": exc.__class__.__name__, "exception_message": str(exc)})
+        return JsonResponse({"detalle": str(exc), "errores": {}, "operation_id": operation_id}, status=400)
