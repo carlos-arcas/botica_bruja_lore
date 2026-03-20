@@ -15,7 +15,7 @@ function precioValido(valor: unknown): boolean {
   return Number.isFinite(numero) && numero >= 0;
 }
 
-export function validarFormularioProducto(formulario: Record<string, unknown>): string | null {
+export function validarFormularioProducto(formulario: Record<string, unknown>, estadoCargaPlantas: "cargando" | "ok" | "error" = "ok"): string | null {
   if (!texto(formulario.nombre)) return "El producto requiere nombre.";
   if (!texto(formulario.seccion_publica)) return "Debes seleccionar la sección pública del producto.";
   if (!texto(formulario.precio_numerico) || !precioValido(formulario.precio_numerico)) {
@@ -27,8 +27,10 @@ export function validarFormularioProducto(formulario: Record<string, unknown>): 
   const faltante = CAMPOS_BOTICA_OBLIGATORIOS.find((campo) => !texto(formulario[campo.clave]));
   if (faltante) return `Falta completar ${faltante.etiqueta} para Botica Natural.`;
 
-  if (texto(formulario.tipo_producto) === "hierbas-a-granel" && !texto(formulario.planta_id)) {
-    return "Las hierbas a granel requieren planta asociada.";
+  if (texto(formulario.tipo_producto) === "hierbas-a-granel") {
+    if (estadoCargaPlantas === "error") return "No se pudieron cargar las plantas asociables. Reintenta la carga antes de guardar una hierba a granel.";
+    if (estadoCargaPlantas === "cargando") return "La lista de plantas asociables sigue cargando. Espera antes de guardar una hierba a granel.";
+    if (!texto(formulario.planta_id)) return "Las hierbas a granel requieren planta asociada.";
   }
   return null;
 }
