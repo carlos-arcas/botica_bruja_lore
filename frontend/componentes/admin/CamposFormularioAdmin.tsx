@@ -8,6 +8,7 @@ export type ConfigCampo = {
   etiqueta: string;
   tipo?: "text" | "textarea" | "checkbox" | "select" | "multi_select" | "precio" | "imagen" | "selector_productos";
   opciones?: { etiqueta: string; valor: string }[];
+  ayuda?: string;
 };
 
 export type ControlImagenFormulario = {

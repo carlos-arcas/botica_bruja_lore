@@ -136,7 +136,7 @@ export async function obtenerListadoAdmin(modulo: ModuloAdmin, query: URLSearchP
 
 export async function obtenerPlantasAsociables(token?: string): Promise<PlantaAsociable[]> {
   const respuesta = await fetch(construirUrlBackoffice("/api/v1/backoffice/productos/plantas-asociables/"), { headers: cabecerasConToken(token, false), cache: "no-store" });
-  if (!respuesta.ok) throw new Error("No se pudo cargar la lista de plantas asociables.");
+  if (!respuesta.ok) return parsearErrorBackoffice(respuesta, "No se pudo cargar la lista de plantas asociables.");
   const data = (await respuesta.json()) as { items?: PlantaAsociable[] };
   return Array.isArray(data.items) ? data.items : [];
 }

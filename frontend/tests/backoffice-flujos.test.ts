@@ -293,6 +293,35 @@ test("validación de producto bloquea payload incompleto de botica en alta y edi
   assert.equal(valido, null);
 });
 
+test("validación de producto distingue selector faltante de error de carga de plantas", () => {
+  const errorCarga = validarFormularioProducto({
+    nombre: "Producto",
+    seccion_publica: "botica-natural",
+    precio_numerico: "9.90",
+    tipo_producto: "hierbas-a-granel",
+    categoria_comercial: "hierbas",
+    beneficio_principal: "calma",
+    formato_comercial: "hoja-seca",
+    modo_uso: "infusion",
+    planta_id: "",
+  }, "error");
+
+  const cargando = validarFormularioProducto({
+    nombre: "Producto",
+    seccion_publica: "botica-natural",
+    precio_numerico: "9.90",
+    tipo_producto: "hierbas-a-granel",
+    categoria_comercial: "hierbas",
+    beneficio_principal: "calma",
+    formato_comercial: "hoja-seca",
+    modo_uso: "infusion",
+    planta_id: "",
+  }, "cargando");
+
+  assert.equal(errorCarga, "No se pudieron cargar las plantas asociables. Reintenta la carga antes de guardar una hierba a granel.");
+  assert.equal(cargando, "La lista de plantas asociables sigue cargando. Espera antes de guardar una hierba a granel.");
+});
+
 test("validación de producto exige precio numérico", () => {
   const invalido = validarFormularioProducto({ nombre: "Producto", seccion_publica: "botica-natural", precio_numerico: "" });
   assert.equal(invalido, "El precio debe ser numérico y válido.");
@@ -311,4 +340,32 @@ test("obtiene plantas asociables para selector humano", async () => {
   assert.match(url, /\/api\/v1\/backoffice\/productos\/plantas-asociables\/$/);
   assert.equal(plantas[0]?.nombre, "Melisa");
   assert.equal(plantas[0]?.id, "pla-1");
+});
+
+
+test("obtiene plantas asociables propagando detalle backend y operation_id", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 503, json: async () => ({ detalle: "Backend de plantas no disponible.", operation_id: "pla-op-9" }) }) as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => obtenerPlantasAsociables("token"), /Backend de plantas no disponible\..*operation_id: pla-op-9/);
+});
+
+test("ui de productos distingue carga vacía frente a error de plantas y ofrece reintento", () => {
+  const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
+
+  assert.match(modulo, /estadoPlantas\.estado === "cargando"/);
+  assert.match(modulo, /estadoPlantas\.estado === "ok" && plantas\.length === 0/);
+  assert.match(modulo, /estadoPlantas\.estado === "error"/);
+  assert.match(modulo, /Reintentar carga de plantas/);
+  assert.match(modulo, /No se pudieron cargar las plantas asociables\. Reintenta la carga antes de guardar o publicar una hierba a granel\./);
+  assert.doesNotMatch(modulo, /catch\(\(\) => \{\s*if \(activo\) setPlantas\(\[\]\);/);
+});
+
+test("ui del campo planta asociada muestra ayuda contextual para ok vacío, error y éxito", () => {
+  const modulo = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
+  const contextual = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+
+  assert.match(modulo, /Carga completada, pero todavía no hay plantas asociables publicadas para vincular\./);
+  assert.match(modulo, /Selecciona la planta editorial que se vinculará con este producto herbal\./);
+  assert.match(modulo, /ayuda: resolverAyudaPlantas\(estadoPlantas, plantas\)/);
+  assert.match(contextual, /campo\.ayuda \? <small>\{campo\.ayuda\}<\/small> : null/);
 });

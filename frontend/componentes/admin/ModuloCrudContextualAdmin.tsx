@@ -149,6 +149,7 @@ function BloqueCampos({ modulo, grupo, formulario, onCambio, controlImagen }: { 
             <label key={campo.clave} className={clase}>
               <span>{campo.etiqueta}</span>
               <CampoFormulario campo={campo} valor={formulario[campo.clave]} onCambio={(valor) => onCambio(campo.clave, valor)} controlImagen={campo.clave === "imagen_url" ? controlImagen : undefined} />
+              {campo.ayuda ? <small>{campo.ayuda}</small> : null}
             </label>
           );
         })}
