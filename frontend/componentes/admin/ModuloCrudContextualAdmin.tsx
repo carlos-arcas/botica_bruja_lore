@@ -4,12 +4,14 @@ import { ChangeEvent, Dispatch, FormEvent, SetStateAction, useEffect, useMemo, u
 import { useRouter } from "next/navigation";
 
 import { CampoFormulario, ConfigCampo, ControlImagenFormulario } from "@/componentes/admin/CamposFormularioAdmin";
+import { PanelEstadoListadoAdmin } from "@/componentes/admin/PanelEstadoListadoAdmin";
 import { construirFeedbackConfirmacionImportacion } from "@/componentes/admin/importacion/feedbackConfirmacionImportacion";
 import { actualizarDetalleImportacion } from "@/componentes/admin/importacion/resumenImportacion";
 import { TablaStagingImportacion } from "@/componentes/admin/TablaStagingImportacion";
 import {
   FilaImportacion,
   ModuloAdmin,
+  ResumenImportacion,
   adjuntarImagenFilaImportacion,
   cambiarPublicacionAdmin,
   cambiarSeleccionFilaImportacion,
@@ -24,6 +26,7 @@ import {
   revalidarLoteImportacion,
   subirImagenBackoffice,
 } from "@/infraestructura/api/backoffice";
+import { EstadoListadoAdmin } from "@/componentes/admin/estadoListadoAdmin";
 import { construirPayloadRitual } from "@/infraestructura/configuracion/adminRituales";
 import { construirPayloadCanonicoProducto } from "@/infraestructura/configuracion/contratoProductosBackoffice";
 
@@ -47,11 +50,11 @@ type Props = {
   contextoFormulario?: { clave: string; etiqueta: string; ayuda: string; opciones: OpcionContexto[] };
   onCambioContexto?: (valor: string) => void;
   validarFormulario?: (form: Record<string, unknown>) => string | null;
-  errorInicial?: string;
+  estadoListadoInicial?: EstadoListadoAdmin;
   mostrarPanelHerramientas?: boolean;
 };
 
-type DetalleLote = { lote: Record<string, unknown>; filas: FilaImportacion[] };
+type DetalleLote = { lote: Record<string, unknown>; resumen: ResumenImportacion; filas: FilaImportacion[] };
 
 function descargarBlobNavegador(blob: Blob, nombre: string): void {
   const url = window.URL.createObjectURL(blob);
@@ -161,6 +164,12 @@ function BloqueCampos({ modulo, grupo, formulario, onCambio, controlImagen }: { 
 }
 
 
+function resolverMensajeTablaVacia(estado: EstadoListadoAdmin, hayFiltro: boolean): string {
+  if (estado.tipo === "vacio") return estado.mensaje;
+  if (estado.tipo === "denegado" || estado.tipo === "error") return estado.detalle;
+  return hayFiltro ? "No hay registros visibles con el filtro actual." : "No hay registros disponibles en este momento.";
+}
+
 function prepararRegistroEdicion(modulo: ModuloAdmin, campos: ConfigCampo[], item: Record<string, unknown>): Record<string, unknown> {
   if (modulo !== "productos") return { ...item };
   return { ...item };
@@ -189,14 +198,14 @@ export function ModuloCrudContextualAdmin({
   contextoFormulario,
   onCambioContexto,
   validarFormulario,
-  errorInicial = "",
+  estadoListadoInicial = { tipo: "datos", mensaje: "Datos cargados." },
   mostrarPanelHerramientas = false,
 }: Props): JSX.Element {
   const router = useRouter();
   const [items, setItems] = useState(itemsIniciales);
   const [formAlta, setFormAlta] = useState<Record<string, unknown>>({ [contextoFormulario?.clave ?? ""]: seccionSeleccionada });
   const [filtro, setFiltro] = useState("");
-  const [error, setError] = useState(errorInicial);
+  const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [detalle, setDetalle] = useState<DetalleLote | null>(null);
   const [registroEdicion, setRegistroEdicion] = useState<Record<string, unknown> | null>(null);
@@ -398,6 +407,7 @@ export function ModuloCrudContextualAdmin({
       <div className="admin-resumen"><h2>{titulo}</h2></div>
       {ok ? <p className="admin-estado">{ok}</p> : null}
       {error ? <p className="admin-estado admin-estado--error">{error}</p> : null}
+      {!error ? <PanelEstadoListadoAdmin estado={items.length > 0 ? { tipo: "datos", mensaje: "Datos cargados." } : estadoListadoInicial} /> : null}
 
       <section className="admin-bloque admin-acciones-modulo" aria-label="Acciones del módulo">
         <h3>Acciones rápidas</h3>
@@ -444,6 +454,11 @@ export function ModuloCrudContextualAdmin({
             <table className="admin-tabla">
               <thead><tr><th>Registro</th><th>Estado</th><th>Acciones</th></tr></thead>
               <tbody>
+                {filtrados.length === 0 ? (
+                  <tr>
+                    <td colSpan={3}>{resolverMensajeTablaVacia(estadoListadoInicial, filtro.length > 0)}</td>
+                  </tr>
+                ) : null}
                 {filtrados.map((item) => (
                   <tr key={String(item.id)}>
                     <td>{String(item.nombre ?? item.titulo ?? item.slug ?? item.id)}</td>

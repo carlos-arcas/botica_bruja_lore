@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 
+import { resolverEstadoRenderListadoAdmin } from "@/componentes/admin/estadoListadoAdmin";
 import { ModuloCrudContextualAdmin } from "@/componentes/admin/ModuloCrudContextualAdmin";
 import { obtenerListadoAdmin } from "@/infraestructura/api/backoffice";
 import { NOMBRE_COOKIE_BACKOFFICE } from "@/infraestructura/auth/configuracion";
@@ -24,6 +25,11 @@ export default async function AdminEditorialPage(): Promise<JSX.Element> {
     obtenerListadoAdmin("editorial", new URLSearchParams(), token),
     obtenerListadoAdmin("productos", new URLSearchParams(), token),
   ]);
+  const estadoInicial = resolverEstadoRenderListadoAdmin(resultado, {
+    mensajeVacio: "Todavía no hay artículos editoriales creados.",
+    mensajeDenegado: "No pudimos cargar editorial porque tu sesión administrativa no es válida o no tiene permisos.",
+    mensajeError: "No pudimos cargar editorial por un error del backoffice.",
+  });
   const opcionesProductos =
     productos.estado === "ok"
       ? productos.items.map((item) => ({
@@ -31,12 +37,14 @@ export default async function AdminEditorialPage(): Promise<JSX.Element> {
           etiqueta: `${String(item.nombre ?? "")} · ${String(item.sku ?? "")}`.trim(),
         }))
       : [];
+
   return (
     <ModuloCrudContextualAdmin
       modulo="editorial"
       titulo="Artículos"
       token={token}
-      itemsIniciales={resultado.estado === "ok" ? resultado.items : []}
+      itemsIniciales={estadoInicial.items}
+      estadoListadoInicial={estadoInicial.estado}
       campoEstado="publicado"
       entidadImportacion="articulos_editoriales"
       camposComunes={CAMPOS.map((campo) => campo.clave === "productos_relacionados" ? { ...campo, opciones: opcionesProductos } : campo)}
