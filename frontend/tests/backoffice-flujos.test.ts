@@ -74,7 +74,8 @@ test("edición, publish/unpublish y layout inferior quedan implementados", () =>
   assert.match(componente, /cambiarPublicacionAdmin/);
   assert.match(componente, /Registros existentes/);
   assert.match(componente, /useRouter/);
-  assert.match(componente, /router\.refresh\(\)/);
+  assert.match(componente, /const \{ refrescarRouter = true \} = opciones/);
+  assert.match(componente, /if \(refrescarRouter\) \{\s*router\.refresh\(\);\s*\}/);
 });
 
 test("feedback de éxito y error se informa en UI para alta, edición e importación", () => {
@@ -382,6 +383,8 @@ test("los dos flujos UI de importación consumen el mismo contrato sin doble fet
   assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
   assert.match(contextual, /const seccionesAfectadas = resolverSeccionesAfectadasImportacion\(feedback\.detalle, seccionSeleccionada\)/);
   assert.match(contextual, /const sincronizacion = await sincronizarListadoTrasConfirmacion\(seccionesAfectadas\)/);
+  assert.match(contextual, /await recargarListadoReal\(seccion, \{ refrescarRouter: false \}\)/);
+  assert.match(contextual, /if \(resultados\.some\(\(resultado\) => resultado\.estado === "sincronizada"\)\) \{\s*router\.refresh\(\);\s*\}/);
   assert.match(contextual, /setOk\(construirMensajeConfirmacionContextual\(feedback\.mensaje, sincronizacion\)\)/);
   assert.doesNotMatch(contextual, /const onConfirmarLote = \(\) => !detalle \? Promise\.resolve\(\) : ejecutarAccion\(async \(\) => \{[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
   assert.match(importacion, /actualizarDetalleImportacion/);
@@ -578,6 +581,7 @@ test("la confirmación inline queda protegida frente a un GET posterior fallido 
   assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
   assert.match(contextual, /if \(modulo !== "productos"\) return \{ estado: "omitida" \};/);
   assert.match(contextual, /await recargarListadoReal\(\)/);
+  assert.match(contextual, /await recargarListadoReal\(seccion, \{ refrescarRouter: false \}\)/);
   assert.doesNotMatch(contextual, /const respuesta = await confirmarLoteImportacion[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
 });
 
@@ -806,6 +810,45 @@ test("regresión explícita A+B confirmadas no arrastra C con filas fallidas, au
 
   assert.deepEqual(secciones, ["botica-natural", "velas-e-incienso"]);
   assert.equal(secciones.includes("minerales-y-energia"), false);
+});
+
+test("regresión explícita A+B+C actualiza store global sin tocar la vista local activa", () => {
+  const s0 = [
+    { id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: false },
+    { id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: false },
+    { id: "c-1", nombre: "Cuarzo", seccion_publica: "minerales-y-energia", publicado: false },
+  ];
+  const s1a = [{ id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: true }];
+  const s1b = [{ id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: true }];
+  const s1c = [{ id: "c-1", nombre: "Cuarzo", seccion_publica: "minerales-y-energia", publicado: true }];
+
+  const storeSincronizado = actualizarItemsSecciones(s0, {
+    "botica-natural": s1a,
+    "velas-e-incienso": s1b,
+    "minerales-y-energia": s1c,
+  });
+
+  const vistaLocalProtegida = debeActualizarVistaLocal({
+    modulo: "productos",
+    seccionSincronizada: "velas-e-incienso",
+    seccionVisible: "botica-natural",
+  })
+    ? s1b
+    : storeSincronizado.filter((item) => item.seccion_publica === "botica-natural");
+
+  assert.deepEqual(storeSincronizado.filter((item) => item.seccion_publica === "botica-natural"), s1a);
+  assert.deepEqual(storeSincronizado.filter((item) => item.seccion_publica === "velas-e-incienso"), s1b);
+  assert.deepEqual(storeSincronizado.filter((item) => item.seccion_publica === "minerales-y-energia"), s1c);
+  assert.deepEqual(vistaLocalProtegida, s1a);
+});
+
+test("regresión de refresh multisección A+B+C delega un único refresh global al final", () => {
+  const contextual = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+
+  assert.match(contextual, /const recargarListadoReal = async \([\s\S]*opciones: \{ refrescarRouter\?: boolean \} = \{\},/);
+  assert.match(contextual, /const \{ refrescarRouter = true \} = opciones/);
+  assert.match(contextual, /await recargarListadoReal\(seccion, \{ refrescarRouter: false \}\)/);
+  assert.match(contextual, /if \(resultados\.some\(\(resultado\) => resultado\.estado === "sincronizada"\)\) \{\s*router\.refresh\(\);\s*\}/);
 });
 
 test("regresión explícita A+B sincroniza S1a y S1b sin resucitar snapshots previos al cambiar de pestaña", () => {

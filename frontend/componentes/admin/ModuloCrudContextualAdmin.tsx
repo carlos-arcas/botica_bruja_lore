@@ -235,7 +235,11 @@ export function ModuloCrudContextualAdmin({
   const gruposFormulario = useMemo(() => agruparCamposFormulario(campos), [campos]);
   const filtrados = useMemo(() => items.filter((item) => JSON.stringify(item).toLowerCase().includes(filtro.toLowerCase())), [items, filtro]);
 
-  const recargarListadoReal = async (seccionObjetivo = seccionSeleccionada): Promise<Record<string, unknown>[]> => {
+  const recargarListadoReal = async (
+    seccionObjetivo = seccionSeleccionada,
+    opciones: { refrescarRouter?: boolean } = {},
+  ): Promise<Record<string, unknown>[]> => {
+    const { refrescarRouter = true } = opciones;
     const query = new URLSearchParams();
     if (modulo === "productos" && seccionObjetivo) {
       query.set("seccion", seccionObjetivo);
@@ -253,7 +257,9 @@ export function ModuloCrudContextualAdmin({
       setItems(actualizado.items);
     }
     onItemsSincronizados?.(seccionObjetivo, actualizado.items);
-    router.refresh();
+    if (refrescarRouter) {
+      router.refresh();
+    }
     return actualizado.items;
   };
 
@@ -263,7 +269,7 @@ export function ModuloCrudContextualAdmin({
     const resultados = await Promise.all(
       secciones.map(async (seccion) => {
         try {
-          await recargarListadoReal(seccion);
+          await recargarListadoReal(seccion, { refrescarRouter: false });
           return { seccion, estado: "sincronizada" as const };
         } catch (error) {
           return {
@@ -274,6 +280,9 @@ export function ModuloCrudContextualAdmin({
         }
       }),
     );
+    if (resultados.some((resultado) => resultado.estado === "sincronizada")) {
+      router.refresh();
+    }
     const pendientes = resultados
       .filter((resultado) => resultado.estado === "pendiente")
       .map((resultado) => ({ seccion: resultado.seccion, detalle: resultado.detalle }));
