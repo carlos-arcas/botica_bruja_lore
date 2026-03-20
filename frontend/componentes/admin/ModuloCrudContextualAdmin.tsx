@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { CampoFormulario, ConfigCampo, ControlImagenFormulario } from "@/componentes/admin/CamposFormularioAdmin";
@@ -166,6 +166,13 @@ function prepararRegistroEdicion(modulo: ModuloAdmin, campos: ConfigCampo[], ite
   return { ...item };
 }
 
+function actualizarDetalleLote(
+  asignarDetalle: Dispatch<SetStateAction<DetalleLote | null>>,
+  filaActualizada: FilaImportacion,
+): void {
+  asignarDetalle((detalleActual) => (!detalleActual ? detalleActual : actualizarDetalleImportacion(detalleActual, filaActualizada)));
+}
+
 export function ModuloCrudContextualAdmin({
   modulo,
   titulo,
@@ -283,7 +290,7 @@ export function ModuloCrudContextualAdmin({
     if (!detalle) return;
     await ejecutarAccion(async () => {
       const filaActualizada = await cambiarSeleccionFilaImportacion(Number(detalle.lote.id), filaId, seleccionado, token);
-      setDetalle(actualizarDetalleImportacion(detalle, filaActualizada));
+      actualizarDetalleLote(setDetalle, filaActualizada);
     }, "No se pudo actualizar la selección de la fila.");
   };
 
@@ -291,7 +298,7 @@ export function ModuloCrudContextualAdmin({
     if (!detalle) return;
     await ejecutarAccion(async () => {
       const filaActualizada = await adjuntarImagenFilaImportacion(Number(detalle.lote.id), filaId, archivo, token);
-      setDetalle(actualizarDetalleImportacion(detalle, filaActualizada));
+      actualizarDetalleLote(setDetalle, filaActualizada);
     }, "No se pudo adjuntar la imagen de la fila.");
   };
 
@@ -299,7 +306,7 @@ export function ModuloCrudContextualAdmin({
     if (!detalle) return;
     await ejecutarAccion(async () => {
       const filaActualizada = await eliminarImagenFilaImportacion(Number(detalle.lote.id), filaId, token);
-      setDetalle(actualizarDetalleImportacion(detalle, filaActualizada));
+      actualizarDetalleLote(setDetalle, filaActualizada);
     }, "No se pudo eliminar la imagen de la fila.");
   };
 
@@ -307,7 +314,7 @@ export function ModuloCrudContextualAdmin({
     if (!detalle) return;
     await ejecutarAccion(async () => {
       const filaActualizada = await descartarFilaImportacion(Number(detalle.lote.id), filaId, token);
-      setDetalle(actualizarDetalleImportacion(detalle, filaActualizada));
+      actualizarDetalleLote(setDetalle, filaActualizada);
     }, "No se pudo descartar la fila.");
   };
 

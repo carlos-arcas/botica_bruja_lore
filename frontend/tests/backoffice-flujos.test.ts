@@ -330,8 +330,9 @@ test("los dos flujos UI de importación consumen el mismo contrato sin doble fet
   assert.match(helper, /export function construirFeedbackConfirmacionImportacion/);
   assert.match(helper, /mensaje: `\$\{etiqueta\}: \$\{String\(confirmacion\.confirmadas\)\}\.`/);
   assert.match(contextual, /actualizarDetalleImportacion/);
+  assert.match(contextual, /function actualizarDetalleLote/);
   assert.match(contextual, /const filaActualizada = await cambiarSeleccionFilaImportacion/);
-  assert.match(contextual, /setDetalle\(actualizarDetalleImportacion\(detalle, filaActualizada\)\)/);
+  assert.match(contextual, /actualizarDetalleLote\(setDetalle, filaActualizada\)/);
   assert.match(contextual, /const respuesta = await revalidarLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
   assert.match(contextual, /setDetalle\(respuesta\.detalle\)/);
   assert.match(contextual, /const feedback = construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
@@ -339,10 +340,28 @@ test("los dos flujos UI de importación consumen el mismo contrato sin doble fet
   assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
   assert.doesNotMatch(contextual, /const onConfirmarLote = \(\) => !detalle \? Promise\.resolve\(\) : ejecutarAccion\(async \(\) => \{[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
   assert.match(importacion, /actualizarDetalleImportacion/);
-  assert.match(importacion, /setDetalle\(actualizarDetalleImportacion\(detalle, actualizada\)\)/);
+  assert.match(importacion, /setDetalle\(\(detalleActual\) => \(!detalleActual \? detalleActual : actualizarDetalleImportacion\(detalleActual, actualizada\)\)\)/);
   assert.match(importacion, /const feedback = construirFeedbackConfirmacionImportacion\("Filas confirmadas", respuesta\)/);
   assert.match(importacion, /const feedback = construirFeedbackConfirmacionImportacion\("Filas válidas confirmadas", respuesta\)/);
   assert.match(importacion, /setDetalle\(feedback\.detalle\)/);
+});
+
+test("acciones inline del CRUD contextual quedan blindadas frente a un GET posterior hipotéticamente fallido", () => {
+  const contextual = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+
+  assert.match(contextual, /const onSeleccionFila = async \(filaId: number, seleccionado: boolean\) => \{/);
+  assert.match(contextual, /const filaActualizada = await cambiarSeleccionFilaImportacion\(Number\(detalle\.lote\.id\), filaId, seleccionado, token\)/);
+  assert.match(contextual, /actualizarDetalleLote\(setDetalle, filaActualizada\)/);
+  assert.doesNotMatch(contextual, /const onSeleccionFila[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
+  assert.match(contextual, /const onDescartarFila = async \(filaId: number\) => \{/);
+  assert.doesNotMatch(contextual, /const onDescartarFila[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
+  assert.match(contextual, /const onAdjuntarImagen = async \(filaId: number, archivo: File\) => \{/);
+  assert.doesNotMatch(contextual, /const onAdjuntarImagen[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
+  assert.match(contextual, /const onEliminarImagen = async \(filaId: number\) => \{/);
+  assert.doesNotMatch(contextual, /const onEliminarImagen[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
+  assert.match(contextual, /const onRevalidarLote = \(\) => !detalle \? Promise\.resolve\(\) : ejecutarAccion\(async \(\) => \{/);
+  assert.match(contextual, /setDetalle\(respuesta\.detalle\)/);
+  assert.doesNotMatch(contextual, /const onRevalidarLote[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
 });
 
 

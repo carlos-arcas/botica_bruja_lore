@@ -55,8 +55,7 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
 
   const refrescarDetalle = async (id: number) => setDetalle(await obtenerLoteImportacion(id, token));
   const actualizarFila = (actualizada: FilaImportacion): void => {
-    if (!detalle) return;
-    setDetalle(actualizarDetalleImportacion(detalle, actualizada));
+    setDetalle((detalleActual) => (!detalleActual ? detalleActual : actualizarDetalleImportacion(detalleActual, actualizada)));
   };
 
   const subir = (event: FormEvent<HTMLFormElement>) => void ejecutarAccion(async () => {
