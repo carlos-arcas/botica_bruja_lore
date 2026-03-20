@@ -34,6 +34,7 @@ import {
   actualizarItemsSeccion,
   actualizarItemsSecciones,
   construirDetalleSincronizacionSecciones,
+  debeActualizarVistaLocal,
   resolverSeccionesAfectadasImportacion,
   sincronizarProductoMutado,
 } from "../componentes/admin/sincronizacionProductosAdmin";
@@ -634,6 +635,70 @@ test("listado admin diferencia denegado, backend y red", async () => {
 });
 
 
+test("resincronización multisección separa store global y vista local de la pestaña activa", () => {
+  const s0 = [
+    { id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: false },
+    { id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: false },
+  ];
+  const itemsA = [{ id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: true }];
+  const itemsB = [{ id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: true }];
+
+  const storeTrasA = actualizarItemsSeccion(s0, "botica-natural", itemsA);
+  const vistaTrasA = debeActualizarVistaLocal({
+    modulo: "productos",
+    seccionSincronizada: "botica-natural",
+    seccionVisible: "botica-natural",
+  })
+    ? itemsA
+    : s0.filter((item) => item.seccion_publica === "botica-natural");
+
+  const storeFinal = actualizarItemsSeccion(storeTrasA, "velas-e-incienso", itemsB);
+  const vistaFinal = debeActualizarVistaLocal({
+    modulo: "productos",
+    seccionSincronizada: "velas-e-incienso",
+    seccionVisible: "botica-natural",
+  })
+    ? itemsB
+    : vistaTrasA;
+
+  assert.deepEqual(storeFinal.filter((item) => item.seccion_publica === "botica-natural"), itemsA);
+  assert.deepEqual(storeFinal.filter((item) => item.seccion_publica === "velas-e-incienso"), itemsB);
+  assert.deepEqual(vistaFinal, itemsA);
+});
+
+test("al cambiar a la pestaña resincronizada después, la vista local puede pintar la sección B actualizada", () => {
+  const itemsB = [{ id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: true }];
+
+  const vistaB = debeActualizarVistaLocal({
+    modulo: "productos",
+    seccionSincronizada: "velas-e-incienso",
+    seccionVisible: "velas-e-incienso",
+  })
+    ? itemsB
+    : [];
+
+  assert.deepEqual(vistaB, itemsB);
+});
+
+test("caso monosección y módulos no contextuales siguen actualizando la vista local", () => {
+  assert.equal(
+    debeActualizarVistaLocal({
+      modulo: "productos",
+      seccionSincronizada: "botica-natural",
+      seccionVisible: "botica-natural",
+    }),
+    true,
+  );
+  assert.equal(
+    debeActualizarVistaLocal({
+      modulo: "editorial",
+      seccionSincronizada: "blog",
+      seccionVisible: "inicio",
+    }),
+    true,
+  );
+});
+
 test("productos sincroniza una única fuente de verdad tras mutación y cambio de sección", () => {
   const moduloProductos = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
   const moduloCrud = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
@@ -642,6 +707,13 @@ test("productos sincroniza una única fuente de verdad tras mutación y cambio d
   assert.match(moduloProductos, /itemsProductos\.filter\(\(item\) => item\.seccion_publica === seccion\)/);
   assert.match(moduloProductos, /onItemsSincronizados=\{sincronizarListadoSeccion\}/);
   assert.match(moduloProductos, /onItemMutado=\{sincronizarProducto\}/);
+  assert.match(moduloCrud, /const seccionVisibleRef = useRef\(seccionSeleccionada\)/);
+  assert.match(moduloCrud, /seccionVisibleRef\.current = seccionSeleccionada/);
+  assert.match(moduloCrud, /const debeActualizarVista = debeActualizarVistaLocal\(\{/);
+  assert.match(moduloCrud, /seccionSincronizada: seccionObjetivo/);
+  assert.match(moduloCrud, /seccionVisible: seccionVisibleRef\.current/);
+  assert.match(moduloCrud, /if \(debeActualizarVista\) \{/);
+  assert.match(moduloCrud, /setItems\(actualizado\.items\)/);
   assert.match(moduloCrud, /onItemsSincronizados\?\.\(seccionObjetivo, actualizado\.items\)/);
   assert.match(moduloCrud, /onItemMutado\?\.\(itemGuardado\)/);
 });

@@ -5,8 +5,24 @@ export type ResultadoSincronizacionSecciones = {
   seccionesPendientes: { seccion: string; detalle: string }[];
 };
 
+export type ContextoVistaProductos = {
+  modulo: string;
+  seccionSincronizada: string;
+  seccionVisible: string;
+};
+
 function extraerSeccionFila(detalleFila: Record<string, string>): string {
   return String(detalleFila.seccion_publica ?? "").trim();
+}
+
+
+export function debeActualizarVistaLocal({
+  modulo,
+  seccionSincronizada,
+  seccionVisible,
+}: ContextoVistaProductos): boolean {
+  if (modulo !== "productos") return true;
+  return seccionSincronizada === seccionVisible;
 }
 
 export function actualizarItemsSeccion(
