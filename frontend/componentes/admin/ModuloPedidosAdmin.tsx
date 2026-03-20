@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { PanelEstadoListadoAdmin } from "@/componentes/admin/PanelEstadoListadoAdmin";
+import { EstadoListadoAdmin } from "@/componentes/admin/estadoListadoAdmin";
 import { marcarPedidoEntregado, marcarPedidoEnviado, marcarPedidoPreparando, PayloadEnvioPedido } from "@/infraestructura/api/backoffice";
 
 type PedidoAdmin = Record<string, any>;
@@ -10,6 +12,7 @@ type PedidoAdmin = Record<string, any>;
 type Props = {
   token?: string;
   itemsIniciales: PedidoAdmin[];
+  estadoListadoInicial: EstadoListadoAdmin;
   estadoActivo?: string;
 };
 
@@ -19,7 +22,7 @@ function payloadEnvioInicial(): PayloadEnvioPedido {
   return { transportista: "", codigo_seguimiento: "", envio_sin_seguimiento: false, observaciones_operativas: "" };
 }
 
-export function ModuloPedidosAdmin({ token, itemsIniciales, estadoActivo = "" }: Props): JSX.Element {
+export function ModuloPedidosAdmin({ token, itemsIniciales, estadoListadoInicial, estadoActivo = "" }: Props): JSX.Element {
   const [items, setItems] = useState(itemsIniciales);
   const [mensaje, setMensaje] = useState("");
   const [formularios, setFormularios] = useState<Record<string, PayloadEnvioPedido>>({});
@@ -30,6 +33,7 @@ export function ModuloPedidosAdmin({ token, itemsIniciales, estadoActivo = "" }:
       return { ...previo, [idPedido]: { ...actual, [campo]: valor } };
     });
   };
+
   const reemplazar = (actualizado: PedidoAdmin, mensajeOk: string): void => {
     setItems((previos) => previos.map((item) => (item.id_pedido === actualizado.id_pedido ? actualizado : item)));
     setMensaje(mensajeOk);
@@ -47,6 +51,7 @@ export function ModuloPedidosAdmin({ token, itemsIniciales, estadoActivo = "" }:
         {ESTADOS.map((estado) => <Link key={estado || "todos"} href={estado ? `/admin/pedidos?estado=${estado}` : "/admin/pedidos"} className="boton boton--secundario">{estado || "Todos"}</Link>)}
       </nav>
       {mensaje && <p>{mensaje}</p>}
+      <PanelEstadoListadoAdmin estado={items.length > 0 ? { tipo: "datos", mensaje: "Datos cargados." } : estadoListadoInicial} />
       <div className="admin-tarjetas">
         {items.map((item) => {
           const form = formularios[item.id_pedido] ?? payloadEnvioInicial();

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { EstadoListadoAdmin } from "@/componentes/admin/estadoListadoAdmin";
 import { ModuloCrudContextualAdmin } from "@/componentes/admin/ModuloCrudContextualAdmin";
 import { BENEFICIOS_BOTICA, CATEGORIAS_VISIBLES_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
 import { PlantaAsociable, obtenerPlantasAsociables } from "@/infraestructura/api/backoffice";
@@ -54,7 +55,7 @@ function construirValidadorProducto(estadoPlantas: EstadoCargaPlantas) {
   return (formulario: Record<string, unknown>) => validarFormularioProducto(formulario, estadoPlantas.estado);
 }
 
-export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string; itemsIniciales: Record<string, unknown>[] }): JSX.Element {
+export function ModuloProductosAdmin({ token, itemsIniciales, estadoListadoInicial }: { token?: string; itemsIniciales: Record<string, unknown>[]; estadoListadoInicial: EstadoListadoAdmin }): JSX.Element {
   const [seccion, setSeccion] = useState<string>(SECCIONES[0].slug);
   const [plantas, setPlantas] = useState<PlantaAsociable[]>([]);
   const [estadoPlantas, setEstadoPlantas] = useState<EstadoCargaPlantas>({ estado: "cargando", mensaje: "Cargando plantas asociables..." });
@@ -148,6 +149,7 @@ export function ModuloProductosAdmin({ token, itemsIniciales }: { token?: string
         titulo="Productos"
         token={token}
         itemsIniciales={filtrados}
+        estadoListadoInicial={itemsIniciales.length > 0 ? { tipo: "datos", mensaje: "Datos cargados." } : estadoListadoInicial}
         campoEstado="publicado"
         entidadImportacion="productos"
         camposComunes={CAMPOS_COMUNES}
