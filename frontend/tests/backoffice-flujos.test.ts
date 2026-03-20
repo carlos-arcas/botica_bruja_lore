@@ -30,7 +30,13 @@ import {
   normalizarConfirmacionImportacion,
 } from "../componentes/admin/importacion/feedbackConfirmacionImportacion";
 import { construirMensajeConfirmacionContextual } from "../componentes/admin/importacion/confirmacionContextualImportacion";
-import { actualizarItemsSeccion, sincronizarProductoMutado } from "../componentes/admin/sincronizacionProductosAdmin";
+import {
+  actualizarItemsSeccion,
+  actualizarItemsSecciones,
+  construirDetalleSincronizacionSecciones,
+  resolverSeccionesAfectadasImportacion,
+  sincronizarProductoMutado,
+} from "../componentes/admin/sincronizacionProductosAdmin";
 import {
   actualizarDetalleImportacion,
   construirResumenImportacion,
@@ -373,7 +379,8 @@ test("los dos flujos UI de importación consumen el mismo contrato sin doble fet
   assert.match(contextual, /setDetalle\(respuesta\.detalle\)/);
   assert.match(contextual, /const feedback = construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
   assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
-  assert.match(contextual, /const sincronizacion = await sincronizarListadoTrasConfirmacion\(\)/);
+  assert.match(contextual, /const seccionesAfectadas = resolverSeccionesAfectadasImportacion\(feedback\.detalle, seccionSeleccionada\)/);
+  assert.match(contextual, /const sincronizacion = await sincronizarListadoTrasConfirmacion\(seccionesAfectadas\)/);
   assert.match(contextual, /setOk\(construirMensajeConfirmacionContextual\(feedback\.mensaje, sincronizacion\)\)/);
   assert.doesNotMatch(contextual, /const onConfirmarLote = \(\) => !detalle \? Promise\.resolve\(\) : ejecutarAccion\(async \(\) => \{[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
   assert.match(importacion, /actualizarDetalleImportacion/);
@@ -635,7 +642,7 @@ test("productos sincroniza una única fuente de verdad tras mutación y cambio d
   assert.match(moduloProductos, /itemsProductos\.filter\(\(item\) => item\.seccion_publica === seccion\)/);
   assert.match(moduloProductos, /onItemsSincronizados=\{sincronizarListadoSeccion\}/);
   assert.match(moduloProductos, /onItemMutado=\{sincronizarProducto\}/);
-  assert.match(moduloCrud, /onItemsSincronizados\?\.\(seccionSeleccionada, actualizado\.items\)/);
+  assert.match(moduloCrud, /onItemsSincronizados\?\.\(seccionObjetivo, actualizado\.items\)/);
   assert.match(moduloCrud, /onItemMutado\?\.\(itemGuardado\)/);
 });
 
@@ -675,6 +682,65 @@ test("sincronización S0→S1 del padre conserva otras secciones y evita reintro
     sincronizado.filter((item) => item.seccion_publica === "velas-e-incienso"),
     [{ id: "prod-2", nombre: "Vela", seccion_publica: "velas-e-incienso", publicado: true }],
   );
+});
+
+test("importación contextual multisección detecta todas las secciones confirmadas desde el staging", () => {
+  const detalle = {
+    lote: { id: 100 },
+    resumen: { total: 3, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 2, con_imagen: 0, sin_imagen: 3, seleccionadas: 2 },
+    filas: [
+      { id: 1, numero: 1, datos: { seccion_publica: "botica-natural" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-1", titulo: "Rosa", tipo: "producto", resumen_datos: "ok" },
+      { id: 2, numero: 2, datos: { seccion_publica: "velas-e-incienso" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-2", titulo: "Vela", tipo: "producto", resumen_datos: "ok" },
+      { id: 3, numero: 3, datos: { seccion_publica: "minerales-y-energia" }, errores: [], warnings: [], estado: "valida", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "", identificador: "SKU-3", titulo: "Cuarzo", tipo: "producto", resumen_datos: "ok" },
+    ],
+  };
+
+  const secciones = resolverSeccionesAfectadasImportacion(detalle, "botica-natural");
+
+  assert.deepEqual(secciones, ["botica-natural", "velas-e-incienso"]);
+});
+
+test("regresión explícita A+B sincroniza S1a y S1b sin resucitar snapshots previos al cambiar de pestaña", () => {
+  const s0 = [
+    { id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: false },
+    { id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: false },
+  ];
+  const s1a = [{ id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: true }];
+  const s1b = [{ id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: true }];
+
+  const sincronizado = actualizarItemsSecciones(s0, {
+    "botica-natural": s1a,
+    "velas-e-incienso": s1b,
+  });
+
+  assert.deepEqual(sincronizado.filter((item) => item.seccion_publica === "botica-natural"), s1a);
+  assert.deepEqual(sincronizado.filter((item) => item.seccion_publica === "velas-e-incienso"), s1b);
+  assert.notDeepEqual(sincronizado.filter((item) => item.seccion_publica === "botica-natural"), s0.filter((item) => item.seccion_publica === "botica-natural"));
+  assert.notDeepEqual(sincronizado.filter((item) => item.seccion_publica === "velas-e-incienso"), s0.filter((item) => item.seccion_publica === "velas-e-incienso"));
+});
+
+test("sincronización parcial conserva éxito del lote y no finge refresco completo de secciones hermanas", () => {
+  const detalle = construirDetalleSincronizacionSecciones({
+    seccionesSincronizadas: ["botica-natural"],
+    seccionesPendientes: [{ seccion: "velas-e-incienso", detalle: "Error de red." }],
+  });
+  const mensaje = construirMensajeConfirmacionContextual("Lote confirmado. Filas aplicadas: 2.", { estado: "pendiente", detalle });
+
+  assert.match(mensaje, /Lote confirmado\. Filas aplicadas: 2\./);
+  assert.match(mensaje, /Secciones sincronizadas: botica-natural\./);
+  assert.match(mensaje, /Sincronización pendiente en: velas-e-incienso \(Error de red\.\)\./);
+});
+
+test("lote monosección mantiene fallback a la pestaña activa cuando el staging no expone otra sección", () => {
+  const detalle = {
+    lote: { id: 101 },
+    resumen: { total: 1, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 1, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 },
+    filas: [{ id: 1, numero: 1, datos: {}, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-1", titulo: "Rosa", tipo: "producto", resumen_datos: "ok" }],
+  };
+
+  const secciones = resolverSeccionesAfectadasImportacion(detalle, "botica-natural");
+
+  assert.deepEqual(secciones, ["botica-natural"]);
 });
 
 test("sincronizarProductoMutado mantiene fuente de verdad única del padre antes del refresco contextual", () => {
