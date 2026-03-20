@@ -23,6 +23,7 @@ import {
   obtenerPlantasAsociables,
 } from "../infraestructura/api/backoffice";
 import {
+  construirFeedbackConfirmacionImportacion,
   construirMensajeConfirmacionImportacion,
   normalizarConfirmacionImportacion,
 } from "../componentes/admin/importacion/feedbackConfirmacionImportacion";
@@ -66,26 +67,27 @@ test("feedback de éxito y error se informa en UI para alta, edición e importac
   assert.match(componente, /Registro guardado\./);
   assert.match(componente, /Cambios guardados\./);
   assert.match(componente, /Lote cargado\. Revisa filas antes de confirmar\./);
-  assert.match(componente, /construirMensajeConfirmacionImportacion\("Lote confirmado\. Filas aplicadas"/);
+  assert.match(componente, /construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
   assert.match(componente, /No se pudo cargar el lote de importación\./);
 });
 
-test("normaliza el contrato de confirmación y construye mensajes sin serializar el objeto completo", () => {
-  const resultado = {
-    confirmadas: 3,
-    detalle: {
-      lote: { id: 44 },
-      resumen: { total: 3, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 3, con_imagen: 0, sin_imagen: 3, seleccionadas: 3 },
-      filas: [],
-    },
+test("normaliza el contrato de confirmación y construye feedback reutilizable sin serializar el objeto completo", () => {
+  const detalle = {
+    lote: { id: 44 },
+    resumen: { total: 3, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 3, con_imagen: 0, sin_imagen: 3, seleccionadas: 3 },
+    filas: [{ id: 1, numero: 1, datos: {}, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-1", titulo: "Producto", tipo: "producto", resumen_datos: "ok" }],
   };
+  const resultado = { confirmadas: 3, detalle };
 
   const confirmacion = normalizarConfirmacionImportacion(resultado);
+  const feedback = construirFeedbackConfirmacionImportacion("Lote confirmado. Filas aplicadas", resultado);
   const mensaje = construirMensajeConfirmacionImportacion("Lote confirmado. Filas aplicadas", resultado);
 
   assert.equal(confirmacion.confirmadas, 3);
   assert.equal(confirmacion.detalle.lote.id, 44);
-  assert.equal(mensaje, "Lote confirmado. Filas aplicadas: 3.");
+  assert.equal(feedback.detalle, detalle);
+  assert.equal(feedback.mensaje, "Lote confirmado. Filas aplicadas: 3.");
+  assert.equal(mensaje, feedback.mensaje);
   assert.doesNotMatch(mensaje, /\[object Object\]/);
 });
 
@@ -204,8 +206,8 @@ test("flujo de importación confirmada: crear lote, consultar y confirmar", asyn
     const url = String(input);
     llamadas.push(url);
     if (url.endsWith("/importacion/lotes/")) return { ok: true, json: async () => ({ lote_id: 22, operation_id: "imp-ok-1" }) } as Response;
-    if (url.endsWith("/importacion/lotes/22/")) return { ok: true, json: async () => ({ lote: { id: 22 }, resumen: { total: 1, validas: 1, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 0, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "valida", imagen: "", estado_imagen: "ausente", resultado_confirmacion: "" }], operation_id: "imp-ok-2" }) } as Response;
-    return { ok: true, json: async () => ({ confirmadas: 1, detalle: { lote: { id: 22 }, resumen: { total: 1, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 1, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "confirmada", imagen: "", estado_imagen: "ausente", resultado_confirmacion: "ok" }], operation_id: "imp-ok-3" }, operation_id: "imp-ok-3" }) } as Response;
+    if (url.endsWith("/importacion/lotes/22/")) return { ok: true, json: async () => ({ lote: { id: 22 }, resumen: { total: 1, validas: 1, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 0, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "valida", imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "" }], operation_id: "imp-ok-2" }) } as Response;
+    return { ok: true, json: async () => ({ confirmadas: 1, detalle: { lote: { id: 22 }, resumen: { total: 1, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 1, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "confirmada", imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok" }], operation_id: "imp-ok-3" }, operation_id: "imp-ok-3" }) } as Response;
   }) as unknown as typeof fetch;
 
   const formData = new FormData();
@@ -265,20 +267,20 @@ test("ui de importación valida columnas faltantes y muestra mensaje claro", () 
   assert.match(componente, /columnasObligatoriasImportacion/);
 });
 
-test("los dos flujos UI de importación consumen el mismo contrato de confirmación", () => {
+test("los dos flujos UI de importación consumen el mismo contrato sin doble fetch tras confirmar", () => {
   const contextual = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
   const importacion = readFileSync("componentes/admin/ModuloImportacionAdmin.tsx", "utf8");
   const helper = readFileSync("componentes/admin/importacion/feedbackConfirmacionImportacion.ts", "utf8");
 
-  assert.match(helper, /normalizarConfirmacionImportacion/);
-  assert.match(helper, /return `\$\{etiqueta\}: \$\{String\(confirmadas\)\}\.`;/);
-  assert.match(contextual, /normalizarConfirmacionImportacion\(respuesta\)/);
-  assert.match(contextual, /construirMensajeConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
-  assert.match(contextual, /setDetalle\(await obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)\)/);
-  assert.doesNotMatch(contextual, /Filas aplicadas: \$\{confirmadas\}/);
-  assert.match(importacion, /normalizarConfirmacionImportacion\(respuesta\)/);
-  assert.match(importacion, /construirMensajeConfirmacionImportacion\("Filas confirmadas", respuesta\)/);
-  assert.match(importacion, /construirMensajeConfirmacionImportacion\("Filas válidas confirmadas", respuesta\)/);
+  assert.match(helper, /export function construirFeedbackConfirmacionImportacion/);
+  assert.match(helper, /mensaje: `\$\{etiqueta\}: \$\{String\(confirmacion\.confirmadas\)\}\.`/);
+  assert.match(contextual, /const feedback = construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
+  assert.match(contextual, /setOk\(feedback\.mensaje\)/);
+  assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
+  assert.doesNotMatch(contextual, /const onConfirmarLote = \(\) => !detalle \? Promise\.resolve\(\) : ejecutarAccion\(async \(\) => \{[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
+  assert.match(importacion, /const feedback = construirFeedbackConfirmacionImportacion\("Filas confirmadas", respuesta\)/);
+  assert.match(importacion, /const feedback = construirFeedbackConfirmacionImportacion\("Filas válidas confirmadas", respuesta\)/);
+  assert.match(importacion, /setDetalle\(feedback\.detalle\)/);
 });
 
 
@@ -422,4 +424,14 @@ test("ui del campo planta asociada muestra ayuda contextual para ok vacío, erro
   assert.match(modulo, /Selecciona la planta editorial que se vinculará con este producto herbal\./);
   assert.match(modulo, /ayuda: resolverAyudaPlantas\(estadoPlantas, plantas\)/);
   assert.match(contextual, /campo\.ayuda \? <small>\{campo\.ayuda\}<\/small> : null/);
+});
+
+
+test("la confirmación inline queda protegida frente a un GET posterior fallido porque ya no depende de ese segundo fetch", () => {
+  const contextual = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+
+  assert.match(contextual, /const respuesta = await confirmarLoteImportacion\(Number\(detalle\.lote\.id\), seleccionadas, token\)/);
+  assert.match(contextual, /const feedback = construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
+  assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
+  assert.doesNotMatch(contextual, /const respuesta = await confirmarLoteImportacion[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
 });
