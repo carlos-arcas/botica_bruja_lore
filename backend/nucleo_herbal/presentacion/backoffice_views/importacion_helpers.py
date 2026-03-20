@@ -15,13 +15,14 @@ from .shared import json_no_autorizado
 LOGGER = logging.getLogger(__name__)
 
 
-def serializar_detalle_lote(lote: ImportacionLoteModelo) -> dict:
+def serializar_detalle_lote(lote: ImportacionLoteModelo, operation_id_actual: str | None = None) -> dict:
     filas = list(lote.filas.all())
     resumen = construir_resumen(filas)
     return {
         "lote": {"id": lote.id, "entidad": lote.entidad, "modo": lote.modo, "archivo": lote.nombre_archivo, "total_filas": lote.total_filas},
         "resumen": resumen.__dict__,
         "filas": [serializar_fila(fila) for fila in filas],
+        "operation_id": operation_id_actual,
     }
 
 
@@ -45,13 +46,17 @@ def serializar_fila(fila: ImportacionFilaModelo) -> dict:
     }
 
 
+def json_importacion(detalle: str, status: int, request: HttpRequest, **extra) -> JsonResponse:
+    return JsonResponse({"detalle": detalle, "operation_id": operation_id(request), **extra}, status=status)
+
+
 def lote_por_usuario(request: HttpRequest, lote_id: int) -> ImportacionLoteModelo | JsonResponse:
     usuario = usuario_staff(request)
     if usuario is None:
         return json_no_autorizado()
     lote = ImportacionLoteModelo.objects.filter(id=lote_id, usuario=usuario).first()
     if lote is None:
-        return JsonResponse({"detalle": "Lote no encontrado."}, status=404)
+        return json_importacion("Lote no encontrado.", 404, request)
     return lote
 
 
@@ -61,17 +66,17 @@ def fila_por_usuario(request: HttpRequest, lote_id: int, fila_id: int) -> Import
         return lote
     fila = ImportacionFilaModelo.objects.filter(id=fila_id, lote=lote).first()
     if fila is None:
-        return JsonResponse({"detalle": "Fila no encontrada."}, status=404)
+        return json_importacion("Fila no encontrada.", 404, request)
     if fila.estado == ImportacionFilaModelo.ESTADO_CONFIRMADA:
-        return JsonResponse({"detalle": "La fila ya fue confirmada."}, status=409)
+        return json_importacion("La fila ya fue confirmada.", 409, request)
     return fila
 
 
-def log_importacion(accion: str, usuario, lote: ImportacionLoteModelo, filas_afectadas: int, resultado: str, error: str = "") -> None:
+def log_importacion(accion: str, usuario, lote: ImportacionLoteModelo, filas_afectadas: int, resultado: str, operation_id_actual: str, error: str = "") -> None:
     LOGGER.info(
         "backoffice_importacion_operacion",
         extra={
-            "operation_id": str(uuid.uuid4()),
+            "operation_id": operation_id_actual,
             "usuario": getattr(usuario, "username", "anonimo"),
             "lote_id": lote.id,
             "entidad": lote.entidad,

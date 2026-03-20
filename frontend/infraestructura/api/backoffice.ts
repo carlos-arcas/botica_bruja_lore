@@ -52,8 +52,8 @@ export type FilaImportacion = {
   resumen_datos: string;
 };
 
-export type DetalleImportacion = { lote: Record<string, unknown>; resumen: ResumenImportacion; filas: FilaImportacion[] };
-export type ResultadoConfirmacionImportacion = { confirmadas: number; detalle: DetalleImportacion };
+export type DetalleImportacion = { lote: Record<string, unknown>; resumen: ResumenImportacion; filas: FilaImportacion[]; operation_id?: string };
+export type ResultadoConfirmacionImportacion = { confirmadas: number; detalle: DetalleImportacion; operation_id?: string };
 
 export type EstadoAccesoBackoffice =
   | { estado: "autorizado"; usuario: { username: string; is_staff: boolean; is_superuser: boolean } }
@@ -180,28 +180,29 @@ export async function confirmarValidasLoteImportacion(loteId: number, token?: st
   return (await r.json()) as ResultadoConfirmacionImportacion;
 }
 
-export async function revalidarLoteImportacion(loteId: number, token?: string): Promise<{ revalidado: boolean; detalle: DetalleImportacion }> {
+export async function revalidarLoteImportacion(loteId: number, token?: string): Promise<{ revalidado: boolean; detalle: DetalleImportacion; operation_id?: string }> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/revalidar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
   if (!r.ok) return parsearErrorBackoffice(r, "No se pudo revalidar el lote de importación.");
-  return (await r.json()) as { revalidado: boolean; detalle: DetalleImportacion };
+  return (await r.json()) as { revalidado: boolean; detalle: DetalleImportacion; operation_id?: string };
 }
 
-export async function cancelarLoteImportacion(loteId: number, token?: string): Promise<void> {
+export async function cancelarLoteImportacion(loteId: number, token?: string): Promise<{ cancelado: boolean; lote_id: number; operation_id?: string }> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/cancelar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
   if (!r.ok) return parsearErrorBackoffice(r, "No se pudo cancelar el lote de importación.");
+  return (await r.json()) as { cancelado: boolean; lote_id: number; operation_id?: string };
 }
 
 export async function cambiarSeleccionFilaImportacion(loteId: number, filaId: number, seleccionado: boolean, token?: string): Promise<FilaImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/seleccion/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ seleccionado }) });
   if (!r.ok) return parsearErrorBackoffice(r, "No se pudo actualizar la selección de la fila.");
-  const data = (await r.json()) as { fila: FilaImportacion };
+  const data = (await r.json()) as { fila: FilaImportacion; operation_id?: string };
   return data.fila;
 }
 
 export async function descartarFilaImportacion(loteId: number, filaId: number, token?: string): Promise<FilaImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/descartar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
   if (!r.ok) return parsearErrorBackoffice(r, "No se pudo descartar la fila de importación.");
-  const data = (await r.json()) as { fila: FilaImportacion };
+  const data = (await r.json()) as { fila: FilaImportacion; operation_id?: string };
   return data.fila;
 }
 
@@ -211,14 +212,14 @@ export async function adjuntarImagenFilaImportacion(loteId: number, filaId: numb
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/imagen/`), { method: "POST", headers, body: formData });
   if (!r.ok) return parsearErrorBackoffice(r, "No se pudo adjuntar la imagen de la fila.");
-  const data = (await r.json()) as { fila: FilaImportacion };
+  const data = (await r.json()) as { fila: FilaImportacion; operation_id?: string };
   return data.fila;
 }
 
 export async function eliminarImagenFilaImportacion(loteId: number, filaId: number, token?: string): Promise<FilaImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/imagen/eliminar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
   if (!r.ok) return parsearErrorBackoffice(r, "No se pudo eliminar la imagen de la fila.");
-  const data = (await r.json()) as { fila: FilaImportacion };
+  const data = (await r.json()) as { fila: FilaImportacion; operation_id?: string };
   return data.fila;
 }
 

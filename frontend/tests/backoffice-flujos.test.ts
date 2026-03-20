@@ -162,6 +162,21 @@ test("acciones de lote propagan detalle backend cuando existe", async () => {
   await assert.rejects(() => cancelarLoteImportacion(10, "token"), /El lote ya fue cancelado\..*operation_id: lot-12/);
 });
 
+test("acciones de fila de importación propagan operation_id en errores trazables", async () => {
+  const cola = [
+    { detalle: "Lote no encontrado.", operation_id: "fila-lote-404" },
+    { detalle: "Fila no encontrada.", operation_id: "fila-404" },
+    { detalle: "La fila ya fue confirmada.", operation_id: "fila-409" },
+    { detalle: "Imagen requerida.", operation_id: "img-400" },
+  ];
+  globalThis.fetch = (async () => ({ ok: false, status: 409, json: async () => cola.shift() }) as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => obtenerLoteImportacion(999, "token"), /Lote no encontrado\..*operation_id: fila-lote-404/);
+  await assert.rejects(() => cambiarSeleccionFilaImportacion(10, 999, true, "token"), /Fila no encontrada\..*operation_id: fila-404/);
+  await assert.rejects(() => descartarFilaImportacion(10, 9, "token"), /La fila ya fue confirmada\..*operation_id: fila-409/);
+  await assert.rejects(() => adjuntarImagenFilaImportacion(10, 9, new File(["x"], "foto.png", { type: "image/png" }), "token"), /Imagen requerida\..*operation_id: img-400/);
+});
+
 test("adjuntar imagen de fila propaga detalle backend de validación WebP", async () => {
   globalThis.fetch = (async () => ({ ok: false, status: 422, json: async () => ({ detalle: "No fue posible convertir la imagen a WebP.", operation_id: "img-422" }) }) as Response) as unknown as typeof fetch;
 
@@ -188,9 +203,9 @@ test("flujo de importación confirmada: crear lote, consultar y confirmar", asyn
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     const url = String(input);
     llamadas.push(url);
-    if (url.endsWith("/importacion/lotes/")) return { ok: true, json: async () => ({ lote_id: 22 }) } as Response;
-    if (url.endsWith("/importacion/lotes/22/")) return { ok: true, json: async () => ({ lote: { id: 22 }, resumen: { total: 1, validas: 1, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 0, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "valida", imagen: "", estado_imagen: "ausente", resultado_confirmacion: "" }] }) } as Response;
-    return { ok: true, json: async () => ({ confirmadas: 1, detalle: { lote: { id: 22 }, resumen: { total: 1, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 1, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "confirmada", imagen: "", estado_imagen: "ausente", resultado_confirmacion: "ok" }] } }) } as Response;
+    if (url.endsWith("/importacion/lotes/")) return { ok: true, json: async () => ({ lote_id: 22, operation_id: "imp-ok-1" }) } as Response;
+    if (url.endsWith("/importacion/lotes/22/")) return { ok: true, json: async () => ({ lote: { id: 22 }, resumen: { total: 1, validas: 1, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 0, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "valida", imagen: "", estado_imagen: "ausente", resultado_confirmacion: "" }], operation_id: "imp-ok-2" }) } as Response;
+    return { ok: true, json: async () => ({ confirmadas: 1, detalle: { lote: { id: 22 }, resumen: { total: 1, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 1, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [{ id: 1, seleccionado: true, identificador: "SKU", titulo: "Producto", tipo: "te", resumen_datos: "ok", errores: [], warnings: [], estado: "confirmada", imagen: "", estado_imagen: "ausente", resultado_confirmacion: "ok" }], operation_id: "imp-ok-3" }, operation_id: "imp-ok-3" }) } as Response;
   }) as unknown as typeof fetch;
 
   const formData = new FormData();
@@ -211,11 +226,11 @@ test("importación permite revalidar, seleccionar, descartar y gestionar imagen 
     const url = String(input);
     llamadas.push(url);
     const method = String(init?.method ?? "GET");
-    if (url.includes("/revalidar/")) return { ok: true, json: async () => ({ revalidado: true, detalle: { lote: { id: 10 }, resumen: { total: 1, validas: 1, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 0, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [] } }) } as Response;
-    if (url.includes("/seleccion/")) return { ok: true, json: async () => ({ fila: { id: 9, seleccionado: true } }) } as Response;
-    if (url.includes("/descartar/")) return { ok: true, json: async () => ({ fila: { id: 9, estado: "descartada" } }) } as Response;
-    if (url.includes("/imagen/eliminar/")) return { ok: true, json: async () => ({ fila: { id: 9, imagen: "" } }) } as Response;
-    if (url.endsWith("/imagen/")) return { ok: true, json: async () => ({ fila: { id: 9, imagen: "https://cdn.test/ok.webp" } }) } as Response;
+    if (url.includes("/revalidar/")) return { ok: true, json: async () => ({ revalidado: true, detalle: { lote: { id: 10 }, resumen: { total: 1, validas: 1, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 0, con_imagen: 0, sin_imagen: 1, seleccionadas: 1 }, filas: [], operation_id: "imp-op-1" }, operation_id: "imp-op-1" }) } as Response;
+    if (url.includes("/seleccion/")) return { ok: true, json: async () => ({ fila: { id: 9, seleccionado: true }, operation_id: "imp-op-2" }) } as Response;
+    if (url.includes("/descartar/")) return { ok: true, json: async () => ({ fila: { id: 9, estado: "descartada" }, operation_id: "imp-op-3" }) } as Response;
+    if (url.includes("/imagen/eliminar/")) return { ok: true, json: async () => ({ fila: { id: 9, imagen: "" }, operation_id: "imp-op-4" }) } as Response;
+    if (url.endsWith("/imagen/")) return { ok: true, json: async () => ({ fila: { id: 9, imagen: "https://cdn.test/ok.webp" }, operation_id: "imp-op-5" }) } as Response;
     return { ok: method === "POST", json: async () => ({}) } as Response;
   }) as unknown as typeof fetch;
 
