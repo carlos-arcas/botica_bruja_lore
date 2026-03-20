@@ -4,6 +4,10 @@ import {
   ItemEncargoPreseleccionado,
 } from "./cestaRitual";
 import { PRODUCTOS_CATALOGO, ProductoCatalogo } from "./catalogo";
+import {
+  LineaNoConvertiblePedido,
+  ResultadoLineasPedidoDemo,
+} from "./checkoutDemo";
 
 export type CanalCheckoutReal = "web_invitado" | "web_autenticado";
 
@@ -58,23 +62,62 @@ export type DatosCheckoutReal = {
   observaciones: string;
 };
 
+export type ResultadoLineasPedidoReal = {
+  lineasConvertibles: LineaPedidoPayload[];
+  lineasNoConvertibles: LineaNoConvertiblePedido[];
+};
+
+export function construirResultadoLineasPedidoReal(
+  itemsPreseleccionados: ItemEncargoPreseleccionado[],
+  productoSlug: string,
+  cantidadTexto: string,
+  productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO,
+): ResultadoLineasPedidoReal {
+  if (itemsPreseleccionados.length > 0) {
+    return itemsPreseleccionados.reduce<ResultadoLineasPedidoReal>(
+      (acumulado, item) => {
+        const linea = construirLineaReal(item.slug, item.cantidad, productos);
+        if (linea) {
+          acumulado.lineasConvertibles.push(linea);
+          return acumulado;
+        }
+
+        acumulado.lineasNoConvertibles.push({
+          id_linea: item.id_linea,
+          nombre: item.nombre,
+          cantidad: item.cantidad,
+          tipo_linea: item.tipo_linea,
+          motivo: resolverMotivoNoConvertibleReal(item),
+        });
+        return acumulado;
+      },
+      { lineasConvertibles: [], lineasNoConvertibles: [] },
+    );
+  }
+
+  const linea = construirLineaReal(
+    productoSlug,
+    resolverCantidadCheckoutReal(cantidadTexto),
+    productos,
+  );
+  return {
+    lineasConvertibles: linea ? [linea] : [],
+    lineasNoConvertibles: [],
+  };
+}
+
 export function construirLineasPedidoReal(
   itemsPreseleccionados: ItemEncargoPreseleccionado[],
   productoSlug: string,
   cantidadTexto: string,
   productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO,
 ): LineaPedidoPayload[] {
-  if (itemsPreseleccionados.length > 0) {
-    return itemsPreseleccionados
-      .map((item) => construirLineaReal(item.slug, item.cantidad, productos))
-      .filter((linea): linea is LineaPedidoPayload => linea !== null);
-  }
-  const linea = construirLineaReal(
+  return construirResultadoLineasPedidoReal(
+    itemsPreseleccionados,
     productoSlug,
-    resolverCantidadCheckoutReal(cantidadTexto),
+    cantidadTexto,
     productos,
-  );
-  return linea ? [linea] : [];
+  ).lineasConvertibles;
 }
 
 export function construirPayloadPedidoReal(
@@ -108,7 +151,7 @@ export function construirPayloadPedidoReal(
 
 export function validarCheckoutReal(
   datos: DatosCheckoutReal,
-  lineas: LineaPedidoPayload[],
+  resultadoLineas: LineaPedidoPayload[] | ResultadoLineasPedidoReal,
 ): Record<string, string> {
   const errores: Record<string, string> = {};
   for (const campo of [
@@ -126,10 +169,17 @@ export function validarCheckoutReal(
       errores[campo] = "Campo obligatorio.";
     }
   }
-  if (lineas.length === 0) {
+
+  const resultadoNormalizado = normalizarResultadoLineas(resultadoLineas);
+  if (resultadoNormalizado.lineasNoConvertibles.length > 0) {
+    errores.lineas = construirMensajeBloqueoLineasReales(
+      resultadoNormalizado.lineasNoConvertibles,
+    );
+  } else if (resultadoNormalizado.lineasConvertibles.length === 0) {
     errores.lineas =
       "Necesitas al menos una línea válida para crear el pedido real.";
   }
+
   if (datos.canal_checkout === "web_autenticado" && !datos.id_usuario.trim()) {
     errores.id_usuario =
       "El modo autenticado futuro requiere un id_usuario real.";
@@ -160,6 +210,43 @@ export function construirEstadoInicialCheckoutReal(
   };
 }
 
+function normalizarResultadoLineas(
+  resultadoLineas: LineaPedidoPayload[] | ResultadoLineasPedidoReal,
+): ResultadoLineasPedidoReal {
+  if (Array.isArray(resultadoLineas)) {
+    return {
+      lineasConvertibles: resultadoLineas,
+      lineasNoConvertibles: [],
+    };
+  }
+
+  return resultadoLineas;
+}
+
+function construirMensajeBloqueoLineasReales(
+  lineas: LineaNoConvertiblePedido[],
+): string {
+  const resumenLineas = lineas
+    .map((linea) => `${linea.cantidad} × ${linea.nombre}`)
+    .join(", ");
+
+  return `No podemos crear el pedido real porque tu selección incluye líneas fuera del contrato comprable: ${resumenLineas}. Sepáralas como consulta manual antes de continuar.`;
+}
+
+function resolverMotivoNoConvertibleReal(
+  item: ItemEncargoPreseleccionado,
+): string {
+  if (item.tipo_linea === "fuera_catalogo") {
+    return "La línea artesanal no se puede convertir en una línea pagable del pedido real.";
+  }
+
+  if (item.tipo_linea === "sugerencia_editorial") {
+    return "La sugerencia editorial no tiene disponibilidad activa para pedido real.";
+  }
+
+  return "La línea visible no se puede convertir en una línea pagable del pedido real.";
+}
+
 function construirLineaReal(
   slug: string | null,
   cantidad: number,
@@ -169,12 +256,8 @@ function construirLineaReal(
     return null;
   }
 
-  if (!slug) {
-    return null;
-  }
-
   const producto = productos.find((item) => item.slug === slug);
-  if (!producto) {
+  if (!producto || !producto.disponible) {
     return null;
   }
   return {

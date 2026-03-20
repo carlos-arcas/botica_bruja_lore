@@ -7,8 +7,8 @@ import { PRODUCTOS_CATALOGO } from "@/contenido/catalogo/catalogo";
 import { resolverContextoPreseleccionado } from "@/contenido/catalogo/encargoConsulta";
 import {
   construirEstadoInicialCheckoutReal,
-  construirLineasPedidoReal,
   construirPayloadPedidoReal,
+  construirResultadoLineasPedidoReal,
   validarCheckoutReal,
 } from "@/contenido/catalogo/checkoutReal";
 import { crearPedidoPublico } from "@/infraestructura/api/pedidos";
@@ -28,18 +28,18 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
   const [enviando, setEnviando] = useState(false);
   const router = useRouter();
   const producto = useMemo(() => PRODUCTOS_CATALOGO.find((item) => item.slug === datos.producto_slug) ?? null, [datos.producto_slug]);
+  const resultadoLineas = useMemo(() => construirResultadoLineasPedidoReal(contexto.itemsPreseleccionados, datos.producto_slug, datos.cantidad), [contexto.itemsPreseleccionados, datos.cantidad, datos.producto_slug]);
 
   const enviar = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    const lineas = construirLineasPedidoReal(contexto.itemsPreseleccionados, datos.producto_slug, datos.cantidad);
-    const nuevosErrores = validarCheckoutReal(datos, lineas);
+    const nuevosErrores = validarCheckoutReal(datos, resultadoLineas);
     setErrores(nuevosErrores);
     setMensaje("");
     if (Object.keys(nuevosErrores).length > 0) {
       return;
     }
     setEnviando(true);
-    const resultado = await crearPedidoPublico(construirPayloadPedidoReal(datos, lineas));
+    const resultado = await crearPedidoPublico(construirPayloadPedidoReal(datos, resultadoLineas.lineasConvertibles));
     setEnviando(false);
     if (resultado.estado === "error") {
       setMensaje(resultado.mensaje);
@@ -82,6 +82,19 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
             <textarea value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} />
           </label>
           {producto && <p className={estilos.resumenProducto}>{producto.nombre} · {producto.precioVisible}</p>}
+          {resultadoLineas.lineasNoConvertibles.length > 0 && (
+            <div className={estilos.error} role="alert">
+              <p>El pedido real queda bloqueado porque tu selección visible incluye líneas no comprables.</p>
+              <ul>
+                {resultadoLineas.lineasNoConvertibles.map((linea) => (
+                  <li key={linea.id_linea}>
+                    {linea.cantidad} × {linea.nombre}: {linea.motivo}
+                  </li>
+                ))}
+              </ul>
+              <p>Separa esas piezas como consulta manual antes de continuar con el pago.</p>
+            </div>
+          )}
           {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
         </fieldset>
         <fieldset>

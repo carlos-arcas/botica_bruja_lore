@@ -20,8 +20,8 @@ import {
 } from "@/contenido/catalogo/encargoConsulta";
 import {
   CanalCheckoutDemo,
-  construirLineasPedidoDemo,
   construirPayloadPedidoDemo,
+  construirResultadoLineasPedidoDemo,
   resolverEstadoIdentificacionCheckoutDemo,
   validarCheckoutDemo,
 } from "@/contenido/catalogo/checkoutDemo";
@@ -111,6 +111,16 @@ export function FlujoEncargoConsulta({
   const [datos, setDatos] = useState<DatosConsulta>(() =>
     construirEstadoInicialConsulta(contexto, lineasSeleccion),
   );
+  const resultadoLineasDemo = useMemo(
+    () =>
+      construirResultadoLineasPedidoDemo(
+        itemsSeleccionados,
+        datos.productoSlug,
+        datos.cantidad,
+      ),
+    [datos.cantidad, datos.productoSlug, itemsSeleccionados],
+  );
+  const lineasNoConvertiblesDemo = resultadoLineasDemo.lineasNoConvertibles;
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [resumen, setResumen] = useState("");
   const [mensajeCopia, setMensajeCopia] = useState("");
@@ -190,7 +200,7 @@ export function FlujoEncargoConsulta({
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    const lineas = construirLineasPedidoDemo(
+    const resultadoLineas = construirResultadoLineasPedidoDemo(
       itemsSeleccionados,
       datos.productoSlug,
       datos.cantidad,
@@ -200,7 +210,7 @@ export function FlujoEncargoConsulta({
       ...validarCheckoutDemo(
         canalCheckout,
         estadoIdentificacion.cuentaActiva,
-        lineas,
+        resultadoLineas,
       ),
     };
     limpiarMensajesPrevios(
@@ -228,7 +238,7 @@ export function FlujoEncargoConsulta({
     const payload = construirPayloadPedidoDemo(
       datos.email,
       canalCheckout,
-      lineas,
+      resultadoLineas.lineasConvertibles,
       estadoIdentificacion.cuentaActiva,
     );
     const resultado = await crearPedidoDemoPublico(payload);
@@ -301,6 +311,25 @@ export function FlujoEncargoConsulta({
             {resumenEconomico.totalVisible ?? "A revisar"}
           </p>
           <p>{resumenEconomico.detalle}</p>
+          {lineasNoConvertiblesDemo.length > 0 && (
+            <div className={estilos.error} role="alert">
+              <p>
+                Esta selección no se enviará como pedido demo completo mientras
+                existan líneas fuera de catálogo o no comprables.
+              </p>
+              <ul>
+                {lineasNoConvertiblesDemo.map((linea) => (
+                  <li key={linea.id_linea}>
+                    {linea.cantidad} × {linea.nombre}: {linea.motivo}
+                  </li>
+                ))}
+              </ul>
+              <p>
+                Mantén estas piezas como consulta artesanal o retíralas de tu
+                selección antes de enviar el pedido demo.
+              </p>
+            </div>
+          )}
         </article>
       ) : (
         <article className={estilos.resumenProducto} aria-live="polite">

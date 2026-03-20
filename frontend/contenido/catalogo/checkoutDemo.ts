@@ -2,6 +2,7 @@ import { ItemEncargoPreseleccionado } from "./cestaRitual";
 import { CANTIDAD_MAXIMA_CESTA, CANTIDAD_MINIMA_CESTA } from "./cestaRitual";
 import { PRODUCTOS_CATALOGO, ProductoCatalogo } from "./catalogo";
 import { CuentaDemo } from "../../infraestructura/api/cuentasDemo";
+import { TipoLineaSeleccion } from "./seleccionEncargo";
 
 export type CanalCheckoutDemo = "invitado" | "autenticado";
 
@@ -20,6 +21,19 @@ export type PayloadPedidoDemo = {
   id_usuario?: string;
 };
 
+export type LineaNoConvertiblePedido = {
+  id_linea: string;
+  nombre: string;
+  cantidad: number;
+  tipo_linea: TipoLineaSeleccion;
+  motivo: string;
+};
+
+export type ResultadoLineasPedidoDemo = {
+  lineasConvertibles: LineaPedidoDemoPayload[];
+  lineasNoConvertibles: LineaNoConvertiblePedido[];
+};
+
 export type ErroresCheckoutDemo = Partial<
   Record<"lineas" | "canal" | "idUsuario", string>
 >;
@@ -29,23 +43,37 @@ export type EstadoIdentificacionCheckoutDemo = {
   emailPrefill: string;
 };
 
+export function construirResultadoLineasPedidoDemo(
+  itemsPreseleccionados: ItemEncargoPreseleccionado[],
+  productoSlug: string,
+  cantidadTexto: string,
+  productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO,
+): ResultadoLineasPedidoDemo {
+  if (itemsPreseleccionados.length > 0) {
+    return construirResultadoSeleccionMultiple(itemsPreseleccionados, productos);
+  }
+
+  const cantidad = resolverCantidadCheckout(cantidadTexto);
+  const resultado = construirLineaDesdeProducto(productoSlug, cantidad, productos);
+
+  return {
+    lineasConvertibles: resultado ? [resultado] : [],
+    lineasNoConvertibles: [],
+  };
+}
+
 export function construirLineasPedidoDemo(
   itemsPreseleccionados: ItemEncargoPreseleccionado[],
   productoSlug: string,
   cantidadTexto: string,
   productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO,
 ): LineaPedidoDemoPayload[] {
-  if (itemsPreseleccionados.length > 0) {
-    return itemsPreseleccionados
-      .map((item) =>
-        construirLineaDesdeProducto(item.slug, item.cantidad, productos),
-      )
-      .filter((linea): linea is LineaPedidoDemoPayload => linea !== null);
-  }
-
-  const cantidad = resolverCantidadCheckout(cantidadTexto);
-  const linea = construirLineaDesdeProducto(productoSlug, cantidad, productos);
-  return linea ? [linea] : [];
+  return construirResultadoLineasPedidoDemo(
+    itemsPreseleccionados,
+    productoSlug,
+    cantidadTexto,
+    productos,
+  ).lineasConvertibles;
 }
 
 export function construirPayloadPedidoDemo(
@@ -69,11 +97,17 @@ export function construirPayloadPedidoDemo(
 export function validarCheckoutDemo(
   canal: CanalCheckoutDemo,
   cuentaDemo: CuentaDemo | null,
-  lineas: LineaPedidoDemoPayload[],
+  resultadoLineas: LineaPedidoDemoPayload[] | ResultadoLineasPedidoDemo,
 ): ErroresCheckoutDemo {
   const errores: ErroresCheckoutDemo = {};
+  const resultadoNormalizado = normalizarResultadoLineas(resultadoLineas);
 
-  if (lineas.length === 0) {
+  if (resultadoNormalizado.lineasNoConvertibles.length > 0) {
+    errores.lineas = construirMensajeBloqueoLineas(
+      resultadoNormalizado.lineasNoConvertibles,
+      "pedido demo",
+    );
+  } else if (resultadoNormalizado.lineasConvertibles.length === 0) {
     errores.lineas = "No hay líneas válidas para crear el pedido demo.";
   }
 
@@ -124,6 +158,69 @@ export function resolverCantidadCheckout(valor: string): number {
   );
 }
 
+function construirResultadoSeleccionMultiple(
+  itemsPreseleccionados: ItemEncargoPreseleccionado[],
+  productos: ProductoCatalogo[],
+): ResultadoLineasPedidoDemo {
+  return itemsPreseleccionados.reduce<ResultadoLineasPedidoDemo>(
+    (acumulado, item) => {
+      const linea = construirLineaDesdeProducto(item.slug, item.cantidad, productos);
+      if (linea) {
+        acumulado.lineasConvertibles.push(linea);
+        return acumulado;
+      }
+
+      acumulado.lineasNoConvertibles.push({
+        id_linea: item.id_linea,
+        nombre: item.nombre,
+        cantidad: item.cantidad,
+        tipo_linea: item.tipo_linea,
+        motivo: resolverMotivoNoConvertible(item),
+      });
+      return acumulado;
+    },
+    { lineasConvertibles: [], lineasNoConvertibles: [] },
+  );
+}
+
+function resolverMotivoNoConvertible(
+  item: ItemEncargoPreseleccionado,
+): string {
+  if (item.tipo_linea === "fuera_catalogo") {
+    return "Esta línea artesanal no tiene ficha pública activa y no entra en el contrato final del pedido demo.";
+  }
+
+  if (item.tipo_linea === "sugerencia_editorial") {
+    return "Esta sugerencia editorial no está disponible como producto comprable en el pedido demo.";
+  }
+
+  return "La línea visible no se puede convertir en una línea enviable del pedido demo.";
+}
+
+function normalizarResultadoLineas(
+  resultadoLineas: LineaPedidoDemoPayload[] | ResultadoLineasPedidoDemo,
+): ResultadoLineasPedidoDemo {
+  if (Array.isArray(resultadoLineas)) {
+    return {
+      lineasConvertibles: resultadoLineas,
+      lineasNoConvertibles: [],
+    };
+  }
+
+  return resultadoLineas;
+}
+
+function construirMensajeBloqueoLineas(
+  lineas: LineaNoConvertiblePedido[],
+  contexto: string,
+): string {
+  const resumenLineas = lineas
+    .map((linea) => `${linea.cantidad} × ${linea.nombre}`)
+    .join(", ");
+
+  return `No podemos enviar este ${contexto} porque tu selección incluye líneas fuera del contrato final: ${resumenLineas}. Revísalas o pásalas a consulta manual antes de continuar.`;
+}
+
 function construirLineaDesdeProducto(
   slug: string | null,
   cantidad: number,
@@ -134,7 +231,7 @@ function construirLineaDesdeProducto(
   }
 
   const producto = productos.find((item) => item.slug === slug);
-  if (!producto) {
+  if (!producto || !producto.disponible) {
     return null;
   }
 
