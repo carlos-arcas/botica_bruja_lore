@@ -126,6 +126,38 @@ test("actualizar detalle de importación mantiene filas y resumen sincronizados"
   assert.equal(actualizado.resumen.sin_imagen, 1);
 });
 
+test("actualización secuencial del detalle conserva mutaciones rápidas encadenadas", () => {
+  const detalleInicial = {
+    lote: { id: 92 },
+    resumen: { total: 2, validas: 2, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 0, con_imagen: 0, sin_imagen: 2, seleccionadas: 0 },
+    filas: [
+      { id: 1, numero: 1, datos: {}, errores: [], warnings: [], estado: "valida", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "", identificador: "SKU-1", titulo: "Fila 1", tipo: "producto", resumen_datos: "ok" },
+      { id: 2, numero: 2, datos: {}, errores: [], warnings: [], estado: "valida", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "", identificador: "SKU-2", titulo: "Fila 2", tipo: "producto", resumen_datos: "ok" },
+    ],
+  };
+
+  const filaSeleccionada = {
+    ...detalleInicial.filas[0],
+    seleccionado: true,
+  };
+  const filaConImagen = {
+    ...detalleInicial.filas[1],
+    imagen: "https://cdn.test/2.webp",
+    estado_imagen: "optimizada" as const,
+  };
+
+  const detalleTrasSeleccion = actualizarDetalleImportacion(detalleInicial, filaSeleccionada);
+  const detalleFinal = actualizarDetalleImportacion(detalleTrasSeleccion, filaConImagen);
+  const detallePisadoPorClosureObsoleto = actualizarDetalleImportacion(detalleInicial, filaConImagen);
+
+  assert.equal(detalleFinal.filas[0].seleccionado, true);
+  assert.equal(detalleFinal.filas[1].imagen, "https://cdn.test/2.webp");
+  assert.equal(detalleFinal.resumen.seleccionadas, 1);
+  assert.equal(detalleFinal.resumen.con_imagen, 1);
+  assert.equal(detalleFinal.resumen.sin_imagen, 1);
+  assert.equal(detallePisadoPorClosureObsoleto.filas[0].seleccionado, false);
+});
+
 test("normaliza el contrato de confirmación y construye feedback reutilizable sin serializar el objeto completo", () => {
   const detalle = {
     lote: { id: 44 },
@@ -340,10 +372,27 @@ test("los dos flujos UI de importación consumen el mismo contrato sin doble fet
   assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
   assert.doesNotMatch(contextual, /const onConfirmarLote = \(\) => !detalle \? Promise\.resolve\(\) : ejecutarAccion\(async \(\) => \{[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
   assert.match(importacion, /actualizarDetalleImportacion/);
-  assert.match(importacion, /setDetalle\(\(detalleActual\) => \(!detalleActual \? detalleActual : actualizarDetalleImportacion\(detalleActual, actualizada\)\)\)/);
+  assert.match(importacion, /function actualizarDetalleLoteImportacion/);
+  assert.match(importacion, /asignarDetalle\(\(detalleActual\) => \(!detalleActual \? detalleActual : actualizarDetalleImportacion\(detalleActual, filaActualizada\)\)\)/);
+  assert.match(importacion, /actualizarDetalleLoteImportacion\(setDetalle, actualizada\)/);
   assert.match(importacion, /const feedback = construirFeedbackConfirmacionImportacion\("Filas confirmadas", respuesta\)/);
   assert.match(importacion, /const feedback = construirFeedbackConfirmacionImportacion\("Filas válidas confirmadas", respuesta\)/);
   assert.match(importacion, /setDetalle\(feedback\.detalle\)/);
+});
+
+test("acciones por fila del módulo dedicado aplican actualización funcional sin refetch redundante", () => {
+  const importacion = readFileSync("componentes/admin/ModuloImportacionAdmin.tsx", "utf8");
+
+  assert.match(importacion, /const cambiarSeleccion = \(fila: FilaImportacion\) => loteId \? ejecutarAccion\(async \(\) => \{/);
+  assert.match(importacion, /const actualizada = await cambiarSeleccionFilaImportacion\(loteId, fila\.id, !fila\.seleccionado, token\)/);
+  assert.match(importacion, /actualizarDetalleLoteImportacion\(setDetalle, actualizada\)/);
+  assert.doesNotMatch(importacion, /const cambiarSeleccion[\s\S]*obtenerLoteImportacion\(loteId, token\)/);
+  assert.match(importacion, /const descartarFila = \(fila: FilaImportacion\) => loteId \? ejecutarAccion\(async \(\) => \{/);
+  assert.doesNotMatch(importacion, /const descartarFila[\s\S]*obtenerLoteImportacion\(loteId, token\)/);
+  assert.match(importacion, /const eliminarImagen = \(fila: FilaImportacion\) => loteId \? ejecutarAccion\(async \(\) => \{/);
+  assert.doesNotMatch(importacion, /const eliminarImagen[\s\S]*obtenerLoteImportacion\(loteId, token\)/);
+  assert.match(importacion, /const adjuntarImagen = \(fila: FilaImportacion, archivo\?: File\) => loteId && archivo \? ejecutarAccion\(async \(\) => \{/);
+  assert.doesNotMatch(importacion, /const adjuntarImagen[\s\S]*obtenerLoteImportacion\(loteId, token\)/);
 });
 
 test("acciones inline del CRUD contextual quedan blindadas frente a un GET posterior hipotéticamente fallido", () => {
