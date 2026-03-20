@@ -138,7 +138,18 @@ export async function guardarRegistroAdmin(modulo: ModuloAdmin, payload: Record<
 
 export async function cambiarPublicacionAdmin(modulo: ModuloAdmin, id: string | number, publicado: boolean, token?: string): Promise<Record<string, unknown>> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/${modulo}/${id}/publicacion/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ publicado }) });
-  if (!r.ok) throw new Error("No se pudo actualizar publicación");
+  if (!r.ok) {
+    const data = (await r.json().catch(() => ({ detalle: "No se pudo actualizar publicación" }))) as {
+      detalle?: string;
+      errores?: Record<string, string>;
+      operation_id?: string;
+    };
+    const detalle = data.detalle || "No se pudo actualizar publicación";
+    const errores = formatearErroresValidacion(data.errores);
+    const operationId = data.operation_id ? ` (operation_id: ${data.operation_id})` : "";
+    const mensaje = [detalle, errores].filter(Boolean).join(" · ");
+    throw new Error(`${mensaje || "No se pudo actualizar publicación"}${operationId}`);
+  }
   const data = (await r.json()) as { item: Record<string, unknown> };
   return data.item;
 }
