@@ -15,6 +15,9 @@ function extraerSeccionFila(detalleFila: Record<string, string>): string {
   return String(detalleFila.seccion_publica ?? "").trim();
 }
 
+function filaFueConfirmada(detalleFila: DetalleImportacion["filas"][number]): boolean {
+  return detalleFila.estado === "confirmada";
+}
 
 export function debeActualizarVistaLocal({
   modulo,
@@ -57,7 +60,7 @@ export function resolverSeccionesAfectadasImportacion(
 ): string[] {
   const secciones = new Set(
     detalle.filas
-      .filter((fila) => fila.estado === "confirmada" || fila.resultado_confirmacion)
+      .filter(filaFueConfirmada)
       .map((fila) => extraerSeccionFila(fila.datos))
       .filter(Boolean),
   );
@@ -78,4 +81,3 @@ export function construirDetalleSincronizacionSecciones(resultado: ResultadoSinc
   }
   return mensajes.join(" ");
 }
-
