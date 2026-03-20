@@ -10,7 +10,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import Int
 
 from .auth import usuario_staff
 from .identificadores import generar_id_si_falta, generar_slug_unico
-from .shared import json_no_autorizado, json_payload, to_bool
+from .shared import json_no_autorizado, json_payload, operation_id, to_bool
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def listado_rituales_backoffice(request: HttpRequest) -> JsonResponse:
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
     if usuario_staff(request) is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     q = request.GET.get("q", "").strip()
     queryset = RitualModelo.objects.all().order_by("nombre")
     if q:
@@ -47,8 +47,9 @@ def guardar_ritual_backoffice(request: HttpRequest) -> JsonResponse:
         return HttpResponseNotAllowed(["POST"])
     usuario = usuario_staff(request)
     if usuario is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     try:
+        operation_id_actual = operation_id(request)
         data = json_payload(request)
         existente = RitualModelo.objects.filter(id=data.get("id")).first() if data.get("id") else None
         nombre = data.get("nombre", "").strip()
@@ -65,9 +66,9 @@ def guardar_ritual_backoffice(request: HttpRequest) -> JsonResponse:
         _actualizar_intenciones(obj, data)
         _actualizar_productos(obj, data)
         LOGGER.info("backoffice_ritual_guardado", extra={"usuario": usuario.username, "ritual": obj.id})
-        return JsonResponse({"item": ritual_dict(obj)})
+        return JsonResponse({"item": ritual_dict(obj), "operation_id": operation_id_actual})
     except ValueError as exc:
-        return JsonResponse({"detalle": str(exc)}, status=400)
+        return JsonResponse({"detalle": str(exc), "operation_id": operation_id_actual}, status=400)
 
 
 def _actualizar_intenciones(ritual: RitualModelo, data: dict) -> None:
@@ -105,14 +106,15 @@ def cambiar_publicacion_ritual_backoffice(request: HttpRequest, ritual_id: str) 
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
     if usuario_staff(request) is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     try:
+        operation_id_actual = operation_id(request)
         payload = json_payload(request)
         ritual = RitualModelo.objects.get(id=ritual_id)
         ritual.publicado = to_bool(payload, "publicado")
         ritual.save(update_fields=["publicado"])
-        return JsonResponse({"item": ritual_dict(ritual)})
+        return JsonResponse({"item": ritual_dict(ritual), "operation_id": operation_id_actual})
     except RitualModelo.DoesNotExist:
-        return JsonResponse({"detalle": "Ritual no encontrado."}, status=404)
+        return JsonResponse({"detalle": "Ritual no encontrado.", "operation_id": operation_id_actual}, status=404)
     except ValueError as exc:
-        return JsonResponse({"detalle": str(exc)}, status=400)
+        return JsonResponse({"detalle": str(exc), "operation_id": operation_id_actual}, status=400)

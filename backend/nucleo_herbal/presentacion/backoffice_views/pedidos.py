@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-from uuid import uuid4
-
 from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -12,14 +10,14 @@ from ...dominio.excepciones import ErrorDominio
 from ..publica.dependencias import construir_servicios_backoffice_pedidos
 from ..publica.pedidos_serializadores import serializar_pedido
 from .auth import usuario_staff
-from .shared import json_no_autorizado
+from .shared import json_no_autorizado, operation_id
 
 
 def listado_pedidos_backoffice(request: HttpRequest) -> JsonResponse:
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
     if usuario_staff(request) is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     solo_pagados = request.GET.get("solo_pagados", "").strip().lower() == "true"
     estado = request.GET.get("estado", "").strip() or None
     pedidos = construir_servicios_backoffice_pedidos().listar_pedidos.ejecutar(estado=estado, solo_pagados=solo_pagados)
@@ -60,16 +58,16 @@ def _ejecutar_transicion(request: HttpRequest, pedido_id: str, accion):
         return HttpResponseNotAllowed(["POST"])
     staff = usuario_staff(request)
     if staff is None:
-        return json_no_autorizado()
-    operation_id = request.headers.get("X-Request-ID", str(uuid4()))
+        return json_no_autorizado(request)
+    operation_id_actual = operation_id(request)
     payload = _leer_payload(request)
     try:
-        pedido = accion(construir_servicios_backoffice_pedidos(), staff.username, operation_id, payload)
+        pedido = accion(construir_servicios_backoffice_pedidos(), staff.username, operation_id_actual, payload)
     except ErrorAplicacionLookup as exc:
-        return JsonResponse({"detalle": str(exc), "operation_id": operation_id}, status=404)
+        return JsonResponse({"detalle": str(exc), "operation_id": operation_id_actual}, status=404)
     except ErrorDominio as exc:
-        return JsonResponse({"detalle": str(exc), "operation_id": operation_id}, status=400)
-    return JsonResponse({"item": serializar_pedido(pedido), "pedido": serializar_pedido(pedido), "operation_id": operation_id})
+        return JsonResponse({"detalle": str(exc), "operation_id": operation_id_actual}, status=400)
+    return JsonResponse({"item": serializar_pedido(pedido), "pedido": serializar_pedido(pedido), "operation_id": operation_id_actual})
 
 
 def _leer_payload(request: HttpRequest) -> dict[str, object]:

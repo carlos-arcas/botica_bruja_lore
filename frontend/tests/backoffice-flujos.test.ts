@@ -20,6 +20,8 @@ import {
   marcarPedidoPreparando,
   subirImagenBackoffice,
   resolverBaseBackoffice,
+  obtenerEstadoBackoffice,
+  obtenerListadoAdmin,
   obtenerPlantasAsociables,
 } from "../infraestructura/api/backoffice";
 import {
@@ -564,4 +566,43 @@ test("la confirmación inline queda protegida frente a un GET posterior fallido 
   assert.match(contextual, /const feedback = construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
   assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
   assert.doesNotMatch(contextual, /const respuesta = await confirmarLoteImportacion[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
+});
+
+
+test("estado backoffice preserva detalle útil y operation_id en 403", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 403, json: async () => ({ detalle: "Sesión expirada o usuario sin permisos staff.", operation_id: "auth-403" }) }) as Response) as unknown as typeof fetch;
+
+  const estado = await obtenerEstadoBackoffice("token");
+
+  assert.deepEqual(estado, { estado: "denegado", detalle: "Sesión expirada o usuario sin permisos staff.", operation_id: "auth-403" });
+});
+
+test("estado backoffice mantiene fallback claro ante 403 opaco y diferencia error backend", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 403, json: async () => ({}) }) as Response) as unknown as typeof fetch;
+  const denegado = await obtenerEstadoBackoffice("token");
+  assert.equal(denegado.estado, "denegado");
+  assert.equal(denegado.detalle, "Debes iniciar sesión como staff para acceder al backoffice.");
+  assert.equal("operation_id" in denegado ? denegado.operation_id : undefined, undefined);
+
+  globalThis.fetch = (async () => ({ ok: false, status: 500, json: async () => ({ detalle: "Backend de autenticación degradado.", operation_id: "auth-500" }) }) as Response) as unknown as typeof fetch;
+  const error = await obtenerEstadoBackoffice("token");
+  assert.deepEqual(error, { estado: "error", detalle: "Backend de autenticación degradado. (operation_id: auth-500)", operation_id: "auth-500" });
+});
+
+test("listado admin preserva detalle útil y operation_id en 401/403 sin degradar a mensaje fijo", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 401, json: async () => ({ detalle: "Tu sesión staff ha caducado.", operation_id: "list-401" }) }) as Response) as unknown as typeof fetch;
+
+  const resultado = await obtenerListadoAdmin("productos", new URLSearchParams("q=rosa"), "token");
+
+  assert.deepEqual(resultado, { estado: "denegado", detalle: "Tu sesión staff ha caducado.", operation_id: "list-401" });
+});
+
+test("listado admin diferencia denegado, backend y red", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 503, json: async () => ({ detalle: "Servicio editorial no disponible.", operation_id: "list-503" }) }) as Response) as unknown as typeof fetch;
+  const errorBackend = await obtenerListadoAdmin("editorial", new URLSearchParams(), "token");
+  assert.deepEqual(errorBackend, { estado: "error", detalle: "Servicio editorial no disponible. (operation_id: list-503)", operation_id: "list-503" });
+
+  globalThis.fetch = (async () => { throw new Error("network"); }) as unknown as typeof fetch;
+  const errorRed = await obtenerListadoAdmin("editorial", new URLSearchParams(), "token");
+  assert.deepEqual(errorRed, { estado: "error", detalle: "Error de red." });
 });

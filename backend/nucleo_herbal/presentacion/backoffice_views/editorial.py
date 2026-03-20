@@ -11,7 +11,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import Art
 
 from .auth import usuario_staff
 from .identificadores import generar_slug_unico
-from .shared import json_no_autorizado, json_payload, to_bool
+from .shared import json_no_autorizado, json_payload, operation_id, to_bool
 
 LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def listado_editorial_backoffice(request: HttpRequest) -> JsonResponse:
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
     if usuario_staff(request) is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     q = request.GET.get("q", "").strip()
     queryset = ArticuloEditorialModelo.objects.all().order_by("-fecha_actualizacion")
     if q:
@@ -52,8 +52,9 @@ def guardar_editorial_backoffice(request: HttpRequest) -> JsonResponse:
         return HttpResponseNotAllowed(["POST"])
     usuario = usuario_staff(request)
     if usuario is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     try:
+        operation_id_actual = operation_id(request)
         data = json_payload(request)
         seccion = _resolver_seccion_publica(data)
         existente = ArticuloEditorialModelo.objects.filter(id=data.get("id")).first() if data.get("id") else None
@@ -77,9 +78,9 @@ def guardar_editorial_backoffice(request: HttpRequest) -> JsonResponse:
         obj.save()
         _actualizar_productos_relacionados(obj, data)
         LOGGER.info("backoffice_editorial_guardado", extra={"usuario": usuario.username, "articulo": obj.id})
-        return JsonResponse({"item": articulo_dict(obj)})
+        return JsonResponse({"item": articulo_dict(obj), "operation_id": operation_id_actual})
     except ValueError as exc:
-        return JsonResponse({"detalle": str(exc)}, status=400)
+        return JsonResponse({"detalle": str(exc), "operation_id": operation_id_actual}, status=400)
 
 
 def _actualizar_productos_relacionados(articulo: ArticuloEditorialModelo, data: dict) -> None:
@@ -111,15 +112,16 @@ def cambiar_publicacion_editorial_backoffice(request: HttpRequest, articulo_id: 
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
     if usuario_staff(request) is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     try:
+        operation_id_actual = operation_id(request)
         payload = json_payload(request)
         articulo = ArticuloEditorialModelo.objects.get(id=articulo_id)
         articulo.publicado = to_bool(payload, "publicado")
         articulo.fecha_publicacion = timezone.now() if articulo.publicado else None
         articulo.save(update_fields=["publicado", "fecha_publicacion"])
-        return JsonResponse({"item": articulo_dict(articulo)})
+        return JsonResponse({"item": articulo_dict(articulo), "operation_id": operation_id_actual})
     except ArticuloEditorialModelo.DoesNotExist:
-        return JsonResponse({"detalle": "Artículo no encontrado."}, status=404)
+        return JsonResponse({"detalle": "Artículo no encontrado.", "operation_id": operation_id_actual}, status=404)
     except ValueError as exc:
-        return JsonResponse({"detalle": str(exc)}, status=400)
+        return JsonResponse({"detalle": str(exc), "operation_id": operation_id_actual}, status=400)

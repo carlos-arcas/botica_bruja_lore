@@ -1,12 +1,27 @@
 from __future__ import annotations
 
 import json
+from uuid import uuid4
 
 from django.http import HttpRequest, JsonResponse
 
+OPERATION_ID_ATTR = "_operation_id_backoffice"
 
-def json_no_autorizado() -> JsonResponse:
-    return JsonResponse({"autorizado": False, "detalle": "Acceso restringido a staff."}, status=403)
+
+def operation_id(request: HttpRequest) -> str:
+    operation_id_actual = getattr(request, OPERATION_ID_ATTR, None)
+    if operation_id_actual:
+        return operation_id_actual
+    operation_id_actual = request.headers.get("X-Request-ID") or str(uuid4())
+    setattr(request, OPERATION_ID_ATTR, operation_id_actual)
+    return operation_id_actual
+
+
+def json_no_autorizado(request: HttpRequest | None = None, detalle: str = "Acceso restringido a staff.") -> JsonResponse:
+    payload = {"autorizado": False, "detalle": detalle}
+    if request is not None:
+        payload["operation_id"] = operation_id(request)
+    return JsonResponse(payload, status=403)
 
 
 def json_payload(request: HttpRequest) -> dict:
