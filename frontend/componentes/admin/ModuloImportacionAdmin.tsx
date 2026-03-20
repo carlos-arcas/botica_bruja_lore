@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { Dispatch, FormEvent, SetStateAction, useMemo, useState } from "react";
 
 import { construirFeedbackConfirmacionImportacion } from "@/componentes/admin/importacion/feedbackConfirmacionImportacion";
 import { actualizarDetalleImportacion } from "@/componentes/admin/importacion/resumenImportacion";
@@ -32,6 +32,13 @@ const OPCIONES_ENTIDAD: Array<{ value: EntidadImportacion; label: string }> = [
   { value: "secciones_publicas", label: "Secciones públicas" },
 ];
 
+function actualizarDetalleLoteImportacion(
+  asignarDetalle: Dispatch<SetStateAction<DetalleImportacion | null>>,
+  filaActualizada: FilaImportacion,
+): void {
+  asignarDetalle((detalleActual) => (!detalleActual ? detalleActual : actualizarDetalleImportacion(detalleActual, filaActualizada)));
+}
+
 export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Element {
   const [entidad, setEntidad] = useState<EntidadImportacion>("productos");
   const [detalle, setDetalle] = useState<DetalleImportacion | null>(null);
@@ -54,9 +61,6 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
   };
 
   const refrescarDetalle = async (id: number) => setDetalle(await obtenerLoteImportacion(id, token));
-  const actualizarFila = (actualizada: FilaImportacion): void => {
-    setDetalle((detalleActual) => (!detalleActual ? detalleActual : actualizarDetalleImportacion(detalleActual, actualizada)));
-  };
 
   const subir = (event: FormEvent<HTMLFormElement>) => void ejecutarAccion(async () => {
     event.preventDefault();
@@ -94,19 +98,19 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
 
   const cambiarSeleccion = (fila: FilaImportacion) => loteId ? ejecutarAccion(async () => {
     const actualizada = await cambiarSeleccionFilaImportacion(loteId, fila.id, !fila.seleccionado, token);
-    actualizarFila(actualizada);
+    actualizarDetalleLoteImportacion(setDetalle, actualizada);
   }, "No se pudo actualizar la selección.") : Promise.resolve();
   const descartarFila = (fila: FilaImportacion) => loteId ? ejecutarAccion(async () => {
     const actualizada = await descartarFilaImportacion(loteId, fila.id, token);
-    actualizarFila(actualizada);
+    actualizarDetalleLoteImportacion(setDetalle, actualizada);
   }, "No se pudo descartar la fila.") : Promise.resolve();
   const eliminarImagen = (fila: FilaImportacion) => loteId ? ejecutarAccion(async () => {
     const actualizada = await eliminarImagenFilaImportacion(loteId, fila.id, token);
-    actualizarFila(actualizada);
+    actualizarDetalleLoteImportacion(setDetalle, actualizada);
   }, "No se pudo quitar la imagen.") : Promise.resolve();
   const adjuntarImagen = (fila: FilaImportacion, archivo?: File) => loteId && archivo ? ejecutarAccion(async () => {
     const actualizada = await adjuntarImagenFilaImportacion(loteId, fila.id, archivo, token);
-    actualizarFila(actualizada);
+    actualizarDetalleLoteImportacion(setDetalle, actualizada);
   }, "No se pudo adjuntar la imagen.") : Promise.resolve();
 
   const descargar = async (tipo: "inventario", formato: "csv" | "xlsx") => {
