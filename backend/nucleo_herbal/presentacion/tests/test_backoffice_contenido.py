@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 
-from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import ErrorImagenWebP, guardar_imagen_fila
+from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import ErrorImagenWebP, ErrorValidacionImagen, guardar_imagen_fila
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, PlantaModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
 from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.presentacion.backoffice_auth import crear_token_backoffice
@@ -260,6 +260,177 @@ class BackofficeContenidoTests(TestCase):
         r3 = self.client.post(f"/api/v1/backoffice/importacion/lotes/{lote}/filas/{fila_id}/descartar/", data=json.dumps({}), content_type="application/json", **self._auth())
         self.assertEqual(r3.status_code, 200)
         self.assertEqual(r3.json()["fila"]["estado"], "descartada")
+
+    def test_importacion_errores_y_exitos_incluyen_operation_id(self):
+        respuesta_archivo = self.client.post(
+            "/api/v1/backoffice/importacion/lotes/",
+            data={"entidad": "productos", "modo": "crear_actualizar"},
+            HTTP_X_REQUEST_ID="imp-archivo-1",
+            **self._auth(),
+        )
+        self.assertEqual(respuesta_archivo.status_code, 400)
+        self.assertEqual(respuesta_archivo.json()["operation_id"], "imp-archivo-1")
+
+        lote = self._crear_lote_csv()
+        detalle = self.client.get(
+            f"/api/v1/backoffice/importacion/lotes/{lote}/",
+            HTTP_X_REQUEST_ID="imp-detalle-1",
+            **self._auth(),
+        )
+        self.assertEqual(detalle.status_code, 200)
+        self.assertEqual(detalle.json()["operation_id"], "imp-detalle-1")
+        fila_id = detalle.json()["filas"][0]["id"]
+
+        confirmar = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote}/confirmar/",
+            data=json.dumps({"filas_ids": [fila_id]}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="imp-confirmar-1",
+            **self._auth(),
+        )
+        self.assertEqual(confirmar.status_code, 200)
+        self.assertEqual(confirmar.json()["operation_id"], "imp-confirmar-1")
+        self.assertEqual(confirmar.json()["detalle"]["operation_id"], "imp-confirmar-1")
+
+        fila_confirmada = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote}/filas/{fila_id}/descartar/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="imp-fila-confirmada-1",
+            **self._auth(),
+        )
+        self.assertEqual(fila_confirmada.status_code, 409)
+        self.assertEqual(fila_confirmada.json()["operation_id"], "imp-fila-confirmada-1")
+
+        lote_no_encontrado = self.client.get(
+            "/api/v1/backoffice/importacion/lotes/999999/",
+            HTTP_X_REQUEST_ID="imp-lote-404",
+            **self._auth(),
+        )
+        self.assertEqual(lote_no_encontrado.status_code, 404)
+        self.assertEqual(lote_no_encontrado.json()["operation_id"], "imp-lote-404")
+
+        fila_no_encontrada = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote}/filas/999999/seleccion/",
+            data=json.dumps({"seleccionado": True}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="imp-fila-404",
+            **self._auth(),
+        )
+        self.assertEqual(fila_no_encontrada.status_code, 404)
+        self.assertEqual(fila_no_encontrada.json()["operation_id"], "imp-fila-404")
+
+    @patch("backend.nucleo_herbal.presentacion.backoffice_views.importacion.guardar_imagen_fila")
+    def test_importacion_operaciones_de_lote_y_fila_reutilizan_operation_id(self, guardar_mock):
+        guardar_mock.return_value = "https://cdn.test/fila.webp"
+        lote = self._crear_lote_csv()
+
+        confirmar_validas = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote}/confirmar-validas/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="imp-validas-1",
+            **self._auth(),
+        )
+        self.assertEqual(confirmar_validas.status_code, 200)
+        self.assertEqual(confirmar_validas.json()["operation_id"], "imp-validas-1")
+
+        lote_revalidar = self._crear_lote_csv()
+        revalidar = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote_revalidar}/revalidar/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="imp-revalidar-1",
+            **self._auth(),
+        )
+        self.assertEqual(revalidar.status_code, 200)
+        self.assertEqual(revalidar.json()["operation_id"], "imp-revalidar-1")
+        self.assertEqual(revalidar.json()["detalle"]["operation_id"], "imp-revalidar-1")
+
+        detalle = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote_revalidar}/", **self._auth()).json()
+        fila_id = detalle["filas"][0]["id"]
+
+        seleccion = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote_revalidar}/filas/{fila_id}/seleccion/",
+            data=json.dumps({"seleccionado": False}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="imp-seleccion-1",
+            **self._auth(),
+        )
+        self.assertEqual(seleccion.status_code, 200)
+        self.assertEqual(seleccion.json()["operation_id"], "imp-seleccion-1")
+
+        descarte = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote_revalidar}/filas/{fila_id}/descartar/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="imp-descartar-1",
+            **self._auth(),
+        )
+        self.assertEqual(descarte.status_code, 200)
+        self.assertEqual(descarte.json()["operation_id"], "imp-descartar-1")
+
+        lote_imagen = self._crear_lote_csv()
+        fila_imagen = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote_imagen}/", **self._auth()).json()["filas"][0]["id"]
+        imagen = SimpleUploadedFile("foto.png", b"img-bytes", content_type="image/png")
+        adjuntar = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote_imagen}/filas/{fila_imagen}/imagen/",
+            data={"imagen": imagen},
+            HTTP_X_REQUEST_ID="imp-imagen-ok-1",
+            **self._auth(),
+        )
+        self.assertEqual(adjuntar.status_code, 200)
+        self.assertEqual(adjuntar.json()["operation_id"], "imp-imagen-ok-1")
+
+        eliminar = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote_imagen}/filas/{fila_imagen}/imagen/eliminar/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="imp-imagen-del-1",
+            **self._auth(),
+        )
+        self.assertEqual(eliminar.status_code, 200)
+        self.assertEqual(eliminar.json()["operation_id"], "imp-imagen-del-1")
+
+        cancelar = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote_imagen}/cancelar/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="imp-cancelar-1",
+            **self._auth(),
+        )
+        self.assertEqual(cancelar.status_code, 200)
+        self.assertEqual(cancelar.json()["operation_id"], "imp-cancelar-1")
+
+    @patch("backend.nucleo_herbal.presentacion.backoffice_views.importacion.guardar_imagen_fila")
+    def test_importacion_errores_imagen_reutilizan_operation_id_en_logs_y_respuesta(self, guardar_mock):
+        guardar_mock.side_effect = ErrorValidacionImagen("Formato de imagen inválido.")
+        lote = self._crear_lote_csv()
+        fila_id = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote}/", **self._auth()).json()["filas"][0]["id"]
+
+        with self.assertLogs("backend.nucleo_herbal.presentacion.backoffice_views.importacion_helpers", level="INFO") as logs:
+            respuesta = self.client.post(
+                f"/api/v1/backoffice/importacion/lotes/{lote}/filas/{fila_id}/imagen/",
+                data={"imagen": SimpleUploadedFile("foto.png", b"img-bytes", content_type="image/png")},
+                HTTP_X_REQUEST_ID="imp-log-1",
+                **self._auth(),
+            )
+
+        self.assertEqual(respuesta.status_code, 422)
+        self.assertEqual(respuesta.json()["operation_id"], "imp-log-1")
+        self.assertEqual(logs.records[0].operation_id, "imp-log-1")
+        self.assertEqual(logs.records[0].resultado, "error")
+        self.assertEqual(logs.records[0].error, "Formato de imagen inválido.")
+
+        guardar_mock.side_effect = ErrorImagenWebP("No fue posible convertir la imagen a WebP.")
+        respuesta_webp = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote}/filas/{fila_id}/imagen/",
+            data={"imagen": SimpleUploadedFile("foto.png", b"img-bytes", content_type="image/png")},
+            HTTP_X_REQUEST_ID="imp-webp-1",
+            **self._auth(),
+        )
+        self.assertEqual(respuesta_webp.status_code, 422)
+        self.assertEqual(respuesta_webp.json()["operation_id"], "imp-webp-1")
 
     @patch("backend.nucleo_herbal.presentacion.backoffice_views.importacion.guardar_imagen_fila")
     def test_error_claro_si_falla_conversion_webp_en_fila(self, guardar_mock):

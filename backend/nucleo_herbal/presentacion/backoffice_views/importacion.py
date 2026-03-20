@@ -14,7 +14,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.servi
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ImportacionFilaModelo, ImportacionLoteModelo
 
 from .auth import usuario_staff
-from .importacion_helpers import fila_por_usuario, log_importacion, lote_por_usuario, operation_id, serializar_detalle_lote, serializar_fila
+from .importacion_helpers import fila_por_usuario, json_importacion, log_importacion, lote_por_usuario, operation_id, serializar_detalle_lote, serializar_fila
 from .shared import json_no_autorizado, json_payload
 
 
@@ -25,9 +25,10 @@ def crear_lote_importacion_backoffice(request: HttpRequest) -> JsonResponse:
     usuario = usuario_staff(request)
     if usuario is None:
         return json_no_autorizado()
+    operation_id_actual = operation_id(request)
     archivo = request.FILES.get("archivo")
     if archivo is None:
-        return JsonResponse({"detalle": "Archivo requerido."}, status=400)
+        return json_importacion("Archivo requerido.", 400, request)
     columnas, filas = leer_tabla(archivo)
     lote = ImportacionLoteModelo.objects.create(
         entidad=(request.POST.get("entidad") or "").strip(),
@@ -39,8 +40,8 @@ def crear_lote_importacion_backoffice(request: HttpRequest) -> JsonResponse:
     )
     for indice, row in enumerate(filas, start=2):
         crear_fila_staging(lote, indice, row, columnas, usuario)
-    log_importacion("inicio_lote", usuario, lote, filas_afectadas=len(filas), resultado="ok")
-    return JsonResponse({"lote_id": lote.id, "operation_id": operation_id(request)})
+    log_importacion("inicio_lote", usuario, lote, filas_afectadas=len(filas), resultado="ok", operation_id_actual=operation_id_actual)
+    return JsonResponse({"lote_id": lote.id, "operation_id": operation_id_actual})
 
 
 def detalle_lote_importacion_backoffice(request: HttpRequest, lote_id: int) -> JsonResponse:
@@ -49,7 +50,7 @@ def detalle_lote_importacion_backoffice(request: HttpRequest, lote_id: int) -> J
     lote = lote_por_usuario(request, lote_id)
     if isinstance(lote, JsonResponse):
         return lote
-    return JsonResponse(serializar_detalle_lote(lote))
+    return JsonResponse(serializar_detalle_lote(lote, operation_id(request)))
 
 
 @csrf_exempt
@@ -69,11 +70,12 @@ def revalidar_lote_importacion_backoffice(request: HttpRequest, lote_id: int) ->
     lote = lote_por_usuario(request, lote_id)
     if isinstance(lote, JsonResponse):
         return lote
+    operation_id_actual = operation_id(request)
     filas = list(lote.filas.exclude(estado=ImportacionFilaModelo.ESTADO_CONFIRMADA))
     for fila in filas:
         revalidar_fila(lote, fila, lote.usuario)
-    log_importacion("revalidacion", lote.usuario, lote, filas_afectadas=len(filas), resultado="ok")
-    return JsonResponse({"revalidado": True, "detalle": serializar_detalle_lote(lote)})
+    log_importacion("revalidacion", lote.usuario, lote, filas_afectadas=len(filas), resultado="ok", operation_id_actual=operation_id_actual)
+    return JsonResponse({"revalidado": True, "detalle": serializar_detalle_lote(lote, operation_id_actual), "operation_id": operation_id_actual})
 
 
 @csrf_exempt
@@ -83,11 +85,12 @@ def cancelar_lote_importacion_backoffice(request: HttpRequest, lote_id: int) -> 
     lote = lote_por_usuario(request, lote_id)
     if isinstance(lote, JsonResponse):
         return lote
+    operation_id_actual = operation_id(request)
     filas = lote.filas.count()
     usuario = lote.usuario
     lote.delete()
-    log_importacion("cancelacion", usuario, lote, filas_afectadas=filas, resultado="ok")
-    return JsonResponse({"cancelado": True, "lote_id": lote_id})
+    log_importacion("cancelacion", usuario, lote, filas_afectadas=filas, resultado="ok", operation_id_actual=operation_id_actual)
+    return JsonResponse({"cancelado": True, "lote_id": lote_id, "operation_id": operation_id_actual})
 
 
 @csrf_exempt
@@ -97,13 +100,14 @@ def descartar_filas_importacion_backoffice(request: HttpRequest, lote_id: int) -
     lote = lote_por_usuario(request, lote_id)
     if isinstance(lote, JsonResponse):
         return lote
+    operation_id_actual = operation_id(request)
     ids = json_payload(request).get("filas_ids") or []
     lote.filas.filter(id__in=ids).exclude(estado=ImportacionFilaModelo.ESTADO_CONFIRMADA).update(
         estado=ImportacionFilaModelo.ESTADO_DESCARTADA,
         seleccionado=False,
     )
-    log_importacion("descarte_lote", lote.usuario, lote, filas_afectadas=len(ids), resultado="ok")
-    return JsonResponse({"detalle": serializar_detalle_lote(lote)})
+    log_importacion("descarte_lote", lote.usuario, lote, filas_afectadas=len(ids), resultado="ok", operation_id_actual=operation_id_actual)
+    return JsonResponse({"detalle": serializar_detalle_lote(lote, operation_id_actual), "operation_id": operation_id_actual})
 
 
 @csrf_exempt
@@ -132,11 +136,12 @@ def confirmar_lote(request: HttpRequest, lote_id: int, alcance: str) -> JsonResp
     lote = lote_por_usuario(request, lote_id)
     if isinstance(lote, JsonResponse):
         return lote
+    operation_id_actual = operation_id(request)
     ids = set(json_payload(request).get("filas_ids") or [])
     filas = filas_objetivo_confirmacion(lote, alcance, ids)
     confirmadas = sum(confirmar_fila(lote, fila, lote.usuario) for fila in filas)
-    log_importacion(f"confirmacion_{alcance}", lote.usuario, lote, filas_afectadas=len(filas), resultado="ok")
-    return JsonResponse({"confirmadas": confirmadas, "detalle": serializar_detalle_lote(lote)})
+    log_importacion(f"confirmacion_{alcance}", lote.usuario, lote, filas_afectadas=len(filas), resultado="ok", operation_id_actual=operation_id_actual)
+    return JsonResponse({"confirmadas": confirmadas, "detalle": serializar_detalle_lote(lote, operation_id_actual), "operation_id": operation_id_actual})
 
 
 def operar_fila(request: HttpRequest, lote_id: int, fila_id: int, accion: str) -> JsonResponse:
@@ -145,6 +150,7 @@ def operar_fila(request: HttpRequest, lote_id: int, fila_id: int, accion: str) -
     fila = fila_por_usuario(request, lote_id, fila_id)
     if isinstance(fila, JsonResponse):
         return fila
+    operation_id_actual = operation_id(request)
     if accion == "seleccion":
         fila.seleccionado = bool(json_payload(request).get("seleccionado"))
         fila.save(update_fields=["seleccionado"])
@@ -159,16 +165,16 @@ def operar_fila(request: HttpRequest, lote_id: int, fila_id: int, accion: str) -
     else:
         archivo = request.FILES.get("imagen")
         if archivo is None:
-            return JsonResponse({"detalle": "Imagen requerida."}, status=400)
+            return json_importacion("Imagen requerida.", 400, request)
         try:
             fila.imagen = guardar_imagen_fila(archivo, fila.id)
         except (ErrorImagenWebP, ErrorValidacionImagen) as error:
-            log_importacion("imagen_adjuntar", fila.lote.usuario, fila.lote, filas_afectadas=1, resultado="error", error=str(error))
-            return JsonResponse({"detalle": str(error)}, status=422)
+            log_importacion("imagen_adjuntar", fila.lote.usuario, fila.lote, filas_afectadas=1, resultado="error", operation_id_actual=operation_id_actual, error=str(error))
+            return json_importacion(str(error), 422, request)
         fila.resultado_confirmacion = estado_imagen_staging(fila.datos, fila.imagen)
         fila.save(update_fields=["imagen", "resultado_confirmacion"])
-    log_importacion(accion, fila.lote.usuario, fila.lote, filas_afectadas=1, resultado="ok")
-    return JsonResponse({"fila": serializar_fila(fila)})
+    log_importacion(accion, fila.lote.usuario, fila.lote, filas_afectadas=1, resultado="ok", operation_id_actual=operation_id_actual)
+    return JsonResponse({"fila": serializar_fila(fila), "operation_id": operation_id_actual})
 
 
 def filas_objetivo_confirmacion(lote: ImportacionLoteModelo, alcance: str, ids: set[int]) -> list[ImportacionFilaModelo]:
