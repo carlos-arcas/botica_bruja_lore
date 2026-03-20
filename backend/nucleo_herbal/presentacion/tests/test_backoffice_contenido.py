@@ -12,6 +12,7 @@ from django.test import Client, TestCase
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import ErrorImagenWebP, guardar_imagen_fila
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, PlantaModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
+from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.presentacion.backoffice_auth import crear_token_backoffice
 from backend.nucleo_herbal.presentacion.backoffice_views.productos_contrato import (
     CAMPOS_CONTRATO_ENTRADA,
@@ -658,3 +659,25 @@ class BackofficeContenidoTests(TestCase):
         self.assertEqual(logs.records[0].operation_id, "req-123")
         self.assertEqual(logs.records[0].modo, "crear")
         self.assertEqual(logs.records[-1].errores_validacion["planta_id"], "Selecciona una planta asociada.")
+
+
+    @patch("backend.nucleo_herbal.presentacion.backoffice_views.pedidos.construir_servicios_backoffice_pedidos")
+    def test_pedido_backoffice_error_incluye_operation_id(self, mock_servicios):
+        class MarcarPreparandoInvalido:
+            def ejecutar(self, pedido_id, operation_id, actor):
+                raise ErrorDominio("Solo un pedido pagado puede pasar a preparando.")
+
+        mock_servicios.return_value = type("Servicios", (), {"marcar_preparando": MarcarPreparandoInvalido()})()
+
+        respuesta = self.client.post(
+            "/api/v1/backoffice/pedidos/ped-err/preparando/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID="ped-op-1",
+            **self._auth(),
+        )
+
+        self.assertEqual(respuesta.status_code, 400)
+        cuerpo = respuesta.json()
+        self.assertEqual(cuerpo["detalle"], "Solo un pedido pagado puede pasar a preparando.")
+        self.assertEqual(cuerpo["operation_id"], "ped-op-1")

@@ -2,6 +2,12 @@ import { API_BACKEND_BASE, NOMBRE_COOKIE_BACKOFFICE } from "../auth/configuracio
 
 const API_BACKOFFICE_PROXY_BASE = "/api/backoffice/proxy";
 
+type ErrorBackoffice = {
+  detalle?: string;
+  errores?: Record<string, string | string[]> | string[];
+  operation_id?: string;
+};
+
 export function resolverBaseBackoffice(esNavegador: boolean): string {
   return esNavegador ? API_BACKOFFICE_PROXY_BASE : API_BACKEND_BASE;
 }
@@ -65,10 +71,28 @@ export type PayloadEnvioPedido = {
   observaciones_operativas: string;
 };
 
-function formatearErroresValidacion(errores?: Record<string, string>): string {
+function formatearErroresValidacion(errores?: ErrorBackoffice["errores"]): string {
   if (!errores) return "";
-  const entradas = Object.entries(errores).filter(([, mensaje]) => Boolean(mensaje));
-  return entradas.map(([campo, mensaje]) => `${campo}: ${mensaje}`).join(" · ");
+  if (Array.isArray(errores)) return errores.filter(Boolean).join(" · ");
+  return Object.entries(errores)
+    .flatMap(([campo, mensaje]) => {
+      if (Array.isArray(mensaje)) return mensaje.filter(Boolean).map((item) => `${campo}: ${item}`);
+      return mensaje ? [`${campo}: ${mensaje}`] : [];
+    })
+    .join(" · ");
+}
+
+function construirMensajeErrorBackoffice(payload: ErrorBackoffice | null, fallback: string): string {
+  const detalle = payload?.detalle?.trim() || fallback;
+  const errores = formatearErroresValidacion(payload?.errores);
+  const operationId = payload?.operation_id ? ` (operation_id: ${payload.operation_id})` : "";
+  const mensaje = [detalle, errores].filter(Boolean).join(" · ");
+  return `${mensaje || fallback}${operationId}`;
+}
+
+async function parsearErrorBackoffice(respuesta: Response, fallback: string): Promise<never> {
+  const payload = (await respuesta.json().catch(() => null)) as ErrorBackoffice | null;
+  throw new Error(construirMensajeErrorBackoffice(payload, fallback));
 }
 
 function cabecerasConToken(token?: string, json = true): HeadersInit {
@@ -110,7 +134,6 @@ export async function obtenerListadoAdmin(modulo: ModuloAdmin, query: URLSearchP
   }
 }
 
-
 export async function obtenerPlantasAsociables(token?: string): Promise<PlantaAsociable[]> {
   const respuesta = await fetch(construirUrlBackoffice("/api/v1/backoffice/productos/plantas-asociables/"), { headers: cabecerasConToken(token, false), cache: "no-store" });
   if (!respuesta.ok) throw new Error("No se pudo cargar la lista de plantas asociables.");
@@ -120,86 +143,64 @@ export async function obtenerPlantasAsociables(token?: string): Promise<PlantaAs
 
 export async function guardarRegistroAdmin(modulo: ModuloAdmin, payload: Record<string, unknown>, token?: string): Promise<Record<string, unknown>> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/${modulo}/guardar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify(payload) });
-  if (!r.ok) {
-    const data = (await r.json().catch(() => ({ detalle: "No se pudo guardar" }))) as {
-      detalle?: string;
-      errores?: Record<string, string>;
-      operation_id?: string;
-    };
-    const detalle = data.detalle || "No se pudo guardar";
-    const errores = formatearErroresValidacion(data.errores);
-    const operationId = data.operation_id ? ` (operation_id: ${data.operation_id})` : "";
-    const mensaje = [detalle, errores].filter(Boolean).join(" · ");
-    throw new Error(`${mensaje || "No se pudo guardar"}${operationId}`);
-  }
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo guardar");
   const data = (await r.json()) as { item: Record<string, unknown> };
   return data.item;
 }
 
 export async function cambiarPublicacionAdmin(modulo: ModuloAdmin, id: string | number, publicado: boolean, token?: string): Promise<Record<string, unknown>> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/${modulo}/${id}/publicacion/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ publicado }) });
-  if (!r.ok) {
-    const data = (await r.json().catch(() => ({ detalle: "No se pudo actualizar publicación" }))) as {
-      detalle?: string;
-      errores?: Record<string, string>;
-      operation_id?: string;
-    };
-    const detalle = data.detalle || "No se pudo actualizar publicación";
-    const errores = formatearErroresValidacion(data.errores);
-    const operationId = data.operation_id ? ` (operation_id: ${data.operation_id})` : "";
-    const mensaje = [detalle, errores].filter(Boolean).join(" · ");
-    throw new Error(`${mensaje || "No se pudo actualizar publicación"}${operationId}`);
-  }
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo actualizar publicación");
   const data = (await r.json()) as { item: Record<string, unknown> };
   return data.item;
 }
 
 export async function crearLoteImportacion(formData: FormData, token?: string): Promise<number> {
   const r = await fetch(construirUrlBackoffice("/api/v1/backoffice/importacion/lotes/"), { method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : undefined, body: formData });
-  if (!r.ok) throw new Error("Error creando lote");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo crear el lote de importación.");
   const data = (await r.json()) as { lote_id: number };
   return data.lote_id;
 }
 
 export async function obtenerLoteImportacion(loteId: number, token?: string): Promise<DetalleImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/`), { headers: cabecerasConToken(token, false), cache: "no-store" });
-  if (!r.ok) throw new Error("Error consultando lote");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo consultar el lote de importación.");
   return (await r.json()) as DetalleImportacion;
 }
 
 export async function confirmarLoteImportacion(loteId: number, filasIds: number[], token?: string): Promise<ResultadoConfirmacionImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/confirmar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ filas_ids: filasIds }) });
-  if (!r.ok) throw new Error("Error confirmando lote");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo confirmar el lote de importación.");
   return (await r.json()) as ResultadoConfirmacionImportacion;
 }
 
 export async function confirmarValidasLoteImportacion(loteId: number, token?: string): Promise<ResultadoConfirmacionImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/confirmar-validas/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
-  if (!r.ok) throw new Error("Error confirmando filas válidas");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudieron confirmar las filas válidas del lote.");
   return (await r.json()) as ResultadoConfirmacionImportacion;
 }
 
 export async function revalidarLoteImportacion(loteId: number, token?: string): Promise<{ revalidado: boolean; detalle: DetalleImportacion }> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/revalidar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
-  if (!r.ok) throw new Error("Error revalidando lote");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo revalidar el lote de importación.");
   return (await r.json()) as { revalidado: boolean; detalle: DetalleImportacion };
 }
 
 export async function cancelarLoteImportacion(loteId: number, token?: string): Promise<void> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/cancelar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
-  if (!r.ok) throw new Error("Error cancelando lote");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo cancelar el lote de importación.");
 }
 
 export async function cambiarSeleccionFilaImportacion(loteId: number, filaId: number, seleccionado: boolean, token?: string): Promise<FilaImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/seleccion/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({ seleccionado }) });
-  if (!r.ok) throw new Error("Error cambiando selección");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo actualizar la selección de la fila.");
   const data = (await r.json()) as { fila: FilaImportacion };
   return data.fila;
 }
 
 export async function descartarFilaImportacion(loteId: number, filaId: number, token?: string): Promise<FilaImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/descartar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
-  if (!r.ok) throw new Error("Error descartando fila");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo descartar la fila de importación.");
   const data = (await r.json()) as { fila: FilaImportacion };
   return data.fila;
 }
@@ -209,19 +210,17 @@ export async function adjuntarImagenFilaImportacion(loteId: number, filaId: numb
   formData.set("imagen", imagen);
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/imagen/`), { method: "POST", headers, body: formData });
-  if (!r.ok) throw new Error((await r.json()).detalle || "Error adjuntando imagen");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo adjuntar la imagen de la fila.");
   const data = (await r.json()) as { fila: FilaImportacion };
   return data.fila;
 }
 
 export async function eliminarImagenFilaImportacion(loteId: number, filaId: number, token?: string): Promise<FilaImportacion> {
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/importacion/lotes/${loteId}/filas/${filaId}/imagen/eliminar/`), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify({}) });
-  if (!r.ok) throw new Error("Error eliminando imagen");
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo eliminar la imagen de la fila.");
   const data = (await r.json()) as { fila: FilaImportacion };
   return data.fila;
 }
-
-
 
 export async function subirImagenBackoffice(imagen: File, prefijo: string, token?: string): Promise<string> {
   const formData = new FormData();
@@ -229,10 +228,7 @@ export async function subirImagenBackoffice(imagen: File, prefijo: string, token
   formData.set("prefijo", prefijo);
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
   const r = await fetch(construirUrlBackoffice("/api/v1/backoffice/imagenes/subir/"), { method: "POST", headers, body: formData });
-  if (!r.ok) {
-    const data = (await r.json().catch(() => ({ detalle: "No se pudo subir la imagen." }))) as { detalle?: string };
-    throw new Error(data.detalle || "No se pudo subir la imagen.");
-  }
+  if (!r.ok) return parsearErrorBackoffice(r, "No se pudo subir la imagen.");
   const data = (await r.json()) as { imagen_url: string };
   return data.imagen_url;
 }
@@ -246,7 +242,7 @@ export async function descargarExportacionAdmin(modulo: ModuloAdmin, tipo: "plan
   const query = new URLSearchParams({ tipo, formato });
   if (seccion) query.set("seccion", seccion);
   const r = await fetch(construirUrlBackoffice(`/api/v1/backoffice/${modulo}/exportar/?${query.toString()}`), { headers: cabecerasConToken(token, false) });
-  if (!r.ok) throw new Error("Error exportando módulo");
+  if (!r.ok) return parsearErrorBackoffice(r, `No se pudo exportar el módulo ${modulo}.`);
   return r.blob();
 }
 
@@ -257,22 +253,21 @@ export async function obtenerProductosAdmin(query: URLSearchParams, token?: stri
   return { estado: "ok", productos, metricas: { total: productos.length, publicados: productos.filter((p) => p.publicado).length, borrador: productos.filter((p) => !p.publicado).length } };
 }
 
-
 export async function marcarPedidoPreparando(id: string, token?: string): Promise<Record<string, unknown>> {
-  return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/preparando/`, {}, token, "No se pudo marcar el pedido como preparando");
+  return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/preparando/`, {}, token, "No se pudo marcar el pedido como preparando.");
 }
 
 export async function marcarPedidoEnviado(id: string, payload: PayloadEnvioPedido, token?: string): Promise<Record<string, unknown>> {
-  return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/enviado/`, payload, token, "No se pudo marcar el pedido como enviado");
+  return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/enviado/`, payload, token, "No se pudo marcar el pedido como enviado.");
 }
 
 export async function marcarPedidoEntregado(id: string, observaciones_operativas: string, token?: string): Promise<Record<string, unknown>> {
-  return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/entregado/`, { observaciones_operativas }, token, "No se pudo marcar el pedido como entregado");
+  return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/entregado/`, { observaciones_operativas }, token, "No se pudo marcar el pedido como entregado.");
 }
 
 async function ejecutarAccionPedido(ruta: string, payload: Record<string, unknown>, token: string | undefined, mensajeError: string): Promise<Record<string, unknown>> {
   const r = await fetch(construirUrlBackoffice(ruta), { method: "POST", headers: cabecerasConToken(token), body: JSON.stringify(payload) });
-  if (!r.ok) throw new Error(mensajeError);
+  if (!r.ok) return parsearErrorBackoffice(r, mensajeError);
   const data = (await r.json()) as { item: Record<string, unknown> };
   return data.item;
 }

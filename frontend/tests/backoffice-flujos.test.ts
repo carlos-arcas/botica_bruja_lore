@@ -7,7 +7,9 @@ import {
   adjuntarImagenFilaImportacion,
   cambiarPublicacionAdmin,
   cambiarSeleccionFilaImportacion,
+  cancelarLoteImportacion,
   confirmarLoteImportacion,
+  confirmarValidasLoteImportacion,
   crearLoteImportacion,
   descartarFilaImportacion,
   descargarExportacionAdmin,
@@ -15,6 +17,7 @@ import {
   guardarRegistroAdmin,
   obtenerLoteImportacion,
   revalidarLoteImportacion,
+  marcarPedidoPreparando,
   subirImagenBackoffice,
   resolverBaseBackoffice,
   obtenerPlantasAsociables,
@@ -105,6 +108,56 @@ test("publish/unpublish mantiene fallback seguro si backend no devuelve JSON", a
 test("submit de alta propaga errores backend cuando guardar falla", async () => {
   globalThis.fetch = (async () => ({ ok: false, status: 400, json: async () => ({ detalle: "Nombre obligatorio" }) }) as Response) as unknown as typeof fetch;
   await assert.rejects(() => guardarRegistroAdmin("productos", { nombre: "fallido" }, "token"), /Nombre obligatorio/);
+});
+
+
+
+test("crear lote de importación propaga detalle backend cuando falta archivo", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 400, json: async () => ({ detalle: "Archivo requerido.", operation_id: "imp-001" }) }) as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => crearLoteImportacion(new FormData(), "token"), /Archivo requerido\..*operation_id: imp-001/);
+});
+
+test("obtener lote mantiene fallback seguro si backend no devuelve JSON", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 502, json: async () => { throw new Error("html"); } }) as unknown as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => obtenerLoteImportacion(404, "token"), /No se pudo consultar el lote de importación\./);
+});
+
+test("acciones de lote propagan detalle backend cuando existe", async () => {
+  const cola = [
+    { detalle: "El lote ya fue confirmado.", operation_id: "lot-11" },
+    { detalle: "No hay filas válidas para confirmar." },
+    { detalle: "El lote ya no puede revalidarse." },
+    { detalle: "El lote ya fue cancelado.", operation_id: "lot-12" },
+  ];
+  globalThis.fetch = (async () => ({ ok: false, status: 409, json: async () => cola.shift() }) as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => confirmarLoteImportacion(10, [1], "token"), /El lote ya fue confirmado\..*operation_id: lot-11/);
+  await assert.rejects(() => confirmarValidasLoteImportacion(10, "token"), /No hay filas válidas para confirmar\./);
+  await assert.rejects(() => revalidarLoteImportacion(10, "token"), /El lote ya no puede revalidarse\./);
+  await assert.rejects(() => cancelarLoteImportacion(10, "token"), /El lote ya fue cancelado\..*operation_id: lot-12/);
+});
+
+test("adjuntar imagen de fila propaga detalle backend de validación WebP", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 422, json: async () => ({ detalle: "No fue posible convertir la imagen a WebP.", operation_id: "img-422" }) }) as Response) as unknown as typeof fetch;
+
+  await assert.rejects(
+    () => adjuntarImagenFilaImportacion(10, 9, new File(["x"], "foto.png", { type: "image/png" }), "token"),
+    /No fue posible convertir la imagen a WebP\..*operation_id: img-422/,
+  );
+});
+
+test("exportación fallida propaga detalle backend", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 400, json: async () => ({ detalle: "Formato inválido.", operation_id: "exp-1" }) }) as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => descargarExportacionAdmin("productos", "inventario", "xlsx", "token"), /Formato inválido\..*operation_id: exp-1/);
+});
+
+test("acciones operativas de pedidos propagan detalle backend", async () => {
+  globalThis.fetch = (async () => ({ ok: false, status: 400, json: async () => ({ detalle: "El pedido ya está en preparación.", operation_id: "ped-77" }) }) as Response) as unknown as typeof fetch;
+
+  await assert.rejects(() => marcarPedidoPreparando("ped-1", "token"), /El pedido ya está en preparación\..*operation_id: ped-77/);
 });
 
 test("flujo de importación confirmada: crear lote, consultar y confirmar", async () => {

@@ -66,10 +66,10 @@ def _ejecutar_transicion(request: HttpRequest, pedido_id: str, accion):
     try:
         pedido = accion(construir_servicios_backoffice_pedidos(), staff.username, operation_id, payload)
     except ErrorAplicacionLookup as exc:
-        return JsonResponse({"detalle": str(exc)}, status=404)
+        return JsonResponse({"detalle": str(exc), "operation_id": operation_id}, status=404)
     except ErrorDominio as exc:
-        return JsonResponse({"detalle": str(exc)}, status=400)
-    return JsonResponse({"item": serializar_pedido(pedido), "pedido": serializar_pedido(pedido)})
+        return JsonResponse({"detalle": str(exc), "operation_id": operation_id}, status=400)
+    return JsonResponse({"item": serializar_pedido(pedido), "pedido": serializar_pedido(pedido), "operation_id": operation_id})
 
 
 def _leer_payload(request: HttpRequest) -> dict[str, object]:
