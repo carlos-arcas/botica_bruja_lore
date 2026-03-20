@@ -55,11 +55,28 @@ function construirValidadorProducto(estadoPlantas: EstadoCargaPlantas) {
   return (formulario: Record<string, unknown>) => validarFormularioProducto(formulario, estadoPlantas.estado);
 }
 
+function actualizarItemsSeccion(
+  itemsActuales: Record<string, unknown>[],
+  seccionObjetivo: string,
+  itemsSeccion: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  return [...itemsActuales.filter((item) => item.seccion_publica !== seccionObjetivo), ...itemsSeccion];
+}
+
+function sincronizarProductoMutado(
+  itemsActuales: Record<string, unknown>[],
+  itemMutado: Record<string, unknown>,
+): Record<string, unknown>[] {
+  const resto = itemsActuales.filter((item) => String(item.id) !== String(itemMutado.id));
+  return [...resto, itemMutado];
+}
+
 export function ModuloProductosAdmin({ token, itemsIniciales, estadoListadoInicial }: { token?: string; itemsIniciales: Record<string, unknown>[]; estadoListadoInicial: EstadoListadoAdmin }): JSX.Element {
   const [seccion, setSeccion] = useState<string>(SECCIONES[0].slug);
   const [plantas, setPlantas] = useState<PlantaAsociable[]>([]);
   const [estadoPlantas, setEstadoPlantas] = useState<EstadoCargaPlantas>({ estado: "cargando", mensaje: "Cargando plantas asociables..." });
-  const filtrados = useMemo(() => itemsIniciales.filter((item) => item.seccion_publica === seccion), [itemsIniciales, seccion]);
+  const [itemsProductos, setItemsProductos] = useState(itemsIniciales);
+  const filtrados = useMemo(() => itemsProductos.filter((item) => item.seccion_publica === seccion), [itemsProductos, seccion]);
 
   const cargarPlantas = useCallback(() => {
     let cancelado = false;
@@ -83,6 +100,18 @@ export function ModuloProductosAdmin({ token, itemsIniciales, estadoListadoInici
   }, [token]);
 
   useEffect(() => cargarPlantas(), [cargarPlantas]);
+
+  useEffect(() => {
+    setItemsProductos(itemsIniciales);
+  }, [itemsIniciales]);
+
+  const sincronizarListadoSeccion = useCallback((seccionActualizada: string, itemsSeccion: Record<string, unknown>[]) => {
+    setItemsProductos((actuales) => actualizarItemsSeccion(actuales, seccionActualizada, itemsSeccion));
+  }, []);
+
+  const sincronizarProducto = useCallback((itemMutado: Record<string, unknown>) => {
+    setItemsProductos((actuales) => sincronizarProductoMutado(actuales, itemMutado));
+  }, []);
 
   const validadorProducto = useMemo(() => construirValidadorProducto(estadoPlantas), [estadoPlantas]);
 
@@ -165,6 +194,8 @@ export function ModuloProductosAdmin({ token, itemsIniciales, estadoListadoInici
         }}
         onCambioContexto={setSeccion}
         validarFormulario={validadorProducto}
+        onItemsSincronizados={sincronizarListadoSeccion}
+        onItemMutado={sincronizarProducto}
       />
     </>
   );

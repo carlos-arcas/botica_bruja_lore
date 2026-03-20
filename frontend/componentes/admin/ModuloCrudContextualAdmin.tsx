@@ -52,6 +52,8 @@ type Props = {
   validarFormulario?: (form: Record<string, unknown>) => string | null;
   estadoListadoInicial?: EstadoListadoAdmin;
   mostrarPanelHerramientas?: boolean;
+  onItemsSincronizados?: (seccion: string, items: Record<string, unknown>[]) => void;
+  onItemMutado?: (item: Record<string, unknown>) => void;
 };
 
 type DetalleLote = { lote: Record<string, unknown>; resumen: ResumenImportacion; filas: FilaImportacion[] };
@@ -200,6 +202,8 @@ export function ModuloCrudContextualAdmin({
   validarFormulario,
   estadoListadoInicial = { tipo: "datos", mensaje: "Datos cargados." },
   mostrarPanelHerramientas = false,
+  onItemsSincronizados,
+  onItemMutado,
 }: Props): JSX.Element {
   const router = useRouter();
   const [items, setItems] = useState(itemsIniciales);
@@ -233,6 +237,7 @@ export function ModuloCrudContextualAdmin({
       throw new Error(actualizado.detalle);
     }
     setItems(actualizado.items);
+    onItemsSincronizados?.(seccionSeleccionada, actualizado.items);
     router.refresh();
   };
 
@@ -248,7 +253,8 @@ export function ModuloCrudContextualAdmin({
 
   const guardar = async (formulario: Record<string, unknown>) => {
     const payload = construirPayloadSegunTipo(tipoPayload, formulario, seccionSeleccionada);
-    await guardarRegistroAdmin(modulo, payload, token);
+    const itemGuardado = await guardarRegistroAdmin(modulo, payload, token);
+    onItemMutado?.(itemGuardado);
     await recargarListadoReal();
   };
 
@@ -470,7 +476,8 @@ export function ModuloCrudContextualAdmin({
                           type="button"
                           className={item[campoEstado] ? "admin-boton admin-boton--peligro" : "admin-boton admin-boton--primario"}
                           onClick={() => void ejecutarAccion(async () => {
-                            await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token);
+                            const itemActualizado = await cambiarPublicacionAdmin(modulo, String(item.id), !Boolean(item[campoEstado]), token);
+                            onItemMutado?.(itemActualizado);
                             await recargarListadoReal();
                           }, "No se pudo actualizar la publicación.")}
                         >

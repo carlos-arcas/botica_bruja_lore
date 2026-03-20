@@ -606,3 +606,43 @@ test("listado admin diferencia denegado, backend y red", async () => {
   const errorRed = await obtenerListadoAdmin("editorial", new URLSearchParams(), "token");
   assert.deepEqual(errorRed, { estado: "error", detalle: "Error de red." });
 });
+
+
+test("productos sincroniza una única fuente de verdad tras mutación y cambio de sección", () => {
+  const moduloProductos = readFileSync("componentes/admin/ModuloProductosAdmin.tsx", "utf8");
+  const moduloCrud = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+
+  assert.match(moduloProductos, /const \[itemsProductos, setItemsProductos\] = useState\(itemsIniciales\)/);
+  assert.match(moduloProductos, /itemsProductos\.filter\(\(item\) => item\.seccion_publica === seccion\)/);
+  assert.match(moduloProductos, /onItemsSincronizados=\{sincronizarListadoSeccion\}/);
+  assert.match(moduloProductos, /onItemMutado=\{sincronizarProducto\}/);
+  assert.match(moduloCrud, /onItemsSincronizados\?\.\(seccionSeleccionada, actualizado\.items\)/);
+  assert.match(moduloCrud, /onItemMutado\?\.\(itemGuardado\)/);
+});
+
+test("regresión S0→S1 en productos evita resucitar snapshot obsoleto al volver de pestaña", () => {
+  const s0 = [
+    { id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: false },
+    { id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: true },
+  ];
+  const s1Botica = [{ id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: true }];
+
+  const actualizarItemsSeccion = (itemsActuales: Record<string, unknown>[], seccionObjetivo: string, itemsSeccion: Record<string, unknown>[]) => [
+    ...itemsActuales.filter((item) => item.seccion_publica !== seccionObjetivo),
+    ...itemsSeccion,
+  ];
+
+  const trasMutacion = actualizarItemsSeccion(s0, "botica-natural", s1Botica);
+  const vistaBoticaTrasVolver = trasMutacion.filter((item) => item.seccion_publica === "botica-natural");
+  const snapshotViejo = s0.filter((item) => item.seccion_publica === "botica-natural");
+
+  assert.equal(snapshotViejo[0]?.publicado, false);
+  assert.equal(vistaBoticaTrasVolver[0]?.publicado, true);
+  assert.notDeepEqual(vistaBoticaTrasVolver, snapshotViejo);
+});
+
+test("publicar o despublicar sincroniza el item mutado antes del refresco contextual", () => {
+  const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  assert.match(componente, /const itemActualizado = await cambiarPublicacionAdmin\(modulo, String\(item\.id\), !Boolean\(item\[campoEstado\]\), token\);/);
+  assert.match(componente, /onItemMutado\?\.\(itemActualizado\);/);
+});
