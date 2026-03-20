@@ -1,4 +1,8 @@
-import { CANTIDAD_MAXIMA_CESTA, CANTIDAD_MINIMA_CESTA, ItemEncargoPreseleccionado } from "./cestaRitual";
+import {
+  CANTIDAD_MAXIMA_CESTA,
+  CANTIDAD_MINIMA_CESTA,
+  ItemEncargoPreseleccionado,
+} from "./cestaRitual";
 import { PRODUCTOS_CATALOGO, ProductoCatalogo } from "./catalogo";
 
 export type CanalCheckoutReal = "web_invitado" | "web_autenticado";
@@ -65,7 +69,11 @@ export function construirLineasPedidoReal(
       .map((item) => construirLineaReal(item.slug, item.cantidad, productos))
       .filter((linea): linea is LineaPedidoPayload => linea !== null);
   }
-  const linea = construirLineaReal(productoSlug, resolverCantidadCheckoutReal(cantidadTexto), productos);
+  const linea = construirLineaReal(
+    productoSlug,
+    resolverCantidadCheckoutReal(cantidadTexto),
+    productos,
+  );
   return linea ? [linea] : [];
 }
 
@@ -98,23 +106,40 @@ export function construirPayloadPedidoReal(
   return payload;
 }
 
-export function validarCheckoutReal(datos: DatosCheckoutReal, lineas: LineaPedidoPayload[]): Record<string, string> {
+export function validarCheckoutReal(
+  datos: DatosCheckoutReal,
+  lineas: LineaPedidoPayload[],
+): Record<string, string> {
   const errores: Record<string, string> = {};
-  for (const campo of ["email_contacto", "nombre_contacto", "telefono_contacto", "producto_slug", "nombre_destinatario", "linea_1", "codigo_postal", "ciudad", "provincia"]) {
+  for (const campo of [
+    "email_contacto",
+    "nombre_contacto",
+    "telefono_contacto",
+    "producto_slug",
+    "nombre_destinatario",
+    "linea_1",
+    "codigo_postal",
+    "ciudad",
+    "provincia",
+  ]) {
     if (!datos[campo as keyof DatosCheckoutReal].toString().trim()) {
       errores[campo] = "Campo obligatorio.";
     }
   }
   if (lineas.length === 0) {
-    errores.lineas = "Necesitas al menos una línea válida para crear el pedido real.";
+    errores.lineas =
+      "Necesitas al menos una línea válida para crear el pedido real.";
   }
   if (datos.canal_checkout === "web_autenticado" && !datos.id_usuario.trim()) {
-    errores.id_usuario = "El modo autenticado futuro requiere un id_usuario real.";
+    errores.id_usuario =
+      "El modo autenticado futuro requiere un id_usuario real.";
   }
   return errores;
 }
 
-export function construirEstadoInicialCheckoutReal(productoSlug?: string): DatosCheckoutReal {
+export function construirEstadoInicialCheckoutReal(
+  productoSlug?: string,
+): DatosCheckoutReal {
   return {
     email_contacto: "",
     nombre_contacto: "",
@@ -135,7 +160,19 @@ export function construirEstadoInicialCheckoutReal(productoSlug?: string): Datos
   };
 }
 
-function construirLineaReal(slug: string, cantidad: number, productos: ProductoCatalogo[]): LineaPedidoPayload | null {
+function construirLineaReal(
+  slug: string | null,
+  cantidad: number,
+  productos: ProductoCatalogo[],
+): LineaPedidoPayload | null {
+  if (!slug) {
+    return null;
+  }
+
+  if (!slug) {
+    return null;
+  }
+
   const producto = productos.find((item) => item.slug === slug);
   if (!producto) {
     return null;
@@ -152,11 +189,16 @@ function construirLineaReal(slug: string, cantidad: number, productos: ProductoC
 
 function resolverCantidadCheckoutReal(valor: string): number {
   const coincidencia = valor.match(/\d+/);
-  const cantidad = coincidencia ? Number(coincidencia[0]) : CANTIDAD_MINIMA_CESTA;
+  const cantidad = coincidencia
+    ? Number(coincidencia[0])
+    : CANTIDAD_MINIMA_CESTA;
   if (!Number.isFinite(cantidad)) {
     return CANTIDAD_MINIMA_CESTA;
   }
-  return Math.min(CANTIDAD_MAXIMA_CESTA, Math.max(CANTIDAD_MINIMA_CESTA, Math.round(cantidad)));
+  return Math.min(
+    CANTIDAD_MAXIMA_CESTA,
+    Math.max(CANTIDAD_MINIMA_CESTA, Math.round(cantidad)),
+  );
 }
 
 function convertirPrecioVisibleADecimal(precioVisible: string): string {

@@ -20,7 +20,9 @@ export type PayloadPedidoDemo = {
   id_usuario?: string;
 };
 
-export type ErroresCheckoutDemo = Partial<Record<"lineas" | "canal" | "idUsuario", string>>;
+export type ErroresCheckoutDemo = Partial<
+  Record<"lineas" | "canal" | "idUsuario", string>
+>;
 export type EstadoIdentificacionCheckoutDemo = {
   canalActivo: CanalCheckoutDemo;
   cuentaActiva: CuentaDemo | null;
@@ -35,7 +37,9 @@ export function construirLineasPedidoDemo(
 ): LineaPedidoDemoPayload[] {
   if (itemsPreseleccionados.length > 0) {
     return itemsPreseleccionados
-      .map((item) => construirLineaDesdeProducto(item.slug, item.cantidad, productos))
+      .map((item) =>
+        construirLineaDesdeProducto(item.slug, item.cantidad, productos),
+      )
       .filter((linea): linea is LineaPedidoDemoPayload => linea !== null);
   }
 
@@ -51,7 +55,12 @@ export function construirPayloadPedidoDemo(
   cuentaDemo?: CuentaDemo | null,
 ): PayloadPedidoDemo {
   if (canal === "autenticado" && cuentaDemo?.id_usuario.trim()) {
-    return { email: email.trim(), canal, lineas, id_usuario: cuentaDemo.id_usuario.trim() };
+    return {
+      email: email.trim(),
+      canal,
+      lineas,
+      id_usuario: cuentaDemo.id_usuario.trim(),
+    };
   }
 
   return { email: email.trim(), canal, lineas };
@@ -73,7 +82,8 @@ export function validarCheckoutDemo(
   }
 
   if (canal === "autenticado" && !cuentaDemo?.id_usuario.trim()) {
-    errores.idUsuario = "Necesitas una sesión activa de cuenta demo para comprar en modo autenticado.";
+    errores.idUsuario =
+      "Necesitas una sesión activa de cuenta demo para comprar en modo autenticado.";
   }
 
   return errores;
@@ -91,25 +101,38 @@ export function resolverEstadoIdentificacionCheckoutDemo(
     };
   }
 
-  return { canalActivo: "invitado", cuentaActiva: cuentaDemo, emailPrefill: "" };
+  return {
+    canalActivo: "invitado",
+    cuentaActiva: cuentaDemo,
+    emailPrefill: "",
+  };
 }
 
 export function resolverCantidadCheckout(valor: string): number {
   const coincidencia = valor.match(/\d+/);
-  const cantidad = coincidencia ? Number(coincidencia[0]) : CANTIDAD_MINIMA_CESTA;
+  const cantidad = coincidencia
+    ? Number(coincidencia[0])
+    : CANTIDAD_MINIMA_CESTA;
 
   if (!Number.isFinite(cantidad)) {
     return CANTIDAD_MINIMA_CESTA;
   }
 
-  return Math.min(CANTIDAD_MAXIMA_CESTA, Math.max(CANTIDAD_MINIMA_CESTA, Math.round(cantidad)));
+  return Math.min(
+    CANTIDAD_MAXIMA_CESTA,
+    Math.max(CANTIDAD_MINIMA_CESTA, Math.round(cantidad)),
+  );
 }
 
 function construirLineaDesdeProducto(
-  slug: string,
+  slug: string | null,
   cantidad: number,
   productos: ProductoCatalogo[],
 ): LineaPedidoDemoPayload | null {
+  if (!slug) {
+    return null;
+  }
+
   const producto = productos.find((item) => item.slug === slug);
   if (!producto) {
     return null;
@@ -120,7 +143,9 @@ function construirLineaDesdeProducto(
     slug_producto: producto.slug,
     nombre_producto: producto.nombre,
     cantidad,
-    precio_unitario_demo: convertirPrecioVisibleADecimal(producto.precioVisible),
+    precio_unitario_demo: convertirPrecioVisibleADecimal(
+      producto.precioVisible,
+    ),
   };
 }
 

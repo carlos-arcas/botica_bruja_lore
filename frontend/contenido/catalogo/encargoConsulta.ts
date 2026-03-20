@@ -1,7 +1,14 @@
-import { ItemEncargoPreseleccionado, construirResumenItemsEncargo, deserializarItemsEncargo } from "./cestaRitual";
+import {
+  ItemEncargoPreseleccionado,
+  construirResumenItemsEncargo,
+  deserializarItemsEncargo,
+} from "./cestaRitual";
 import { PRODUCTOS_CATALOGO, ProductoCatalogo } from "./catalogo";
 import { obtenerProductoPorSlug } from "./detalleCatalogo";
-import { LineaSeleccionEncargo, construirResumenHumanoSeleccion } from "./seleccionEncargo";
+import {
+  LineaSeleccionEncargo,
+  construirResumenHumanoSeleccion,
+} from "./seleccionEncargo";
 
 export const MENSAJES_VALIDACION = {
   nombre: "Comparte tu nombre para preparar la consulta.",
@@ -31,7 +38,10 @@ export type ContextoPreseleccionConsulta = {
 
 export type ErroresConsulta = Partial<Record<keyof DatosConsulta, string>>;
 
-export function resolverProductoPreseleccionado(slug: string | null, productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO): ProductoCatalogo | null {
+export function resolverProductoPreseleccionado(
+  slug: string | null,
+  productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO,
+): ProductoCatalogo | null {
   return slug ? obtenerProductoPorSlug(slug, productos) : null;
 }
 
@@ -41,7 +51,10 @@ export function resolverContextoPreseleccionado(
   origen: string | null = null,
 ): ContextoPreseleccionConsulta {
   const itemsPreseleccionados = deserializarItemsEncargo(cestaSerializada);
-  const modo = origen === "seleccion" || itemsPreseleccionados.length > 0 ? "seleccion" : "producto";
+  const modo =
+    origen === "seleccion" || itemsPreseleccionados.length > 0
+      ? "seleccion"
+      : "producto";
 
   return {
     modo,
@@ -77,7 +90,10 @@ export function construirEstadoInicialConsulta(
   };
 }
 
-export function validarSolicitudConsulta(datos: DatosConsulta, modo: ModoConsulta): ErroresConsulta {
+export function validarSolicitudConsulta(
+  datos: DatosConsulta,
+  modo: ModoConsulta,
+): ErroresConsulta {
   const errores: ErroresConsulta = {};
 
   if (datos.nombre.trim().length < 2) {
@@ -106,9 +122,10 @@ export function construirResumenConsulta(
   lineasSeleccion: LineaSeleccionEncargo[] = [],
 ): string {
   const contacto = datos.email.trim() || `Teléfono: ${datos.telefono.trim()}`;
-  const bloqueSeleccion = modo === "seleccion"
-    ? `Selección: ${construirResumenHumanoSeleccion(lineasSeleccion) || construirResumenItemsEncargo(lineasSeleccion.map(({ slug, cantidad }) => ({ slug: slug ?? "pieza-sin-slug", cantidad })))}`
-    : `Producto: ${producto?.nombre ?? "Producto pendiente de selección"}`;
+  const bloqueSeleccion =
+    modo === "seleccion"
+      ? `Selección: ${construirResumenHumanoSeleccion(lineasSeleccion) || construirResumenItemsEncargo(lineasSeleccion.map(lineaAItemResumen))}`
+      : `Producto: ${producto?.nombre ?? "Producto pendiente de selección"}`;
 
   return [
     "Consulta de encargo · La Botica de la Bruja Lore",
@@ -118,6 +135,23 @@ export function construirResumenConsulta(
     `Cantidad/Formato: ${datos.cantidad.trim() || "A convenir"}`,
     `Intención: ${datos.mensaje.trim()}`,
   ].join("\n");
+}
+
+function lineaAItemResumen(
+  linea: LineaSeleccionEncargo,
+): ItemEncargoPreseleccionado {
+  return {
+    id_linea: linea.id_linea,
+    tipo_linea: linea.tipo_linea,
+    slug: linea.slug,
+    id_producto: linea.id_producto,
+    nombre: linea.nombre,
+    cantidad: linea.cantidad,
+    formato: linea.formato,
+    imagen_url: linea.imagen_url,
+    referencia_economica: linea.referencia_economica,
+    notas_origen: linea.notas_origen,
+  };
 }
 
 function tieneContactoValido(email: string, telefono: string): boolean {

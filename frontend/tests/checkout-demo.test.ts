@@ -8,18 +8,43 @@ import {
   resolverCantidadCheckout,
   validarCheckoutDemo,
 } from "../contenido/catalogo/checkoutDemo";
-import { construirRutaReciboPedidoDemo, resolverIdPedidoDesdeRuta } from "../contenido/catalogo/postCheckoutDemo";
+import {
+  construirRutaReciboPedidoDemo,
+  resolverIdPedidoDesdeRuta,
+} from "../contenido/catalogo/postCheckoutDemo";
 import {
   construirRutaCuentaDemoConRetornoSeguro,
   guardarBorradorCheckoutDemo,
   leerBorradorCheckoutDemo,
   limpiarBorradorCheckoutDemo,
 } from "../contenido/catalogo/estadoCheckoutDemo";
-import { crearPedidoDemoPublico, obtenerEmailDemoPedidoPublico, obtenerPedidoDemoPublico } from "../infraestructura/api/pedidosDemo";
+import {
+  crearPedidoDemoPublico,
+  obtenerEmailDemoPedidoPublico,
+  obtenerPedidoDemoPublico,
+} from "../infraestructura/api/pedidosDemo";
+
+function crearItemSeleccionado(slug: string, cantidad: number) {
+  return {
+    id_linea: `linea-${slug}`,
+    tipo_linea: "catalogo" as const,
+    slug,
+    id_producto: null,
+    nombre: slug,
+    cantidad,
+    formato: null,
+    imagen_url: null,
+    referencia_economica: {
+      etiqueta: "Referencia editorial disponible",
+      valor: null,
+    },
+    notas_origen: null,
+  };
+}
 
 test("construirLineasPedidoDemo usa selección múltiple de cesta cuando existe", () => {
   const lineas = construirLineasPedidoDemo(
-    [{ slug: "infusion-bruma-lavanda", cantidad: 2 }],
+    [crearItemSeleccionado("infusion-bruma-lavanda", 2)],
     "vela-intencion-clara",
     "1 unidad",
   );
@@ -31,7 +56,11 @@ test("construirLineasPedidoDemo usa selección múltiple de cesta cuando existe"
 });
 
 test("construirLineasPedidoDemo cae a producto individual y normaliza cantidad", () => {
-  const lineas = construirLineasPedidoDemo([], "vela-intencion-clara", "3 unidades");
+  const lineas = construirLineasPedidoDemo(
+    [],
+    "vela-intencion-clara",
+    "3 unidades",
+  );
 
   assert.equal(lineas.length, 1);
   assert.equal(lineas[0]?.slug_producto, "vela-intencion-clara");
@@ -58,7 +87,11 @@ test("construirPayloadPedidoDemo añade id_usuario en autenticado con sesión de
         precio_unitario_demo: "14.90",
       },
     ],
-    { id_usuario: "usr-100", email: "demo@botica.test", nombre_visible: "Lore" },
+    {
+      id_usuario: "usr-100",
+      email: "demo@botica.test",
+      nombre_visible: "Lore",
+    },
   );
 
   assert.equal(payload.id_usuario, "usr-100");
@@ -69,7 +102,11 @@ test("construirPayloadPedidoDemo no envía id_usuario en invitado aunque exista 
     "demo@botica.test",
     "invitado",
     [],
-    { id_usuario: "usr-100", email: "demo@botica.test", nombre_visible: "Lore" },
+    {
+      id_usuario: "usr-100",
+      email: "demo@botica.test",
+      nombre_visible: "Lore",
+    },
   );
 
   assert.equal("id_usuario" in payload, false);
@@ -77,7 +114,11 @@ test("construirPayloadPedidoDemo no envía id_usuario en invitado aunque exista 
 
 test("resolverEstadoIdentificacionCheckoutDemo detecta sesión demo activa y hace prefill de email", () => {
   const estado = resolverEstadoIdentificacionCheckoutDemo(
-    { id_usuario: "usr-100", email: "demo@botica.test", nombre_visible: "Lore" },
+    {
+      id_usuario: "usr-100",
+      email: "demo@botica.test",
+      nombre_visible: "Lore",
+    },
     false,
   );
 
@@ -105,7 +146,6 @@ test("resolverIdPedidoDesdeRuta retorna null en vacío", () => {
   assert.equal(resolverIdPedidoDesdeRuta("   "), null);
 });
 
-
 test("guardar y leer borrador de checkout demo preserva intención y resetea consentimiento", () => {
   const originalWindow = global.window;
   const storage = new Map<string, string>();
@@ -118,15 +158,18 @@ test("guardar y leer borrador de checkout demo preserva intención y resetea con
     },
   } as Window & typeof globalThis;
 
-  guardarBorradorCheckoutDemo({
-    nombre: "Lore",
-    email: "demo@botica.test",
-    telefono: "600123123",
-    productoSlug: "vela-intencion-clara",
-    cantidad: "2 unidades",
-    mensaje: "Quiero conservar esta intención para volver al checkout.",
-    consentimiento: true,
-  }, true);
+  guardarBorradorCheckoutDemo(
+    {
+      nombre: "Lore",
+      email: "demo@botica.test",
+      telefono: "600123123",
+      productoSlug: "vela-intencion-clara",
+      cantidad: "2 unidades",
+      mensaje: "Quiero conservar esta intención para volver al checkout.",
+      consentimiento: true,
+    },
+    true,
+  );
 
   const borrador = leerBorradorCheckoutDemo();
 
@@ -149,15 +192,18 @@ test("limpiarBorradorCheckoutDemo elimina residuos tras pedido exitoso", () => {
     },
   } as Window & typeof globalThis;
 
-  guardarBorradorCheckoutDemo({
-    nombre: "Lore",
-    email: "demo@botica.test",
-    telefono: "600123123",
-    productoSlug: "vela-intencion-clara",
-    cantidad: "2 unidades",
-    mensaje: "Seguimos con el checkout demo sin perder el formulario.",
-    consentimiento: false,
-  }, false);
+  guardarBorradorCheckoutDemo(
+    {
+      nombre: "Lore",
+      email: "demo@botica.test",
+      telefono: "600123123",
+      productoSlug: "vela-intencion-clara",
+      cantidad: "2 unidades",
+      mensaje: "Seguimos con el checkout demo sin perder el formulario.",
+      consentimiento: false,
+    },
+    false,
+  );
   limpiarBorradorCheckoutDemo();
 
   assert.equal(leerBorradorCheckoutDemo(), null);
@@ -165,8 +211,14 @@ test("limpiarBorradorCheckoutDemo elimina residuos tras pedido exitoso", () => {
 });
 
 test("construirRutaCuentaDemoConRetornoSeguro solo permite retorno interno", () => {
-  assert.equal(construirRutaCuentaDemoConRetornoSeguro("/encargo"), "/cuenta-demo?returnTo=%2Fencargo");
-  assert.equal(construirRutaCuentaDemoConRetornoSeguro("https://evil.test"), "/cuenta-demo?returnTo=%2Fcuenta-demo");
+  assert.equal(
+    construirRutaCuentaDemoConRetornoSeguro("/encargo"),
+    "/cuenta-demo?returnTo=%2Fencargo",
+  );
+  assert.equal(
+    construirRutaCuentaDemoConRetornoSeguro("https://evil.test"),
+    "/cuenta-demo?returnTo=%2Fcuenta-demo",
+  );
 });
 
 test("crearPedidoDemoPublico devuelve éxito con respuesta API", async () => {
@@ -277,7 +329,6 @@ test("obtenerPedidoDemoPublico gestiona pedido inexistente", async () => {
   global.fetch = originalFetch;
 });
 
-
 test("obtenerEmailDemoPedidoPublico devuelve simulación de email", async () => {
   const originalFetch = global.fetch;
   global.fetch = (async () => {
@@ -292,7 +343,9 @@ test("obtenerEmailDemoPedidoPublico devuelve simulación de email", async () => 
           asunto: "[DEMO] Confirmación de pedido PD-300",
           cuerpo_texto: "Aviso: entorno demo sin envío real de correo",
           subtotal_demo: "14.90",
-          lineas: [{ nombre_producto: "Bruma", cantidad: 1, subtotal_demo: "14.90" }],
+          lineas: [
+            { nombre_producto: "Bruma", cantidad: 1, subtotal_demo: "14.90" },
+          ],
           es_simulacion: true,
         },
       }),
@@ -304,8 +357,6 @@ test("obtenerEmailDemoPedidoPublico devuelve simulación de email", async () => 
 
   global.fetch = originalFetch;
 });
-
-
 
 test("flujo post-checkout consume contratos mínimos de pedido y email demo", async () => {
   const originalFetch = global.fetch;
