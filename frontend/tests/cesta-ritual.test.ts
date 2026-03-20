@@ -16,7 +16,7 @@ import {
   serializarItemsEncargo,
   vaciarCesta,
 } from "../contenido/catalogo/cestaRitual";
-import { resolverResumenEconomicoSeleccion } from "../contenido/catalogo/seleccionEncargo";
+import { resolverReferenciaEconomicaVisualLinea, resolverResumenEconomicoSeleccion } from "../contenido/catalogo/seleccionEncargo";
 
 test("agregarProducto suma unidades cuando el slug ya existe", () => {
   const inicial = agregarProducto(crearCestaVacia(), "infusion-bruma-lavanda");
@@ -92,4 +92,52 @@ test("la referencia parcial se comunica como parcial cuando hay mezcla de catál
   assert.equal(resumen.estado, "parcial");
   assert.equal(resumen.etiqueta, "Referencia parcial");
   assert.match(resumen.totalVisible ?? "", /14,90/);
+});
+
+
+test("una línea de catálogo rellena imagen_url cuando existe información visual", () => {
+  const cesta = agregarProducto(crearCestaVacia(), "infusion-bruma-lavanda", 1);
+  const lineas = convertirCestaALineasSeleccion(cesta);
+
+  assert.match(lineas[0]?.imagen_url ?? "", /^data:image\/svg\+xml/);
+});
+
+test("una línea con referencia válida expone referencia unitaria y subtotal orientativo honestos", () => {
+  const cesta = agregarProducto(crearCestaVacia(), "infusion-bruma-lavanda", 2);
+  const lineas = convertirCestaALineasSeleccion(cesta);
+  const referencia = resolverReferenciaEconomicaVisualLinea(lineas[0]!);
+
+  assert.equal(referencia.referenciaUnitaria, "14,90 €");
+  assert.equal(referencia.subtotal, "29,80 €");
+  assert.equal(referencia.mensaje, "Referencia editorial disponible");
+});
+
+test("una línea sin referencia mantiene mensaje honesto y no inventa subtotal", () => {
+  const cesta = agregarProducto(crearCestaVacia(), "lavanda-flores-40g", 2);
+  const lineas = convertirCestaALineasSeleccion(cesta);
+  const referencia = resolverReferenciaEconomicaVisualLinea(lineas[0]!);
+
+  assert.equal(referencia.referenciaUnitaria, null);
+  assert.equal(referencia.subtotal, null);
+  assert.match(referencia.mensaje, /revisión artesanal/);
+});
+
+test("las líneas fuera de catálogo siguen funcionando sin imagen obligatoria", () => {
+  const cesta = agregarProducto(crearCestaVacia(), "lavanda-flores-40g", 1);
+  const lineas = convertirCestaALineasSeleccion(cesta);
+
+  assert.equal(lineas[0]?.tipo_linea, "fuera_catalogo");
+  assert.equal(lineas[0]?.imagen_url, null);
+});
+
+test("regresión: mezcla catálogo y fuera de catálogo mantiene riqueza visual y honestidad económica por línea", () => {
+  let cesta = agregarProducto(crearCestaVacia(), "infusion-bruma-lavanda", 2);
+  cesta = agregarProducto(cesta, "lavanda-flores-40g", 1);
+  const lineas = convertirCestaALineasSeleccion(cesta);
+
+  assert.equal(lineas.length, 2);
+  assert.match(lineas[0]?.imagen_url ?? "", /^data:image\/svg\+xml/);
+  assert.equal(resolverReferenciaEconomicaVisualLinea(lineas[0]!).subtotal, "29,80 €");
+  assert.equal(lineas[1]?.imagen_url, null);
+  assert.equal(resolverReferenciaEconomicaVisualLinea(lineas[1]!).subtotal, null);
 });

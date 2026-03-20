@@ -12,9 +12,12 @@ test("la página de selección usa naming coherente y empty state real", () => {
   assert.match(vistaSeleccion, /Vaciar selección/);
 });
 
-test("la selección renderiza líneas reales y CTA coherente hacia encargo", () => {
+test("la selección renderiza líneas ricas y CTA coherente hacia encargo", () => {
   assert.match(vistaSeleccion, /Línea de catálogo/);
   assert.match(vistaSeleccion, /Pieza fuera de catálogo/);
+  assert.match(vistaSeleccion, /src=\{linea\.imagen_url\}/);
+  assert.match(vistaSeleccion, /Referencia unitaria/);
+  assert.match(vistaSeleccion, /Subtotal orientativo/);
   assert.match(vistaSeleccion, /Quitar línea/);
   assert.match(vistaSeleccion, /\/encargo\?origen=seleccion/);
 });
@@ -29,4 +32,10 @@ test("el formulario evita contaminar inputs con dumps crudos de cesta", () => {
   assert.doesNotMatch(flujoEncargo, /Selección múltiple desde cesta/);
   assert.doesNotMatch(flujoEncargo, /construirResumenItemsEncargo\(contextoPreseleccionado\.itemsPreseleccionados\)/);
   assert.match(flujoEncargo, /Regresar a mi selección/);
+});
+
+
+test("la selección mantiene contexto honesto para líneas sin imagen o sin referencia", () => {
+  assert.match(vistaSeleccion, /Sin referencia editorial/);
+  assert.match(vistaSeleccion, /Se confirma en la solicitud/);
 });

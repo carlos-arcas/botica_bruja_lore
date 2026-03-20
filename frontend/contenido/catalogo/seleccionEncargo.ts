@@ -29,6 +29,12 @@ export type ResumenEconomicoSeleccion = {
   totalVisible: string | null;
 };
 
+export type ReferenciaEconomicaVisualLinea = {
+  mensaje: string;
+  referenciaUnitaria: string | null;
+  subtotal: string | null;
+};
+
 export function resolverLineasSeleccionEncargo(
   cesta: CestaRitual,
   productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO,
@@ -85,6 +91,23 @@ export function resolverResumenEconomicoSeleccion(lineas: LineaSeleccionEncargo[
   };
 }
 
+export function resolverReferenciaEconomicaVisualLinea(linea: LineaSeleccionEncargo): ReferenciaEconomicaVisualLinea {
+  const valorUnitario = linea.referencia_economica.valor;
+  if (valorUnitario === null) {
+    return {
+      mensaje: "Referencia económica a confirmar durante la revisión artesanal.",
+      referenciaUnitaria: null,
+      subtotal: null,
+    };
+  }
+
+  return {
+    mensaje: linea.referencia_economica.etiqueta,
+    referenciaUnitaria: formatearMoneda(valorUnitario),
+    subtotal: formatearMoneda(valorUnitario * linea.cantidad),
+  };
+}
+
 function resolverLineaSeleccion(
   slug: string,
   cantidad: number,
@@ -114,7 +137,7 @@ function resolverLineaSeleccion(
     nombre: producto.nombre,
     cantidad,
     formato: producto.categoria,
-    imagen_url: null,
+    imagen_url: producto.imagen_url,
     referencia_economica: {
       etiqueta: producto.disponible ? "Referencia editorial disponible" : "Referencia editorial no activa",
       valor: producto.disponible ? convertirPrecioVisibleANumero(producto.precioVisible) : null,
