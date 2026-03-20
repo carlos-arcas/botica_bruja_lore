@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { EstadoListadoAdmin } from "@/componentes/admin/estadoListadoAdmin";
 import { ModuloCrudContextualAdmin } from "@/componentes/admin/ModuloCrudContextualAdmin";
+import { actualizarItemsSeccion, sincronizarProductoMutado } from "@/componentes/admin/sincronizacionProductosAdmin";
 import { BENEFICIOS_BOTICA, CATEGORIAS_VISIBLES_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
 import { PlantaAsociable, obtenerPlantasAsociables } from "@/infraestructura/api/backoffice";
 import { validarFormularioProducto } from "@/infraestructura/configuracion/validacionProductosBackoffice";
@@ -53,22 +54,6 @@ function resolverAyudaPlantas(estado: EstadoCargaPlantas, plantas: PlantaAsociab
 
 function construirValidadorProducto(estadoPlantas: EstadoCargaPlantas) {
   return (formulario: Record<string, unknown>) => validarFormularioProducto(formulario, estadoPlantas.estado);
-}
-
-function actualizarItemsSeccion(
-  itemsActuales: Record<string, unknown>[],
-  seccionObjetivo: string,
-  itemsSeccion: Record<string, unknown>[],
-): Record<string, unknown>[] {
-  return [...itemsActuales.filter((item) => item.seccion_publica !== seccionObjetivo), ...itemsSeccion];
-}
-
-function sincronizarProductoMutado(
-  itemsActuales: Record<string, unknown>[],
-  itemMutado: Record<string, unknown>,
-): Record<string, unknown>[] {
-  const resto = itemsActuales.filter((item) => String(item.id) !== String(itemMutado.id));
-  return [...resto, itemMutado];
 }
 
 export function ModuloProductosAdmin({ token, itemsIniciales, estadoListadoInicial }: { token?: string; itemsIniciales: Record<string, unknown>[]; estadoListadoInicial: EstadoListadoAdmin }): JSX.Element {

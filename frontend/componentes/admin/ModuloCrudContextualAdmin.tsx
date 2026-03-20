@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { CampoFormulario, ConfigCampo, ControlImagenFormulario } from "@/componentes/admin/CamposFormularioAdmin";
 import { PanelEstadoListadoAdmin } from "@/componentes/admin/PanelEstadoListadoAdmin";
+import { construirMensajeConfirmacionContextual, EstadoSincronizacionConfirmacion } from "@/componentes/admin/importacion/confirmacionContextualImportacion";
 import { construirFeedbackConfirmacionImportacion } from "@/componentes/admin/importacion/feedbackConfirmacionImportacion";
 import { actualizarDetalleImportacion } from "@/componentes/admin/importacion/resumenImportacion";
 import { TablaStagingImportacion } from "@/componentes/admin/TablaStagingImportacion";
@@ -241,6 +242,19 @@ export function ModuloCrudContextualAdmin({
     router.refresh();
   };
 
+  const sincronizarListadoTrasConfirmacion = async (): Promise<EstadoSincronizacionConfirmacion> => {
+    if (modulo !== "productos") return { estado: "omitida" };
+    try {
+      await recargarListadoReal();
+      return { estado: "sincronizada" };
+    } catch (error) {
+      return {
+        estado: "pendiente",
+        detalle: error instanceof Error && error.message ? error.message : "No se pudo refrescar el listado real.",
+      };
+    }
+  };
+
   const ejecutarAccion = async (accion: () => Promise<void>, mensajeError: string) => {
     try {
       await accion();
@@ -343,8 +357,9 @@ export function ModuloCrudContextualAdmin({
     const seleccionadas = detalle.filas.filter((fila) => fila.seleccionado).map((fila) => fila.id);
     const respuesta = await confirmarLoteImportacion(Number(detalle.lote.id), seleccionadas, token);
     const feedback = construirFeedbackConfirmacionImportacion("Lote confirmado. Filas aplicadas", respuesta);
-    setOk(feedback.mensaje);
     setDetalle(feedback.detalle);
+    const sincronizacion = await sincronizarListadoTrasConfirmacion();
+    setOk(construirMensajeConfirmacionContextual(feedback.mensaje, sincronizacion));
   }, "No se pudo confirmar el lote.");
 
 
