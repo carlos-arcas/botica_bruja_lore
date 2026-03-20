@@ -27,6 +27,10 @@ import {
   construirMensajeConfirmacionImportacion,
   normalizarConfirmacionImportacion,
 } from "../componentes/admin/importacion/feedbackConfirmacionImportacion";
+import {
+  actualizarDetalleImportacion,
+  construirResumenImportacion,
+} from "../componentes/admin/importacion/resumenImportacion";
 import { validarFormularioProducto } from "../infraestructura/configuracion/validacionProductosBackoffice";
 
 
@@ -69,6 +73,57 @@ test("feedback de éxito y error se informa en UI para alta, edición e importac
   assert.match(componente, /Lote cargado\. Revisa filas antes de confirmar\./);
   assert.match(componente, /construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
   assert.match(componente, /No se pudo cargar el lote de importación\./);
+});
+
+
+
+test("recalcula resumen local de importación tras acciones por fila", () => {
+  const filas = [
+    { id: 1, numero: 1, datos: {}, errores: [], warnings: [], estado: "valida", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "", identificador: "SKU-1", titulo: "Fila 1", tipo: "producto", resumen_datos: "ok" },
+    { id: 2, numero: 2, datos: {}, errores: [], warnings: ["revisar"], estado: "valida_warning", seleccionado: false, imagen: "https://cdn.test/2.webp", estado_imagen: "optimizada" as const, resultado_confirmacion: "", identificador: "SKU-2", titulo: "Fila 2", tipo: "producto", resumen_datos: "ok" },
+    { id: 3, numero: 3, datos: {}, errores: ["slug repetido"], warnings: [], estado: "descartada", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "", identificador: "SKU-3", titulo: "Fila 3", tipo: "producto", resumen_datos: "ok" },
+    { id: 4, numero: 4, datos: {}, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "https://cdn.test/4.webp", estado_imagen: "optimizada" as const, resultado_confirmacion: "ok", identificador: "SKU-4", titulo: "Fila 4", tipo: "producto", resumen_datos: "ok" },
+  ];
+
+  const resumen = construirResumenImportacion(filas);
+
+  assert.deepEqual(resumen, {
+    total: 4,
+    validas: 1,
+    warnings: 1,
+    invalidas: 0,
+    descartadas: 1,
+    confirmadas: 1,
+    con_imagen: 2,
+    sin_imagen: 2,
+    seleccionadas: 2,
+  });
+});
+
+test("actualizar detalle de importación mantiene filas y resumen sincronizados", () => {
+  const detalle = {
+    lote: { id: 91 },
+    resumen: { total: 2, validas: 1, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 1, con_imagen: 0, sin_imagen: 2, seleccionadas: 1 },
+    filas: [
+      { id: 1, numero: 1, datos: {}, errores: [], warnings: [], estado: "valida", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "", identificador: "SKU-1", titulo: "Fila 1", tipo: "producto", resumen_datos: "ok" },
+      { id: 2, numero: 2, datos: {}, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-2", titulo: "Fila 2", tipo: "producto", resumen_datos: "ok" },
+    ],
+  };
+
+  const actualizado = actualizarDetalleImportacion(detalle, {
+    ...detalle.filas[0],
+    estado: "descartada",
+    seleccionado: true,
+    imagen: "https://cdn.test/1.webp",
+    estado_imagen: "optimizada" as const,
+  });
+
+  assert.equal(actualizado.filas[0].estado, "descartada");
+  assert.equal(actualizado.resumen.seleccionadas, 2);
+  assert.equal(actualizado.resumen.descartadas, 1);
+  assert.equal(actualizado.resumen.validas, 0);
+  assert.equal(actualizado.resumen.con_imagen, 1);
+  assert.equal(actualizado.resumen.sin_imagen, 1);
 });
 
 test("normaliza el contrato de confirmación y construye feedback reutilizable sin serializar el objeto completo", () => {
@@ -274,10 +329,17 @@ test("los dos flujos UI de importación consumen el mismo contrato sin doble fet
 
   assert.match(helper, /export function construirFeedbackConfirmacionImportacion/);
   assert.match(helper, /mensaje: `\$\{etiqueta\}: \$\{String\(confirmacion\.confirmadas\)\}\.`/);
+  assert.match(contextual, /actualizarDetalleImportacion/);
+  assert.match(contextual, /const filaActualizada = await cambiarSeleccionFilaImportacion/);
+  assert.match(contextual, /setDetalle\(actualizarDetalleImportacion\(detalle, filaActualizada\)\)/);
+  assert.match(contextual, /const respuesta = await revalidarLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
+  assert.match(contextual, /setDetalle\(respuesta\.detalle\)/);
   assert.match(contextual, /const feedback = construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
   assert.match(contextual, /setOk\(feedback\.mensaje\)/);
   assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
   assert.doesNotMatch(contextual, /const onConfirmarLote = \(\) => !detalle \? Promise\.resolve\(\) : ejecutarAccion\(async \(\) => \{[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
+  assert.match(importacion, /actualizarDetalleImportacion/);
+  assert.match(importacion, /setDetalle\(actualizarDetalleImportacion\(detalle, actualizada\)\)/);
   assert.match(importacion, /const feedback = construirFeedbackConfirmacionImportacion\("Filas confirmadas", respuesta\)/);
   assert.match(importacion, /const feedback = construirFeedbackConfirmacionImportacion\("Filas válidas confirmadas", respuesta\)/);
   assert.match(importacion, /setDetalle\(feedback\.detalle\)/);

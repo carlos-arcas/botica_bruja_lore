@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { CampoFormulario, ConfigCampo, ControlImagenFormulario } from "@/componentes/admin/CamposFormularioAdmin";
 import { construirFeedbackConfirmacionImportacion } from "@/componentes/admin/importacion/feedbackConfirmacionImportacion";
+import { actualizarDetalleImportacion } from "@/componentes/admin/importacion/resumenImportacion";
 import { TablaStagingImportacion } from "@/componentes/admin/TablaStagingImportacion";
 import {
   FilaImportacion,
@@ -281,38 +282,38 @@ export function ModuloCrudContextualAdmin({
   const onSeleccionFila = async (filaId: number, seleccionado: boolean) => {
     if (!detalle) return;
     await ejecutarAccion(async () => {
-      await cambiarSeleccionFilaImportacion(Number(detalle.lote.id), filaId, seleccionado, token);
-      setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+      const filaActualizada = await cambiarSeleccionFilaImportacion(Number(detalle.lote.id), filaId, seleccionado, token);
+      setDetalle(actualizarDetalleImportacion(detalle, filaActualizada));
     }, "No se pudo actualizar la selección de la fila.");
   };
 
   const onAdjuntarImagen = async (filaId: number, archivo: File) => {
     if (!detalle) return;
     await ejecutarAccion(async () => {
-      await adjuntarImagenFilaImportacion(Number(detalle.lote.id), filaId, archivo, token);
-      setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+      const filaActualizada = await adjuntarImagenFilaImportacion(Number(detalle.lote.id), filaId, archivo, token);
+      setDetalle(actualizarDetalleImportacion(detalle, filaActualizada));
     }, "No se pudo adjuntar la imagen de la fila.");
   };
 
   const onEliminarImagen = async (filaId: number) => {
     if (!detalle) return;
     await ejecutarAccion(async () => {
-      await eliminarImagenFilaImportacion(Number(detalle.lote.id), filaId, token);
-      setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+      const filaActualizada = await eliminarImagenFilaImportacion(Number(detalle.lote.id), filaId, token);
+      setDetalle(actualizarDetalleImportacion(detalle, filaActualizada));
     }, "No se pudo eliminar la imagen de la fila.");
   };
 
   const onDescartarFila = async (filaId: number) => {
     if (!detalle) return;
     await ejecutarAccion(async () => {
-      await descartarFilaImportacion(Number(detalle.lote.id), filaId, token);
-      setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+      const filaActualizada = await descartarFilaImportacion(Number(detalle.lote.id), filaId, token);
+      setDetalle(actualizarDetalleImportacion(detalle, filaActualizada));
     }, "No se pudo descartar la fila.");
   };
 
   const onRevalidarLote = () => !detalle ? Promise.resolve() : ejecutarAccion(async () => {
-    await revalidarLoteImportacion(Number(detalle.lote.id), token);
-    setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+    const respuesta = await revalidarLoteImportacion(Number(detalle.lote.id), token);
+    setDetalle(respuesta.detalle);
     setOk("Lote revalidado.");
   }, "No se pudo revalidar el lote.");
 
