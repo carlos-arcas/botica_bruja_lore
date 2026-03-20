@@ -21,56 +21,79 @@ const LINEAS_SELECCION: LineaSeleccionEncargo[] = [
     cantidad: 1,
     formato: "mezcla-herbal",
     imagen_url: null,
-    referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 14.9 },
+    referencia_economica: {
+      etiqueta: "Referencia editorial disponible",
+      valor: 14.9,
+    },
     notas_origen: "Mezcla floral de cierre del día.",
   },
   {
-    id_linea: "lavanda-flores-40g",
+    id_linea: "libre-001",
     tipo_linea: "fuera_catalogo",
-    slug: "lavanda-flores-40g",
+    slug: null,
     id_producto: null,
-    nombre: "Pieza fuera de catálogo",
+    nombre: "Atado herbal a medida",
     cantidad: 1,
-    formato: "lavanda flores 40g",
+    formato: "ramillete artesanal",
     imagen_url: null,
     referencia_economica: { etiqueta: "Sin referencia económica", valor: null },
-    notas_origen: "Recuperada desde selección local.",
+    notas_origen: "Petición manual guardada desde selección local.",
   },
 ];
 
 test("resolverProductoPreseleccionado devuelve producto válido por slug", () => {
-  const producto = resolverProductoPreseleccionado("infusion-bruma-lavanda", PRODUCTOS_CATALOGO);
+  const producto = resolverProductoPreseleccionado(
+    "infusion-bruma-lavanda",
+    PRODUCTOS_CATALOGO,
+  );
   assert.equal(producto?.nombre, "Bruma de Lavanda Serena");
 });
 
 test("resolverProductoPreseleccionado usa fallback seguro con slug inválido", () => {
-  const producto = resolverProductoPreseleccionado("no-existe", PRODUCTOS_CATALOGO);
+  const producto = resolverProductoPreseleccionado(
+    "no-existe",
+    PRODUCTOS_CATALOGO,
+  );
   assert.equal(producto, null);
 });
 
 test("construirEstadoInicialConsulta permite entrada directa sin slug", () => {
-  const estado = construirEstadoInicialConsulta({ modo: "producto", productoPreseleccionado: null, itemsPreseleccionados: [] });
+  const estado = construirEstadoInicialConsulta({
+    modo: "producto",
+    productoPreseleccionado: null,
+    itemsPreseleccionados: [],
+  });
   assert.equal(estado.productoSlug, "");
   assert.equal(estado.cantidad, "1 unidad");
 });
 
 test("construirEstadoInicialConsulta para selección múltiple evita parches en cantidad y mensaje", () => {
-  const estado = construirEstadoInicialConsulta({ modo: "seleccion", productoPreseleccionado: null, itemsPreseleccionados: [] }, LINEAS_SELECCION);
+  const estado = construirEstadoInicialConsulta(
+    {
+      modo: "seleccion",
+      productoPreseleccionado: null,
+      itemsPreseleccionados: [],
+    },
+    LINEAS_SELECCION,
+  );
   assert.equal(estado.productoSlug, "");
   assert.doesNotMatch(estado.cantidad, /Selección múltiple desde cesta/);
   assert.match(estado.mensaje, /Selección enviada desde mi selección/);
 });
 
 test("validarSolicitudConsulta reporta errores cuando faltan campos en modo producto", () => {
-  const errores = validarSolicitudConsulta({
-    nombre: "A",
-    email: "",
-    telefono: "123",
-    productoSlug: "",
-    cantidad: "",
-    mensaje: "Muy corto",
-    consentimiento: false,
-  }, "producto");
+  const errores = validarSolicitudConsulta(
+    {
+      nombre: "A",
+      email: "",
+      telefono: "123",
+      productoSlug: "",
+      cantidad: "",
+      mensaje: "Muy corto",
+      consentimiento: false,
+    },
+    "producto",
+  );
 
   assert.ok(errores.nombre);
   assert.ok(errores.email);
@@ -80,15 +103,19 @@ test("validarSolicitudConsulta reporta errores cuando faltan campos en modo prod
 });
 
 test("validarSolicitudConsulta no exige selector único en modo selección", () => {
-  const errores = validarSolicitudConsulta({
-    nombre: "Lore",
-    email: "lore@botica.es",
-    telefono: "",
-    productoSlug: "",
-    cantidad: "A convenir",
-    mensaje: "Quiero revisar esta selección con calma y ajustar el formato final.",
-    consentimiento: true,
-  }, "seleccion");
+  const errores = validarSolicitudConsulta(
+    {
+      nombre: "Lore",
+      email: "lore@botica.es",
+      telefono: "",
+      productoSlug: "",
+      cantidad: "A convenir",
+      mensaje:
+        "Quiero revisar esta selección con calma y ajustar el formato final.",
+      consentimiento: true,
+    },
+    "seleccion",
+  );
 
   assert.equal(errores.productoSlug, undefined);
 });
@@ -114,7 +141,7 @@ test("construirResumenConsulta compone texto final reutilizable en modo producto
   assert.match(resumen, /2 unidades/);
 });
 
-test("construirResumenConsulta refleja la selección real en modo múltiple", () => {
+test("construirResumenConsulta refleja la selección rica real en modo múltiple", () => {
   const resumen = construirResumenConsulta(
     {
       nombre: "Lore",
@@ -122,7 +149,8 @@ test("construirResumenConsulta refleja la selección real en modo múltiple", ()
       telefono: "",
       productoSlug: "",
       cantidad: "A definir durante la revisión artesanal",
-      mensaje: "Quiero que revisemos el equilibrio entre la pieza publicada y la pieza fuera de catálogo.",
+      mensaje:
+        "Quiero que revisemos el equilibrio entre la pieza publicada y la pieza fuera de catálogo.",
       consentimiento: true,
     },
     null,
@@ -132,24 +160,53 @@ test("construirResumenConsulta refleja la selección real en modo múltiple", ()
 
   assert.match(resumen, /Selección:/);
   assert.match(resumen, /Bruma de Lavanda Serena/);
-  assert.match(resumen, /lavanda flores 40g/);
+  assert.match(resumen, /Atado herbal a medida/);
   assert.doesNotMatch(resumen, /Producto pendiente de selección/);
 });
 
-
-test("resolverContextoPreseleccionado mantiene compatibilidad entre producto individual y selección", () => {
-  const desdeFicha = resolverContextoPreseleccionado("infusion-bruma-lavanda", null);
+test("resolverContextoPreseleccionado mantiene compatibilidad entre producto individual, selección rica y estado legacy", () => {
+  const desdeFicha = resolverContextoPreseleccionado(
+    "infusion-bruma-lavanda",
+    null,
+  );
   assert.equal(desdeFicha.modo, "producto");
-  assert.equal(desdeFicha.productoPreseleccionado?.slug, "infusion-bruma-lavanda");
+  assert.equal(
+    desdeFicha.productoPreseleccionado?.slug,
+    "infusion-bruma-lavanda",
+  );
   assert.equal(desdeFicha.itemsPreseleccionados.length, 0);
 
-  const desdeSeleccion = resolverContextoPreseleccionado(null, null, "seleccion");
+  const desdeSeleccion = resolverContextoPreseleccionado(
+    null,
+    null,
+    "seleccion",
+  );
   assert.equal(desdeSeleccion.modo, "seleccion");
+
+  const desdeSeleccionRica = resolverContextoPreseleccionado(
+    null,
+    encodeURIComponent(JSON.stringify(LINEAS_SELECCION)),
+    "seleccion",
+  );
+  assert.equal(desdeSeleccionRica.itemsPreseleccionados[1]?.slug, null);
+  assert.equal(
+    desdeSeleccionRica.itemsPreseleccionados[1]?.nombre,
+    "Atado herbal a medida",
+  );
 
   const desdeCestaLegacy = resolverContextoPreseleccionado(
     null,
-    encodeURIComponent(JSON.stringify([{ slug: "pack-bosque-dorado", cantidad: 2 }])),
+    encodeURIComponent(
+      JSON.stringify([{ slug: "pack-bosque-dorado", cantidad: 2 }]),
+    ),
   );
   assert.equal(desdeCestaLegacy.modo, "seleccion");
-  assert.equal(desdeCestaLegacy.itemsPreseleccionados[0]?.slug, "pack-bosque-dorado");
+  assert.equal(
+    desdeCestaLegacy.itemsPreseleccionados[0]?.slug,
+    "pack-bosque-dorado",
+  );
+  assert.equal(
+    desdeCestaLegacy.itemsPreseleccionados[0]?.nombre,
+    "Pack Bosque Dorado",
+  );
 });

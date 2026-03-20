@@ -22,8 +22,8 @@ export type UseCarrito = {
   cesta: CestaRitual;
   totalUnidades: number;
   agregarAlCarrito: (slug: string, cantidad?: number) => void;
-  eliminar: (slug: string) => void;
-  cambiarCantidad: (slug: string, cantidad: number) => void;
+  eliminar: (idLinea: string) => void;
+  cambiarCantidad: (idLinea: string, cantidad: number) => void;
   limpiar: () => void;
 };
 
@@ -50,17 +50,26 @@ export function useCarrito(): UseCarrito {
     setCesta(siguiente);
   }, []);
 
-  const agregarAlCarrito = useCallback((slug: string, cantidad?: number): void => {
-    persistir(agregarProducto(cesta, slug, cantidad));
-  }, [cesta, persistir]);
+  const agregarAlCarrito = useCallback(
+    (slug: string, cantidad?: number): void => {
+      persistir(agregarProducto(cesta, slug, cantidad));
+    },
+    [cesta, persistir],
+  );
 
-  const eliminar = useCallback((slug: string): void => {
-    persistir(quitarProducto(cesta, slug));
-  }, [cesta, persistir]);
+  const eliminar = useCallback(
+    (idLinea: string): void => {
+      persistir(quitarProducto(cesta, idLinea));
+    },
+    [cesta, persistir],
+  );
 
-  const cambiarCantidad = useCallback((slug: string, cantidad: number): void => {
-    persistir(actualizarCantidad(cesta, slug, cantidad));
-  }, [cesta, persistir]);
+  const cambiarCantidad = useCallback(
+    (idLinea: string, cantidad: number): void => {
+      persistir(actualizarCantidad(cesta, idLinea, cantidad));
+    },
+    [cesta, persistir],
+  );
 
   const limpiar = useCallback((): void => {
     limpiarCestaRitualLocal();
@@ -69,5 +78,12 @@ export function useCarrito(): UseCarrito {
 
   const totalUnidades = useMemo(() => contarUnidades(cesta), [cesta]);
 
-  return { cesta, totalUnidades, agregarAlCarrito, eliminar, cambiarCantidad, limpiar };
+  return {
+    cesta,
+    totalUnidades,
+    agregarAlCarrito,
+    eliminar,
+    cambiarCantidad,
+    limpiar,
+  };
 }

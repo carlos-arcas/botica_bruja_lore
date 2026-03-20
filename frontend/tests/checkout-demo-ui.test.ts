@@ -9,7 +9,10 @@ const archivoFlujo = readFileSync(
 );
 
 const archivoBloque = readFileSync(
-  join(process.cwd(), "componentes/catalogo/encargo/BloqueIdentificacionCheckoutDemo.tsx"),
+  join(
+    process.cwd(),
+    "componentes/catalogo/encargo/BloqueIdentificacionCheckoutDemo.tsx",
+  ),
   "utf8",
 );
 
@@ -19,7 +22,7 @@ const archivoRecibo = readFileSync(
 );
 
 test("checkout demo elimina el input manual de id_usuario", () => {
-  assert.equal(archivoFlujo.includes("name=\"idUsuarioDemo\""), false);
+  assert.equal(archivoFlujo.includes('name="idUsuarioDemo"'), false);
   assert.equal(archivoFlujo.includes("ID de usuario demo"), false);
 });
 
@@ -28,29 +31,43 @@ test("checkout demo muestra estado claro de cuenta autenticada y mantiene CTA in
   assert.equal(archivoBloque.includes("Continuar como invitado"), true);
   assert.equal(archivoFlujo.includes("guardarBorradorCheckoutDemo"), true);
   assert.equal(archivoFlujo.includes("limpiarBorradorCheckoutDemo"), true);
-  assert.equal(archivoFlujo.includes("construirRutaCuentaDemoConRetornoSeguro"), true);
+  assert.equal(
+    archivoFlujo.includes("construirRutaCuentaDemoConRetornoSeguro"),
+    true,
+  );
 });
 
 test("checkout demo mantiene continuidad con retorno seguro y sin recuperar consentimiento marcado", () => {
   assert.equal(archivoFlujo.includes("returnTo=%2Fencargo"), false);
-  assert.equal(archivoFlujo.includes("consentimiento: false"), true);
-  assert.equal(archivoFlujo.includes("router.push(construirRutaCuentaDemoConRetornoSeguro"), true);
+  assert.match(archivoFlujo, /consentimiento:\s*false/);
+  assert.match(
+    archivoFlujo,
+    /router\.push\(\s*construirRutaCuentaDemoConRetornoSeguro/,
+  );
 });
 
-
 test("el recibo demo muestra CTA contextual hacia cuenta demo con sesión activa", () => {
-  assert.equal(archivoRecibo.includes("Ver este pedido en mi cuenta demo"), true);
+  assert.equal(
+    archivoRecibo.includes("Ver este pedido en mi cuenta demo"),
+    true,
+  );
   assert.equal(archivoRecibo.includes("pedidoRecientePerteneceASesion"), true);
   assert.equal(archivoRecibo.includes(`href="/cuenta-demo"`), true);
 });
 
 test("el checkout demo guarda continuidad post-checkout sin tocar el contrato de PedidoDemo", () => {
-  assert.equal(archivoFlujo.includes("guardarPedidoRecienteDemo(resultado.pedido.id_pedido"), true);
-  assert.equal(archivoFlujo.includes("router.push(construirRutaReciboPedidoDemo"), true);
+  assert.match(
+    archivoFlujo,
+    /guardarPedidoRecienteDemo\([\s\S]*resultado\.pedido\.id_pedido/,
+  );
+  assert.match(archivoFlujo, /router\.push\(\s*construirRutaReciboPedidoDemo/);
 });
 
 test("el recibo público sigue contemplando uso sin sesión demo", () => {
-  assert.equal(archivoRecibo.includes("!mostrarCtaCuenta && haySesionDemo"), true);
+  assert.equal(
+    archivoRecibo.includes("!mostrarCtaCuenta && haySesionDemo"),
+    true,
+  );
   assert.equal(archivoRecibo.includes("EstadoVacio"), true);
   assert.equal(archivoRecibo.includes("EstadoError"), true);
 });
