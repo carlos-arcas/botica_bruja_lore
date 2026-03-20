@@ -772,6 +772,42 @@ test("importación contextual multisección detecta todas las secciones confirma
   assert.deepEqual(secciones, ["botica-natural", "velas-e-incienso"]);
 });
 
+test("resolver secciones afectadas ignora proxies ambiguos en resultado_confirmacion", () => {
+  const detalle = {
+    lote: { id: 102 },
+    resumen: { total: 4, validas: 1, warnings: 2, invalidas: 1, descartadas: 0, confirmadas: 1, con_imagen: 0, sin_imagen: 4, seleccionadas: 2 },
+    filas: [
+      { id: 1, numero: 1, datos: { seccion_publica: "botica-natural" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-1", titulo: "Rosa", tipo: "producto", resumen_datos: "ok" },
+      { id: 2, numero: 2, datos: { seccion_publica: "velas-e-incienso" }, errores: [], warnings: ["revisar"], estado: "valida_warning", seleccionado: true, imagen: "", estado_imagen: "pendiente" as const, resultado_confirmacion: "pendiente", identificador: "SKU-2", titulo: "Vela", tipo: "producto", resumen_datos: "ok" },
+      { id: 3, numero: 3, datos: { seccion_publica: "minerales-y-energia" }, errores: [], warnings: [], estado: "valida", seleccionado: true, imagen: "", estado_imagen: "optimizada" as const, resultado_confirmacion: "ausente", identificador: "SKU-3", titulo: "Cuarzo", tipo: "producto", resumen_datos: "ok" },
+      { id: 4, numero: 4, datos: { seccion_publica: "amuletos-y-talismenes" }, errores: ["Error backend"], warnings: [], estado: "invalida", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "Error backend: slug duplicado", identificador: "SKU-4", titulo: "Amuleto", tipo: "producto", resumen_datos: "ok" },
+    ],
+  };
+
+  const secciones = resolverSeccionesAfectadasImportacion(detalle, "botica-natural");
+
+  assert.deepEqual(secciones, ["botica-natural"]);
+});
+
+test("regresión explícita A+B confirmadas no arrastra C con filas fallidas, ausentes o descartadas", () => {
+  const detalle = {
+    lote: { id: 103 },
+    resumen: { total: 5, validas: 0, warnings: 2, invalidas: 1, descartadas: 1, confirmadas: 2, con_imagen: 0, sin_imagen: 5, seleccionadas: 3 },
+    filas: [
+      { id: 1, numero: 1, datos: { seccion_publica: "botica-natural" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-1", titulo: "Rosa", tipo: "producto", resumen_datos: "ok" },
+      { id: 2, numero: 2, datos: { seccion_publica: "velas-e-incienso" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-2", titulo: "Vela", tipo: "producto", resumen_datos: "ok" },
+      { id: 3, numero: 3, datos: { seccion_publica: "minerales-y-energia" }, errores: [], warnings: ["sin imagen"], estado: "valida_warning", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "pendiente", identificador: "SKU-3", titulo: "Cuarzo", tipo: "producto", resumen_datos: "ok" },
+      { id: 4, numero: 4, datos: { seccion_publica: "minerales-y-energia" }, errores: [], warnings: [], estado: "descartada", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ausente", identificador: "SKU-4", titulo: "Pirita", tipo: "producto", resumen_datos: "ok" },
+      { id: 5, numero: 5, datos: { seccion_publica: "minerales-y-energia" }, errores: ["slug duplicado"], warnings: [], estado: "invalida", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "Error de validación", identificador: "SKU-5", titulo: "Obsidiana", tipo: "producto", resumen_datos: "ok" },
+    ],
+  };
+
+  const secciones = resolverSeccionesAfectadasImportacion(detalle, "botica-natural");
+
+  assert.deepEqual(secciones, ["botica-natural", "velas-e-incienso"]);
+  assert.equal(secciones.includes("minerales-y-energia"), false);
+});
+
 test("regresión explícita A+B sincroniza S1a y S1b sin resucitar snapshots previos al cambiar de pestaña", () => {
   const s0 = [
     { id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: false },
@@ -801,6 +837,7 @@ test("sincronización parcial conserva éxito del lote y no finge refresco compl
   assert.match(mensaje, /Lote confirmado\. Filas aplicadas: 2\./);
   assert.match(mensaje, /Secciones sincronizadas: botica-natural\./);
   assert.match(mensaje, /Sincronización pendiente en: velas-e-incienso \(Error de red\.\)\./);
+  assert.doesNotMatch(mensaje, /minerales-y-energia/);
 });
 
 test("lote monosección mantiene fallback a la pestaña activa cuando el staging no expone otra sección", () => {
@@ -813,6 +850,22 @@ test("lote monosección mantiene fallback a la pestaña activa cuando el staging
   const secciones = resolverSeccionesAfectadasImportacion(detalle, "botica-natural");
 
   assert.deepEqual(secciones, ["botica-natural"]);
+});
+
+test("fallback sin confirmadas detectables usa solo la sección activa y no expande el lote", () => {
+  const detalle = {
+    lote: { id: 104 },
+    resumen: { total: 3, validas: 1, warnings: 1, invalidas: 0, descartadas: 1, confirmadas: 0, con_imagen: 0, sin_imagen: 3, seleccionadas: 1 },
+    filas: [
+      { id: 1, numero: 1, datos: { seccion_publica: "botica-natural" }, errores: [], warnings: [], estado: "valida", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "pendiente", identificador: "SKU-1", titulo: "Rosa", tipo: "producto", resumen_datos: "ok" },
+      { id: 2, numero: 2, datos: { seccion_publica: "velas-e-incienso" }, errores: [], warnings: ["imagen ausente"], estado: "valida_warning", seleccionado: false, imagen: "", estado_imagen: "pendiente" as const, resultado_confirmacion: "optimizada", identificador: "SKU-2", titulo: "Vela", tipo: "producto", resumen_datos: "ok" },
+      { id: 3, numero: 3, datos: { seccion_publica: "minerales-y-energia" }, errores: [], warnings: [], estado: "descartada", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ausente", identificador: "SKU-3", titulo: "Cuarzo", tipo: "producto", resumen_datos: "ok" },
+    ],
+  };
+
+  const secciones = resolverSeccionesAfectadasImportacion(detalle, "velas-e-incienso");
+
+  assert.deepEqual(secciones, ["velas-e-incienso"]);
 });
 
 test("sincronizarProductoMutado mantiene fuente de verdad única del padre antes del refresco contextual", () => {
