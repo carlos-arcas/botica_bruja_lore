@@ -1,8 +1,13 @@
 import { DetalleImportacion, ResultadoConfirmacionImportacion } from "../../../infraestructura/api/backoffice";
 
-type ConfirmacionNormalizadaImportacion = {
+export type ConfirmacionNormalizadaImportacion = {
   confirmadas: number;
   detalle: DetalleImportacion;
+};
+
+export type FeedbackConfirmacionImportacion = {
+  detalle: DetalleImportacion;
+  mensaje: string;
 };
 
 export function normalizarConfirmacionImportacion(resultado: ResultadoConfirmacionImportacion): ConfirmacionNormalizadaImportacion {
@@ -12,10 +17,20 @@ export function normalizarConfirmacionImportacion(resultado: ResultadoConfirmaci
   };
 }
 
+export function construirFeedbackConfirmacionImportacion(
+  etiqueta: string,
+  resultado: ResultadoConfirmacionImportacion,
+): FeedbackConfirmacionImportacion {
+  const confirmacion = normalizarConfirmacionImportacion(resultado);
+  return {
+    detalle: confirmacion.detalle,
+    mensaje: `${etiqueta}: ${String(confirmacion.confirmadas)}.`,
+  };
+}
+
 export function construirMensajeConfirmacionImportacion(
   etiqueta: string,
   resultado: ResultadoConfirmacionImportacion,
 ): string {
-  const { confirmadas } = normalizarConfirmacionImportacion(resultado);
-  return `${etiqueta}: ${String(confirmadas)}.`;
+  return construirFeedbackConfirmacionImportacion(etiqueta, resultado).mensaje;
 }

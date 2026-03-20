@@ -4,7 +4,7 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { CampoFormulario, ConfigCampo, ControlImagenFormulario } from "@/componentes/admin/CamposFormularioAdmin";
-import { construirMensajeConfirmacionImportacion, normalizarConfirmacionImportacion } from "@/componentes/admin/importacion/feedbackConfirmacionImportacion";
+import { construirFeedbackConfirmacionImportacion } from "@/componentes/admin/importacion/feedbackConfirmacionImportacion";
 import { TablaStagingImportacion } from "@/componentes/admin/TablaStagingImportacion";
 import {
   FilaImportacion,
@@ -319,10 +319,9 @@ export function ModuloCrudContextualAdmin({
   const onConfirmarLote = () => !detalle ? Promise.resolve() : ejecutarAccion(async () => {
     const seleccionadas = detalle.filas.filter((fila) => fila.seleccionado).map((fila) => fila.id);
     const respuesta = await confirmarLoteImportacion(Number(detalle.lote.id), seleccionadas, token);
-    const confirmacion = normalizarConfirmacionImportacion(respuesta);
-    setOk(construirMensajeConfirmacionImportacion("Lote confirmado. Filas aplicadas", respuesta));
-    setDetalle(confirmacion.detalle);
-    setDetalle(await obtenerLoteImportacion(Number(detalle.lote.id), token));
+    const feedback = construirFeedbackConfirmacionImportacion("Lote confirmado. Filas aplicadas", respuesta);
+    setOk(feedback.mensaje);
+    setDetalle(feedback.detalle);
   }, "No se pudo confirmar el lote.");
 
 
