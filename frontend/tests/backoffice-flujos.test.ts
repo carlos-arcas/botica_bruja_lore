@@ -29,6 +29,8 @@ import {
   construirMensajeConfirmacionImportacion,
   normalizarConfirmacionImportacion,
 } from "../componentes/admin/importacion/feedbackConfirmacionImportacion";
+import { construirMensajeConfirmacionContextual } from "../componentes/admin/importacion/confirmacionContextualImportacion";
+import { actualizarItemsSeccion, sincronizarProductoMutado } from "../componentes/admin/sincronizacionProductosAdmin";
 import {
   actualizarDetalleImportacion,
   construirResumenImportacion,
@@ -370,8 +372,9 @@ test("los dos flujos UI de importación consumen el mismo contrato sin doble fet
   assert.match(contextual, /const respuesta = await revalidarLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
   assert.match(contextual, /setDetalle\(respuesta\.detalle\)/);
   assert.match(contextual, /const feedback = construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
-  assert.match(contextual, /setOk\(feedback\.mensaje\)/);
   assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
+  assert.match(contextual, /const sincronizacion = await sincronizarListadoTrasConfirmacion\(\)/);
+  assert.match(contextual, /setOk\(construirMensajeConfirmacionContextual\(feedback\.mensaje, sincronizacion\)\)/);
   assert.doesNotMatch(contextual, /const onConfirmarLote = \(\) => !detalle \? Promise\.resolve\(\) : ejecutarAccion\(async \(\) => \{[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
   assert.match(importacion, /actualizarDetalleImportacion/);
   assert.match(importacion, /function actualizarDetalleLoteImportacion/);
@@ -565,7 +568,23 @@ test("la confirmación inline queda protegida frente a un GET posterior fallido 
   assert.match(contextual, /const respuesta = await confirmarLoteImportacion\(Number\(detalle\.lote\.id\), seleccionadas, token\)/);
   assert.match(contextual, /const feedback = construirFeedbackConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
   assert.match(contextual, /setDetalle\(feedback\.detalle\)/);
+  assert.match(contextual, /if \(modulo !== "productos"\) return \{ estado: "omitida" \};/);
+  assert.match(contextual, /await recargarListadoReal\(\)/);
   assert.doesNotMatch(contextual, /const respuesta = await confirmarLoteImportacion[\s\S]*obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)/);
+});
+
+test("mensaje contextual distingue confirmación exitosa de sincronización pendiente", () => {
+  const exitoTotal = construirMensajeConfirmacionContextual("Lote confirmado. Filas aplicadas: 2.", { estado: "sincronizada" });
+  const exitoParcial = construirMensajeConfirmacionContextual("Lote confirmado. Filas aplicadas: 2.", {
+    estado: "pendiente",
+    detalle: "Error de red.",
+  });
+
+  assert.equal(exitoTotal, "Lote confirmado. Filas aplicadas: 2.");
+  assert.equal(
+    exitoParcial,
+    "Lote confirmado. Filas aplicadas: 2. El lote se confirmó, pero el listado real no pudo refrescarse todavía: Error de red.",
+  );
 });
 
 
@@ -627,11 +646,6 @@ test("regresión S0→S1 en productos evita resucitar snapshot obsoleto al volve
   ];
   const s1Botica = [{ id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: true }];
 
-  const actualizarItemsSeccion = (itemsActuales: Record<string, unknown>[], seccionObjetivo: string, itemsSeccion: Record<string, unknown>[]) => [
-    ...itemsActuales.filter((item) => item.seccion_publica !== seccionObjetivo),
-    ...itemsSeccion,
-  ];
-
   const trasMutacion = actualizarItemsSeccion(s0, "botica-natural", s1Botica);
   const vistaBoticaTrasVolver = trasMutacion.filter((item) => item.seccion_publica === "botica-natural");
   const snapshotViejo = s0.filter((item) => item.seccion_publica === "botica-natural");
@@ -639,6 +653,41 @@ test("regresión S0→S1 en productos evita resucitar snapshot obsoleto al volve
   assert.equal(snapshotViejo[0]?.publicado, false);
   assert.equal(vistaBoticaTrasVolver[0]?.publicado, true);
   assert.notDeepEqual(vistaBoticaTrasVolver, snapshotViejo);
+});
+
+test("sincronización S0→S1 del padre conserva otras secciones y evita reintroducir snapshot viejo tras importar", () => {
+  const s0 = [
+    { id: "prod-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: false },
+    { id: "prod-2", nombre: "Vela", seccion_publica: "velas-e-incienso", publicado: true },
+  ];
+  const s1 = [
+    { id: "prod-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: true },
+    { id: "prod-3", nombre: "Lavanda", seccion_publica: "botica-natural", publicado: true },
+  ];
+
+  const sincronizado = actualizarItemsSeccion(s0, "botica-natural", s1);
+
+  assert.deepEqual(
+    sincronizado.filter((item) => item.seccion_publica === "botica-natural"),
+    s1,
+  );
+  assert.deepEqual(
+    sincronizado.filter((item) => item.seccion_publica === "velas-e-incienso"),
+    [{ id: "prod-2", nombre: "Vela", seccion_publica: "velas-e-incienso", publicado: true }],
+  );
+});
+
+test("sincronizarProductoMutado mantiene fuente de verdad única del padre antes del refresco contextual", () => {
+  const base = [
+    { id: "prod-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: false },
+    { id: "prod-2", nombre: "Vela", seccion_publica: "velas-e-incienso", publicado: true },
+  ];
+  const mutado = { id: "prod-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: true };
+
+  const sincronizado = sincronizarProductoMutado(base, mutado);
+
+  assert.equal(sincronizado.find((item) => item.id === "prod-1")?.publicado, true);
+  assert.equal(sincronizado.find((item) => item.id === "prod-2")?.publicado, true);
 });
 
 test("publicar o despublicar sincroniza el item mutado antes del refresco contextual", () => {
