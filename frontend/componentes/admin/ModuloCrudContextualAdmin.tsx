@@ -28,6 +28,7 @@ import {
   subirImagenBackoffice,
 } from "@/infraestructura/api/backoffice";
 import { EstadoListadoAdmin } from "@/componentes/admin/estadoListadoAdmin";
+import { construirDetalleSincronizacionSecciones, resolverSeccionesAfectadasImportacion } from "@/componentes/admin/sincronizacionProductosAdmin";
 import { construirPayloadRitual } from "@/infraestructura/configuracion/adminRituales";
 import { construirPayloadCanonicoProducto } from "@/infraestructura/configuracion/contratoProductosBackoffice";
 
@@ -228,31 +229,49 @@ export function ModuloCrudContextualAdmin({
   const gruposFormulario = useMemo(() => agruparCamposFormulario(campos), [campos]);
   const filtrados = useMemo(() => items.filter((item) => JSON.stringify(item).toLowerCase().includes(filtro.toLowerCase())), [items, filtro]);
 
-  const recargarListadoReal = async (): Promise<void> => {
+  const recargarListadoReal = async (seccionObjetivo = seccionSeleccionada): Promise<Record<string, unknown>[]> => {
     const query = new URLSearchParams();
-    if (modulo === "productos" && seccionSeleccionada) {
-      query.set("seccion", seccionSeleccionada);
+    if (modulo === "productos" && seccionObjetivo) {
+      query.set("seccion", seccionObjetivo);
     }
     const actualizado = await obtenerListadoAdmin(modulo, query, token);
     if (actualizado.estado !== "ok") {
       throw new Error(actualizado.detalle);
     }
     setItems(actualizado.items);
-    onItemsSincronizados?.(seccionSeleccionada, actualizado.items);
+    onItemsSincronizados?.(seccionObjetivo, actualizado.items);
     router.refresh();
+    return actualizado.items;
   };
 
-  const sincronizarListadoTrasConfirmacion = async (): Promise<EstadoSincronizacionConfirmacion> => {
+  const sincronizarListadoTrasConfirmacion = async (seccionesAfectadas: string[]): Promise<EstadoSincronizacionConfirmacion> => {
     if (modulo !== "productos") return { estado: "omitida" };
-    try {
-      await recargarListadoReal();
-      return { estado: "sincronizada" };
-    } catch (error) {
-      return {
-        estado: "pendiente",
-        detalle: error instanceof Error && error.message ? error.message : "No se pudo refrescar el listado real.",
-      };
-    }
+    const secciones = seccionesAfectadas.length > 0 ? seccionesAfectadas : [seccionSeleccionada].filter(Boolean);
+    const resultados = await Promise.all(
+      secciones.map(async (seccion) => {
+        try {
+          await recargarListadoReal(seccion);
+          return { seccion, estado: "sincronizada" as const };
+        } catch (error) {
+          return {
+            seccion,
+            estado: "pendiente" as const,
+            detalle: error instanceof Error && error.message ? error.message : "No se pudo refrescar el listado real.",
+          };
+        }
+      }),
+    );
+    const pendientes = resultados
+      .filter((resultado) => resultado.estado === "pendiente")
+      .map((resultado) => ({ seccion: resultado.seccion, detalle: resultado.detalle }));
+    if (pendientes.length === 0) return { estado: "sincronizada" };
+    return {
+      estado: "pendiente",
+      detalle: construirDetalleSincronizacionSecciones({
+        seccionesSincronizadas: resultados.filter((resultado) => resultado.estado === "sincronizada").map((resultado) => resultado.seccion),
+        seccionesPendientes: pendientes,
+      }),
+    };
   };
 
   const ejecutarAccion = async (accion: () => Promise<void>, mensajeError: string) => {
@@ -358,7 +377,8 @@ export function ModuloCrudContextualAdmin({
     const respuesta = await confirmarLoteImportacion(Number(detalle.lote.id), seleccionadas, token);
     const feedback = construirFeedbackConfirmacionImportacion("Lote confirmado. Filas aplicadas", respuesta);
     setDetalle(feedback.detalle);
-    const sincronizacion = await sincronizarListadoTrasConfirmacion();
+    const seccionesAfectadas = resolverSeccionesAfectadasImportacion(feedback.detalle, seccionSeleccionada);
+    const sincronizacion = await sincronizarListadoTrasConfirmacion(seccionesAfectadas);
     setOk(construirMensajeConfirmacionContextual(feedback.mensaje, sincronizacion));
   }, "No se pudo confirmar el lote.");
 
