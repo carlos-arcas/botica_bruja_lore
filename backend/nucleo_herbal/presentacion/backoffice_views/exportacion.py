@@ -37,7 +37,7 @@ def exportar_backoffice(request: HttpRequest, modulo: str) -> HttpResponse:
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
     if usuario_staff(request) is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     if modulo not in MODULO_ENTIDAD:
         return JsonResponse({"detalle": "Módulo inválido."}, status=404)
 

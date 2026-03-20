@@ -10,7 +10,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.prese
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ImportacionFilaModelo, ImportacionLoteModelo
 
 from .auth import usuario_staff
-from .shared import json_no_autorizado
+from .shared import json_no_autorizado, operation_id
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ def json_importacion(detalle: str, status: int, request: HttpRequest, operation_
 def lote_por_usuario(request: HttpRequest, lote_id: int, operation_id_actual: str | None = None) -> ImportacionLoteModelo | JsonResponse:
     usuario = usuario_staff(request)
     if usuario is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     lote = ImportacionLoteModelo.objects.filter(id=lote_id, usuario=usuario).first()
     if lote is None:
         return json_importacion("Lote no encontrado.", 404, request, operation_id_actual=operation_id_actual)
@@ -88,15 +88,3 @@ def log_importacion(accion: str, usuario, lote: ImportacionLoteModelo, filas_afe
             "error": error,
         },
     )
-
-
-OPERATION_ID_ATTR = "_operation_id_importacion"
-
-
-def operation_id(request: HttpRequest) -> str:
-    operation_id_actual = getattr(request, OPERATION_ID_ATTR, None)
-    if operation_id_actual:
-        return operation_id_actual
-    operation_id_actual = request.headers.get("X-Request-ID") or str(uuid.uuid4())
-    setattr(request, OPERATION_ID_ATTR, operation_id_actual)
-    return operation_id_actual

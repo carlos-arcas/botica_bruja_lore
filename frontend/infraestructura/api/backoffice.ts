@@ -57,10 +57,13 @@ export type ResultadoConfirmacionImportacion = { confirmadas: number; detalle: D
 
 export type EstadoAccesoBackoffice =
   | { estado: "autorizado"; usuario: { username: string; is_staff: boolean; is_superuser: boolean } }
-  | { estado: "denegado"; detalle: string }
-  | { estado: "error"; detalle: string };
+  | { estado: "denegado"; detalle: string; operation_id?: string }
+  | { estado: "error"; detalle: string; operation_id?: string };
 
-export type ResultadoListado = { estado: "ok"; items: Record<string, unknown>[] } | { estado: "denegado"; detalle: string } | { estado: "error"; detalle: string };
+export type ResultadoListado =
+  | { estado: "ok"; items: Record<string, unknown>[] }
+  | { estado: "denegado"; detalle: string; operation_id?: string }
+  | { estado: "error"; detalle: string; operation_id?: string };
 
 export type PlantaAsociable = { id: string; nombre: string };
 
@@ -91,8 +94,26 @@ function construirMensajeErrorBackoffice(payload: ErrorBackoffice | null, fallba
 }
 
 async function parsearErrorBackoffice(respuesta: Response, fallback: string): Promise<never> {
-  const payload = (await respuesta.json().catch(() => null)) as ErrorBackoffice | null;
+  const payload = await leerPayloadErrorBackoffice(respuesta);
   throw new Error(construirMensajeErrorBackoffice(payload, fallback));
+}
+
+async function leerPayloadErrorBackoffice(respuesta: Response): Promise<ErrorBackoffice | null> {
+  return (await respuesta.json().catch(() => null)) as ErrorBackoffice | null;
+}
+
+function resolverDetalleDenegado(payload: ErrorBackoffice | null, fallback: string): { detalle: string; operation_id?: string } {
+  return {
+    detalle: payload?.detalle?.trim() || fallback,
+    operation_id: payload?.operation_id,
+  };
+}
+
+function resolverDetalleErrorBackoffice(payload: ErrorBackoffice | null, fallback: string): { detalle: string; operation_id?: string } {
+  return {
+    detalle: construirMensajeErrorBackoffice(payload, fallback),
+    operation_id: payload?.operation_id,
+  };
 }
 
 function cabecerasConToken(token?: string, json = true): HeadersInit {
@@ -113,8 +134,14 @@ export function extraerTokenBackoffice(cookieHeader: string): string | null {
 export async function obtenerEstadoBackoffice(token?: string): Promise<EstadoAccesoBackoffice> {
   try {
     const respuesta = await fetch(construirUrlBackoffice("/api/v1/backoffice/estado/"), { headers: cabecerasConToken(token, false), cache: "no-store" });
-    if (respuesta.status === 401 || respuesta.status === 403) return { estado: "denegado", detalle: "Debes iniciar sesión como staff para acceder al backoffice." };
-    if (!respuesta.ok) return { estado: "error", detalle: "No pudimos validar la sesión administrativa en backend." };
+    if (respuesta.status === 401 || respuesta.status === 403) {
+      const payload = await leerPayloadErrorBackoffice(respuesta);
+      return { estado: "denegado", ...resolverDetalleDenegado(payload, "Debes iniciar sesión como staff para acceder al backoffice.") };
+    }
+    if (!respuesta.ok) {
+      const payload = await leerPayloadErrorBackoffice(respuesta);
+      return { estado: "error", ...resolverDetalleErrorBackoffice(payload, "No pudimos validar la sesión administrativa en backend.") };
+    }
     const data = (await respuesta.json()) as { usuario: { username: string; is_staff: boolean; is_superuser: boolean } };
     return { estado: "autorizado", usuario: data.usuario };
   } catch {
@@ -125,8 +152,14 @@ export async function obtenerEstadoBackoffice(token?: string): Promise<EstadoAcc
 export async function obtenerListadoAdmin(modulo: ModuloAdmin, query: URLSearchParams, token?: string): Promise<ResultadoListado> {
   try {
     const respuesta = await fetch(construirUrlBackoffice(`/api/v1/backoffice/${modulo}/?${query.toString()}`), { headers: cabecerasConToken(token, false), cache: "no-store" });
-    if (respuesta.status === 401 || respuesta.status === 403) return { estado: "denegado", detalle: "Sin permisos staff." };
-    if (!respuesta.ok) return { estado: "error", detalle: "No se pudo cargar el módulo." };
+    if (respuesta.status === 401 || respuesta.status === 403) {
+      const payload = await leerPayloadErrorBackoffice(respuesta);
+      return { estado: "denegado", ...resolverDetalleDenegado(payload, "Sin permisos staff.") };
+    }
+    if (!respuesta.ok) {
+      const payload = await leerPayloadErrorBackoffice(respuesta);
+      return { estado: "error", ...resolverDetalleErrorBackoffice(payload, "No se pudo cargar el módulo.") };
+    }
     const data = (await respuesta.json()) as { items: Record<string, unknown>[] };
     return { estado: "ok", items: data.items ?? [] };
   } catch {

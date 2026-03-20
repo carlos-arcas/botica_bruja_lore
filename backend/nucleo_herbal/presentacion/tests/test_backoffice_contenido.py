@@ -14,7 +14,8 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.image
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, PlantaModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
 from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.presentacion.backoffice_auth import crear_token_backoffice
-from backend.nucleo_herbal.presentacion.backoffice_views.importacion_helpers import json_importacion, operation_id
+from backend.nucleo_herbal.presentacion.backoffice_views.importacion_helpers import json_importacion
+from backend.nucleo_herbal.presentacion.backoffice_views.shared import json_no_autorizado, operation_id
 from backend.nucleo_herbal.presentacion.backoffice_views.productos_contrato import (
     CAMPOS_CONTRATO_ENTRADA,
     CAMPOS_LEGACY_TOLERADOS_PRODUCTO,
@@ -34,6 +35,26 @@ class BackofficeContenidoTests(TestCase):
     def _auth(self, staff: bool = True) -> dict[str, str]:
         user = self.staff if staff else self.no_staff
         return {"HTTP_AUTHORIZATION": f"Bearer {crear_token_backoffice(user)}"}
+
+
+    def test_json_no_autorizado_incluye_operation_id_y_conserva_x_request_id(self):
+        request = RequestFactory().get("/api/v1/backoffice/productos/", HTTP_X_REQUEST_ID="req-403-1")
+
+        respuesta = json_no_autorizado(request)
+
+        self.assertEqual(respuesta.status_code, 403)
+        cuerpo = json.loads(respuesta.content)
+        self.assertEqual(cuerpo["detalle"], "Acceso restringido a staff.")
+        self.assertEqual(cuerpo["operation_id"], "req-403-1")
+
+    def test_backoffice_403_reutiliza_operation_id_en_estado_y_listado(self):
+        estado = self.client.get("/api/v1/backoffice/estado/", HTTP_X_REQUEST_ID="estado-403")
+        listado = self.client.get("/api/v1/backoffice/productos/", HTTP_X_REQUEST_ID="lista-403")
+
+        self.assertEqual(estado.status_code, 403)
+        self.assertEqual(estado.json()["operation_id"], "estado-403")
+        self.assertEqual(listado.status_code, 403)
+        self.assertEqual(listado.json()["operation_id"], "lista-403")
 
     def test_operation_id_se_cachea_por_request_sin_header(self):
         request = RequestFactory().get("/api/v1/backoffice/importacion/lotes/1/")

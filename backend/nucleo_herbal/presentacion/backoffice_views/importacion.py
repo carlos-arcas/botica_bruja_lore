@@ -24,7 +24,7 @@ def crear_lote_importacion_backoffice(request: HttpRequest) -> JsonResponse:
         return HttpResponseNotAllowed(["POST"])
     usuario = usuario_staff(request)
     if usuario is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     operation_id_actual = operation_id(request)
     archivo = request.FILES.get("archivo")
     if archivo is None:

@@ -15,7 +15,7 @@ def usuario_staff(request: HttpRequest):
 def estado_backoffice(request: HttpRequest) -> JsonResponse:
     usuario = usuario_staff(request)
     if usuario is None:
-        return json_no_autorizado()
+        return json_no_autorizado(request)
     return JsonResponse(
         {
             "autorizado": True,
