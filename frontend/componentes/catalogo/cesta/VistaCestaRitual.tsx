@@ -3,89 +3,79 @@
 import Link from "next/link";
 import { useMemo } from "react";
 
-import {
-  convertirCestaAItemsEncargo,
-  resolverSubtotalVisible,
-  serializarItemsEncargo,
-} from "@/contenido/catalogo/cestaRitual";
-import { PRODUCTOS_CATALOGO } from "@/contenido/catalogo/catalogo";
+import { convertirCestaALineasSeleccion } from "@/contenido/catalogo/cestaRitual";
+import { resolverResumenEconomicoSeleccion } from "@/contenido/catalogo/seleccionEncargo";
 
 import estilos from "./cestaRitual.module.css";
 import { useCarrito } from "./useCarrito";
 
 export function VistaCestaRitual(): JSX.Element {
   const { cesta, totalUnidades, cambiarCantidad, eliminar, limpiar } = useCarrito();
+  const lineasSeleccion = useMemo(() => convertirCestaALineasSeleccion(cesta), [cesta]);
+  const resumenEconomico = useMemo(() => resolverResumenEconomicoSeleccion(lineasSeleccion), [lineasSeleccion]);
 
-  const enlaceEncargo = useMemo(() => {
-    const seleccion = serializarItemsEncargo(convertirCestaAItemsEncargo(cesta));
-    return `/encargo?cesta=${seleccion}`;
-  }, [cesta]);
-
-  const subtotal = useMemo(() => resolverSubtotalVisible(cesta), [cesta]);
-
-  if (cesta.lineas.length === 0) {
+  if (lineasSeleccion.length === 0) {
     return (
       <section className="bloque-home">
-        <h1>Cesta ritual</h1>
-        <p>Tu cesta está vacía. Explora las colecciones y reúne las piezas que deseas consultar juntas.</p>
-        <Link href="/colecciones" className="boton boton--principal">Ir a colecciones</Link>
+        <h1>Mi selección</h1>
+        <p>No has guardado piezas todavía. Cuando añadas productos o referencias editoriales, podrás revisarlas aquí antes de solicitar el encargo.</p>
+        <Link href="/colecciones" className="boton boton--principal">Explorar colecciones</Link>
       </section>
     );
   }
 
   return (
-    <section className="bloque-home" aria-labelledby="titulo-cesta-ritual">
-      <h1 id="titulo-cesta-ritual">Cesta ritual</h1>
-      <p>Revisa tu selección artesanal, ajusta cantidades y deriva la consulta al flujo de encargo.</p>
+    <section className="bloque-home" aria-labelledby="titulo-mi-seleccion">
+      <h1 id="titulo-mi-seleccion">Mi selección</h1>
+      <p>Revisa cada línea, ajusta cantidades y pasa a la solicitud artesanal con una selección clara en lugar de un checkout ficticio.</p>
 
       <ul className={estilos.listado}>
-        {cesta.lineas.map((linea) => {
-          const producto = PRODUCTOS_CATALOGO.find((item) => item.slug === linea.slug);
-          if (!producto) {
-            return null;
-          }
-
-          return (
-            <li key={linea.slug} className={estilos.linea}>
-              <div className={estilos.lineaCabecera}>
-                <h2>{producto.nombre}</h2>
-                <strong>{producto.precioVisible}</strong>
+        {lineasSeleccion.map((linea) => (
+          <li key={linea.id_linea} className={estilos.linea}>
+            <div className={estilos.lineaCabecera}>
+              <div>
+                <h2>{linea.nombre}</h2>
+                <p>{etiquetaTipoLinea(linea.tipo_linea)}</p>
               </div>
-              <p>{producto.subtitulo}</p>
-              <div className={estilos.controlesLinea}>
-                <label>
-                  Cantidad
-                  <input
-                    type="number"
-                    min={1}
-                    max={12}
-                    value={linea.cantidad}
-                    onChange={(event) => cambiarCantidad(linea.slug, Number(event.target.value))}
-                  />
-                </label>
-                <button type="button" className="boton boton--secundario" onClick={() => eliminar(linea.slug)}>
-                  Quitar
-                </button>
-                <Link href={`/colecciones/${linea.slug}`} className="boton boton--secundario">Ver ficha</Link>
-              </div>
-            </li>
-          );
-        })}
+              <strong>{linea.referencia_economica.valor === null ? "Sin referencia" : linea.referencia_economica.etiqueta}</strong>
+            </div>
+            <p>{linea.notas_origen ?? "Sin contexto editorial adicional."}</p>
+            {linea.formato && <p><strong>Formato:</strong> {linea.formato}</p>}
+            <div className={estilos.controlesLinea}>
+              <label>
+                Cantidad
+                <input type="number" min={1} max={12} value={linea.cantidad} onChange={(event) => cambiarCantidad(linea.slug ?? linea.id_linea, Number(event.target.value))} />
+              </label>
+              <button type="button" className="boton boton--secundario" onClick={() => eliminar(linea.slug ?? linea.id_linea)}>
+                Quitar línea
+              </button>
+              {linea.slug && <Link href={`/colecciones/${linea.slug}`} className="boton boton--secundario">Ver ficha</Link>}
+            </div>
+          </li>
+        ))}
       </ul>
 
       <article className={estilos.resumen}>
         <p><strong>Total de unidades:</strong> {totalUnidades}</p>
-        <p><strong>Referencia editorial:</strong> {subtotal}</p>
-        <p>
-          Este valor es orientativo para tu selección ritual; la gestión final se concreta en el intercambio artesanal.
-        </p>
+        <p><strong>{resumenEconomico.etiqueta}:</strong> {resumenEconomico.totalVisible ?? "A revisar"}</p>
+        <p>{resumenEconomico.detalle}</p>
       </article>
 
       <div className={estilos.accionesCesta}>
-        <a href={enlaceEncargo} className="boton boton--principal">Pasar esta selección a encargo</a>
-        <button type="button" className="boton boton--secundario" onClick={limpiar}>Vaciar cesta</button>
+        <Link href="/encargo?origen=seleccion" className="boton boton--principal">Continuar con la solicitud de encargo</Link>
+        <button type="button" className="boton boton--secundario" onClick={limpiar}>Vaciar selección</button>
         <Link href="/colecciones" className="boton boton--secundario">Seguir explorando</Link>
       </div>
     </section>
   );
+}
+
+function etiquetaTipoLinea(tipo: "catalogo" | "fuera_catalogo" | "sugerencia_editorial"): string {
+  if (tipo === "catalogo") {
+    return "Línea de catálogo";
+  }
+  if (tipo === "fuera_catalogo") {
+    return "Pieza fuera de catálogo";
+  }
+  return "Sugerencia editorial";
 }

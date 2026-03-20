@@ -69,7 +69,7 @@ export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
           <BotonAgregarCarrito slugProducto={producto.slug} />
           <Link href="/colecciones" className="boton boton--secundario">Volver al listado de colecciones rituales</Link>
           <Link href="/rituales" className="boton boton--secundario">Explorar rituales relacionados por intención</Link>
-          <Link href="/cesta" className="boton boton--secundario">Ver cesta ritual</Link>
+          <Link href="/cesta" className="boton boton--secundario">Ver selección</Link>
           <Link href={`/encargo?producto=${producto.slug}`} className="boton boton--secundario">Consultar encargo para esta pieza</Link>
         </div>
       </section>

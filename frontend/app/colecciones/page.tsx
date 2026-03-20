@@ -32,7 +32,7 @@ const IndicadorCestaRitualDiferido = dynamic(
     ssr: false,
     loading: () => (
       <Link href="/cesta" className="boton boton--secundario">
-        Cesta ritual
+        Mi selección
       </Link>
     ),
   },
@@ -67,8 +67,8 @@ export default function PaginaColecciones({ searchParams }: Props): JSX.Element 
       />
 
       <section className="bloque-home">
-        <h2>Tu selección ritual</h2>
-        <p>Guarda piezas de interés y prepara una consulta con varias referencias en un solo paso.</p>
+        <h2>Tu selección para encargo</h2>
+        <p>Guarda piezas de interés y prepara una solicitud de encargo con varias referencias en un solo paso.</p>
         <IndicadorCestaRitualDiferido />
       </section>
 

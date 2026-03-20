@@ -27,7 +27,7 @@ export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
   { etiqueta: "Guías", href: "/guias", coincidencia: "prefijo" },
   { etiqueta: "Tarot", href: "/tarot", coincidencia: "exacta" },
   { etiqueta: "Calendario ritual", href: "/calendario-ritual", coincidencia: "exacta" },
-  { etiqueta: "Cesta ritual", href: "/cesta", coincidencia: "exacta" },
+  { etiqueta: "Mi selección", href: "/cesta", coincidencia: "exacta" },
   { etiqueta: "Encargo", href: "/encargo", coincidencia: "exacta" },
   { etiqueta: "Acceso", href: "/acceso", coincidencia: "exacta" },
   { etiqueta: "Mi cuenta", href: "/mi-cuenta", coincidencia: "prefijo" },
@@ -69,7 +69,7 @@ export function esRutaActiva(rutaActual: string, enlace: EnlaceNavegacionGlobal)
 }
 
 export function construirTextoContadorCesta(totalUnidades: number): string {
-  return `${totalUnidades} ${totalUnidades === 1 ? "unidad" : "unidades"} en cesta`;
+  return `${totalUnidades} ${totalUnidades === 1 ? "unidad" : "unidades"} en mi selección`;
 }
 
 export function debeMostrarContadorCesta(totalUnidades: number): boolean {

@@ -50,6 +50,7 @@ test("construirEnlaceCanal reutiliza el resumen de consulta para WhatsApp", () =
       consentimiento: true,
     },
     producto,
+    "producto",
   );
 
   const canal = resolverCanalesDisponibles({ email: null, whatsapp: "34600123123" })[0];

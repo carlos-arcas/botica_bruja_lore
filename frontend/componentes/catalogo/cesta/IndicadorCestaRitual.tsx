@@ -10,8 +10,8 @@ export function IndicadorCestaRitual(): JSX.Element {
 
   return (
     <Link href="/cesta" className={`boton boton--secundario ${estilos.indicador}`}>
-      Cesta ritual
-      <span className={estilos.contador} aria-label={`${totalUnidades} unidades en cesta`}>
+      Mi selección
+      <span className={estilos.contador} aria-label={`${totalUnidades} unidades en mi selección`}>
         {totalUnidades}
       </span>
     </Link>
