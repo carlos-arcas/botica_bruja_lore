@@ -1,10 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
 
 import { convertirCestaALineasSeleccion } from "@/contenido/catalogo/cestaRitual";
-import { resolverResumenEconomicoSeleccion } from "@/contenido/catalogo/seleccionEncargo";
+import {
+  LineaSeleccionEncargo,
+  resolverReferenciaEconomicaVisualLinea,
+  resolverResumenEconomicoSeleccion,
+} from "@/contenido/catalogo/seleccionEncargo";
 
 import estilos from "./cestaRitual.module.css";
 import { useCarrito } from "./useCarrito";
@@ -31,27 +36,12 @@ export function VistaCestaRitual(): JSX.Element {
 
       <ul className={estilos.listado}>
         {lineasSeleccion.map((linea) => (
-          <li key={linea.id_linea} className={estilos.linea}>
-            <div className={estilos.lineaCabecera}>
-              <div>
-                <h2>{linea.nombre}</h2>
-                <p>{etiquetaTipoLinea(linea.tipo_linea)}</p>
-              </div>
-              <strong>{linea.referencia_economica.valor === null ? "Sin referencia" : linea.referencia_economica.etiqueta}</strong>
-            </div>
-            <p>{linea.notas_origen ?? "Sin contexto editorial adicional."}</p>
-            {linea.formato && <p><strong>Formato:</strong> {linea.formato}</p>}
-            <div className={estilos.controlesLinea}>
-              <label>
-                Cantidad
-                <input type="number" min={1} max={12} value={linea.cantidad} onChange={(event) => cambiarCantidad(linea.slug ?? linea.id_linea, Number(event.target.value))} />
-              </label>
-              <button type="button" className="boton boton--secundario" onClick={() => eliminar(linea.slug ?? linea.id_linea)}>
-                Quitar línea
-              </button>
-              {linea.slug && <Link href={`/colecciones/${linea.slug}`} className="boton boton--secundario">Ver ficha</Link>}
-            </div>
-          </li>
+          <LineaSeleccionCard
+            key={linea.id_linea}
+            linea={linea}
+            onCambiarCantidad={cambiarCantidad}
+            onEliminar={eliminar}
+          />
         ))}
       </ul>
 
@@ -67,6 +57,66 @@ export function VistaCestaRitual(): JSX.Element {
         <Link href="/colecciones" className="boton boton--secundario">Seguir explorando</Link>
       </div>
     </section>
+  );
+}
+
+type LineaSeleccionCardProps = {
+  linea: LineaSeleccionEncargo;
+  onCambiarCantidad: (slug: string, cantidad: number) => void;
+  onEliminar: (slug: string) => void;
+};
+
+function LineaSeleccionCard({ linea, onCambiarCantidad, onEliminar }: LineaSeleccionCardProps): JSX.Element {
+  const referenciaVisual = resolverReferenciaEconomicaVisualLinea(linea);
+  const claveLinea = linea.slug ?? linea.id_linea;
+
+  return (
+    <li className={estilos.linea}>
+      {linea.imagen_url ? (
+        <div className={estilos.mediaLinea}>
+          <Image src={linea.imagen_url} alt={`Imagen editorial de ${linea.nombre}`} className={estilos.imagenLinea} width={640} height={400} unoptimized />
+        </div>
+      ) : null}
+
+      <div className={estilos.contenidoLinea}>
+        <div className={estilos.lineaCabecera}>
+          <div>
+            <p className={estilos.tipoLinea}>{etiquetaTipoLinea(linea.tipo_linea)}</p>
+            <h2>{linea.nombre}</h2>
+          </div>
+          <span className={estilos.cantidadLinea}>{linea.cantidad} {linea.cantidad === 1 ? "pieza" : "piezas"}</span>
+        </div>
+
+        <dl className={estilos.metaLinea}>
+          <div>
+            <dt>Formato</dt>
+            <dd>{linea.formato ?? "A definir durante la revisión artesanal"}</dd>
+          </div>
+          <div>
+            <dt>Referencia unitaria</dt>
+            <dd>{referenciaVisual.referenciaUnitaria ?? "Sin referencia editorial"}</dd>
+          </div>
+          <div>
+            <dt>Subtotal orientativo</dt>
+            <dd>{referenciaVisual.subtotal ?? "Se confirma en la solicitud"}</dd>
+          </div>
+        </dl>
+
+        <p className={estilos.estadoEconomico}>{referenciaVisual.mensaje}</p>
+        <p className={estilos.notasLinea}>{linea.notas_origen ?? "Sin contexto editorial adicional."}</p>
+
+        <div className={estilos.controlesLinea}>
+          <label>
+            Cantidad
+            <input type="number" min={1} max={12} value={linea.cantidad} onChange={(event) => onCambiarCantidad(claveLinea, Number(event.target.value))} />
+          </label>
+          <button type="button" className="boton boton--secundario" onClick={() => onEliminar(claveLinea)}>
+            Quitar línea
+          </button>
+          {linea.slug ? <Link href={`/colecciones/${linea.slug}`} className="boton boton--secundario">Ver ficha</Link> : null}
+        </div>
+      </div>
+    </li>
   );
 }
 
