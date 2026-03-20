@@ -26,6 +26,17 @@ function construirDetalleVisible(detalle: string, operationId?: string): string 
   return operationId ? `${detalleLimpio} · operation_id: ${operationId}` : detalleLimpio;
 }
 
+
+export function resolverEstadoListadoVisible(
+  estadoBase: EstadoListadoAdmin,
+  itemsVisibles: Record<string, unknown>[],
+  mensajeVacioVisible: string,
+): EstadoListadoAdmin {
+  if (estadoBase.tipo === "denegado" || estadoBase.tipo === "error") return estadoBase;
+  if (itemsVisibles.length > 0) return { tipo: "datos", mensaje: "Datos cargados." };
+  return { tipo: "vacio", mensaje: mensajeVacioVisible };
+}
+
 export function resolverEstadoRenderListadoAdmin(
   resultado: ResultadoListado,
   opciones: OpcionesEstadoListadoAdmin,

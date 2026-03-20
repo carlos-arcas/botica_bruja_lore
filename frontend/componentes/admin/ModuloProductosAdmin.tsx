@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { EstadoListadoAdmin } from "@/componentes/admin/estadoListadoAdmin";
+import { EstadoListadoAdmin, resolverEstadoListadoVisible } from "@/componentes/admin/estadoListadoAdmin";
 import { ModuloCrudContextualAdmin } from "@/componentes/admin/ModuloCrudContextualAdmin";
 import { actualizarItemsSeccion, sincronizarProductoMutado } from "@/componentes/admin/sincronizacionProductosAdmin";
 import { BENEFICIOS_BOTICA, CATEGORIAS_VISIBLES_BOTICA, FORMATOS_BOTICA, MODOS_USO_BOTICA } from "@/contenido/catalogo/taxonomiasBoticaNatural";
@@ -56,12 +56,21 @@ function construirValidadorProducto(estadoPlantas: EstadoCargaPlantas) {
   return (formulario: Record<string, unknown>) => validarFormularioProducto(formulario, estadoPlantas.estado);
 }
 
+function resolverMensajeVacioSeccion(seccion: string): string {
+  const etiquetaSeccion = SECCIONES.find((item) => item.slug === seccion)?.etiqueta ?? "la sección seleccionada";
+  return `No hay productos registrados todavía en ${etiquetaSeccion.toLowerCase()}.`;
+}
+
 export function ModuloProductosAdmin({ token, itemsIniciales, estadoListadoInicial }: { token?: string; itemsIniciales: Record<string, unknown>[]; estadoListadoInicial: EstadoListadoAdmin }): JSX.Element {
   const [seccion, setSeccion] = useState<string>(SECCIONES[0].slug);
   const [plantas, setPlantas] = useState<PlantaAsociable[]>([]);
   const [estadoPlantas, setEstadoPlantas] = useState<EstadoCargaPlantas>({ estado: "cargando", mensaje: "Cargando plantas asociables..." });
   const [itemsProductos, setItemsProductos] = useState(itemsIniciales);
   const filtrados = useMemo(() => itemsProductos.filter((item) => item.seccion_publica === seccion), [itemsProductos, seccion]);
+  const estadoListadoSeccion = useMemo(
+    () => resolverEstadoListadoVisible(estadoListadoInicial, filtrados, resolverMensajeVacioSeccion(seccion)),
+    [estadoListadoInicial, filtrados, seccion],
+  );
 
   const cargarPlantas = useCallback(() => {
     let cancelado = false;
@@ -163,7 +172,7 @@ export function ModuloProductosAdmin({ token, itemsIniciales, estadoListadoInici
         titulo="Productos"
         token={token}
         itemsIniciales={filtrados}
-        estadoListadoInicial={itemsIniciales.length > 0 ? { tipo: "datos", mensaje: "Datos cargados." } : estadoListadoInicial}
+        estadoListadoInicial={estadoListadoSeccion}
         campoEstado="publicado"
         entidadImportacion="productos"
         camposComunes={CAMPOS_COMUNES}
