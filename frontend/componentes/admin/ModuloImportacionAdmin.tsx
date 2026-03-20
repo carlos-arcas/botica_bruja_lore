@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
+import { construirMensajeConfirmacionImportacion, normalizarConfirmacionImportacion } from "@/componentes/admin/importacion/feedbackConfirmacionImportacion";
 import { ResumenImportacionAdmin } from "@/componentes/admin/importacion/ResumenImportacionAdmin";
 import { TablaLoteImportacionAdmin } from "@/componentes/admin/importacion/TablaLoteImportacionAdmin";
 import {
@@ -69,15 +70,17 @@ export function ModuloImportacionAdmin({ token }: { token?: string }): JSX.Eleme
   }, "No se pudo validar el archivo de importación.");
 
   const confirmarSeleccionadas = () => !detalle ? Promise.resolve() : ejecutarAccion(async () => {
-    const confirmadas = await confirmarLoteImportacion(loteId, detalle.filas.filter((fila) => fila.seleccionado).map((fila) => fila.id), token);
-    setDetalle(confirmadas.detalle);
-    setEstado({ cargando: false, ok: `Filas confirmadas: ${String(confirmadas.confirmadas)}.`, error: "" });
+    const respuesta = await confirmarLoteImportacion(loteId, detalle.filas.filter((fila) => fila.seleccionado).map((fila) => fila.id), token);
+    const confirmacion = normalizarConfirmacionImportacion(respuesta);
+    setDetalle(confirmacion.detalle);
+    setEstado({ cargando: false, ok: construirMensajeConfirmacionImportacion("Filas confirmadas", respuesta), error: "" });
   }, "No se pudo confirmar la selección actual.");
 
   const confirmarValidas = () => !detalle ? Promise.resolve() : ejecutarAccion(async () => {
-    const confirmadas = await confirmarValidasLoteImportacion(loteId, token);
-    setDetalle(confirmadas.detalle);
-    setEstado({ cargando: false, ok: `Filas válidas confirmadas: ${String(confirmadas.confirmadas)}.`, error: "" });
+    const respuesta = await confirmarValidasLoteImportacion(loteId, token);
+    const confirmacion = normalizarConfirmacionImportacion(respuesta);
+    setDetalle(confirmacion.detalle);
+    setEstado({ cargando: false, ok: construirMensajeConfirmacionImportacion("Filas válidas confirmadas", respuesta), error: "" });
   }, "No se pudo confirmar las filas válidas.");
 
   const revalidar = () => !detalle ? Promise.resolve() : ejecutarAccion(async () => {

@@ -22,6 +22,10 @@ import {
   resolverBaseBackoffice,
   obtenerPlantasAsociables,
 } from "../infraestructura/api/backoffice";
+import {
+  construirMensajeConfirmacionImportacion,
+  normalizarConfirmacionImportacion,
+} from "../componentes/admin/importacion/feedbackConfirmacionImportacion";
 import { validarFormularioProducto } from "../infraestructura/configuracion/validacionProductosBackoffice";
 
 
@@ -62,8 +66,27 @@ test("feedback de éxito y error se informa en UI para alta, edición e importac
   assert.match(componente, /Registro guardado\./);
   assert.match(componente, /Cambios guardados\./);
   assert.match(componente, /Lote cargado\. Revisa filas antes de confirmar\./);
-  assert.match(componente, /Lote confirmado\. Filas aplicadas:/);
+  assert.match(componente, /construirMensajeConfirmacionImportacion\("Lote confirmado\. Filas aplicadas"/);
   assert.match(componente, /No se pudo cargar el lote de importación\./);
+});
+
+test("normaliza el contrato de confirmación y construye mensajes sin serializar el objeto completo", () => {
+  const resultado = {
+    confirmadas: 3,
+    detalle: {
+      lote: { id: 44 },
+      resumen: { total: 3, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 3, con_imagen: 0, sin_imagen: 3, seleccionadas: 3 },
+      filas: [],
+    },
+  };
+
+  const confirmacion = normalizarConfirmacionImportacion(resultado);
+  const mensaje = construirMensajeConfirmacionImportacion("Lote confirmado. Filas aplicadas", resultado);
+
+  assert.equal(confirmacion.confirmadas, 3);
+  assert.equal(confirmacion.detalle.lote.id, 44);
+  assert.equal(mensaje, "Lote confirmado. Filas aplicadas: 3.");
+  assert.doesNotMatch(mensaje, /\[object Object\]/);
 });
 
 test("publish/unpublish llama endpoint de publicación", async () => {
@@ -225,6 +248,22 @@ test("ui de importación valida columnas faltantes y muestra mensaje claro", () 
   const componente = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
   assert.match(componente, /Faltan columnas obligatorias/);
   assert.match(componente, /columnasObligatoriasImportacion/);
+});
+
+test("los dos flujos UI de importación consumen el mismo contrato de confirmación", () => {
+  const contextual = readFileSync("componentes/admin/ModuloCrudContextualAdmin.tsx", "utf8");
+  const importacion = readFileSync("componentes/admin/ModuloImportacionAdmin.tsx", "utf8");
+  const helper = readFileSync("componentes/admin/importacion/feedbackConfirmacionImportacion.ts", "utf8");
+
+  assert.match(helper, /normalizarConfirmacionImportacion/);
+  assert.match(helper, /return `\$\{etiqueta\}: \$\{String\(confirmadas\)\}\.`;/);
+  assert.match(contextual, /normalizarConfirmacionImportacion\(respuesta\)/);
+  assert.match(contextual, /construirMensajeConfirmacionImportacion\("Lote confirmado\. Filas aplicadas", respuesta\)/);
+  assert.match(contextual, /setDetalle\(await obtenerLoteImportacion\(Number\(detalle\.lote\.id\), token\)\)/);
+  assert.doesNotMatch(contextual, /Filas aplicadas: \$\{confirmadas\}/);
+  assert.match(importacion, /normalizarConfirmacionImportacion\(respuesta\)/);
+  assert.match(importacion, /construirMensajeConfirmacionImportacion\("Filas confirmadas", respuesta\)/);
+  assert.match(importacion, /construirMensajeConfirmacionImportacion\("Filas válidas confirmadas", respuesta\)/);
 });
 
 
