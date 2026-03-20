@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { API_BACKEND_BASE, NOMBRE_COOKIE_CUENTA_CLIENTE } from "@/infraestructura/auth/configuracion";
+import { callBackendSafe, crearProxyResponse } from "@/infraestructura/http/callBackendSafe";
 
 function cabeceras(request: NextRequest): Headers {
   const headers = new Headers({ Accept: "application/json", "Content-Type": request.headers.get("content-type") ?? "application/json" });
@@ -10,11 +11,11 @@ function cabeceras(request: NextRequest): Headers {
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
-  const respuesta = await fetch(`${API_BACKEND_BASE}/api/v1/pedidos/`, {
+  const respuesta = await callBackendSafe({
+    url: `${API_BACKEND_BASE}/api/v1/pedidos/`,
     method: "POST",
     headers: cabeceras(request),
     body: await request.text(),
-    cache: "no-store",
   });
-  return new NextResponse(await respuesta.arrayBuffer(), { status: respuesta.status, headers: { "Content-Type": respuesta.headers.get("content-type") ?? "application/json" } });
+  return crearProxyResponse(respuesta);
 }

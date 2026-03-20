@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { callBackendSafe, crearProxyResponse } from "../http/callBackendSafe";
 import {
   API_BACKEND_BASE,
   DURACION_COOKIE_CUENTA_CLIENTE_SEGUNDOS,
   NOMBRE_COOKIE_CUENTA_CLIENTE,
-} from "@/infraestructura/auth/configuracion";
+} from "./configuracion";
 
 const METODOS_SIN_CUERPO = new Set(["GET", "HEAD"]);
 
@@ -23,18 +24,20 @@ export function construirCabecerasCuenta(request: NextRequest): Headers {
 }
 
 export async function reenviarCuenta(request: NextRequest, ruta: string[]): Promise<Response> {
-  const respuesta = await fetch(construirUrlBackendCuenta(request, ruta), {
+  const respuesta = await callBackendSafe({
+    url: construirUrlBackendCuenta(request, ruta),
     method: request.method,
     headers: construirCabecerasCuenta(request),
-    body: METODOS_SIN_CUERPO.has(request.method) ? undefined : await request.arrayBuffer(),
-    cache: "no-store",
+    body: await construirBodyCuenta(request),
   });
-  const proxied = new NextResponse(await respuesta.arrayBuffer(), {
-    status: respuesta.status,
-    headers: { "Content-Type": respuesta.headers.get("content-type") ?? "application/json", "Cache-Control": "no-store" },
-  });
+  const proxied = crearProxyResponse(respuesta, { "Cache-Control": "no-store" });
   sincronizarCookieSesion(proxied, respuesta.headers.get("set-cookie"));
   return proxied;
+}
+
+async function construirBodyCuenta(request: NextRequest): Promise<ArrayBuffer | undefined> {
+  if (METODOS_SIN_CUERPO.has(request.method)) return undefined;
+  return request.arrayBuffer();
 }
 
 export function limpiarCookieSesion(response: NextResponse): NextResponse {
