@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { CampoFormulario, ConfigCampo, ControlImagenFormulario } from "@/componentes/admin/CamposFormularioAdmin";
@@ -28,7 +28,7 @@ import {
   subirImagenBackoffice,
 } from "@/infraestructura/api/backoffice";
 import { EstadoListadoAdmin } from "@/componentes/admin/estadoListadoAdmin";
-import { construirDetalleSincronizacionSecciones, resolverSeccionesAfectadasImportacion } from "@/componentes/admin/sincronizacionProductosAdmin";
+import { construirDetalleSincronizacionSecciones, debeActualizarVistaLocal, resolverSeccionesAfectadasImportacion } from "@/componentes/admin/sincronizacionProductosAdmin";
 import { construirPayloadRitual } from "@/infraestructura/configuracion/adminRituales";
 import { construirPayloadCanonicoProducto } from "@/infraestructura/configuracion/contratoProductosBackoffice";
 
@@ -218,6 +218,11 @@ export function ModuloCrudContextualAdmin({
   const [estadoImagenAlta, setEstadoImagenAlta] = useState<EstadoImagenFormulario>({ estado: "idle", mensaje: "" });
   const [estadoImagenEdicion, setEstadoImagenEdicion] = useState<EstadoImagenFormulario>({ estado: "idle", mensaje: "" });
   const [importacionAbierta, setImportacionAbierta] = useState(false);
+  const seccionVisibleRef = useRef(seccionSeleccionada);
+
+  useEffect(() => {
+    seccionVisibleRef.current = seccionSeleccionada;
+  }, [seccionSeleccionada]);
 
   useEffect(() => setItems(itemsIniciales), [itemsIniciales]);
   useEffect(() => {
@@ -238,7 +243,14 @@ export function ModuloCrudContextualAdmin({
     if (actualizado.estado !== "ok") {
       throw new Error(actualizado.detalle);
     }
-    setItems(actualizado.items);
+    const debeActualizarVista = debeActualizarVistaLocal({
+      modulo,
+      seccionSincronizada: seccionObjetivo,
+      seccionVisible: seccionVisibleRef.current,
+    });
+    if (debeActualizarVista) {
+      setItems(actualizado.items);
+    }
     onItemsSincronizados?.(seccionObjetivo, actualizado.items);
     router.refresh();
     return actualizado.items;
