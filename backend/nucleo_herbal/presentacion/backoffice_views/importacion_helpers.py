@@ -46,29 +46,30 @@ def serializar_fila(fila: ImportacionFilaModelo) -> dict:
     }
 
 
-def json_importacion(detalle: str, status: int, request: HttpRequest, **extra) -> JsonResponse:
-    return JsonResponse({"detalle": detalle, "operation_id": operation_id(request), **extra}, status=status)
+def json_importacion(detalle: str, status: int, request: HttpRequest, operation_id_actual: str | None = None, **extra) -> JsonResponse:
+    operation_id_resuelto = operation_id_actual or operation_id(request)
+    return JsonResponse({"detalle": detalle, "operation_id": operation_id_resuelto, **extra}, status=status)
 
 
-def lote_por_usuario(request: HttpRequest, lote_id: int) -> ImportacionLoteModelo | JsonResponse:
+def lote_por_usuario(request: HttpRequest, lote_id: int, operation_id_actual: str | None = None) -> ImportacionLoteModelo | JsonResponse:
     usuario = usuario_staff(request)
     if usuario is None:
         return json_no_autorizado()
     lote = ImportacionLoteModelo.objects.filter(id=lote_id, usuario=usuario).first()
     if lote is None:
-        return json_importacion("Lote no encontrado.", 404, request)
+        return json_importacion("Lote no encontrado.", 404, request, operation_id_actual=operation_id_actual)
     return lote
 
 
-def fila_por_usuario(request: HttpRequest, lote_id: int, fila_id: int) -> ImportacionFilaModelo | JsonResponse:
-    lote = lote_por_usuario(request, lote_id)
+def fila_por_usuario(request: HttpRequest, lote_id: int, fila_id: int, operation_id_actual: str | None = None) -> ImportacionFilaModelo | JsonResponse:
+    lote = lote_por_usuario(request, lote_id, operation_id_actual=operation_id_actual)
     if isinstance(lote, JsonResponse):
         return lote
     fila = ImportacionFilaModelo.objects.filter(id=fila_id, lote=lote).first()
     if fila is None:
-        return json_importacion("Fila no encontrada.", 404, request)
+        return json_importacion("Fila no encontrada.", 404, request, operation_id_actual=operation_id_actual)
     if fila.estado == ImportacionFilaModelo.ESTADO_CONFIRMADA:
-        return json_importacion("La fila ya fue confirmada.", 409, request)
+        return json_importacion("La fila ya fue confirmada.", 409, request, operation_id_actual=operation_id_actual)
     return fila
 
 
@@ -89,5 +90,13 @@ def log_importacion(accion: str, usuario, lote: ImportacionLoteModelo, filas_afe
     )
 
 
+OPERATION_ID_ATTR = "_operation_id_importacion"
+
+
 def operation_id(request: HttpRequest) -> str:
-    return request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    operation_id_actual = getattr(request, OPERATION_ID_ATTR, None)
+    if operation_id_actual:
+        return operation_id_actual
+    operation_id_actual = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    setattr(request, OPERATION_ID_ATTR, operation_id_actual)
+    return operation_id_actual
