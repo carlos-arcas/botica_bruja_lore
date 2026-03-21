@@ -9,6 +9,7 @@ import {
   resolverModoCheckoutReal,
   validarCheckoutReal,
 } from "../contenido/catalogo/checkoutReal";
+import { construirLineasVisualesCheckoutReal } from "../componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal";
 import {
   construirUrlRetornoPedido,
   crearPedidoPublico,
@@ -199,6 +200,80 @@ test("checkout real no crea pedido vacío cuando toda la selección es no catalo
   assert.equal(resultado.lineasConvertibles.length, 0);
   assert.equal(resultado.lineasNoConvertibles.length, 1);
   assert.match(errores.lineas ?? "", /Atado herbal a medida/);
+});
+
+
+
+test("checkout real conserva contexto rico por línea en selección mixta sin degradarse a cantidad por nombre", () => {
+  const itemsPreseleccionados = [
+    {
+      id_linea: "rit-001",
+      tipo_linea: "catalogo" as const,
+      slug: "vela-intencion-clara",
+      id_producto: null,
+      nombre: "Vela Intención Clara",
+      cantidad: 1,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 9.9 },
+      notas_origen: null,
+    },
+    {
+      id_linea: "libre-001",
+      tipo_linea: "fuera_catalogo" as const,
+      slug: null,
+      id_producto: null,
+      nombre: "Atado herbal a medida",
+      cantidad: 1,
+      formato: "ramillete artesanal",
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Sin referencia económica", valor: null },
+      notas_origen: "Petición manual.",
+    },
+  ];
+  const resultado = construirResultadoLineasPedidoReal(itemsPreseleccionados, "", "1");
+  const visuales = construirLineasVisualesCheckoutReal(itemsPreseleccionados, resultado);
+
+  assert.equal(visuales.lineasConvertibles.length, 1);
+  assert.equal(visuales.lineasBloqueadas.length, 1);
+  assert.equal(visuales.lineasConvertibles[0]?.linea.nombre, "Vela Intención Clara");
+  assert.ok((visuales.lineasConvertibles[0]?.linea.imagen_url ?? "").length > 0);
+  assert.ok(Boolean(visuales.lineasConvertibles[0]?.linea.formato));
+  assert.equal(
+    visuales.lineasConvertibles[0]?.estado?.etiqueta,
+    "Línea convertible al pedido real",
+  );
+  assert.equal(visuales.lineasBloqueadas[0]?.linea.nombre, "Atado herbal a medida");
+  assert.equal(visuales.lineasBloqueadas[0]?.linea.formato, "ramillete artesanal");
+  assert.match(
+    visuales.lineasBloqueadas[0]?.estado?.descripcion ?? "",
+    /no se puede convertir en una línea pagable/,
+  );
+});
+
+test("checkout real construye la vista múltiple desde el adaptador compartido de líneas ricas", () => {
+  const itemsPreseleccionados = [
+    {
+      id_linea: "rit-010",
+      tipo_linea: "catalogo" as const,
+      slug: "pack-bosque-dorado",
+      id_producto: null,
+      nombre: "Pack Bosque Dorado",
+      cantidad: 2,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 34 },
+      notas_origen: null,
+    },
+  ];
+  const resultado = construirResultadoLineasPedidoReal(itemsPreseleccionados, "", "1");
+  const visuales = construirLineasVisualesCheckoutReal(itemsPreseleccionados, resultado);
+
+  assert.equal(visuales.lineasBloqueadas.length, 0);
+  assert.equal(visuales.lineasConvertibles.length, 1);
+  assert.equal(visuales.lineasConvertibles[0]?.linea.cantidad, 2);
+  assert.ok(Boolean(visuales.lineasConvertibles[0]?.linea.id_producto));
+  assert.equal(visuales.lineasConvertibles[0]?.linea.slug, "pack-bosque-dorado");
 });
 
 test("checkout real mantiene el modo único con producto_slug obligatorio", () => {
