@@ -3,15 +3,24 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  ItemListaLineasSeleccion,
+  ListaLineasSeleccion,
+} from "@/componentes/catalogo/seleccion/ListaLineasSeleccion";
 import { PRODUCTOS_CATALOGO } from "@/contenido/catalogo/catalogo";
 import { resolverContextoPreseleccionado } from "@/contenido/catalogo/encargoConsulta";
 import {
   construirEstadoInicialCheckoutReal,
   construirPayloadPedidoReal,
   construirResultadoLineasPedidoReal,
+  DatosCheckoutReal,
   resolverModoCheckoutReal,
   validarCheckoutReal,
 } from "@/contenido/catalogo/checkoutReal";
+import {
+  resolverLineasSeleccionEncargo,
+  resolverResumenEconomicoSeleccion,
+} from "@/contenido/catalogo/seleccionEncargo";
 import { crearPedidoPublico } from "@/infraestructura/api/pedidos";
 
 import estilos from "./flujoCheckoutReal.module.css";
@@ -49,12 +58,69 @@ export function FlujoCheckoutReal({
       ),
     [contexto.itemsPreseleccionados, datos.cantidad, datos.producto_slug],
   );
+  const lineasSeleccion = useMemo(
+    () =>
+      resolverLineasSeleccionEncargo(
+        contexto.itemsPreseleccionados.map((item) => ({
+          ...item,
+          actualizadoEn: new Date().toISOString(),
+        })),
+      ),
+    [contexto.itemsPreseleccionados],
+  );
+  const resumenEconomico = useMemo(
+    () => resolverResumenEconomicoSeleccion(lineasSeleccion),
+    [lineasSeleccion],
+  );
   const producto = useMemo(
     () =>
       modoCheckout === "producto_unico"
-        ? PRODUCTOS_CATALOGO.find((item) => item.slug === datos.producto_slug) ?? null
+        ? PRODUCTOS_CATALOGO.find((item) => item.slug === datos.producto_slug) ??
+          null
         : null,
     [datos.producto_slug, modoCheckout],
+  );
+  const idsConvertibles = useMemo(
+    () => new Set(resultadoLineas.lineasConvertibles.map((linea) => linea.id_producto)),
+    [resultadoLineas.lineasConvertibles],
+  );
+  const idsBloqueadas = useMemo(
+    () => new Set(resultadoLineas.lineasNoConvertibles.map((linea) => linea.id_linea)),
+    [resultadoLineas.lineasNoConvertibles],
+  );
+  const lineasConvertiblesVisuales = useMemo(
+    () =>
+      lineasSeleccion
+        .filter((linea) => linea.id_producto && idsConvertibles.has(linea.id_producto))
+        .map((linea) => ({
+          linea,
+          estado: {
+            etiqueta: "Línea convertible al pedido real",
+            descripcion:
+              "Se mantiene como línea revisable del checkout con su contexto visual y económico.",
+            tono: "convertible" as const,
+          },
+        })),
+    [idsConvertibles, lineasSeleccion],
+  );
+  const lineasBloqueadasVisuales = useMemo(
+    () =>
+      lineasSeleccion
+        .filter((linea) => idsBloqueadas.has(linea.id_linea))
+        .map((linea) => {
+          const bloqueo = resultadoLineas.lineasNoConvertibles.find(
+            (item) => item.id_linea === linea.id_linea,
+          );
+          return {
+            linea,
+            estado: {
+              etiqueta: "Línea bloqueada fuera del pedido real",
+              descripcion: bloqueo?.motivo,
+              tono: "bloqueada" as const,
+            },
+          };
+        }),
+    [idsBloqueadas, lineasSeleccion, resultadoLineas.lineasNoConvertibles],
   );
 
   const enviar = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -110,12 +176,13 @@ export function FlujoCheckoutReal({
             />
           ) : (
             <BloquePedidoSeleccionMultiple
-              lineasConvertibles={resultadoLineas.lineasConvertibles}
-              lineasNoConvertibles={resultadoLineas.lineasNoConvertibles}
+              lineasConvertiblesVisuales={lineasConvertiblesVisuales}
+              lineasBloqueadasVisuales={lineasBloqueadasVisuales}
+              resumenEconomico={resumenEconomico}
             />
           )}
           <label>
-            Notas del cliente
+            Intención y observaciones del pedido
             <textarea value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} />
           </label>
           {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
@@ -145,7 +212,7 @@ type CampoProps = {
   nombre: string;
   etiqueta: string;
   valor: string;
-  onChange: React.Dispatch<React.SetStateAction<any>>;
+  onChange: React.Dispatch<React.SetStateAction<DatosCheckoutReal>>;
   error?: string;
   tipo?: "text" | "email" | "tel";
 };
@@ -154,23 +221,13 @@ type BloquePedidoProductoUnicoProps = {
   datos: { producto_slug: string; cantidad: string };
   errores: Record<string, string>;
   producto: (typeof PRODUCTOS_CATALOGO)[number] | null;
-  setDatos: React.Dispatch<React.SetStateAction<any>>;
+  setDatos: React.Dispatch<React.SetStateAction<DatosCheckoutReal>>;
 };
 
 type BloquePedidoSeleccionMultipleProps = {
-  lineasConvertibles: Array<{
-    id_producto: string;
-    nombre_producto: string;
-    cantidad: number;
-    precio_unitario: string;
-    moneda: string;
-  }>;
-  lineasNoConvertibles: Array<{
-    id_linea: string;
-    nombre: string;
-    cantidad: number;
-    motivo: string;
-  }>;
+  lineasConvertiblesVisuales: ItemListaLineasSeleccion[];
+  lineasBloqueadasVisuales: ItemListaLineasSeleccion[];
+  resumenEconomico: ReturnType<typeof resolverResumenEconomicoSeleccion>;
 };
 
 function Campo({ nombre, etiqueta, valor, onChange, error, tipo = "text" }: CampoProps): JSX.Element {
@@ -178,7 +235,7 @@ function Campo({ nombre, etiqueta, valor, onChange, error, tipo = "text" }: Camp
     <>
       <label>
         {etiqueta}
-        <input type={tipo} value={valor} onChange={(event) => onChange((previo: Record<string, string>) => ({ ...previo, [nombre]: event.target.value }))} />
+        <input type={tipo} value={valor} onChange={(event) => onChange((previo: DatosCheckoutReal) => ({ ...previo, [nombre]: event.target.value }))} />
       </label>
       {error && <p className={estilos.error}>{error}</p>}
     </>
@@ -208,34 +265,30 @@ function BloquePedidoProductoUnico({
 }
 
 function BloquePedidoSeleccionMultiple({
-  lineasConvertibles,
-  lineasNoConvertibles,
+  lineasConvertiblesVisuales,
+  lineasBloqueadasVisuales,
+  resumenEconomico,
 }: BloquePedidoSeleccionMultipleProps): JSX.Element {
   return (
-    <div>
-      <p><strong>Selección real que entra en el pedido</strong></p>
-      <p>El pedido se construye desde las líneas preseleccionadas convertibles; este modo no usa un selector único heredado.</p>
-      <ul>
-        {lineasConvertibles.map((linea) => (
-          <li key={linea.id_producto}>
-            {linea.cantidad} × {linea.nombre_producto} · {linea.precio_unitario} {linea.moneda}
-          </li>
-        ))}
-      </ul>
-      {lineasNoConvertibles.length > 0 && (
-        <div className={estilos.error} role="alert">
-          <p>Selección visible bloqueada fuera del pedido real</p>
+    <div className={estilos.bloqueSeleccionMultiple}>
+      <div className={estilos.cabeceraSeleccion}>
+        <p><strong>Selección real que entra en el pedido</strong></p>
+        <p>El pedido se construye desde las líneas preseleccionadas convertibles; este modo no usa un selector único heredado.</p>
+      </div>
+      <ListaLineasSeleccion items={lineasConvertiblesVisuales} />
+      <div className={estilos.resumenEconomico}>
+        <p><strong>{resumenEconomico.etiqueta}:</strong> {resumenEconomico.totalVisible ?? "A revisar"}</p>
+        <p>{resumenEconomico.detalle}</p>
+      </div>
+      {lineasBloqueadasVisuales.length > 0 && (
+        <div className={estilos.bloqueBloqueado} role="alert">
+          <p><strong>Selección visible bloqueada fuera del pedido real</strong></p>
           <p>El pedido real queda bloqueado porque tu selección visible incluye líneas no comprables.</p>
-          <ul>
-            {lineasNoConvertibles.map((linea) => (
-              <li key={linea.id_linea}>
-                {linea.cantidad} × {linea.nombre}: {linea.motivo}
-              </li>
-            ))}
-          </ul>
+          <ListaLineasSeleccion items={lineasBloqueadasVisuales} />
           <p>Separa esas piezas como consulta manual antes de continuar con el pago.</p>
         </div>
       )}
     </div>
   );
 }
+

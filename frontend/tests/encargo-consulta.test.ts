@@ -210,3 +210,19 @@ test("resolverContextoPreseleccionado mantiene compatibilidad entre producto ind
     "Pack Bosque Dorado",
   );
 });
+
+test("la regresión rica mantiene catálogo + fuera de catálogo en el resumen de encargo", () => {
+  const estado = construirEstadoInicialConsulta(
+    {
+      modo: "seleccion",
+      productoPreseleccionado: null,
+      itemsPreseleccionados: [],
+    },
+    LINEAS_SELECCION,
+  );
+
+  assert.match(estado.mensaje, /Bruma de Lavanda Serena/);
+  assert.match(estado.mensaje, /Atado herbal a medida/);
+  assert.equal(LINEAS_SELECCION[0]?.imagen_url, null);
+  assert.equal(LINEAS_SELECCION[1]?.referencia_economica.valor, null);
+});

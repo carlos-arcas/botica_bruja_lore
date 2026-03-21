@@ -36,7 +36,31 @@
   margin: 0;
 }
 
-.resumenProducto {
+.resumenProducto,
+.resumenEconomico,
+.bloqueBloqueado,
+.cabeceraSeleccion {
   margin: 0;
   color: #4b3d45;
+}
+
+.bloqueSeleccionMultiple,
+.resumenEconomico,
+.bloqueBloqueado,
+.cabeceraSeleccion {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.resumenEconomico,
+.bloqueBloqueado {
+  border: 1px solid rgba(109, 90, 100, 0.18);
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: rgba(255, 251, 245, 0.86);
+}
+
+.bloqueBloqueado {
+  border-color: rgba(143, 34, 55, 0.26);
+  background: rgba(143, 34, 55, 0.06);
 }

@@ -1,0 +1,168 @@
+.listado {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.linea {
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff 0%, #fcfaf6 100%);
+  padding: 0.95rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.mediaLinea,
+.mediaFallback {
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(103, 84, 63, 0.12);
+  background: #efe7da;
+}
+
+.mediaFallback {
+  display: grid;
+  place-items: center;
+  min-height: 13rem;
+  color: #6d6356;
+  font-weight: 600;
+  text-align: center;
+  padding: 1rem;
+}
+
+.imagenLinea {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.contenidoLinea {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.lineaCabecera {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.tipoLinea {
+  margin: 0 0 0.25rem;
+  color: #6d6356;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cantidadLinea {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: #f3ecdf;
+  color: #4d4132;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.estadoLinea {
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid transparent;
+}
+
+.estadoLinea p,
+.estadoLinea span,
+.estadoEconomico,
+.notasLinea {
+  margin: 0;
+}
+
+.tonoNeutro {
+  background: #f7f3ea;
+  border-color: #eadfce;
+}
+
+.tonoConvertible {
+  background: rgba(69, 99, 70, 0.08);
+  border-color: rgba(69, 99, 70, 0.25);
+}
+
+.tonoBloqueada {
+  background: rgba(143, 47, 39, 0.08);
+  border-color: rgba(143, 47, 39, 0.24);
+}
+
+.metaLinea {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin: 0;
+}
+
+.metaLinea div {
+  border: 1px solid rgba(103, 84, 63, 0.12);
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: rgba(248, 243, 235, 0.72);
+}
+
+.metaLinea dt {
+  margin: 0 0 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6d6356;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.metaLinea dd {
+  margin: 0;
+  font-weight: 600;
+  color: #30261c;
+}
+
+.estadoEconomico {
+  color: #5a4d3f;
+  font-weight: 600;
+}
+
+.controlesLinea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.controlesLinea input {
+  width: 6rem;
+  border: 1px solid #cfc2b0;
+  border-radius: 10px;
+  padding: 0.45rem;
+}
+
+@media (min-width: 860px) {
+  .linea {
+    grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .mediaLinea,
+  .mediaFallback {
+    height: 100%;
+  }
+
+  .imagenLinea {
+    height: 100%;
+  }
+}
