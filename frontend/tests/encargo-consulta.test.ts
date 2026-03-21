@@ -179,6 +179,7 @@ test("resolverContextoPreseleccionado mantiene compatibilidad entre producto ind
   const desdeSeleccion = resolverContextoPreseleccionado(
     null,
     null,
+    [],
     "seleccion",
   );
   assert.equal(desdeSeleccion.modo, "seleccion");
@@ -186,6 +187,7 @@ test("resolverContextoPreseleccionado mantiene compatibilidad entre producto ind
   const desdeSeleccionRica = resolverContextoPreseleccionado(
     null,
     encodeURIComponent(JSON.stringify(LINEAS_SELECCION)),
+    [],
     "seleccion",
   );
   assert.equal(desdeSeleccionRica.itemsPreseleccionados[1]?.slug, null);
@@ -199,6 +201,7 @@ test("resolverContextoPreseleccionado mantiene compatibilidad entre producto ind
     encodeURIComponent(
       JSON.stringify([{ slug: "pack-bosque-dorado", cantidad: 2 }]),
     ),
+    [],
   );
   assert.equal(desdeCestaLegacy.modo, "seleccion");
   assert.equal(
@@ -208,6 +211,18 @@ test("resolverContextoPreseleccionado mantiene compatibilidad entre producto ind
   assert.equal(
     desdeCestaLegacy.itemsPreseleccionados[0]?.nombre,
     "Pack Bosque Dorado",
+  );
+
+  const desdePersistenciaLocal = resolverContextoPreseleccionado(
+    null,
+    null,
+    LINEAS_SELECCION,
+    "seleccion",
+  );
+  assert.equal(desdePersistenciaLocal.modo, "seleccion");
+  assert.equal(
+    desdePersistenciaLocal.itemsPreseleccionados[1]?.nombre,
+    "Atado herbal a medida",
   );
 });
 

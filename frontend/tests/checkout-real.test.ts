@@ -509,12 +509,47 @@ test("regresión: checkout real bloqueado ofrece salida artesanal preservando se
   assert.equal(resultado.lineasNoConvertibles.length, 1);
   assert.match(rutaConsulta, /^\/encargo\?/);
   assert.match(rutaConsulta, /origen=seleccion/);
-  assert.match(rutaConsulta, /cesta=/);
-  const cestaSerializada = new URL(`https://botica.test${rutaConsulta}`).searchParams.get("cesta");
+  assert.equal(rutaConsulta.includes("cesta="), false);
+  assert.equal(rutaConsulta.includes("data:image/svg+xml"), false);
+  assert.equal(rutaConsulta.length < 80, true);
+});
 
-  assert.ok(cestaSerializada);
-  assert.match(decodeURIComponent(cestaSerializada), /vela-intencion-clara/);
-  assert.match(decodeURIComponent(cestaSerializada), /Mezcla fuera de catálogo/);
+test("regresión: la salida manual no serializa payloads ricos ni data URI inline en la URL", () => {
+  const itemsPreseleccionados = [
+    {
+      id_linea: "rit-070",
+      tipo_linea: "catalogo" as const,
+      slug: "infusion-bruma-lavanda",
+      id_producto: "rit-001",
+      nombre: "Bruma de Lavanda Serena",
+      cantidad: 2,
+      formato: "bolsa 40 g",
+      imagen_url:
+        "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3C/svg%3E",
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 14.9 },
+      notas_origen: "Mantener la nota editorial al desviar a encargo.",
+    },
+    {
+      id_linea: "libre-070",
+      tipo_linea: "fuera_catalogo" as const,
+      slug: null,
+      id_producto: null,
+      nombre: "Atado herbal con sello lunar",
+      cantidad: 1,
+      formato: "pieza artesanal",
+      imagen_url:
+        "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3C/svg%3E",
+      referencia_economica: { etiqueta: "Sin referencia económica", valor: null },
+      notas_origen: "Línea bloqueada que debe viajar por persistencia local.",
+    },
+  ];
+
+  const rutaConsulta = construirRutaConsultaManualCheckoutReal(itemsPreseleccionados);
+
+  assert.equal(rutaConsulta, "/encargo?origen=seleccion");
+  assert.equal(rutaConsulta.includes("Bruma%20de%20Lavanda"), false);
+  assert.equal(rutaConsulta.includes("Atado%20herbal"), false);
+  assert.equal(rutaConsulta.includes("data:image/svg+xml"), false);
 });
 
 test("regresión: selección totalmente convertible mantiene el CTA real como salida principal", () => {
