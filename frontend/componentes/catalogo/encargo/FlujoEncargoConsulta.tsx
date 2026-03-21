@@ -226,8 +226,17 @@ export function FlujoEncargoConsulta({
       return;
     }
 
+    if (contexto.fuentePreseleccion === "persistencia_local") {
+      limpiarPreseleccionEncargoLocal();
+      return;
+    }
+
     setItemsPersistidos(leerPreseleccionEncargoLocal());
-  }, [cestaPreseleccionada, origenPreseleccionado]);
+  }, [
+    cestaPreseleccionada,
+    contexto.fuentePreseleccion,
+    origenPreseleccionado,
+  ]);
 
   useEffect(() => {
     const cuenta = leerSesionCuentaDemo();
