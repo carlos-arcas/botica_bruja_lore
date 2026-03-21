@@ -9,6 +9,10 @@ import {
   resolverModoCheckoutReal,
   validarCheckoutReal,
 } from "../contenido/catalogo/checkoutReal";
+import {
+  construirRutaConsultaManualCheckoutReal,
+  construirRutaRevisionSeleccionCheckoutReal,
+} from "../contenido/catalogo/checkoutRealNavegacion";
 import { construirLineasVisualesCheckoutReal } from "../componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal";
 import {
   resolverLineasSeleccionEncargo,
@@ -467,4 +471,94 @@ test("frontend real consume la nueva API de pago", async () => {
 test("frontend construye retornos success y cancel para la pantalla de pedido", () => {
   assert.equal(construirUrlRetornoPedido("PED-1", "success", "cs_123"), "/pedido/PED-1?retorno_pago=success&session_id=cs_123");
   assert.equal(construirUrlRetornoPedido("PED-1", "cancel"), "/pedido/PED-1?retorno_pago=cancel");
+});
+
+
+test("regresión: checkout real bloqueado ofrece salida artesanal preservando selección mixta", () => {
+  const itemsPreseleccionados = [
+    {
+      id_linea: "rit-050",
+      tipo_linea: "catalogo" as const,
+      slug: "vela-intencion-clara",
+      id_producto: null,
+      nombre: "Vela Intención Clara",
+      cantidad: 1,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 9.9 },
+      notas_origen: null,
+    },
+    {
+      id_linea: "libre-050",
+      tipo_linea: "fuera_catalogo" as const,
+      slug: null,
+      id_producto: null,
+      nombre: "Mezcla fuera de catálogo",
+      cantidad: 1,
+      formato: "preparación artesanal",
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Sin referencia económica", valor: null },
+      notas_origen: "Hay que revisarla manualmente.",
+    },
+  ];
+
+  const resultado = construirResultadoLineasPedidoReal(itemsPreseleccionados, "", "1");
+  const rutaConsulta = construirRutaConsultaManualCheckoutReal(itemsPreseleccionados);
+
+  assert.equal(resultado.lineasConvertibles.length, 1);
+  assert.equal(resultado.lineasNoConvertibles.length, 1);
+  assert.match(rutaConsulta, /^\/encargo\?/);
+  assert.match(rutaConsulta, /origen=seleccion/);
+  assert.match(rutaConsulta, /cesta=/);
+  const cestaSerializada = new URL(`https://botica.test${rutaConsulta}`).searchParams.get("cesta");
+
+  assert.ok(cestaSerializada);
+  assert.match(decodeURIComponent(cestaSerializada), /vela-intencion-clara/);
+  assert.match(decodeURIComponent(cestaSerializada), /Mezcla fuera de catálogo/);
+});
+
+test("regresión: selección totalmente convertible mantiene el CTA real como salida principal", () => {
+  const itemsPreseleccionados = [
+    {
+      id_linea: "rit-060",
+      tipo_linea: "catalogo" as const,
+      slug: "vela-intencion-clara",
+      id_producto: null,
+      nombre: "Vela Intención Clara",
+      cantidad: 1,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 9.9 },
+      notas_origen: null,
+    },
+    {
+      id_linea: "rit-061",
+      tipo_linea: "catalogo" as const,
+      slug: "pack-bosque-dorado",
+      id_producto: null,
+      nombre: "Pack Bosque Dorado",
+      cantidad: 1,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 34 },
+      notas_origen: null,
+    },
+  ];
+
+  const resultado = construirResultadoLineasPedidoReal(itemsPreseleccionados, "", "1");
+  const errores = validarCheckoutReal(
+    {
+      ...construirDatosBaseCheckoutReal(),
+      producto_slug: "",
+    },
+    resultado,
+    resolverModoCheckoutReal(itemsPreseleccionados),
+  );
+
+  assert.equal(resultado.lineasNoConvertibles.length, 0);
+  assert.equal(errores.lineas, undefined);
+});
+
+test("volver a Mi selección desde checkout real usa la ruta visible de la selección", () => {
+  assert.equal(construirRutaRevisionSeleccionCheckoutReal([]), "/cesta");
 });

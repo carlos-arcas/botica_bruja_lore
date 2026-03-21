@@ -8,6 +8,9 @@ const archivoPagina = readFileSync(join(process.cwd(), "app/checkout/page.tsx"),
 const archivoRecibo = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/ReciboPedidoReal.tsx"), "utf8");
 const archivoCompartido = readFileSync(join(process.cwd(), "componentes/catalogo/seleccion/ListaLineasSeleccion.tsx"), "utf8");
 const archivoAdaptador = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal.ts"), "utf8");
+const archivoBloqueSeleccion = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/BloquePedidoSeleccionMultiple.tsx"), "utf8");
+const archivoNavegacion = readFileSync(join(process.cwd(), "contenido/catalogo/checkoutRealNavegacion.ts"), "utf8");
+
 
 test("checkout real no depende de PayloadPedidoDemo ni de CuentaDemo", () => {
   assert.equal(archivoFlujo.includes("PayloadPedidoDemo"), false);
@@ -27,23 +30,38 @@ test("recibo real permite iniciar o continuar el pago real sin tocar el flujo de
 });
 
 test("checkout real muestra bloqueo explícito cuando hay líneas visibles no comprables", () => {
-  assert.equal(archivoFlujo.includes("El pedido real queda bloqueado porque tu selección visible incluye líneas no comprables."), true);
-  assert.equal(archivoFlujo.includes("Separa esas piezas como consulta manual antes de continuar con el pago."), true);
-  assert.equal(archivoFlujo.includes("Contexto de toda la selección visible"), true);
+  assert.equal(archivoBloqueSeleccion.includes("El pedido real queda bloqueado porque tu selección visible incluye líneas no comprables."), true);
+  assert.equal(archivoBloqueSeleccion.includes("Separa esas piezas como consulta manual antes de continuar con el pago."), true);
+  assert.equal(archivoBloqueSeleccion.includes("Contexto de toda la selección visible"), true);
+  assert.equal(archivoBloqueSeleccion.includes("Llevar esta selección a consulta artesanal"), true);
+  assert.equal(archivoBloqueSeleccion.includes("Volver a Mi selección"), true);
   assert.equal(archivoAdaptador.includes("Línea bloqueada fuera del pedido real"), true);
+});
+
+test("checkout real deriva a /encargo preservando la selección rica cuando está bloqueado", () => {
+  assert.equal(archivoFlujo.includes("construirRutaConsultaManualCheckoutReal"), true);
+  assert.equal(archivoNavegacion.includes('origen: "seleccion"'), true);
+  assert.equal(archivoNavegacion.includes("serializarItemsEncargo(items)"), true);
+  assert.equal(archivoNavegacion.includes('return `/encargo?${params.toString()}`;'), true);
+});
+
+test("checkout real desactiva el CTA engañoso de pedido real cuando el flujo está bloqueado", () => {
+  assert.equal(archivoFlujo.includes("disabled={enviando || checkoutBloqueado}"), true);
+  assert.equal(archivoFlujo.includes("Pedido real bloqueado por líneas no convertibles"), true);
+  assert.equal(archivoFlujo.includes("ayuda-checkout-bloqueado"), true);
 });
 
 test("checkout real separa el modo múltiple del selector único heredado", () => {
   assert.equal(archivoFlujo.includes('modoCheckout === "producto_unico" ? ('), true);
   assert.equal(archivoFlujo.includes("BloquePedidoSeleccionMultiple"), true);
-  assert.equal(archivoFlujo.includes("este modo no usa un selector único heredado"), true);
+  assert.equal(archivoBloqueSeleccion.includes("este modo no usa un selector único heredado"), true);
 });
 
 test("checkout real en modo múltiple muestra convertibles con contexto rico y las bloqueadas por separado", () => {
-  assert.equal(archivoFlujo.includes("Selección real que entra en el pedido"), true);
-  assert.equal(archivoFlujo.includes("resumenEconomico.etiqueta"), true);
-  assert.equal(archivoFlujo.includes("ListaLineasSeleccion items={lineasConvertiblesVisuales}"), true);
-  assert.equal(archivoFlujo.includes("ListaLineasSeleccion items={lineasBloqueadasVisuales}"), true);
+  assert.equal(archivoBloqueSeleccion.includes("Selección real que entra en el pedido"), true);
+  assert.equal(archivoBloqueSeleccion.includes("resumenEconomico.etiqueta"), true);
+  assert.equal(archivoBloqueSeleccion.includes("ListaLineasSeleccion items={lineasConvertiblesVisuales}"), true);
+  assert.equal(archivoBloqueSeleccion.includes("ListaLineasSeleccion items={lineasBloqueadasVisuales}"), true);
   assert.equal(archivoAdaptador.includes("Línea convertible al pedido real"), true);
   assert.equal(archivoCompartido.includes("Referencia unitaria"), true);
   assert.equal(archivoCompartido.includes("Subtotal orientativo"), true);
