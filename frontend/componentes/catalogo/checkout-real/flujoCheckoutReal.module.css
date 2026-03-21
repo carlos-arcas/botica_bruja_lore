@@ -64,3 +64,19 @@
   border-color: rgba(143, 34, 55, 0.26);
   background: rgba(143, 34, 55, 0.06);
 }
+
+
+.accionesBloqueo,
+.accionesFinales {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.accionesBloqueo {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.ayudaBloqueoCta {
+  margin: 0;
+  color: #6d5a64;
+}
