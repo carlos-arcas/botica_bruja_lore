@@ -38,6 +38,11 @@ export type ResumenEconomicoSeleccion = {
   totalVisible: string | null;
 };
 
+export type ContextoResumenEconomicoSeleccion =
+  | "seleccion"
+  | "pedido_real"
+  | "fuera_pedido_real";
+
 export type ReferenciaEconomicaVisualLinea = {
   mensaje: string;
   referenciaUnitaria: string | null;
@@ -94,6 +99,7 @@ export function construirResumenHumanoSeleccion(
 
 export function resolverResumenEconomicoSeleccion(
   lineas: LineaSeleccionEncargo[],
+  contexto: ContextoResumenEconomicoSeleccion = "seleccion",
 ): ResumenEconomicoSeleccion {
   const lineasConReferencia = lineas.filter(
     (linea) => linea.referencia_economica.valor !== null,
@@ -107,9 +113,8 @@ export function resolverResumenEconomicoSeleccion(
   if (lineasConReferencia.length === 0) {
     return {
       estado: "sin_referencia",
-      etiqueta: "Sin referencia económica",
-      detalle:
-        "Esta selección necesita revisión artesanal: no mostramos 0,00 € cuando no existe referencia editorial válida.",
+      etiqueta: resolverEtiquetaSinReferencia(contexto),
+      detalle: resolverDetalleSinReferencia(contexto),
       totalVisible: null,
     };
   }
@@ -117,18 +122,16 @@ export function resolverResumenEconomicoSeleccion(
   if (lineasConReferencia.length !== lineas.length) {
     return {
       estado: "parcial",
-      etiqueta: "Referencia parcial",
-      detalle:
-        "Mostramos solo las piezas con referencia editorial disponible; el resto se confirma en la solicitud de encargo.",
+      etiqueta: resolverEtiquetaParcial(contexto),
+      detalle: resolverDetalleParcial(contexto),
       totalVisible: formatearMoneda(total),
     };
   }
 
   return {
     estado: "estimada",
-    etiqueta: "Referencia estimada",
-    detalle:
-      "Importe editorial orientativo para ayudarte a revisar la selección antes del encargo. No equivale a checkout ni confirmación final.",
+    etiqueta: resolverEtiquetaEstimada(contexto),
+    detalle: resolverDetalleEstimado(contexto),
     totalVisible: formatearMoneda(total),
   };
 }
@@ -256,4 +259,88 @@ function formatearMoneda(valor: number): string {
 
 function humanizarSlug(slug: string): string {
   return slug.replace(/-/g, " ");
+}
+
+function resolverEtiquetaSinReferencia(
+  contexto: ContextoResumenEconomicoSeleccion,
+): string {
+  if (contexto === "pedido_real") {
+    return "Pedido real sin referencia económica";
+  }
+
+  if (contexto === "fuera_pedido_real") {
+    return "Fuera del pedido real sin referencia económica";
+  }
+
+  return "Sin referencia económica";
+}
+
+function resolverDetalleSinReferencia(
+  contexto: ContextoResumenEconomicoSeleccion,
+): string {
+  if (contexto === "pedido_real") {
+    return "Las líneas convertibles necesitan revisión económica antes de confirmar el pedido real: no mostramos 0,00 € cuando no existe referencia editorial válida.";
+  }
+
+  if (contexto === "fuera_pedido_real") {
+    return "Estas líneas visibles han quedado fuera del pedido real y no aportan una referencia económica válida al total principal.";
+  }
+
+  return "Esta selección necesita revisión artesanal: no mostramos 0,00 € cuando no existe referencia editorial válida.";
+}
+
+function resolverEtiquetaParcial(
+  contexto: ContextoResumenEconomicoSeleccion,
+): string {
+  if (contexto === "pedido_real") {
+    return "Pedido real con referencia parcial";
+  }
+
+  if (contexto === "fuera_pedido_real") {
+    return "Contexto económico fuera del pedido real";
+  }
+
+  return "Referencia parcial";
+}
+
+function resolverDetalleParcial(
+  contexto: ContextoResumenEconomicoSeleccion,
+): string {
+  if (contexto === "pedido_real") {
+    return "Mostramos solo el importe de las líneas convertibles con referencia editorial disponible; cualquier revisión adicional se confirma antes del pago real.";
+  }
+
+  if (contexto === "fuera_pedido_real") {
+    return "Esta referencia pertenece solo a líneas visibles que no entran en el pedido real. Sirve como contexto y no contamina el total principal.";
+  }
+
+  return "Mostramos solo las piezas con referencia editorial disponible; el resto se confirma en la solicitud de encargo.";
+}
+
+function resolverEtiquetaEstimada(
+  contexto: ContextoResumenEconomicoSeleccion,
+): string {
+  if (contexto === "pedido_real") {
+    return "Total orientativo del pedido real";
+  }
+
+  if (contexto === "fuera_pedido_real") {
+    return "Contexto visible fuera del pedido real";
+  }
+
+  return "Referencia estimada";
+}
+
+function resolverDetalleEstimado(
+  contexto: ContextoResumenEconomicoSeleccion,
+): string {
+  if (contexto === "pedido_real") {
+    return "Importe orientativo calculado solo con las líneas convertibles que sí entrarían en el pedido real.";
+  }
+
+  if (contexto === "fuera_pedido_real") {
+    return "Importe orientativo solo de las líneas visibles bloqueadas o pendientes. No forma parte del pedido real convertible.";
+  }
+
+  return "Importe editorial orientativo para ayudarte a revisar la selección antes del encargo. No equivale a checkout ni confirmación final.";
 }

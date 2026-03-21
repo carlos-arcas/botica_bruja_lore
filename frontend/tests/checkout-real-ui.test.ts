@@ -29,6 +29,7 @@ test("recibo real permite iniciar o continuar el pago real sin tocar el flujo de
 test("checkout real muestra bloqueo explícito cuando hay líneas visibles no comprables", () => {
   assert.equal(archivoFlujo.includes("El pedido real queda bloqueado porque tu selección visible incluye líneas no comprables."), true);
   assert.equal(archivoFlujo.includes("Separa esas piezas como consulta manual antes de continuar con el pago."), true);
+  assert.equal(archivoFlujo.includes("Contexto de toda la selección visible"), true);
   assert.equal(archivoAdaptador.includes("Línea bloqueada fuera del pedido real"), true);
 });
 
@@ -40,11 +41,22 @@ test("checkout real separa el modo múltiple del selector único heredado", () =
 
 test("checkout real en modo múltiple muestra convertibles con contexto rico y las bloqueadas por separado", () => {
   assert.equal(archivoFlujo.includes("Selección real que entra en el pedido"), true);
+  assert.equal(archivoFlujo.includes("resumenEconomico.etiqueta"), true);
   assert.equal(archivoFlujo.includes("ListaLineasSeleccion items={lineasConvertiblesVisuales}"), true);
   assert.equal(archivoFlujo.includes("ListaLineasSeleccion items={lineasBloqueadasVisuales}"), true);
   assert.equal(archivoAdaptador.includes("Línea convertible al pedido real"), true);
   assert.equal(archivoCompartido.includes("Referencia unitaria"), true);
   assert.equal(archivoCompartido.includes("Subtotal orientativo"), true);
+});
+
+test("checkout real no reutiliza el resumen global de la selección visible como total principal del pedido", () => {
+  assert.match(
+    archivoFlujo,
+    /lineasConvertibles\.map\(\(\{ linea \}\) => linea\),\s+"pedido_real"/,
+  );
+  assert.equal(archivoFlujo.includes('resolverResumenEconomicoSeleccion(lineasSeleccion)'), true);
+  assert.equal(archivoFlujo.includes('"pedido_real"'), true);
+  assert.equal(archivoFlujo.includes('"fuera_pedido_real"'), true);
 });
 
 

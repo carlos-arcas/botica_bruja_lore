@@ -69,9 +69,38 @@ export function FlujoCheckoutReal({
       ),
     [contexto.itemsPreseleccionados],
   );
+  const lineasVisualesCheckout = useMemo(
+    () =>
+      construirLineasVisualesCheckoutReal(
+        contexto.itemsPreseleccionados,
+        resultadoLineas,
+      ),
+    [contexto.itemsPreseleccionados, resultadoLineas],
+  );
   const resumenEconomico = useMemo(
-    () => resolverResumenEconomicoSeleccion(lineasSeleccion),
-    [lineasSeleccion],
+    () =>
+      resolverResumenEconomicoSeleccion(
+        lineasVisualesCheckout.lineasConvertibles.map(({ linea }) => linea),
+        "pedido_real",
+      ),
+    [lineasVisualesCheckout.lineasConvertibles],
+  );
+  const resumenEconomicoBloqueado = useMemo(
+    () =>
+      lineasVisualesCheckout.lineasBloqueadas.length > 0
+        ? resolverResumenEconomicoSeleccion(
+            lineasVisualesCheckout.lineasBloqueadas.map(({ linea }) => linea),
+            "fuera_pedido_real",
+          )
+        : null,
+    [lineasVisualesCheckout.lineasBloqueadas],
+  );
+  const resumenSeleccionVisible = useMemo(
+    () =>
+      lineasVisualesCheckout.lineasBloqueadas.length > 0
+        ? resolverResumenEconomicoSeleccion(lineasSeleccion)
+        : null,
+    [lineasSeleccion, lineasVisualesCheckout.lineasBloqueadas.length],
   );
   const producto = useMemo(
     () =>
@@ -80,14 +109,6 @@ export function FlujoCheckoutReal({
           null
         : null,
     [datos.producto_slug, modoCheckout],
-  );
-  const lineasVisualesCheckout = useMemo(
-    () =>
-      construirLineasVisualesCheckoutReal(
-        contexto.itemsPreseleccionados,
-        resultadoLineas,
-      ),
-    [contexto.itemsPreseleccionados, resultadoLineas],
   );
 
   const enviar = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -146,6 +167,8 @@ export function FlujoCheckoutReal({
               lineasConvertiblesVisuales={lineasVisualesCheckout.lineasConvertibles}
               lineasBloqueadasVisuales={lineasVisualesCheckout.lineasBloqueadas}
               resumenEconomico={resumenEconomico}
+              resumenEconomicoBloqueado={resumenEconomicoBloqueado}
+              resumenSeleccionVisible={resumenSeleccionVisible}
             />
           )}
           <label>
@@ -195,6 +218,8 @@ type BloquePedidoSeleccionMultipleProps = {
   lineasConvertiblesVisuales: ItemListaLineasSeleccion[];
   lineasBloqueadasVisuales: ItemListaLineasSeleccion[];
   resumenEconomico: ReturnType<typeof resolverResumenEconomicoSeleccion>;
+  resumenEconomicoBloqueado: ReturnType<typeof resolverResumenEconomicoSeleccion> | null;
+  resumenSeleccionVisible: ReturnType<typeof resolverResumenEconomicoSeleccion> | null;
 };
 
 function Campo({ nombre, etiqueta, valor, onChange, error, tipo = "text" }: CampoProps): JSX.Element {
@@ -235,7 +260,11 @@ function BloquePedidoSeleccionMultiple({
   lineasConvertiblesVisuales,
   lineasBloqueadasVisuales,
   resumenEconomico,
+  resumenEconomicoBloqueado,
+  resumenSeleccionVisible,
 }: BloquePedidoSeleccionMultipleProps): JSX.Element {
+  const hayLineasBloqueadas = lineasBloqueadasVisuales.length > 0;
+
   return (
     <div className={estilos.bloqueSeleccionMultiple}>
       <div className={estilos.cabeceraSeleccion}>
@@ -247,10 +276,22 @@ function BloquePedidoSeleccionMultiple({
         <p><strong>{resumenEconomico.etiqueta}:</strong> {resumenEconomico.totalVisible ?? "A revisar"}</p>
         <p>{resumenEconomico.detalle}</p>
       </div>
-      {lineasBloqueadasVisuales.length > 0 && (
+      {hayLineasBloqueadas && (
         <div className={estilos.bloqueBloqueado} role="alert">
           <p><strong>Selección visible bloqueada fuera del pedido real</strong></p>
           <p>El pedido real queda bloqueado porque tu selección visible incluye líneas no comprables.</p>
+          {resumenEconomicoBloqueado && (
+            <div className={estilos.resumenEconomico}>
+              <p><strong>{resumenEconomicoBloqueado.etiqueta}:</strong> {resumenEconomicoBloqueado.totalVisible ?? "A revisar"}</p>
+              <p>{resumenEconomicoBloqueado.detalle}</p>
+            </div>
+          )}
+          {resumenSeleccionVisible && (
+            <p>
+              <strong>Contexto de toda la selección visible:</strong>{" "}
+              {resumenSeleccionVisible.totalVisible ?? "A revisar"} · {resumenSeleccionVisible.etiqueta}.
+            </p>
+          )}
           <ListaLineasSeleccion items={lineasBloqueadasVisuales} />
           <p>Separa esas piezas como consulta manual antes de continuar con el pago.</p>
         </div>
@@ -258,4 +299,3 @@ function BloquePedidoSeleccionMultiple({
     </div>
   );
 }
-
