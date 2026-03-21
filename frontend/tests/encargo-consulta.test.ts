@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { PRODUCTOS_CATALOGO } from "../contenido/catalogo/catalogo";
 import {
+  debeConsumirPersistenciaLocalEncargo,
   construirEstadoInicialConsulta,
   construirResumenConsulta,
   resolverContextoPreseleccionado,
@@ -230,6 +231,18 @@ test("resolverContextoPreseleccionado mantiene compatibilidad entre producto ind
     "Atado herbal a medida",
   );
   assert.equal(desdePersistenciaLocal.fuentePreseleccion, "persistencia_local");
+
+  const visitaDirectaSinOrigen = resolverContextoPreseleccionado(
+    null,
+    null,
+    LINEAS_SELECCION,
+  );
+  assert.equal(visitaDirectaSinOrigen.modo, "producto");
+  assert.equal(visitaDirectaSinOrigen.itemsPreseleccionados.length, 0);
+  assert.equal(
+    visitaDirectaSinOrigen.fuentePreseleccion,
+    "sin_preseleccion",
+  );
 });
 
 test("resolverItemsPreseleccionados prioriza cesta legacy sobre storage local y evita mezclar orígenes", () => {
@@ -238,6 +251,7 @@ test("resolverItemsPreseleccionados prioriza cesta legacy sobre storage local y 
       JSON.stringify([{ slug: "pack-bosque-dorado", cantidad: 2 }]),
     ),
     LINEAS_SELECCION,
+    "seleccion",
   );
 
   assert.equal(resultado.fuente, "url_legacy");
@@ -246,11 +260,39 @@ test("resolverItemsPreseleccionados prioriza cesta legacy sobre storage local y 
 });
 
 test("resolverItemsPreseleccionados usa persistencia local cuando la URL ligera no trae cesta legacy", () => {
-  const resultado = resolverItemsPreseleccionados(null, LINEAS_SELECCION);
+  const resultado = resolverItemsPreseleccionados(
+    null,
+    LINEAS_SELECCION,
+    "seleccion",
+  );
 
   assert.equal(resultado.fuente, "persistencia_local");
   assert.equal(resultado.items[0]?.slug, "infusion-bruma-lavanda");
   assert.equal(resultado.items[1]?.slug, null);
+});
+
+test("resolverItemsPreseleccionados ignora snapshot local viejo cuando falta señal explícita de selección", () => {
+  const resultado = resolverItemsPreseleccionados(null, LINEAS_SELECCION);
+
+  assert.equal(resultado.fuente, "sin_preseleccion");
+  assert.equal(resultado.items.length, 0);
+});
+
+test("debeConsumirPersistenciaLocalEncargo solo habilita la rehidratación cuando no manda la cesta legacy y existe origen explícito", () => {
+  assert.equal(debeConsumirPersistenciaLocalEncargo(null, null), false);
+  assert.equal(
+    debeConsumirPersistenciaLocalEncargo(
+      encodeURIComponent(
+        JSON.stringify([{ slug: "pack-bosque-dorado", cantidad: 2 }]),
+      ),
+      "seleccion",
+    ),
+    false,
+  );
+  assert.equal(
+    debeConsumirPersistenciaLocalEncargo(null, "seleccion"),
+    true,
+  );
 });
 
 test("la regresión rica mantiene catálogo + fuera de catálogo en el resumen de encargo", () => {

@@ -12,6 +12,7 @@ import {
   TipoCanalContacto,
 } from "@/contenido/catalogo/canalContactoPublico";
 import {
+  debeConsumirPersistenciaLocalEncargo,
   construirResumenConsulta,
   construirEstadoInicialConsulta,
   DatosConsulta,
@@ -77,7 +78,10 @@ export function FlujoEncargoConsulta({
   const router = useRouter();
   const [cestaLocal, setCestaLocal] = useState(() => crearCestaVacia());
   const [itemsPersistidos, setItemsPersistidos] = useState(() =>
-    leerPreseleccionEncargoLocal(),
+    leerItemsPersistidosIniciales(
+      cestaPreseleccionada ?? null,
+      origenPreseleccionado ?? null,
+    ),
   );
   const contexto = useMemo(
     () =>
@@ -222,12 +226,20 @@ export function FlujoEncargoConsulta({
       return;
     }
 
-    if (origenPreseleccionado !== "seleccion") {
+    if (
+      !debeConsumirPersistenciaLocalEncargo(
+        cestaPreseleccionada ?? null,
+        origenPreseleccionado ?? null,
+      )
+    ) {
+      limpiarPreseleccionEncargoLocal();
+      setItemsPersistidos([]);
       return;
     }
 
     if (contexto.fuentePreseleccion === "persistencia_local") {
       limpiarPreseleccionEncargoLocal();
+      setItemsPersistidos([]);
       return;
     }
 
@@ -606,6 +618,22 @@ export function FlujoEncargoConsulta({
       />
     </section>
   );
+}
+
+function leerItemsPersistidosIniciales(
+  cestaPreseleccionada: string | null,
+  origenPreseleccionado: string | null,
+) {
+  if (
+    !debeConsumirPersistenciaLocalEncargo(
+      cestaPreseleccionada,
+      origenPreseleccionado,
+    )
+  ) {
+    return [];
+  }
+
+  return leerPreseleccionEncargoLocal();
 }
 
 type CampoFormularioProps = {

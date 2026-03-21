@@ -59,11 +59,11 @@ export function resolverContextoPreseleccionado(
   const preseleccion = resolverItemsPreseleccionados(
     cestaSerializada,
     itemsPersistidos,
+    origen,
   );
-  const modo =
-    origen === "seleccion" || preseleccion.items.length > 0
-      ? "seleccion"
-      : "producto";
+  const modo = debeAbrirModoSeleccion(origen, preseleccion.items)
+    ? "seleccion"
+    : "producto";
 
   return {
     modo,
@@ -76,6 +76,7 @@ export function resolverContextoPreseleccionado(
 export function resolverItemsPreseleccionados(
   cestaSerializada: string | null,
   itemsPersistidos: ItemEncargoPreseleccionado[] = [],
+  origen: string | null = null,
 ): {
   items: ItemEncargoPreseleccionado[];
   fuente: FuentePreseleccionEncargo;
@@ -85,11 +86,24 @@ export function resolverItemsPreseleccionados(
     return { items: itemsEnUrl, fuente: "url_legacy" };
   }
 
-  if (itemsPersistidos.length > 0) {
+  if (
+    tieneOrigenSeleccionExplicito(origen) &&
+    itemsPersistidos.length > 0
+  ) {
     return { items: itemsPersistidos, fuente: "persistencia_local" };
   }
 
   return { items: [], fuente: "sin_preseleccion" };
+}
+
+export function debeConsumirPersistenciaLocalEncargo(
+  cestaSerializada: string | null,
+  origen: string | null,
+): boolean {
+  return (
+    !tieneCestaLegacyValida(cestaSerializada) &&
+    tieneOrigenSeleccionExplicito(origen)
+  );
 }
 
 export function construirEstadoInicialConsulta(
@@ -181,6 +195,24 @@ function lineaAItemResumen(
     referencia_economica: linea.referencia_economica,
     notas_origen: linea.notas_origen,
   };
+}
+
+function debeAbrirModoSeleccion(
+  origen: string | null,
+  itemsPreseleccionados: ItemEncargoPreseleccionado[],
+): boolean {
+  return (
+    tieneOrigenSeleccionExplicito(origen) ||
+    itemsPreseleccionados.length > 0
+  );
+}
+
+function tieneOrigenSeleccionExplicito(origen: string | null): boolean {
+  return origen === "seleccion";
+}
+
+function tieneCestaLegacyValida(cestaSerializada: string | null): boolean {
+  return deserializarItemsEncargo(cestaSerializada).length > 0;
 }
 
 function tieneContactoValido(email: string, telefono: string): boolean {
