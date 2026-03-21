@@ -154,6 +154,7 @@ export function FlujoEncargoConsulta({
   const [resumen, setResumen] = useState("");
   const [mensajeCopia, setMensajeCopia] = useState("");
   const [mensajeCanal, setMensajeCanal] = useState("");
+  const [mensajeConsultaManual, setMensajeConsultaManual] = useState("");
   const [cuentaDemoActiva, setCuentaDemoActiva] = useState(() =>
     leerSesionCuentaDemo(),
   );
@@ -234,34 +235,48 @@ export function FlujoEncargoConsulta({
       datos.productoSlug,
       datos.cantidad,
     );
+    const erroresConsulta = validarSolicitudConsulta(datos, contexto.modo);
+    const erroresCheckout = validarCheckoutDemo(
+      canalCheckout,
+      estadoIdentificacion.cuentaActiva,
+      resultadoLineas,
+    );
+    const resumenConsulta = construirResumenConsulta(
+      datos,
+      productoSeleccionado,
+      contexto.modo,
+      lineasSeleccion,
+    );
     const nuevosErrores = {
-      ...validarSolicitudConsulta(datos, contexto.modo),
-      ...validarCheckoutDemo(
-        canalCheckout,
-        estadoIdentificacion.cuentaActiva,
-        resultadoLineas,
-      ),
+      ...erroresConsulta,
+      ...erroresCheckout,
     };
     limpiarMensajesPrevios(
       setMensajeCopia,
       setMensajeCanal,
+      setMensajeConsultaManual,
       setMensajeEnvio,
       setPedidoCreado,
       setEstadoEnvio,
     );
     setErrores(nuevosErrores);
-    if (Object.keys(nuevosErrores).length > 0) {
+    if (Object.keys(erroresConsulta).length > 0) {
+      setResumen("");
       guardarBorradorCheckoutDemo(datos, continuarComoInvitado);
       return;
     }
 
-    setResumen(
-      construirResumenConsulta(
-        datos,
-        productoSeleccionado,
-        contexto.modo,
-        lineasSeleccion,
-      ),
+    setResumen(resumenConsulta);
+    if (Object.keys(erroresCheckout).length > 0) {
+      setMensajeConsultaManual(
+        "No podemos crear el pedido demo con esta selección, pero sí puedes enviarla como consulta artesanal usando el resumen y los canales disponibles aquí mismo.",
+      );
+      guardarBorradorCheckoutDemo(datos, continuarComoInvitado);
+      return;
+    }
+
+    setMensajeConsultaManual(
+      "Si prefieres revisión artesanal en lugar de pedido demo, también puedes copiar este resumen o abrir un canal manual.",
     );
     setEstadoEnvio("enviando");
     const payload = construirPayloadPedidoDemo(
@@ -547,6 +562,7 @@ export function FlujoEncargoConsulta({
         ctaSecundaria={estadoCanal.ctaSecundaria}
         mensajeCanal={mensajeCanal}
         mensajeCopia={mensajeCopia}
+        mensajeConsultaManual={mensajeConsultaManual}
         resumen={resumen}
         estadoEnvio={estadoEnvio}
         pedidoCreado={pedidoCreado}
@@ -640,12 +656,14 @@ function resolverModoInvitadoInicial(
 function limpiarMensajesPrevios(
   setMensajeCopia: (valor: string) => void,
   setMensajeCanal: (valor: string) => void,
+  setMensajeConsultaManual: (valor: string) => void,
   setMensajeEnvio: (valor: string) => void,
   setPedidoCreado: (valor: PedidoDemoCreado | null) => void,
   setEstadoEnvio: (valor: "idle" | "enviando" | "error" | "ok") => void,
 ): void {
   setMensajeCopia("");
   setMensajeCanal("");
+  setMensajeConsultaManual("");
   setMensajeEnvio("");
   setPedidoCreado(null);
   setEstadoEnvio("idle");

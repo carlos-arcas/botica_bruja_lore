@@ -22,6 +22,7 @@ type Props = {
   ctaSecundaria: string;
   mensajeCanal: string;
   mensajeCopia: string;
+  mensajeConsultaManual: string;
   resumen: string;
   estadoEnvio: "idle" | "enviando" | "error" | "ok";
   pedidoCreado: PedidoDemoCreado | null;
@@ -47,6 +48,9 @@ export function ResumenEnvioEncargoDemo(props: Props): JSX.Element {
           <h2>Resumen listo</h2>
           <p className={estilos.estadoCanal}>{props.estadoCanalDescripcion}</p>
           <p className={estilos.disponibilidad}>{props.estadoCanalDisponible ? "Canal disponible" : "Canal no disponible"}</p>
+          {props.mensajeConsultaManual && (
+            <p className={estilos.estado}>{props.mensajeConsultaManual}</p>
+          )}
           <pre>{resumen}</pre>
           <div className={estilos.ctasResumen}>
             {props.canales.map((canal) => renderCanal(canal, props))}
