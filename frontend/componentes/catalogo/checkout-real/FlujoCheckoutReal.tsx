@@ -21,6 +21,7 @@ import {
   resolverLineasSeleccionEncargo,
   resolverResumenEconomicoSeleccion,
 } from "@/contenido/catalogo/seleccionEncargo";
+import { construirLineasVisualesCheckoutReal } from "@/componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal";
 import { crearPedidoPublico } from "@/infraestructura/api/pedidos";
 
 import estilos from "./flujoCheckoutReal.module.css";
@@ -80,47 +81,13 @@ export function FlujoCheckoutReal({
         : null,
     [datos.producto_slug, modoCheckout],
   );
-  const idsConvertibles = useMemo(
-    () => new Set(resultadoLineas.lineasConvertibles.map((linea) => linea.id_producto)),
-    [resultadoLineas.lineasConvertibles],
-  );
-  const idsBloqueadas = useMemo(
-    () => new Set(resultadoLineas.lineasNoConvertibles.map((linea) => linea.id_linea)),
-    [resultadoLineas.lineasNoConvertibles],
-  );
-  const lineasConvertiblesVisuales = useMemo(
+  const lineasVisualesCheckout = useMemo(
     () =>
-      lineasSeleccion
-        .filter((linea) => linea.id_producto && idsConvertibles.has(linea.id_producto))
-        .map((linea) => ({
-          linea,
-          estado: {
-            etiqueta: "Línea convertible al pedido real",
-            descripcion:
-              "Se mantiene como línea revisable del checkout con su contexto visual y económico.",
-            tono: "convertible" as const,
-          },
-        })),
-    [idsConvertibles, lineasSeleccion],
-  );
-  const lineasBloqueadasVisuales = useMemo(
-    () =>
-      lineasSeleccion
-        .filter((linea) => idsBloqueadas.has(linea.id_linea))
-        .map((linea) => {
-          const bloqueo = resultadoLineas.lineasNoConvertibles.find(
-            (item) => item.id_linea === linea.id_linea,
-          );
-          return {
-            linea,
-            estado: {
-              etiqueta: "Línea bloqueada fuera del pedido real",
-              descripcion: bloqueo?.motivo,
-              tono: "bloqueada" as const,
-            },
-          };
-        }),
-    [idsBloqueadas, lineasSeleccion, resultadoLineas.lineasNoConvertibles],
+      construirLineasVisualesCheckoutReal(
+        contexto.itemsPreseleccionados,
+        resultadoLineas,
+      ),
+    [contexto.itemsPreseleccionados, resultadoLineas],
   );
 
   const enviar = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -176,8 +143,8 @@ export function FlujoCheckoutReal({
             />
           ) : (
             <BloquePedidoSeleccionMultiple
-              lineasConvertiblesVisuales={lineasConvertiblesVisuales}
-              lineasBloqueadasVisuales={lineasBloqueadasVisuales}
+              lineasConvertiblesVisuales={lineasVisualesCheckout.lineasConvertibles}
+              lineasBloqueadasVisuales={lineasVisualesCheckout.lineasBloqueadas}
               resumenEconomico={resumenEconomico}
             />
           )}
