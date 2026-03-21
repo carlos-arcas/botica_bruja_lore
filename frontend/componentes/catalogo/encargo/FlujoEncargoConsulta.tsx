@@ -45,6 +45,10 @@ import {
   resolverResumenEconomicoSeleccion,
 } from "@/contenido/catalogo/seleccionEncargo";
 import {
+  ItemListaLineasSeleccion,
+  ListaLineasSeleccion,
+} from "@/componentes/catalogo/seleccion/ListaLineasSeleccion";
+import {
   crearPedidoDemoPublico,
   PedidoDemoCreado,
 } from "@/infraestructura/api/pedidosDemo";
@@ -121,6 +125,31 @@ export function FlujoEncargoConsulta({
     [datos.cantidad, datos.productoSlug, itemsSeleccionados],
   );
   const lineasNoConvertiblesDemo = resultadoLineasDemo.lineasNoConvertibles;
+  const itemsSeleccionVisual = useMemo<ItemListaLineasSeleccion[]>(
+    () =>
+      lineasSeleccion.map((linea) => {
+        const lineaBloqueada = lineasNoConvertiblesDemo.find(
+          (item) => item.id_linea === linea.id_linea,
+        );
+
+        return {
+          linea,
+          estado: lineaBloqueada
+            ? {
+                etiqueta: "Línea bloqueada para pedido demo",
+                descripcion: lineaBloqueada.motivo,
+                tono: "bloqueada",
+              }
+            : {
+                etiqueta: "Lista para revisión de encargo",
+                descripcion:
+                  "La línea conserva contexto rico y se revisará antes de confirmar el pedido demo.",
+                tono: "convertible",
+              },
+        };
+      }),
+    [lineasNoConvertiblesDemo, lineasSeleccion],
+  );
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [resumen, setResumen] = useState("");
   const [mensajeCopia, setMensajeCopia] = useState("");
@@ -294,36 +323,24 @@ export function FlujoEncargoConsulta({
       {contexto.modo === "seleccion" ? (
         <article className={estilos.resumenProducto} aria-live="polite">
           <h2>Selección para encargo</h2>
-          <ul>
-            {lineasSeleccion.map((linea) => (
-              <li key={linea.id_linea}>
-                {linea.cantidad} · {linea.nombre} ·{" "}
-                {linea.tipo_linea === "catalogo"
-                  ? "Catálogo"
-                  : linea.tipo_linea === "fuera_catalogo"
-                    ? "Fuera de catálogo"
-                    : "Sugerencia editorial"}
-              </li>
-            ))}
-          </ul>
           <p>
-            <strong>{resumenEconomico.etiqueta}:</strong>{" "}
-            {resumenEconomico.totalVisible ?? "A revisar"}
+            Mantienes la revisión rica de cada línea antes de enviar el encargo,
+            con imagen, formato, referencia orientativa y notas de origen.
           </p>
-          <p>{resumenEconomico.detalle}</p>
+          <ListaLineasSeleccion items={itemsSeleccionVisual} />
+          <div className={estilos.resumenEconomico}>
+            <p>
+              <strong>{resumenEconomico.etiqueta}:</strong>{" "}
+              {resumenEconomico.totalVisible ?? "A revisar"}
+            </p>
+            <p>{resumenEconomico.detalle}</p>
+          </div>
           {lineasNoConvertiblesDemo.length > 0 && (
             <div className={estilos.error} role="alert">
               <p>
                 Esta selección no se enviará como pedido demo completo mientras
                 existan líneas fuera de catálogo o no comprables.
               </p>
-              <ul>
-                {lineasNoConvertiblesDemo.map((linea) => (
-                  <li key={linea.id_linea}>
-                    {linea.cantidad} × {linea.nombre}: {linea.motivo}
-                  </li>
-                ))}
-              </ul>
               <p>
                 Mantén estas piezas como consulta artesanal o retíralas de tu
                 selección antes de enviar el pedido demo.
