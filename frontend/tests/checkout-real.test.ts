@@ -6,9 +6,28 @@ import {
   construirLineasPedidoReal,
   construirPayloadPedidoReal,
   construirResultadoLineasPedidoReal,
+  resolverModoCheckoutReal,
   validarCheckoutReal,
 } from "../contenido/catalogo/checkoutReal";
-import { construirUrlRetornoPedido, crearPedidoPublico, iniciarPagoPedido } from "../infraestructura/api/pedidos";
+import {
+  construirUrlRetornoPedido,
+  crearPedidoPublico,
+  iniciarPagoPedido,
+} from "../infraestructura/api/pedidos";
+
+function construirDatosBaseCheckoutReal() {
+  return {
+    ...construirEstadoInicialCheckoutReal(),
+    email_contacto: "real@test.dev",
+    nombre_contacto: "Lore",
+    telefono_contacto: "600000000",
+    nombre_destinatario: "Lore",
+    linea_1: "Calle Luna 1",
+    codigo_postal: "28001",
+    ciudad: "Madrid",
+    provincia: "Madrid",
+  };
+}
 
 test("checkout real usa un payload propio y separado del demo", () => {
   const inicial = construirEstadoInicialCheckoutReal("tarot-bosque-interior");
@@ -60,96 +79,136 @@ test("checkout real puede operar como invitado sin id_usuario", () => {
   assert.equal(payload.canal_checkout, "web_invitado");
 });
 
+test("checkout real en modo múltiple no exige producto_slug y construye el payload desde la selección", () => {
+  const itemsPreseleccionados = [
+    {
+      id_linea: "rit-004",
+      tipo_linea: "catalogo" as const,
+      slug: "vela-intencion-clara",
+      id_producto: null,
+      nombre: "Vela Intención Clara",
+      cantidad: 2,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Disponible", valor: 16 },
+      notas_origen: null,
+    },
+    {
+      id_linea: "rit-005",
+      tipo_linea: "catalogo" as const,
+      slug: "pack-bosque-dorado",
+      id_producto: null,
+      nombre: "Pack Bosque Dorado",
+      cantidad: 1,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Disponible", valor: 34 },
+      notas_origen: null,
+    },
+  ];
+  const modo = resolverModoCheckoutReal(itemsPreseleccionados);
+  const resultado = construirResultadoLineasPedidoReal(itemsPreseleccionados, "", "1");
+  const datos = {
+    ...construirDatosBaseCheckoutReal(),
+    producto_slug: "",
+  };
+
+  const errores = validarCheckoutReal(datos, resultado, modo);
+  const payload = construirPayloadPedidoReal(datos, resultado.lineasConvertibles);
+
+  assert.equal(modo, "seleccion_multiple");
+  assert.equal(errores.producto_slug, undefined);
+  assert.equal(resultado.lineasNoConvertibles.length, 0);
+  assert.deepEqual(
+    payload.lineas.map((linea) => ({ slug: linea.slug_producto, cantidad: linea.cantidad })),
+    [
+      { slug: "vela-intencion-clara", cantidad: 2 },
+      { slug: "pack-bosque-dorado", cantidad: 1 },
+    ],
+  );
+});
 
 test("checkout real bloquea selección mixta y evita enviar menos líneas de las visibles", () => {
-  const resultado = construirResultadoLineasPedidoReal(
-    [
-      {
-        id_linea: "rit-001",
-        tipo_linea: "catalogo",
-        slug: "vela-intencion-clara",
-        id_producto: null,
-        nombre: "Vela Intención Clara",
-        cantidad: 1,
-        formato: null,
-        imagen_url: null,
-        referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 9.9 },
-        notas_origen: null,
-      },
-      {
-        id_linea: "libre-001",
-        tipo_linea: "fuera_catalogo",
-        slug: null,
-        id_producto: null,
-        nombre: "Atado herbal a medida",
-        cantidad: 1,
-        formato: "ramillete artesanal",
-        imagen_url: null,
-        referencia_economica: { etiqueta: "Sin referencia económica", valor: null },
-        notas_origen: "Petición manual.",
-      },
-    ],
-    "",
-    "1",
-  );
+  const itemsPreseleccionados = [
+    {
+      id_linea: "rit-001",
+      tipo_linea: "catalogo" as const,
+      slug: "vela-intencion-clara",
+      id_producto: null,
+      nombre: "Vela Intención Clara",
+      cantidad: 1,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 9.9 },
+      notas_origen: null,
+    },
+    {
+      id_linea: "libre-001",
+      tipo_linea: "fuera_catalogo" as const,
+      slug: null,
+      id_producto: null,
+      nombre: "Atado herbal a medida",
+      cantidad: 1,
+      formato: "ramillete artesanal",
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Sin referencia económica", valor: null },
+      notas_origen: "Petición manual.",
+    },
+  ];
+  const resultado = construirResultadoLineasPedidoReal(itemsPreseleccionados, "", "1");
 
   assert.equal(resultado.lineasConvertibles.length, 1);
   assert.equal(resultado.lineasNoConvertibles.length, 1);
   const errores = validarCheckoutReal(
     {
-      ...construirEstadoInicialCheckoutReal(),
-      email_contacto: "real@test.dev",
-      nombre_contacto: "Lore",
-      telefono_contacto: "600000000",
-      nombre_destinatario: "Lore",
-      linea_1: "Calle Luna 1",
-      codigo_postal: "28001",
-      ciudad: "Madrid",
-      provincia: "Madrid",
+      ...construirDatosBaseCheckoutReal(),
+      producto_slug: "",
     },
     resultado,
+    resolverModoCheckoutReal(itemsPreseleccionados),
   );
   assert.match(errores.lineas ?? "", /No podemos crear el pedido real/);
 });
 
 test("checkout real no crea pedido vacío cuando toda la selección es no catalogable", () => {
-  const resultado = construirResultadoLineasPedidoReal(
-    [
-      {
-        id_linea: "libre-001",
-        tipo_linea: "fuera_catalogo",
-        slug: null,
-        id_producto: null,
-        nombre: "Atado herbal a medida",
-        cantidad: 1,
-        formato: "ramillete artesanal",
-        imagen_url: null,
-        referencia_economica: { etiqueta: "Sin referencia económica", valor: null },
-        notas_origen: "Petición manual.",
-      },
-    ],
-    "",
-    "1",
-  );
+  const itemsPreseleccionados = [
+    {
+      id_linea: "libre-001",
+      tipo_linea: "fuera_catalogo" as const,
+      slug: null,
+      id_producto: null,
+      nombre: "Atado herbal a medida",
+      cantidad: 1,
+      formato: "ramillete artesanal",
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Sin referencia económica", valor: null },
+      notas_origen: "Petición manual.",
+    },
+  ];
+  const resultado = construirResultadoLineasPedidoReal(itemsPreseleccionados, "", "1");
 
   const errores = validarCheckoutReal(
     {
-      ...construirEstadoInicialCheckoutReal(),
-      email_contacto: "real@test.dev",
-      nombre_contacto: "Lore",
-      telefono_contacto: "600000000",
-      nombre_destinatario: "Lore",
-      linea_1: "Calle Luna 1",
-      codigo_postal: "28001",
-      ciudad: "Madrid",
-      provincia: "Madrid",
+      ...construirDatosBaseCheckoutReal(),
+      producto_slug: "",
     },
     resultado,
+    resolverModoCheckoutReal(itemsPreseleccionados),
   );
 
   assert.equal(resultado.lineasConvertibles.length, 0);
   assert.equal(resultado.lineasNoConvertibles.length, 1);
   assert.match(errores.lineas ?? "", /Atado herbal a medida/);
+});
+
+test("checkout real mantiene el modo único con producto_slug obligatorio", () => {
+  const errores = validarCheckoutReal(
+    construirDatosBaseCheckoutReal(),
+    construirResultadoLineasPedidoReal([], "", "1"),
+    resolverModoCheckoutReal([]),
+  );
+
+  assert.equal(errores.producto_slug, "Campo obligatorio.");
 });
 
 test("cliente API de pedidos reales usa la ruta nueva /api/v1/pedidos/", async () => {

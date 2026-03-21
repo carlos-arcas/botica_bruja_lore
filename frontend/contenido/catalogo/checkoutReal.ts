@@ -10,6 +10,7 @@ import {
 } from "./checkoutDemo";
 
 export type CanalCheckoutReal = "web_invitado" | "web_autenticado";
+export type ModoCheckoutReal = "producto_unico" | "seleccion_multiple";
 
 export type DireccionEntregaPayload = {
   nombre_destinatario: string;
@@ -67,13 +68,22 @@ export type ResultadoLineasPedidoReal = {
   lineasNoConvertibles: LineaNoConvertiblePedido[];
 };
 
+export function resolverModoCheckoutReal(
+  itemsPreseleccionados: ItemEncargoPreseleccionado[],
+): ModoCheckoutReal {
+  return itemsPreseleccionados.length > 0
+    ? "seleccion_multiple"
+    : "producto_unico";
+}
+
 export function construirResultadoLineasPedidoReal(
   itemsPreseleccionados: ItemEncargoPreseleccionado[],
   productoSlug: string,
   cantidadTexto: string,
   productos: ProductoCatalogo[] = PRODUCTOS_CATALOGO,
 ): ResultadoLineasPedidoReal {
-  if (itemsPreseleccionados.length > 0) {
+  const modo = resolverModoCheckoutReal(itemsPreseleccionados);
+  if (modo === "seleccion_multiple") {
     return itemsPreseleccionados.reduce<ResultadoLineasPedidoReal>(
       (acumulado, item) => {
         const linea = construirLineaReal(item.slug, item.cantidad, productos);
@@ -152,22 +162,18 @@ export function construirPayloadPedidoReal(
 export function validarCheckoutReal(
   datos: DatosCheckoutReal,
   resultadoLineas: LineaPedidoPayload[] | ResultadoLineasPedidoReal,
+  modo: ModoCheckoutReal = "producto_unico",
 ): Record<string, string> {
   const errores: Record<string, string> = {};
-  for (const campo of [
-    "email_contacto",
-    "nombre_contacto",
-    "telefono_contacto",
-    "producto_slug",
-    "nombre_destinatario",
-    "linea_1",
-    "codigo_postal",
-    "ciudad",
-    "provincia",
-  ]) {
-    if (!datos[campo as keyof DatosCheckoutReal].toString().trim()) {
+
+  for (const campo of camposObligatoriosBaseCheckoutReal()) {
+    if (!datos[campo].toString().trim()) {
       errores[campo] = "Campo obligatorio.";
     }
+  }
+
+  if (modo === "producto_unico" && !datos.producto_slug.trim()) {
+    errores.producto_slug = "Campo obligatorio.";
   }
 
   const resultadoNormalizado = normalizarResultadoLineas(resultadoLineas);
@@ -208,6 +214,19 @@ export function construirEstadoInicialCheckoutReal(
     pais_iso: "ES",
     observaciones: "",
   };
+}
+
+function camposObligatoriosBaseCheckoutReal(): Array<keyof DatosCheckoutReal> {
+  return [
+    "email_contacto",
+    "nombre_contacto",
+    "telefono_contacto",
+    "nombre_destinatario",
+    "linea_1",
+    "codigo_postal",
+    "ciudad",
+    "provincia",
+  ];
 }
 
 function normalizarResultadoLineas(

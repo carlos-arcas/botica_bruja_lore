@@ -9,6 +9,7 @@ import {
   construirEstadoInicialCheckoutReal,
   construirPayloadPedidoReal,
   construirResultadoLineasPedidoReal,
+  resolverModoCheckoutReal,
   validarCheckoutReal,
 } from "@/contenido/catalogo/checkoutReal";
 import { crearPedidoPublico } from "@/infraestructura/api/pedidos";
@@ -20,26 +21,54 @@ type Props = {
   cestaPreseleccionada?: string;
 };
 
-export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }: Props): JSX.Element {
-  const contexto = resolverContextoPreseleccionado(slugPreseleccionado ?? null, cestaPreseleccionada ?? null);
-  const [datos, setDatos] = useState(() => construirEstadoInicialCheckoutReal(contexto.productoPreseleccionado?.slug));
+export function FlujoCheckoutReal({
+  slugPreseleccionado,
+  cestaPreseleccionada,
+}: Props): JSX.Element {
+  const contexto = resolverContextoPreseleccionado(
+    slugPreseleccionado ?? null,
+    cestaPreseleccionada ?? null,
+  );
+  const [datos, setDatos] = useState(() =>
+    construirEstadoInicialCheckoutReal(contexto.productoPreseleccionado?.slug),
+  );
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [mensaje, setMensaje] = useState("");
   const [enviando, setEnviando] = useState(false);
   const router = useRouter();
-  const producto = useMemo(() => PRODUCTOS_CATALOGO.find((item) => item.slug === datos.producto_slug) ?? null, [datos.producto_slug]);
-  const resultadoLineas = useMemo(() => construirResultadoLineasPedidoReal(contexto.itemsPreseleccionados, datos.producto_slug, datos.cantidad), [contexto.itemsPreseleccionados, datos.cantidad, datos.producto_slug]);
+  const modoCheckout = useMemo(
+    () => resolverModoCheckoutReal(contexto.itemsPreseleccionados),
+    [contexto.itemsPreseleccionados],
+  );
+  const resultadoLineas = useMemo(
+    () =>
+      construirResultadoLineasPedidoReal(
+        contexto.itemsPreseleccionados,
+        datos.producto_slug,
+        datos.cantidad,
+      ),
+    [contexto.itemsPreseleccionados, datos.cantidad, datos.producto_slug],
+  );
+  const producto = useMemo(
+    () =>
+      modoCheckout === "producto_unico"
+        ? PRODUCTOS_CATALOGO.find((item) => item.slug === datos.producto_slug) ?? null
+        : null,
+    [datos.producto_slug, modoCheckout],
+  );
 
   const enviar = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    const nuevosErrores = validarCheckoutReal(datos, resultadoLineas);
+    const nuevosErrores = validarCheckoutReal(datos, resultadoLineas, modoCheckout);
     setErrores(nuevosErrores);
     setMensaje("");
     if (Object.keys(nuevosErrores).length > 0) {
       return;
     }
     setEnviando(true);
-    const resultado = await crearPedidoPublico(construirPayloadPedidoReal(datos, resultadoLineas.lineasConvertibles));
+    const resultado = await crearPedidoPublico(
+      construirPayloadPedidoReal(datos, resultadoLineas.lineasConvertibles),
+    );
     setEnviando(false);
     if (resultado.estado === "error") {
       setMensaje(resultado.mensaje);
@@ -52,7 +81,11 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
     <section className="bloque-home" aria-labelledby="titulo-checkout-real">
       <p className={estilos.eyebrow}>Checkout real v1 · coexistencia controlada</p>
       <h1 id="titulo-checkout-real">Finalizar pedido real sin tocar el flujo demo legado</h1>
-      <p>Este flujo crea un <strong>Pedido</strong> real en estado <strong>pendiente_pago</strong>. No activa PSP ni reutiliza la sesión demo legacy.</p>
+      <p>
+        Este flujo crea un <strong>Pedido</strong> real en estado
+        <strong> pendiente_pago</strong>. No activa PSP ni reutiliza la sesión demo
+        legacy.
+      </p>
       <form className={estilos.formulario} onSubmit={enviar} noValidate>
         <fieldset>
           <legend>Contacto</legend>
@@ -68,33 +101,23 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
         </fieldset>
         <fieldset>
           <legend>Pedido</legend>
-          <label>
-            Producto
-            <select value={datos.producto_slug} onChange={(event) => setDatos((previo) => ({ ...previo, producto_slug: event.target.value }))}>
-              <option value="">Selecciona una pieza</option>
-              {PRODUCTOS_CATALOGO.map((item) => <option key={item.id} value={item.slug}>{item.nombre}</option>)}
-            </select>
-          </label>
-          {errores.producto_slug && <p className={estilos.error}>{errores.producto_slug}</p>}
-          <Campo nombre="cantidad" etiqueta="Cantidad" valor={datos.cantidad} onChange={setDatos} />
+          {modoCheckout === "producto_unico" ? (
+            <BloquePedidoProductoUnico
+              datos={datos}
+              errores={errores}
+              producto={producto}
+              setDatos={setDatos}
+            />
+          ) : (
+            <BloquePedidoSeleccionMultiple
+              lineasConvertibles={resultadoLineas.lineasConvertibles}
+              lineasNoConvertibles={resultadoLineas.lineasNoConvertibles}
+            />
+          )}
           <label>
             Notas del cliente
             <textarea value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} />
           </label>
-          {producto && <p className={estilos.resumenProducto}>{producto.nombre} · {producto.precioVisible}</p>}
-          {resultadoLineas.lineasNoConvertibles.length > 0 && (
-            <div className={estilos.error} role="alert">
-              <p>El pedido real queda bloqueado porque tu selección visible incluye líneas no comprables.</p>
-              <ul>
-                {resultadoLineas.lineasNoConvertibles.map((linea) => (
-                  <li key={linea.id_linea}>
-                    {linea.cantidad} × {linea.nombre}: {linea.motivo}
-                  </li>
-                ))}
-              </ul>
-              <p>Separa esas piezas como consulta manual antes de continuar con el pago.</p>
-            </div>
-          )}
           {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
         </fieldset>
         <fieldset>
@@ -127,6 +150,29 @@ type CampoProps = {
   tipo?: "text" | "email" | "tel";
 };
 
+type BloquePedidoProductoUnicoProps = {
+  datos: { producto_slug: string; cantidad: string };
+  errores: Record<string, string>;
+  producto: (typeof PRODUCTOS_CATALOGO)[number] | null;
+  setDatos: React.Dispatch<React.SetStateAction<any>>;
+};
+
+type BloquePedidoSeleccionMultipleProps = {
+  lineasConvertibles: Array<{
+    id_producto: string;
+    nombre_producto: string;
+    cantidad: number;
+    precio_unitario: string;
+    moneda: string;
+  }>;
+  lineasNoConvertibles: Array<{
+    id_linea: string;
+    nombre: string;
+    cantidad: number;
+    motivo: string;
+  }>;
+};
+
 function Campo({ nombre, etiqueta, valor, onChange, error, tipo = "text" }: CampoProps): JSX.Element {
   return (
     <>
@@ -136,5 +182,60 @@ function Campo({ nombre, etiqueta, valor, onChange, error, tipo = "text" }: Camp
       </label>
       {error && <p className={estilos.error}>{error}</p>}
     </>
+  );
+}
+
+function BloquePedidoProductoUnico({
+  datos,
+  errores,
+  producto,
+  setDatos,
+}: BloquePedidoProductoUnicoProps): JSX.Element {
+  return (
+    <>
+      <label>
+        Producto
+        <select value={datos.producto_slug} onChange={(event) => setDatos((previo) => ({ ...previo, producto_slug: event.target.value }))}>
+          <option value="">Selecciona una pieza</option>
+          {PRODUCTOS_CATALOGO.map((item) => <option key={item.id} value={item.slug}>{item.nombre}</option>)}
+        </select>
+      </label>
+      {errores.producto_slug && <p className={estilos.error}>{errores.producto_slug}</p>}
+      <Campo nombre="cantidad" etiqueta="Cantidad" valor={datos.cantidad} onChange={setDatos} />
+      {producto && <p className={estilos.resumenProducto}>{producto.nombre} · {producto.precioVisible}</p>}
+    </>
+  );
+}
+
+function BloquePedidoSeleccionMultiple({
+  lineasConvertibles,
+  lineasNoConvertibles,
+}: BloquePedidoSeleccionMultipleProps): JSX.Element {
+  return (
+    <div>
+      <p><strong>Selección real que entra en el pedido</strong></p>
+      <p>El pedido se construye desde las líneas preseleccionadas convertibles; este modo no usa un selector único heredado.</p>
+      <ul>
+        {lineasConvertibles.map((linea) => (
+          <li key={linea.id_producto}>
+            {linea.cantidad} × {linea.nombre_producto} · {linea.precio_unitario} {linea.moneda}
+          </li>
+        ))}
+      </ul>
+      {lineasNoConvertibles.length > 0 && (
+        <div className={estilos.error} role="alert">
+          <p>Selección visible bloqueada fuera del pedido real</p>
+          <p>El pedido real queda bloqueado porque tu selección visible incluye líneas no comprables.</p>
+          <ul>
+            {lineasNoConvertibles.map((linea) => (
+              <li key={linea.id_linea}>
+                {linea.cantidad} × {linea.nombre}: {linea.motivo}
+              </li>
+            ))}
+          </ul>
+          <p>Separa esas piezas como consulta manual antes de continuar con el pago.</p>
+        </div>
+      )}
+    </div>
   );
 }
