@@ -21,6 +21,11 @@ const archivoRecibo = readFileSync(
   "utf8",
 );
 
+const archivoResumen = readFileSync(
+  join(process.cwd(), "componentes/catalogo/encargo/ResumenEnvioEncargoDemo.tsx"),
+  "utf8",
+);
+
 test("checkout demo elimina el input manual de id_usuario", () => {
   assert.equal(archivoFlujo.includes('name="idUsuarioDemo"'), false);
   assert.equal(archivoFlujo.includes("ID de usuario demo"), false);
@@ -76,4 +81,28 @@ test("el recibo público sigue contemplando uso sin sesión demo", () => {
 test("checkout demo hace visible el bloqueo honesto de líneas no convertibles", () => {
   assert.equal(archivoFlujo.includes("Esta selección no se enviará como pedido demo completo"), true);
   assert.equal(archivoFlujo.includes("Mantén estas piezas como consulta artesanal"), true);
+});
+
+test("checkout demo desacopla el resumen manual del bloqueo de líneas no convertibles", () => {
+  assert.match(
+    archivoFlujo,
+    /const erroresConsulta = validarSolicitudConsulta[\s\S]*const erroresCheckout = validarCheckoutDemo[\s\S]*const resumenConsulta = construirResumenConsulta/,
+  );
+  assert.match(
+    archivoFlujo,
+    /setResumen\(resumenConsulta\);\s*if \(Object\.keys\(erroresCheckout\)\.length > 0\)/,
+  );
+  assert.equal(
+    archivoFlujo.includes(
+      "No podemos crear el pedido demo con esta selección, pero sí puedes enviarla como consulta artesanal usando el resumen y los canales disponibles aquí mismo.",
+    ),
+    true,
+  );
+});
+
+test("el resumen final mantiene CTAs manuales disponibles cuando existe salida artesanal", () => {
+  assert.equal(archivoFlujo.includes("mensajeConsultaManual={mensajeConsultaManual}"), true);
+  assert.equal(archivoResumen.includes("mensajeConsultaManual"), true);
+  assert.equal(archivoResumen.includes("props.canales.map"), true);
+  assert.equal(archivoResumen.includes("props.onCopiarResumen"), true);
 });

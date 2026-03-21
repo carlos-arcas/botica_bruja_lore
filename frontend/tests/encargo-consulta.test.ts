@@ -226,3 +226,26 @@ test("la regresión rica mantiene catálogo + fuera de catálogo en el resumen d
   assert.equal(LINEAS_SELECCION[0]?.imagen_url, null);
   assert.equal(LINEAS_SELECCION[1]?.referencia_economica.valor, null);
 });
+
+test("la consulta artesanal conserva un resumen usable cuando mezcla una línea convertible y otra fuera de catálogo", () => {
+  const resumen = construirResumenConsulta(
+    {
+      nombre: "Lore",
+      email: "lore@botica.es",
+      telefono: "",
+      productoSlug: "",
+      cantidad: "A definir durante la revisión artesanal",
+      mensaje:
+        "Necesito mantener la pieza publicada y revisar aparte el encargo fuera de catálogo sin perder contexto.",
+      consentimiento: true,
+    },
+    null,
+    "seleccion",
+    LINEAS_SELECCION,
+  );
+
+  assert.match(resumen, /Consulta de encargo/);
+  assert.match(resumen, /Bruma de Lavanda Serena/);
+  assert.match(resumen, /Atado herbal a medida/);
+  assert.match(resumen, /A definir durante la revisión artesanal/);
+});
