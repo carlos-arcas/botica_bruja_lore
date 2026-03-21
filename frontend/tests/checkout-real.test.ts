@@ -11,6 +11,10 @@ import {
 } from "../contenido/catalogo/checkoutReal";
 import { construirLineasVisualesCheckoutReal } from "../componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal";
 import {
+  resolverLineasSeleccionEncargo,
+  resolverResumenEconomicoSeleccion,
+} from "../contenido/catalogo/seleccionEncargo";
+import {
   construirUrlRetornoPedido,
   crearPedidoPublico,
   iniciarPagoPedido,
@@ -274,6 +278,137 @@ test("checkout real construye la vista múltiple desde el adaptador compartido d
   assert.equal(visuales.lineasConvertibles[0]?.linea.cantidad, 2);
   assert.ok(Boolean(visuales.lineasConvertibles[0]?.linea.id_producto));
   assert.equal(visuales.lineasConvertibles[0]?.linea.slug, "pack-bosque-dorado");
+});
+
+test("checkout real resume el pedido real convertible cuando toda la selección múltiple entra en pedido", () => {
+  const itemsPreseleccionados = [
+    {
+      id_linea: "rit-020",
+      tipo_linea: "catalogo" as const,
+      slug: "vela-intencion-clara",
+      id_producto: null,
+      nombre: "Vela Intención Clara",
+      cantidad: 1,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 9.9 },
+      notas_origen: null,
+    },
+    {
+      id_linea: "rit-021",
+      tipo_linea: "catalogo" as const,
+      slug: "pack-bosque-dorado",
+      id_producto: null,
+      nombre: "Pack Bosque Dorado",
+      cantidad: 1,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 34 },
+      notas_origen: null,
+    },
+  ];
+  const resultado = construirResultadoLineasPedidoReal(itemsPreseleccionados, "", "1");
+  const visuales = construirLineasVisualesCheckoutReal(itemsPreseleccionados, resultado);
+  const resumenPedidoReal = resolverResumenEconomicoSeleccion(
+    visuales.lineasConvertibles.map(({ linea }) => linea),
+    "pedido_real",
+  );
+
+  assert.equal(resultado.lineasNoConvertibles.length, 0);
+  assert.equal(resumenPedidoReal.etiqueta, "Total orientativo del pedido real");
+  assert.equal(resumenPedidoReal.totalVisible, "50,00 €");
+  assert.match(resumenPedidoReal.detalle, /solo con las líneas convertibles/);
+});
+
+test("regresión: una línea bloqueada sin referencia no contamina el resumen principal del pedido real", () => {
+  const itemsPreseleccionados = [
+    {
+      id_linea: "rit-030",
+      tipo_linea: "catalogo" as const,
+      slug: "vela-intencion-clara",
+      id_producto: null,
+      nombre: "Vela Intención Clara",
+      cantidad: 2,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 9.9 },
+      notas_origen: null,
+    },
+    {
+      id_linea: "libre-030",
+      tipo_linea: "fuera_catalogo" as const,
+      slug: null,
+      id_producto: null,
+      nombre: "Atado herbal a medida",
+      cantidad: 1,
+      formato: "ramillete artesanal",
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Sin referencia económica", valor: null },
+      notas_origen: "Petición manual.",
+    },
+  ];
+  const resultado = construirResultadoLineasPedidoReal(itemsPreseleccionados, "", "1");
+  const visuales = construirLineasVisualesCheckoutReal(itemsPreseleccionados, resultado);
+  const resumenPedidoReal = resolverResumenEconomicoSeleccion(
+    visuales.lineasConvertibles.map(({ linea }) => linea),
+    "pedido_real",
+  );
+  const resumenBloqueado = resolverResumenEconomicoSeleccion(
+    visuales.lineasBloqueadas.map(({ linea }) => linea),
+    "fuera_pedido_real",
+  );
+
+  assert.equal(resultado.lineasConvertibles.length, 1);
+  assert.equal(resultado.lineasNoConvertibles.length, 1);
+  assert.equal(resumenPedidoReal.totalVisible, "32,00 €");
+  assert.equal(
+    resumenBloqueado.etiqueta,
+    "Fuera del pedido real sin referencia económica",
+  );
+  assert.equal(resumenBloqueado.totalVisible, null);
+});
+
+test("checkout real puede separar resumen principal y contexto visible sin degradar el modo producto único", () => {
+  const lineasSeleccion = resolverLineasSeleccionEncargo([
+    {
+      id_linea: "rit-040",
+      tipo_linea: "catalogo",
+      slug: "vela-intencion-clara",
+      id_producto: null,
+      nombre: "Vela Intención Clara",
+      cantidad: 2,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 9.9 },
+      notas_origen: null,
+      actualizadoEn: "2026-03-21T00:00:00.000Z",
+    },
+    {
+      id_linea: "rit-041",
+      tipo_linea: "catalogo",
+      slug: "pack-bosque-dorado",
+      id_producto: null,
+      nombre: "Pack Bosque Dorado",
+      cantidad: 1,
+      formato: null,
+      imagen_url: null,
+      referencia_economica: { etiqueta: "Referencia editorial disponible", valor: 34 },
+      notas_origen: null,
+      actualizadoEn: "2026-03-21T00:00:00.000Z",
+    },
+  ]);
+  const resumenPedidoReal = resolverResumenEconomicoSeleccion(
+    lineasSeleccion,
+    "pedido_real",
+  );
+  const erroresModoUnico = validarCheckoutReal(
+    construirDatosBaseCheckoutReal(),
+    construirResultadoLineasPedidoReal([], "", "1"),
+    resolverModoCheckoutReal([]),
+  );
+
+  assert.equal(resumenPedidoReal.totalVisible, "66,00 €");
+  assert.equal(erroresModoUnico.producto_slug, "Campo obligatorio.");
 });
 
 test("checkout real mantiene el modo único con producto_slug obligatorio", () => {
