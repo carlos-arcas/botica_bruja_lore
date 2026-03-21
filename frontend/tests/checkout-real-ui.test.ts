@@ -40,8 +40,9 @@ test("checkout real muestra bloqueo explícito cuando hay líneas visibles no co
 
 test("checkout real deriva a /encargo preservando la selección rica cuando está bloqueado", () => {
   assert.equal(archivoFlujo.includes("construirRutaConsultaManualCheckoutReal"), true);
+  assert.equal(archivoFlujo.includes("guardarPreseleccionEncargoLocal(contexto.itemsPreseleccionados)"), true);
   assert.equal(archivoNavegacion.includes('origen: "seleccion"'), true);
-  assert.equal(archivoNavegacion.includes("serializarItemsEncargo(items)"), true);
+  assert.equal(archivoNavegacion.includes("serializarItemsEncargo(items)"), false);
   assert.equal(archivoNavegacion.includes('return `/encargo?${params.toString()}`;'), true);
 });
 

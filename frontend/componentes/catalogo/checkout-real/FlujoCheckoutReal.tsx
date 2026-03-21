@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { PRODUCTOS_CATALOGO } from "@/contenido/catalogo/catalogo";
@@ -17,6 +17,7 @@ import {
   construirRutaConsultaManualCheckoutReal,
   construirRutaRevisionSeleccionCheckoutReal,
 } from "@/contenido/catalogo/checkoutRealNavegacion";
+import { guardarPreseleccionEncargoLocal } from "@/infraestructura/catalogo/almacenPreseleccionEncargo";
 import {
   resolverLineasSeleccionEncargo,
   resolverResumenEconomicoSeleccion,
@@ -121,6 +122,10 @@ export function FlujoCheckoutReal({
       construirRutaRevisionSeleccionCheckoutReal(contexto.itemsPreseleccionados),
     [contexto.itemsPreseleccionados],
   );
+
+  useEffect(() => {
+    guardarPreseleccionEncargoLocal(contexto.itemsPreseleccionados);
+  }, [contexto.itemsPreseleccionados]);
 
   const enviar = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -280,4 +285,3 @@ function BloquePedidoProductoUnico({
     </>
   );
 }
-

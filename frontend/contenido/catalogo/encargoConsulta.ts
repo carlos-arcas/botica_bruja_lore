@@ -48,9 +48,12 @@ export function resolverProductoPreseleccionado(
 export function resolverContextoPreseleccionado(
   slug: string | null,
   cestaSerializada: string | null,
+  itemsPersistidos: ItemEncargoPreseleccionado[] = [],
   origen: string | null = null,
 ): ContextoPreseleccionConsulta {
-  const itemsPreseleccionados = deserializarItemsEncargo(cestaSerializada);
+  const itemsEnUrl = deserializarItemsEncargo(cestaSerializada);
+  const itemsPreseleccionados =
+    itemsEnUrl.length > 0 ? itemsEnUrl : itemsPersistidos;
   const modo =
     origen === "seleccion" || itemsPreseleccionados.length > 0
       ? "seleccion"

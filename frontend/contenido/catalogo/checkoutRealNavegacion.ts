@@ -1,18 +1,14 @@
-import {
-  ItemEncargoPreseleccionado,
-  serializarItemsEncargo,
-} from "./cestaRitual";
+import { ItemEncargoPreseleccionado } from "./cestaRitual";
 
 export function construirRutaConsultaManualCheckoutReal(
   items: ItemEncargoPreseleccionado[],
 ): string {
   if (items.length === 0) {
-    return "/encargo";
+    return "/encargo?origen=seleccion";
   }
 
   const params = new URLSearchParams({
     origen: "seleccion",
-    cesta: serializarItemsEncargo(items),
   });
 
   return `/encargo?${params.toString()}`;

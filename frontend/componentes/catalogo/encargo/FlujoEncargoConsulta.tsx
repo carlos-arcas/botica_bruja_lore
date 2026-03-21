@@ -36,6 +36,10 @@ import { guardarPedidoRecienteDemo } from "@/contenido/cuenta_demo/pedidoRecient
 import { construirRutaReciboPedidoDemo } from "@/contenido/catalogo/postCheckoutDemo";
 import { leerCestaRitualLocal } from "@/infraestructura/catalogo/almacenCestaRitual";
 import {
+  limpiarPreseleccionEncargoLocal,
+  leerPreseleccionEncargoLocal,
+} from "@/infraestructura/catalogo/almacenPreseleccionEncargo";
+import {
   convertirCestaALineasSeleccion,
   convertirCestaAItemsEncargo,
   crearCestaVacia,
@@ -72,14 +76,23 @@ export function FlujoEncargoConsulta({
 }: Props): JSX.Element {
   const router = useRouter();
   const [cestaLocal, setCestaLocal] = useState(() => crearCestaVacia());
+  const [itemsPersistidos, setItemsPersistidos] = useState(() =>
+    leerPreseleccionEncargoLocal(),
+  );
   const contexto = useMemo(
     () =>
       resolverContextoPreseleccionado(
         slugPreseleccionado ?? null,
         cestaPreseleccionada ?? null,
+        itemsPersistidos,
         origenPreseleccionado ?? null,
       ),
-    [cestaPreseleccionada, origenPreseleccionado, slugPreseleccionado],
+    [
+      cestaPreseleccionada,
+      itemsPersistidos,
+      origenPreseleccionado,
+      slugPreseleccionado,
+    ],
   );
   const lineasSeleccion = useMemo(
     () =>
@@ -201,6 +214,20 @@ export function FlujoEncargoConsulta({
       setCestaLocal(leerCestaRitualLocal());
     }
   }, [contexto.itemsPreseleccionados.length, origenPreseleccionado]);
+
+  useEffect(() => {
+    if (cestaPreseleccionada) {
+      limpiarPreseleccionEncargoLocal();
+      setItemsPersistidos([]);
+      return;
+    }
+
+    if (origenPreseleccionado !== "seleccion") {
+      return;
+    }
+
+    setItemsPersistidos(leerPreseleccionEncargoLocal());
+  }, [cestaPreseleccionada, origenPreseleccionado]);
 
   useEffect(() => {
     const cuenta = leerSesionCuentaDemo();
