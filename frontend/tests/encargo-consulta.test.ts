@@ -6,6 +6,7 @@ import {
   construirEstadoInicialConsulta,
   construirResumenConsulta,
   resolverContextoPreseleccionado,
+  resolverItemsPreseleccionados,
   resolverProductoPreseleccionado,
   validarSolicitudConsulta,
 } from "../contenido/catalogo/encargoConsulta";
@@ -62,6 +63,7 @@ test("construirEstadoInicialConsulta permite entrada directa sin slug", () => {
     modo: "producto",
     productoPreseleccionado: null,
     itemsPreseleccionados: [],
+    fuentePreseleccion: "sin_preseleccion",
   });
   assert.equal(estado.productoSlug, "");
   assert.equal(estado.cantidad, "1 unidad");
@@ -73,6 +75,7 @@ test("construirEstadoInicialConsulta para selección múltiple evita parches en 
       modo: "seleccion",
       productoPreseleccionado: null,
       itemsPreseleccionados: [],
+      fuentePreseleccion: "sin_preseleccion",
     },
     LINEAS_SELECCION,
   );
@@ -170,6 +173,7 @@ test("resolverContextoPreseleccionado mantiene compatibilidad entre producto ind
     null,
   );
   assert.equal(desdeFicha.modo, "producto");
+  assert.equal(desdeFicha.fuentePreseleccion, "sin_preseleccion");
   assert.equal(
     desdeFicha.productoPreseleccionado?.slug,
     "infusion-bruma-lavanda",
@@ -195,6 +199,7 @@ test("resolverContextoPreseleccionado mantiene compatibilidad entre producto ind
     desdeSeleccionRica.itemsPreseleccionados[1]?.nombre,
     "Atado herbal a medida",
   );
+  assert.equal(desdeSeleccionRica.fuentePreseleccion, "url_legacy");
 
   const desdeCestaLegacy = resolverContextoPreseleccionado(
     null,
@@ -224,6 +229,28 @@ test("resolverContextoPreseleccionado mantiene compatibilidad entre producto ind
     desdePersistenciaLocal.itemsPreseleccionados[1]?.nombre,
     "Atado herbal a medida",
   );
+  assert.equal(desdePersistenciaLocal.fuentePreseleccion, "persistencia_local");
+});
+
+test("resolverItemsPreseleccionados prioriza cesta legacy sobre storage local y evita mezclar orígenes", () => {
+  const resultado = resolverItemsPreseleccionados(
+    encodeURIComponent(
+      JSON.stringify([{ slug: "pack-bosque-dorado", cantidad: 2 }]),
+    ),
+    LINEAS_SELECCION,
+  );
+
+  assert.equal(resultado.fuente, "url_legacy");
+  assert.equal(resultado.items.length, 1);
+  assert.equal(resultado.items[0]?.slug, "pack-bosque-dorado");
+});
+
+test("resolverItemsPreseleccionados usa persistencia local cuando la URL ligera no trae cesta legacy", () => {
+  const resultado = resolverItemsPreseleccionados(null, LINEAS_SELECCION);
+
+  assert.equal(resultado.fuente, "persistencia_local");
+  assert.equal(resultado.items[0]?.slug, "infusion-bruma-lavanda");
+  assert.equal(resultado.items[1]?.slug, null);
 });
 
 test("la regresión rica mantiene catálogo + fuera de catálogo en el resumen de encargo", () => {
@@ -232,6 +259,7 @@ test("la regresión rica mantiene catálogo + fuera de catálogo en el resumen d
       modo: "seleccion",
       productoPreseleccionado: null,
       itemsPreseleccionados: [],
+      fuentePreseleccion: "sin_preseleccion",
     },
     LINEAS_SELECCION,
   );

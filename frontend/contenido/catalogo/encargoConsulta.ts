@@ -19,6 +19,10 @@ export const MENSAJES_VALIDACION = {
 } as const;
 
 export type ModoConsulta = "producto" | "seleccion";
+export type FuentePreseleccionEncargo =
+  | "url_legacy"
+  | "persistencia_local"
+  | "sin_preseleccion";
 
 export type DatosConsulta = {
   nombre: string;
@@ -34,6 +38,7 @@ export type ContextoPreseleccionConsulta = {
   modo: ModoConsulta;
   productoPreseleccionado: ProductoCatalogo | null;
   itemsPreseleccionados: ItemEncargoPreseleccionado[];
+  fuentePreseleccion: FuentePreseleccionEncargo;
 };
 
 export type ErroresConsulta = Partial<Record<keyof DatosConsulta, string>>;
@@ -51,19 +56,40 @@ export function resolverContextoPreseleccionado(
   itemsPersistidos: ItemEncargoPreseleccionado[] = [],
   origen: string | null = null,
 ): ContextoPreseleccionConsulta {
-  const itemsEnUrl = deserializarItemsEncargo(cestaSerializada);
-  const itemsPreseleccionados =
-    itemsEnUrl.length > 0 ? itemsEnUrl : itemsPersistidos;
+  const preseleccion = resolverItemsPreseleccionados(
+    cestaSerializada,
+    itemsPersistidos,
+  );
   const modo =
-    origen === "seleccion" || itemsPreseleccionados.length > 0
+    origen === "seleccion" || preseleccion.items.length > 0
       ? "seleccion"
       : "producto";
 
   return {
     modo,
     productoPreseleccionado: resolverProductoPreseleccionado(slug),
-    itemsPreseleccionados,
+    itemsPreseleccionados: preseleccion.items,
+    fuentePreseleccion: preseleccion.fuente,
   };
+}
+
+export function resolverItemsPreseleccionados(
+  cestaSerializada: string | null,
+  itemsPersistidos: ItemEncargoPreseleccionado[] = [],
+): {
+  items: ItemEncargoPreseleccionado[];
+  fuente: FuentePreseleccionEncargo;
+} {
+  const itemsEnUrl = deserializarItemsEncargo(cestaSerializada);
+  if (itemsEnUrl.length > 0) {
+    return { items: itemsEnUrl, fuente: "url_legacy" };
+  }
+
+  if (itemsPersistidos.length > 0) {
+    return { items: itemsPersistidos, fuente: "persistencia_local" };
+  }
+
+  return { items: [], fuente: "sin_preseleccion" };
 }
 
 export function construirEstadoInicialConsulta(
