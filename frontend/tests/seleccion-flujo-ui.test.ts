@@ -51,9 +51,10 @@ test("la selección mantiene contexto honesto para líneas sin imagen o sin refe
   assert.match(componenteCompartido, /Se confirma en la solicitud/);
 });
 
-test("/encargo consume la persistencia local explícita con una política de limpieza de un solo uso", () => {
-  assert.match(flujoEncargo, /const \[itemsPersistidos, setItemsPersistidos\] = useState\(\(\) =>\s*leerPreseleccionEncargoLocal\(\),/);
+test("/encargo solo consume la persistencia local cuando hay señal explícita y mantiene limpieza de un solo uso", () => {
+  assert.match(flujoEncargo, /leerItemsPersistidosIniciales\(\s*cestaPreseleccionada \?\? null,\s*origenPreseleccionado \?\? null,\s*\)/s);
   assert.match(flujoEncargo, /resolverContextoPreseleccionado\(\s*slugPreseleccionado \?\? null,\s*cestaPreseleccionada \?\? null,\s*itemsPersistidos,\s*origenPreseleccionado \?\? null,/s);
+  assert.match(flujoEncargo, /debeConsumirPersistenciaLocalEncargo\(/);
   assert.match(flujoEncargo, /contexto\.fuentePreseleccion === "persistencia_local"/);
   assert.match(flujoEncargo, /limpiarPreseleccionEncargoLocal\(\);/);
   assert.doesNotMatch(flujoEncargo, /resolverContextoPreseleccionado\(\s*slugPreseleccionado \?\? null,\s*cestaPreseleccionada \?\? null,\s*origenPreseleccionado \?\? null/s);
