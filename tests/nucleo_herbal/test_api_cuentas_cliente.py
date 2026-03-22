@@ -3,7 +3,9 @@ import unittest
 
 try:
     from django.contrib.auth.models import User
+    from django.core import mail
     from django.test import TestCase as DjangoTestCase
+    from django.test.utils import override_settings
 
     from backend.nucleo_herbal.infraestructura.persistencia_django.models import CuentaClienteModelo
     from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import PedidoRealModelo
@@ -18,6 +20,7 @@ except ModuleNotFoundError:
 
 
 @unittest.skipUnless(DJANGO_DISPONIBLE, "Django no está instalado en el entorno local.")
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", PUBLIC_SITE_URL="http://frontend.test")
 class ApiCuentaClienteTests(DjangoTestCase):
     def test_registro_real_crea_cuenta_y_sesion(self) -> None:
         response = self.client.post(
@@ -31,6 +34,80 @@ class ApiCuentaClienteTests(DjangoTestCase):
         cuenta = response.json()["cuenta"]
         self.assertEqual(cuenta["email"], "cliente@test.dev")
         self.assertTrue(self.client.get("/api/v1/cuenta/sesion/").json()["autenticado"])
+
+
+    def test_registro_real_crea_verificacion_email_y_la_cuenta_nace_no_verificada(self) -> None:
+        response = self.client.post(
+            "/api/v1/cuenta/registro/",
+            data=json.dumps({"email": "verifica@test.dev", "nombre_visible": "Lore", "password": "ClaveSegura123"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertFalse(response.json()["cuenta"]["email_verificado"])
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("verificar-email?token=", mail.outbox[0].body)
+
+    def test_confirmacion_email_ok_token_invalido_y_expirado(self) -> None:
+        self._registrar_cuenta(email="confirmar@test.dev")
+        token_ok = mail.outbox[-1].body.split("token=")[-1].split()[0]
+
+        ok = self.client.post(
+            "/api/v1/cuenta/verificacion-email/confirmar/",
+            data=json.dumps({"token": token_ok}),
+            content_type="application/json",
+        )
+        invalido = self.client.post(
+            "/api/v1/cuenta/verificacion-email/confirmar/",
+            data=json.dumps({"token": "token-invalido"}),
+            content_type="application/json",
+        )
+
+        self._registrar_cuenta(email="expirado@test.dev")
+        token_expirado = mail.outbox[-1].body.split("token=")[-1].split()[0]
+        from backend.nucleo_herbal.infraestructura.persistencia_django.models import VerificacionEmailCuentaClienteModelo
+        solicitud = VerificacionEmailCuentaClienteModelo.objects.get(cuenta__email="expirado@test.dev")
+        solicitud.expira_en = solicitud.fecha_creacion
+        solicitud.save(update_fields=["expira_en", "fecha_envio"])
+        expirado = self.client.post(
+            "/api/v1/cuenta/verificacion-email/confirmar/",
+            data=json.dumps({"token": token_expirado}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(ok.status_code, 200)
+        self.assertTrue(ok.json()["cuenta"]["email_verificado"])
+        self.assertEqual(invalido.status_code, 400)
+        self.assertIn("válido", invalido.json()["detalle"])
+        self.assertEqual(expirado.status_code, 400)
+        self.assertIn("expirado", expirado.json()["detalle"])
+
+    def test_reenvio_ok_y_rechazo_si_ya_esta_verificada_con_json_estable(self) -> None:
+        self._registrar_cuenta(email="reenviar@test.dev")
+        ok = self.client.post(
+            "/api/v1/cuenta/verificacion-email/reenviar/",
+            data=json.dumps({"email": "reenviar@test.dev"}),
+            content_type="application/json",
+        )
+        token = mail.outbox[-1].body.split("token=")[-1].split()[0]
+        self.client.post(
+            "/api/v1/cuenta/verificacion-email/confirmar/",
+            data=json.dumps({"token": token}),
+            content_type="application/json",
+        )
+        ya_verificada = self.client.post(
+            "/api/v1/cuenta/verificacion-email/reenviar/",
+            data=json.dumps({"email": "reenviar@test.dev"}),
+            content_type="application/json",
+        )
+        estado = self.client.get("/api/v1/cuenta/verificacion-email/estado/")
+
+        self.assertEqual(ok.status_code, 200)
+        self.assertSetEqual(set(ok.json()["verificacion"].keys()), {"email", "email_verificado", "expira_en", "reenviada"})
+        self.assertEqual(ya_verificada.status_code, 400)
+        self.assertIn("ya tiene el email verificado", ya_verificada.json()["detalle"])
+        self.assertEqual(estado.status_code, 200)
+        self.assertTrue(estado.json()["verificacion"]["email_verificado"])
 
     def test_password_se_guarda_con_hash(self) -> None:
         self.client.post(

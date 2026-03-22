@@ -153,6 +153,14 @@ class CuentaClienteDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class VerificacionEmailCuentaDTO:
+    email: str
+    email_verificado: bool
+    expira_en: object | None = None
+    reenviada: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class ResultadoSesionClienteDTO:
     autenticado: bool
     cuenta: CuentaClienteDTO | None = None

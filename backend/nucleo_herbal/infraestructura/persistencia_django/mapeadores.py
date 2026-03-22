@@ -1,7 +1,7 @@
 """Mapeadores de ORM Django a entidades de dominio."""
 
 from ...dominio.entidades import Intencion, Planta, Producto
-from ...dominio.cuentas_cliente import CuentaCliente
+from ...dominio.cuentas_cliente import CuentaCliente, SolicitudVerificacionEmail
 from ...dominio.cuentas_demo import CuentaDemo, CredencialCuentaDemo, PerfilCuentaDemo
 from ...dominio.calendario_ritual import ReglaCalendario
 from ...dominio.pedidos_demo import LineaPedido, PedidoDemo
@@ -9,6 +9,7 @@ from ...dominio.rituales import Ritual
 from .models import (
     CuentaClienteModelo,
     CuentaDemoModelo,
+    VerificacionEmailCuentaClienteModelo,
     IntencionModelo,
     LineaPedidoModelo,
     PedidoDemoModelo,
@@ -170,3 +171,16 @@ def a_datos_linea_pedido(linea: LineaPedido) -> dict[str, object]:
         "cantidad": linea.cantidad,
         "precio_unitario_demo": linea.precio_unitario_demo,
     }
+
+
+def a_solicitud_verificacion_email(modelo: VerificacionEmailCuentaClienteModelo) -> SolicitudVerificacionEmail:
+    return SolicitudVerificacionEmail(
+        id_solicitud=str(modelo.id),
+        id_usuario=str(modelo.cuenta.usuario_id),
+        email=modelo.cuenta.email,
+        token_hash=modelo.token_hash,
+        expira_en=modelo.expira_en,
+        fecha_creacion=modelo.fecha_creacion,
+        fecha_envio=modelo.fecha_envio,
+        fecha_confirmacion=modelo.fecha_confirmacion,
+    )

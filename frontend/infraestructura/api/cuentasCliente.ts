@@ -8,6 +8,13 @@ export type CuentaCliente = {
   fecha_actualizacion: string;
 };
 
+export type EstadoVerificacionEmail = {
+  email: string;
+  email_verificado: boolean;
+  expira_en: string | null;
+  reenviada: boolean;
+};
+
 export type PedidoCuentaCliente = {
   id_pedido: string;
   estado: string;
@@ -37,6 +44,20 @@ export async function obtenerSesionCuentaCliente(): Promise<{ autenticado: boole
   return { autenticado: Boolean(data.autenticado), cuenta: (data.cuenta ?? null) as CuentaCliente | null, detalle: data.detalle as string | undefined };
 }
 
+export async function obtenerEstadoVerificacionEmail(): Promise<{ estado: EstadoVerificacionEmail | null; detalle?: string }> {
+  const respuesta = await fetch("/api/cuenta/verificacion-email/estado", { method: "GET", headers: { Accept: "application/json" }, cache: "no-store" });
+  const data = await respuesta.json();
+  return respuesta.ok ? { estado: (data.verificacion ?? null) as EstadoVerificacionEmail | null } : { estado: null, detalle: data.detalle as string | undefined };
+}
+
+export async function reenviarVerificacionEmail(payload: { email: string }): Promise<{ estado: "ok"; verificacion: EstadoVerificacionEmail } | { estado: "error"; mensaje: string }> {
+  return enviarVerificacion("verificacion-email/reenviar", payload);
+}
+
+export async function confirmarVerificacionEmail(payload: { token: string }): Promise<{ estado: "ok"; cuenta: CuentaCliente } | { estado: "error"; mensaje: string }> {
+  return enviarCuenta("verificacion-email/confirmar", payload);
+}
+
 export async function obtenerPedidosCuentaCliente(): Promise<{ pedidos: PedidoCuentaCliente[]; detalle?: string }> {
   const respuesta = await fetch("/api/cuenta/pedidos", { method: "GET", headers: { Accept: "application/json" }, cache: "no-store" });
   const data = await respuesta.json();
@@ -55,5 +76,20 @@ async function enviarCuenta(path: string, payload: Record<string, string>): Prom
     return { estado: "ok", cuenta: data.cuenta as CuentaCliente };
   } catch {
     return { estado: "error", mensaje: "No pudimos conectar con la cuenta real." };
+  }
+}
+
+async function enviarVerificacion(path: string, payload: Record<string, string>): Promise<{ estado: "ok"; verificacion: EstadoVerificacionEmail } | { estado: "error"; mensaje: string }> {
+  try {
+    const respuesta = await fetch(`/api/cuenta/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await respuesta.json();
+    if (!respuesta.ok) return { estado: "error", mensaje: data.detalle ?? "No se pudo gestionar la verificación." };
+    return { estado: "ok", verificacion: data.verificacion as EstadoVerificacionEmail };
+  } catch {
+    return { estado: "error", mensaje: "No pudimos conectar con la verificación de email." };
   }
 }

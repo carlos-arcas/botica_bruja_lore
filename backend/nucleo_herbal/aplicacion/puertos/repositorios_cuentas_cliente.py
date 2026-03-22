@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from ...dominio.cuentas_cliente import CuentaCliente, CredencialesCuentaCliente
+from ...dominio.cuentas_cliente import CuentaCliente, CredencialesCuentaCliente, SolicitudVerificacionEmail
 
 
 class RepositorioCuentasCliente(ABC):
@@ -23,3 +23,19 @@ class RepositorioCuentasCliente(ABC):
     @abstractmethod
     def obtener_por_id_usuario(self, id_usuario: str) -> CuentaCliente | None:
         """Obtiene cuenta real por id canónico."""
+
+    @abstractmethod
+    def crear_solicitud_verificacion(self, *, id_usuario: str, token_hash: str, expira_en) -> SolicitudVerificacionEmail:
+        """Crea o sustituye la solicitud activa de verificación para una cuenta existente."""
+
+    @abstractmethod
+    def obtener_solicitud_por_token_hash(self, token_hash: str) -> SolicitudVerificacionEmail | None:
+        """Recupera una solicitud activa por hash de token."""
+
+    @abstractmethod
+    def marcar_email_verificado(self, *, id_usuario: str, token_hash: str) -> CuentaCliente | None:
+        """Marca la cuenta como verificada si coincide la solicitud esperada."""
+
+    @abstractmethod
+    def obtener_solicitud_activa_por_usuario(self, id_usuario: str) -> SolicitudVerificacionEmail | None:
+        """Recupera la última solicitud activa para la cuenta."""

@@ -288,6 +288,31 @@ class CuentaClienteModelo(models.Model):
         return self.email
 
 
+class VerificacionEmailCuentaClienteModelo(models.Model):
+    cuenta = models.OneToOneField(
+        CuentaClienteModelo,
+        on_delete=models.CASCADE,
+        related_name="verificacion_email",
+    )
+    token_hash = models.CharField(max_length=64, unique=True)
+    expira_en = models.DateTimeField()
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_envio = models.DateTimeField(auto_now=True)
+    fecha_confirmacion = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "nucleo_verificacion_email_cuenta_cliente"
+        ordering = ("-fecha_envio",)
+        verbose_name = "verificación email cuenta cliente"
+        verbose_name_plural = "verificaciones email cuenta cliente"
+        indexes = [
+            models.Index(fields=("expira_en", "fecha_confirmacion"), name="nucleo_verif_email_exp_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.cuenta.email} · {self.expira_en.isoformat()}"
+
+
 class ImportacionLoteModelo(models.Model):
     entidad = models.CharField(max_length=64)
     modo = models.CharField(max_length=32)

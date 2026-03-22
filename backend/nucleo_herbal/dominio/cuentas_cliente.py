@@ -44,13 +44,35 @@ class CredencialesCuentaCliente:
             raise ErrorDominio("La contraseña requiere al menos 8 caracteres.")
 
 
+@dataclass(frozen=True, slots=True)
+class SolicitudVerificacionEmail:
+    id_solicitud: str
+    id_usuario: str
+    email: str
+    token_hash: str
+    expira_en: datetime
+    fecha_creacion: datetime
+    fecha_envio: datetime
+    fecha_confirmacion: datetime | None = None
+
+    def __post_init__(self) -> None:
+        if not self.id_solicitud.strip():
+            raise ErrorDominio("La solicitud de verificación requiere identificador.")
+        if not self.id_usuario.strip():
+            raise ErrorDominio("La solicitud de verificación requiere usuario.")
+        if not _email_valido(self.email):
+            raise ErrorDominio("La solicitud de verificación requiere email válido.")
+        if not self.token_hash.strip():
+            raise ErrorDominio("La solicitud de verificación requiere hash de token.")
+
+
 ESTRATEGIA_CONVIVENCIA_CUENTAS = {
     "contrato_canonico": "CuentaCliente",
     "legado_demo": "CuentaDemo",
     "modo": "coexistencia_controlada",
     "ruta_legacy": "/api/v1/cuentas-demo/",
     "ruta_objetivo": "/api/v1/cuenta/",
-    "estado": "cuenta_real_v1",
+    "estado": "cuenta_real_v1_1_email_verificacion",
 }
 
 

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { loginCuentaCliente, registrarCuentaCliente } from "@/infraestructura/api/cuentasCliente";
+import { resolverMensajePostRegistro } from "@/contenido/cuenta_cliente/verificacionEmail";
 import { RUTAS_CUENTA_CLIENTE } from "@/contenido/cuenta_cliente/rutasCuentaCliente";
 
 type Props = { modo: "registro" | "acceso" };
@@ -24,13 +25,16 @@ export function FormularioCuentaCliente({ modo }: Props): JSX.Element {
       setMensaje(resultado.mensaje);
       return;
     }
-    router.push(RUTAS_CUENTA_CLIENTE.cuenta);
+    const destino = modo === "registro"
+      ? `${RUTAS_CUENTA_CLIENTE.cuenta}?alta=ok&mensaje=${encodeURIComponent(resolverMensajePostRegistro())}`
+      : RUTAS_CUENTA_CLIENTE.cuenta;
+    router.push(destino);
     router.refresh();
   };
 
   return (
     <section className="bloque-home">
-      <p>{modo === "registro" ? "Cuenta real v1" : "Acceso cliente real"}</p>
+      <p>{modo === "registro" ? "Cuenta real v1.1" : "Acceso cliente real"}</p>
       <h1>{modo === "registro" ? "Crear cuenta real" : "Entrar en mi cuenta"}</h1>
       <form onSubmit={enviar} style={{ display: "grid", gap: 12, maxWidth: 480 }}>
         {modo === "registro" && (
