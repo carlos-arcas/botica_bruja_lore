@@ -19,9 +19,13 @@ from ...aplicacion.casos_de_uso_backoffice_pedidos import (
 from ...aplicacion.casos_de_uso_calendario_ritual import ConsultarCalendarioRitualPorFecha
 from ...aplicacion.casos_de_uso_cuentas_cliente import (
     AutenticarCuentaCliente,
+    ConfirmarVerificacionEmail,
+    ConsultarEstadoVerificacionEmail,
+    GenerarSolicitudVerificacionEmail,
     ListarPedidosCuentaCliente,
     ObtenerPedidoCuentaCliente,
     ObtenerSesionCuentaCliente,
+    ReenviarVerificacionEmail,
     RegistrarCuentaCliente,
 )
 from ...aplicacion.casos_de_uso_cuentas_demo import (
@@ -50,6 +54,7 @@ from ...aplicacion.casos_de_uso_rituales import (
     ObtenerRitualesRelacionadosPorIntencion,
 )
 from ...infraestructura.notificaciones_email import NotificadorEmailPostPago
+from ...infraestructura.notificaciones_email_verificacion import NotificadorEmailVerificacionCuenta
 from ...infraestructura.pagos_stripe import construir_pasarela_pago_stripe
 from ...infraestructura.persistencia_django.repositorios import (
     ProveedorHistorialPedidosDemoORM,
@@ -117,6 +122,9 @@ class ServiciosPublicosCuentaCliente:
     obtener_sesion_cuenta_cliente: ObtenerSesionCuentaCliente
     listar_pedidos_cuenta_cliente: ListarPedidosCuentaCliente
     obtener_pedido_cuenta_cliente: ObtenerPedidoCuentaCliente
+    confirmar_verificacion_email: ConfirmarVerificacionEmail
+    reenviar_verificacion_email: ReenviarVerificacionEmail
+    consultar_estado_verificacion_email: ConsultarEstadoVerificacionEmail
 
 @dataclass(frozen=True, slots=True)
 class ServiciosPublicosCuentaDemo:
@@ -216,8 +224,12 @@ def construir_servicios_publicos_pedidos_demo() -> ServiciosPublicosPedidosDemo:
 def construir_servicios_publicos_cuenta_cliente() -> ServiciosPublicosCuentaCliente:
     repositorio_cuentas = RepositorioCuentasClienteORM()
     repositorio_pedidos = RepositorioPedidosORM()
+    notificador_verificacion = NotificadorEmailVerificacionCuenta()
     return ServiciosPublicosCuentaCliente(
-        registrar_cuenta_cliente=RegistrarCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        registrar_cuenta_cliente=RegistrarCuentaCliente(
+            repositorio_cuentas_cliente=repositorio_cuentas,
+            notificador_verificacion_email=notificador_verificacion,
+        ),
         autenticar_cuenta_cliente=AutenticarCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
         obtener_sesion_cuenta_cliente=ObtenerSesionCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
         listar_pedidos_cuenta_cliente=ListarPedidosCuentaCliente(
@@ -227,6 +239,14 @@ def construir_servicios_publicos_cuenta_cliente() -> ServiciosPublicosCuentaClie
         obtener_pedido_cuenta_cliente=ObtenerPedidoCuentaCliente(
             repositorio_cuentas_cliente=repositorio_cuentas,
             repositorio_pedidos=repositorio_pedidos,
+        ),
+        confirmar_verificacion_email=ConfirmarVerificacionEmail(repositorio_cuentas_cliente=repositorio_cuentas),
+        reenviar_verificacion_email=ReenviarVerificacionEmail(
+            repositorio_cuentas_cliente=repositorio_cuentas,
+            notificador_verificacion_email=notificador_verificacion,
+        ),
+        consultar_estado_verificacion_email=ConsultarEstadoVerificacionEmail(
+            repositorio_cuentas_cliente=repositorio_cuentas,
         ),
     )
 

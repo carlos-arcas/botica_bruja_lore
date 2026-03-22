@@ -15,6 +15,7 @@ from ...aplicacion.casos_de_uso_cuentas_cliente import ErrorAutenticacionCliente
 from ...dominio.excepciones import ErrorDominio
 from .cuentas_cliente_serializadores import (
     serializar_cuenta_cliente,
+    serializar_estado_verificacion_email,
     serializar_pedidos_cuenta,
     serializar_sesion_cliente,
 )
@@ -40,6 +41,7 @@ def registrar_cuenta_cliente(request: HttpRequest) -> JsonResponse:
             email=email,
             nombre_visible=_texto(payload, "nombre_visible"),
             password_plano=_texto(payload, "password"),
+            operation_id=operation_id,
         )
     except ErrorDominio as exc:
         log_evento_cuenta(evento="cuenta_real_registro", operation_id=operation_id, email=email, usuario_id=None, resultado="error", error=str(exc))
@@ -97,6 +99,52 @@ def sesion_actual_cuenta_cliente(request: HttpRequest) -> JsonResponse:
     return JsonResponse(serializar_sesion_cliente(sesion))
 
 
+@csrf_exempt
+def confirmar_verificacion_email(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"detalle": "Método no permitido."}, status=405)
+    operation_id = _operation_id(request)
+    payload, error = _leer_payload_json(request)
+    if error is not None:
+        return error
+    token = _texto(payload, "token")
+    try:
+        cuenta = construir_servicios_publicos_cuenta_cliente().confirmar_verificacion_email.ejecutar(token=token)
+    except ErrorDominio as exc:
+        resultado = "token_expirado" if "expirado" in str(exc).lower() else "token_invalido"
+        log_evento_cuenta(evento="cuenta_real_confirmar_email", operation_id=operation_id, email=None, usuario_id=None, resultado=resultado, error=str(exc))
+        return json_validacion(str(exc))
+    except ErrorAplicacionLookup as exc:
+        log_evento_cuenta(evento="cuenta_real_confirmar_email", operation_id=operation_id, email=None, usuario_id=None, resultado="error", error=str(exc))
+        return json_no_encontrado(str(exc))
+    log_evento_cuenta(evento="cuenta_real_confirmar_email", operation_id=operation_id, email=cuenta.email, usuario_id=cuenta.id_usuario, resultado="ok")
+    return JsonResponse({"cuenta": serializar_cuenta_cliente(cuenta)})
+
+
+@csrf_exempt
+def reenviar_verificacion_email(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"detalle": "Método no permitido."}, status=405)
+    operation_id = _operation_id(request)
+    payload, error = _leer_payload_json(request)
+    if error is not None:
+        return error
+    email = _texto(payload, "email")
+    try:
+        resultado = construir_servicios_publicos_cuenta_cliente().reenviar_verificacion_email.ejecutar(
+            email=email,
+            operation_id=operation_id,
+        )
+    except ErrorDominio as exc:
+        log_evento_cuenta(evento="cuenta_real_reenviar_email", operation_id=operation_id, email=email, usuario_id=None, resultado="cuenta_ya_verificada", error=str(exc))
+        return json_validacion(str(exc))
+    except ErrorAplicacionLookup as exc:
+        log_evento_cuenta(evento="cuenta_real_reenviar_email", operation_id=operation_id, email=email, usuario_id=None, resultado="error", error=str(exc))
+        return json_no_encontrado(str(exc))
+    log_evento_cuenta(evento="cuenta_real_reenviar_email", operation_id=operation_id, email=resultado.email, usuario_id=None, resultado="ok")
+    return JsonResponse({"verificacion": serializar_estado_verificacion_email(resultado)})
+
+
 def pedidos_cuenta_cliente(request: HttpRequest) -> JsonResponse:
     usuario_id, error = _usuario_autenticado(request)
     if error is not None:
@@ -123,6 +171,14 @@ def detalle_pedido_cuenta_cliente(request: HttpRequest, id_pedido: str) -> JsonR
         return json_no_encontrado(str(exc))
     log_evento_cuenta(evento="cuenta_real_detalle_pedido", operation_id=operation_id, email=request.user.email, usuario_id=usuario_id, resultado="ok")
     return JsonResponse({"pedido": serializar_pedidos_cuenta((pedido,))[0]})
+
+
+def estado_verificacion_email(request: HttpRequest) -> JsonResponse:
+    usuario_id, error = _usuario_autenticado(request)
+    if error is not None:
+        return error
+    resultado = construir_servicios_publicos_cuenta_cliente().consultar_estado_verificacion_email.ejecutar(id_usuario=usuario_id)
+    return JsonResponse({"verificacion": serializar_estado_verificacion_email(resultado)})
 
 
 def _usuario_autenticado(request: HttpRequest) -> tuple[str, JsonResponse | None]:

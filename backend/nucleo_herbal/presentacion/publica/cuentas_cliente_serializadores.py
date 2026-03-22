@@ -24,5 +24,14 @@ def serializar_sesion_cliente(resultado) -> dict[str, object]:
     }
 
 
+def serializar_estado_verificacion_email(resultado) -> dict[str, object]:
+    return {
+        "email": resultado.email,
+        "email_verificado": resultado.email_verificado,
+        "expira_en": resultado.expira_en.isoformat() if resultado.expira_en else None,
+        "reenviada": resultado.reenviada,
+    }
+
+
 def serializar_pedidos_cuenta(pedidos) -> list[dict[str, object]]:
     return [serializar_pedido(pedido) for pedido in pedidos]
