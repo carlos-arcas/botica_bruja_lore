@@ -10,6 +10,8 @@ try:
         ReglaCalendarioModelo,
     )
 
+    from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
+
     DJANGO_DISPONIBLE = True
 except ModuleNotFoundError:
     DjangoTestCase = unittest.TestCase
@@ -60,6 +62,7 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
             planta=cls.planta_melisa,
             publicado=True,
         )
+        InventarioProductoModelo.objects.create(producto=cls.producto_herbal, cantidad_disponible=1, umbral_bajo_stock=2)
         ProductoModelo.objects.create(
             id="pro-2",
             sku="HERB-002",
@@ -294,6 +297,7 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
             seccion_publica="botica-natural",
             descripcion_corta="demo",
             precio_visible="10,00",
+            precio_numerico=10,
             beneficio_principal="calma",
             formato_comercial="granel",
             modo_uso="infusion",
@@ -310,6 +314,7 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
             seccion_publica="botica-natural",
             descripcion_corta="demo",
             precio_visible="30,00",
+            precio_numerico=30,
             beneficio_principal="energia",
             formato_comercial="capsulas",
             modo_uso="ingesta-directa",
@@ -434,3 +439,12 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("Formato de fecha inválido", response.json()["detalle"])
+
+
+    def test_productos_por_planta_expone_estado_disponibilidad(self) -> None:
+        response = self.client.get("/api/v1/herbal/plantas/melisa/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        producto = response.json()["productos"][0]
+        self.assertTrue(producto["disponible"])
+        self.assertEqual(producto["estado_disponibilidad"], "bajo_stock")

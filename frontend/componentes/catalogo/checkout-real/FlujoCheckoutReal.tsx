@@ -23,6 +23,7 @@ import {
 } from "@/contenido/catalogo/checkoutRealNavegacion";
 import { resolverContextoPreseleccionado } from "@/contenido/catalogo/encargoConsulta";
 import { resolverLineasSeleccionEncargo, resolverResumenEconomicoSeleccion } from "@/contenido/catalogo/seleccionEncargo";
+import { AvisoDisponibilidadCheckoutReal } from "@/componentes/catalogo/checkout-real/AvisoDisponibilidadCheckoutReal";
 import { BloquePedidoSeleccionMultiple } from "@/componentes/catalogo/checkout-real/BloquePedidoSeleccionMultiple";
 import { SelectorDireccionCheckoutReal } from "@/componentes/catalogo/checkout-real/SelectorDireccionCheckoutReal";
 import { construirLineasVisualesCheckoutReal } from "@/componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal";
@@ -141,6 +142,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
         <fieldset>
           <legend>Pedido</legend>
           {modoCheckout === "producto_unico" ? <BloquePedidoProductoUnico datos={datos} errores={errores} producto={producto} setDatos={setDatos} /> : <BloquePedidoSeleccionMultiple lineasConvertiblesVisuales={lineasVisualesCheckout.lineasConvertibles} lineasBloqueadasVisuales={lineasVisualesCheckout.lineasBloqueadas} resumenEconomico={resumenEconomico} resumenEconomicoBloqueado={resumenEconomicoBloqueado} resumenSeleccionVisible={resumenSeleccionVisible} rutaConsultaManual={rutaConsultaManual} rutaRevisionSeleccion={rutaRevisionSeleccion} />}
+          <p className={estilos.estadoCuenta}>La disponibilidad visible en frontend es orientativa: no reserva unidades y el backend vuelve a validar stock al crear el pedido real.</p>
           <label>Intención y observaciones del pedido<textarea value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} /></label>
           {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
         </fieldset>
@@ -182,7 +184,11 @@ function Campo({ nombre, etiqueta, valor, onChange, error, tipo = "text" }: Camp
 }
 
 function BloquePedidoProductoUnico({ datos, errores, producto, setDatos }: BloquePedidoProductoUnicoProps): JSX.Element {
-  return <>{producto ? <p className={estilos.resumenProducto}>Producto seleccionado: <strong>{producto.nombre}</strong> · {producto.precioVisible}</p> : <Campo nombre="producto_slug" etiqueta="Slug del producto" valor={datos.producto_slug} error={errores.producto_slug} onChange={setDatos} /> }<Campo nombre="cantidad" etiqueta="Cantidad" valor={datos.cantidad} onChange={setDatos} /></>;
+  return <>
+    {producto ? <p className={estilos.resumenProducto}>Producto seleccionado: <strong>{producto.nombre}</strong> · {producto.precioVisible}</p> : <Campo nombre="producto_slug" etiqueta="Slug del producto" valor={datos.producto_slug} error={errores.producto_slug} onChange={setDatos} /> }
+    <AvisoDisponibilidadCheckoutReal slugProducto={datos.producto_slug} />
+    <Campo nombre="cantidad" etiqueta="Cantidad" valor={datos.cantidad} onChange={setDatos} />
+  </>;
 }
 
 function BloqueDireccionManual({ datos, errores, setDatos }: BloqueDireccionManualProps): JSX.Element {

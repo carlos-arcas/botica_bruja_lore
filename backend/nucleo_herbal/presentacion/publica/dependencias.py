@@ -164,17 +164,20 @@ class ServiciosBackofficePedidos:
 def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
     repositorio_plantas = RepositorioPlantasORM()
     repositorio_productos = RepositorioProductosORM()
+    repositorio_inventario = RepositorioInventarioORM()
     return ServiciosPublicosHerbales(
         listado_herbal=ObtenerListadoHerbalNavegable(repositorio_plantas),
         detalle_planta=ObtenerDetallePlanta(repositorio_plantas),
         resolucion_comercial=ObtenerResolucionComercialMinimaDePlanta(
             repositorio_plantas,
             repositorio_productos,
+            repositorio_inventario,
         ),
         listado_productos_por_seccion=ObtenerListadoPublicoProductosPorSeccion(
-            repositorio_productos
+            repositorio_productos,
+            repositorio_inventario,
         ),
-        detalle_producto=ObtenerDetallePublicoProductoPorSlug(repositorio_productos),
+        detalle_producto=ObtenerDetallePublicoProductoPorSlug(repositorio_productos, repositorio_inventario),
         relaciones_por_intencion=ObtenerRelacionesHerbalesPorIntencion(repositorio_plantas),
         rituales_por_planta=ObtenerRitualesRelacionadosDePlantaPorSlug(
             repositorio_plantas,

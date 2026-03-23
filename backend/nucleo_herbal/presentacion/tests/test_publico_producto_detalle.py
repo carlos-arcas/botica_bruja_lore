@@ -3,14 +3,15 @@ from __future__ import annotations
 from django.test import Client, TestCase
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
 
 
 class PublicoProductoDetalleApiTests(TestCase):
     def setUp(self) -> None:
         self.client = Client()
 
-    def _crear_producto(self, *, slug: str, publicado: bool) -> None:
-        ProductoModelo.objects.create(
+    def _crear_producto(self, *, slug: str, publicado: bool) -> ProductoModelo:
+        return ProductoModelo.objects.create(
             id=f"id-{slug}",
             sku=f"SKU-{slug}",
             slug=slug,
@@ -62,3 +63,34 @@ class PublicoProductoDetalleApiTests(TestCase):
         respuesta = self.client.get("/api/v1/herbal/productos/detalle-legacy/")
 
         self.assertEqual(respuesta.status_code, 404)
+
+
+    def test_detalle_producto_publicado_expone_disponibilidad_positiva(self):
+        producto = self._crear_producto(slug="detalle-stock-ok", publicado=True)
+        InventarioProductoModelo.objects.create(producto=producto, cantidad_disponible=5, umbral_bajo_stock=2)
+
+        respuesta = self.client.get("/api/v1/herbal/productos/detalle-stock-ok/")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.json()["producto"]["disponible"])
+        self.assertEqual(respuesta.json()["producto"]["estado_disponibilidad"], "disponible")
+
+    def test_detalle_producto_publicado_expone_no_disponible_con_stock_cero(self):
+        producto = self._crear_producto(slug="detalle-sin-stock", publicado=True)
+        InventarioProductoModelo.objects.create(producto=producto, cantidad_disponible=0, umbral_bajo_stock=2)
+
+        respuesta = self.client.get("/api/v1/herbal/productos/detalle-sin-stock/")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(respuesta.json()["producto"]["disponible"])
+        self.assertEqual(respuesta.json()["producto"]["estado_disponibilidad"], "no_disponible")
+
+    def test_detalle_producto_publicado_expone_bajo_stock_cuando_aplica(self):
+        producto = self._crear_producto(slug="detalle-bajo-stock", publicado=True)
+        InventarioProductoModelo.objects.create(producto=producto, cantidad_disponible=1, umbral_bajo_stock=2)
+
+        respuesta = self.client.get("/api/v1/herbal/productos/detalle-bajo-stock/")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.json()["producto"]["disponible"])
+        self.assertEqual(respuesta.json()["producto"]["estado_disponibilidad"], "bajo_stock")

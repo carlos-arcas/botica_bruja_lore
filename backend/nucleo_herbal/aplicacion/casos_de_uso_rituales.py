@@ -168,6 +168,8 @@ def _a_producto_resumen(producto: Producto) -> ProductoResumenDTO:
         formato_comercial=producto.formato_comercial,
         modo_uso=producto.modo_uso,
         categoria_visible=producto.categoria_visible,
+        disponible=False,
+        estado_disponibilidad="no_disponible",
     )
 
 

@@ -117,3 +117,13 @@ test("checkout real muestra detalle limpio cuando la API rechaza por stock", () 
   assert.equal(archivoFlujo.includes("Stock disponible:"), true);
   assert.equal(archivoFlujo.includes("linea.detalle"), true);
 });
+
+
+test("checkout real deja claro que la disponibilidad frontend es informativa y no reserva stock", () => {
+  const archivoAviso = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/AvisoDisponibilidadCheckoutReal.tsx"), "utf8");
+
+  assert.equal(archivoFlujo.includes("La disponibilidad visible en frontend es orientativa"), true);
+  assert.equal(archivoFlujo.includes("AvisoDisponibilidadCheckoutReal"), true);
+  assert.equal(archivoAviso.includes("backend sigue siendo la última línea de defensa"), true);
+  assert.equal(archivoAviso.includes("no existe reserva temporal"), true);
+});

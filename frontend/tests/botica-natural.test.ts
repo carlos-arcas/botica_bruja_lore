@@ -159,3 +159,16 @@ test("cards y ficha reutilizan next/image con fallback visual sin romper el layo
   assert.equal(imagen.includes('botica-natural__imagen--fallback'), true);
   assert.equal(imagen.includes("loader={({ src: origen }) => origen}"), true);
 });
+
+
+test("botica natural refleja disponibilidad mínima en card y ficha sin sobreprometer reserva", () => {
+  const tarjeta = leer("componentes/botica-natural/TarjetaProductoBoticaNatural.tsx");
+  const ficha = leer("componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx");
+  const estado = leer("componentes/catalogo/disponibilidad/EstadoDisponibilidadProducto.tsx");
+
+  assert.equal(tarjeta.includes("EstadoDisponibilidadProducto"), true);
+  assert.equal(tarjeta.includes('disabled={!producto.disponible}'), true);
+  assert.equal(ficha.includes("La disponibilidad pública es informativa"), true);
+  assert.equal(ficha.includes("No disponible para compra"), true);
+  assert.equal(estado.includes('"bajo_stock"'), true);
+});
