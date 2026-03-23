@@ -204,8 +204,12 @@ def construir_servicios_publicos_calendario_ritual() -> ServiciosPublicosCalenda
 
 def construir_servicios_publicos_pedidos() -> ServiciosPublicosPedidos:
     repositorio = RepositorioPedidosORM()
+    repositorio_cuentas = RepositorioCuentasClienteORM()
     return ServiciosPublicosPedidos(
-        registrar_pedido=RegistrarPedido(repositorio_pedidos=repositorio),
+        registrar_pedido=RegistrarPedido(
+            repositorio_pedidos=repositorio,
+            repositorio_cuentas_cliente=repositorio_cuentas,
+        ),
         obtener_pedido=ObtenerPedidoPorId(repositorio_pedidos=repositorio),
     )
 

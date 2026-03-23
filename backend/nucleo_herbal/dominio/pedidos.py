@@ -242,10 +242,11 @@ class DetallePedido:
 class PayloadPedido:
     canal_checkout: CanalCheckout
     cliente: ClientePedido
-    direccion_entrega: DireccionEntrega
+    direccion_entrega: DireccionEntrega | None
     lineas: tuple[LineaPedido, ...]
     notas_cliente: str = ""
     moneda: str = "EUR"
+    id_direccion_guardada: str | None = None
 
     def __post_init__(self) -> None:
         if self.canal_checkout not in CANALES_CHECKOUT_VALIDOS:
@@ -254,6 +255,12 @@ class PayloadPedido:
             raise ErrorDominio("El payload requiere al menos una línea.")
         if not self.moneda.strip():
             raise ErrorDominio("El payload requiere moneda.")
+        tiene_manual = self.direccion_entrega is not None
+        tiene_guardada = _hay_texto(self.id_direccion_guardada)
+        if tiene_manual == tiene_guardada:
+            raise ErrorDominio("Debes indicar exactamente una fuente de dirección: 'direccion_entrega' o 'id_direccion_guardada'.")
+        if self.cliente.es_invitado and tiene_guardada:
+            raise ErrorDominio("Solo un cliente autenticado puede usar 'id_direccion_guardada'.")
 
 
 

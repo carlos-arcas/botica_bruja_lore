@@ -716,4 +716,4 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. una cuenta mantiene como máximo una dirección predeterminada activa;
   2. la primera dirección creada queda predeterminada automáticamente;
   3. si se elimina la predeterminada y quedan alternativas, se reasigna de forma determinista;
-  4. la libreta queda alineada con el contrato futuro de `DireccionEntrega` sin integrarse todavía en checkout.
+  4. la libreta queda alineada con el contrato futuro de `DireccionEntrega` y ya se integra en checkout real mediante snapshot histórico, sin referencia viva al pedido.

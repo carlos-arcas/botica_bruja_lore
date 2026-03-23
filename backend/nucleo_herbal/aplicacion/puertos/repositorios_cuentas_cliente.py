@@ -36,6 +36,10 @@ class RepositorioCuentasCliente(ABC):
         """Lista la libreta de direcciones de una cuenta."""
 
     @abstractmethod
+    def obtener_direccion_por_id(self, *, id_direccion: str) -> DireccionCuentaCliente | None:
+        """Obtiene una dirección por identificador para validaciones de checkout."""
+
+    @abstractmethod
     def crear_direccion(self, *, id_usuario: str, comando: ComandoDireccionCuentaCliente) -> DireccionCuentaCliente:
         """Crea una dirección para la cuenta."""
 
