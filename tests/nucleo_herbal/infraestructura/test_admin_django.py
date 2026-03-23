@@ -18,6 +18,7 @@ try:
     from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
         CuentaDemoModelo,
         IntencionModelo,
+        InventarioProductoModelo,
         LineaPedidoModelo,
         PedidoDemoModelo,
         PlantaModelo,
@@ -39,6 +40,19 @@ class TestAdminNucleoHerbal(TestCase):
             username="admin",
             email="admin@botica.dev",
             password="demo-admin",
+        )
+        cls.inventario = InventarioProductoModelo.objects.create(
+            producto=ProductoModelo.objects.create(
+                id="prod-admin-1",
+                sku="INV-001",
+                slug="producto-inventario-admin",
+                nombre="Producto inventario admin",
+                tipo_producto="herramientas-rituales",
+                categoria_comercial="botica",
+                publicado=True,
+            ),
+            cantidad_disponible=2,
+            umbral_bajo_stock=3,
         )
         cls.pedido = PedidoDemoModelo.objects.create(
             id_pedido="PD-ADMIN-0001",
@@ -63,6 +77,7 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertTrue(admin.site.is_registered(ProductoModelo))
         self.assertTrue(admin.site.is_registered(RitualModelo))
         self.assertTrue(admin.site.is_registered(PedidoDemoModelo))
+        self.assertTrue(admin.site.is_registered(InventarioProductoModelo))
 
     def test_superusuario_puede_abrir_index_admin(self) -> None:
         self.client.force_login(self.superusuario)
@@ -79,6 +94,7 @@ class TestAdminNucleoHerbal(TestCase):
             reverse("admin:persistencia_django_intencionmodelo_changelist"),
             reverse("admin:persistencia_django_plantamodelo_changelist"),
             reverse("admin:persistencia_django_productomodelo_changelist"),
+            reverse("admin:persistencia_django_inventarioproductomodelo_changelist"),
             reverse("admin:persistencia_django_pedidodemomodelo_changelist"),
         ]
 
@@ -141,3 +157,15 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertEqual(respuesta_post.status_code, 302)
         self.pedido.refresh_from_db()
         self.assertEqual(self.pedido.estado, "confirmado")
+
+    def test_changelist_inventario_permita_busqueda_y_filtro_visual_bajo_stock(self) -> None:
+        self.client.force_login(self.superusuario)
+
+        response = self.client.get(
+            reverse("admin:persistencia_django_inventarioproductomodelo_changelist"),
+            {"q": "INV-001"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Producto inventario admin")
+        self.assertContains(response, "icon-yes.svg")

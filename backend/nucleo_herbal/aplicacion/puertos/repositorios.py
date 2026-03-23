@@ -23,6 +23,10 @@ class RepositorioPlantas(ABC):
 
 class RepositorioProductos(ABC):
     @abstractmethod
+    def obtener_por_id(self, id_producto: str) -> Producto | None:
+        """Recupera un producto por identificador interno para usos operativos."""
+
+    @abstractmethod
     def listar_herbales_por_planta(self, id_planta: str) -> tuple[Producto, ...]:
         """Devuelve resolución comercial mínima asociada a una planta."""
 
