@@ -2,29 +2,29 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 import { confirmarVerificacionEmail } from "@/infraestructura/api/cuentasCliente";
 import { resolverMensajeConfirmacion, ResultadoConfirmacionToken } from "@/contenido/cuenta_cliente/verificacionEmail";
 import { RUTAS_CUENTA_CLIENTE } from "@/contenido/cuenta_cliente/rutasCuentaCliente";
 
-export function PantallaVerificarEmail(): JSX.Element {
-  const searchParams = useSearchParams();
+type Props = { token?: string | null };
+
+export function PantallaVerificarEmail({ token = null }: Props): JSX.Element {
   const [estado, setEstado] = useState<ResultadoConfirmacionToken>("error");
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    const token = searchParams.get("token")?.trim() ?? "";
-    if (!token) {
+    const tokenNormalizado = token?.trim() ?? "";
+    if (!tokenNormalizado) {
       setEstado("token_invalido");
       setCargando(false);
       return;
     }
-    void confirmar(token);
-  }, [searchParams]);
+    void confirmar(tokenNormalizado);
+  }, [token]);
 
-  const confirmar = async (token: string): Promise<void> => {
-    const resultado = await confirmarVerificacionEmail({ token });
+  const confirmar = async (tokenConfirmacion: string): Promise<void> => {
+    const resultado = await confirmarVerificacionEmail({ token: tokenConfirmacion });
     if (resultado.estado === "ok") {
       setEstado("exito");
       setCargando(false);

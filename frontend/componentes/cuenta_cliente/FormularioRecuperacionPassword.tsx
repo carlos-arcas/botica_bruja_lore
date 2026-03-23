@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { RUTAS_CUENTA_CLIENTE } from "@/contenido/cuenta_cliente/rutasCuentaCliente";
@@ -12,9 +11,10 @@ import {
 } from "@/contenido/cuenta_cliente/recuperacionPassword";
 import { confirmarRecuperacionPassword, solicitarRecuperacionPassword } from "@/infraestructura/api/cuentasCliente";
 
-export function FormularioRecuperacionPassword(): JSX.Element {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token") ?? "";
+type Props = { token?: string | null };
+
+export function FormularioRecuperacionPassword({ token = "" }: Props): JSX.Element {
+  const tokenRecuperacion = token ?? "";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmacion, setConfirmacion] = useState("");
@@ -37,7 +37,7 @@ export function FormularioRecuperacionPassword(): JSX.Element {
       return;
     }
     setEstado("cargando");
-    const resultado = await confirmarRecuperacionPassword({ token, password });
+    const resultado = await confirmarRecuperacionPassword({ token: tokenRecuperacion, password });
     if (resultado.estado === "error") {
       setEstado("reposo");
       setMensaje(resolverMensajeEstadoRecuperacion(resolverEstadoRecuperacionPorCodigo(resultado.codigo)) || resultado.mensaje);
@@ -52,9 +52,9 @@ export function FormularioRecuperacionPassword(): JSX.Element {
   return (
     <section className="bloque-home">
       <p>Cuenta real v1.1 · recuperación de contraseña</p>
-      <h1>{token ? "Crear nueva contraseña" : "Recuperar contraseña"}</h1>
+      <h1>{tokenRecuperacion ? "Crear nueva contraseña" : "Recuperar contraseña"}</h1>
       <p>{mensaje}</p>
-      {token ? (
+      {tokenRecuperacion ? (
         <form onSubmit={confirmar} style={{ display: "grid", gap: 12, maxWidth: 480 }}>
           <label>
             Nueva contraseña

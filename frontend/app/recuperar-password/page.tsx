@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { FormularioRecuperacionPassword } from "@/componentes/cuenta_cliente/FormularioRecuperacionPassword";
+import { FormularioRecuperacionPasswordSearchParams } from "@/componentes/cuenta_cliente/FormularioRecuperacionPasswordSearchParams";
 
 export const metadata: Metadata = {
   title: "Recuperar contraseña | La Botica de la Bruja Lore",
@@ -8,5 +9,11 @@ export const metadata: Metadata = {
 };
 
 export default function PaginaRecuperarPassword(): JSX.Element {
-  return <main className="contenedor-home"><FormularioRecuperacionPassword /></main>;
+  return (
+    <main className="contenedor-home">
+      <Suspense fallback={<section className="bloque-home"><p>Cargando recuperación de contraseña...</p></section>}>
+        <FormularioRecuperacionPasswordSearchParams />
+      </Suspense>
+    </main>
+  );
 }
