@@ -20,7 +20,7 @@ def construir_payload_pedido(payload: dict) -> PayloadPedido:
         telefono_contacto=_texto(payload, "telefono_contacto"),
         es_invitado=canal_checkout == "web_invitado",
     )
-    direccion = _construir_direccion(_objeto(payload, "direccion_entrega"))
+    direccion = _construir_direccion_opcional(payload)
     lineas = _construir_lineas(payload, moneda)
     return PayloadPedido(
         canal_checkout=canal_checkout,
@@ -29,7 +29,14 @@ def construir_payload_pedido(payload: dict) -> PayloadPedido:
         lineas=lineas,
         notas_cliente=_texto_opcional(payload, "notas_cliente") or "",
         moneda=moneda,
+        id_direccion_guardada=_texto_opcional(payload, "id_direccion_guardada"),
     )
+
+
+def _construir_direccion_opcional(payload: dict) -> DireccionEntrega | None:
+    if "direccion_entrega" not in payload or payload.get("direccion_entrega") is None:
+        return None
+    return _construir_direccion(_objeto(payload, "direccion_entrega"))
 
 
 def _construir_direccion(payload: dict) -> DireccionEntrega:

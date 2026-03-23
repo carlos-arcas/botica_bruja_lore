@@ -170,4 +170,6 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Rutas activas: `GET|POST /api/v1/cuenta/direcciones/`, `PUT|DELETE /api/v1/cuenta/direcciones/{id}/`, `POST /api/v1/cuenta/direcciones/{id}/predeterminada/`.
 - Regla operativa: una sola predeterminada por cuenta; primera alta automática; reasignación determinista al borrar la predeterminada.
 - Frontend activo: `/mi-cuenta/direcciones` desde la navegación de cuenta real.
-- Fuera de alcance preservado: checkout real todavía no consume direcciones guardadas; el siguiente bloque podrá conectarlo sin reescritura grande.
+- Integración activa en checkout real: `POST /api/v1/pedidos/` acepta exactamente una fuente de dirección (`direccion_entrega` manual o `id_direccion_guardada` autenticada), resuelve la libreta en backend y persiste snapshot limpio en `Pedido`.
+- UX activa en `/checkout`: si la sesión real tiene direcciones, se preselecciona la predeterminada, se puede alternar entre direcciones guardadas y modo manual, y el invitado conserva el flujo manual sin contaminación.
+- Regla histórica preservada: el pedido nunca queda enlazado en vivo a la libreta; editar o borrar después una dirección no muta pedidos ya creados.

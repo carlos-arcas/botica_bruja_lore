@@ -80,3 +80,22 @@
   margin: 0;
   color: #6d5a64;
 }
+
+.estadoCuenta {
+  margin: 0;
+  color: #6d5a64;
+}
+
+.bloqueDireccionesGuardadas,
+.listaDireccionesGuardadas,
+.modosDireccion {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tarjetaDireccionGuardada {
+  border: 1px solid rgba(109, 90, 100, 0.2);
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: rgba(255, 251, 245, 0.86);
+}

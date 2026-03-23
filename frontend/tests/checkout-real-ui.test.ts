@@ -9,6 +9,8 @@ const archivoRecibo = readFileSync(join(process.cwd(), "componentes/catalogo/che
 const archivoCompartido = readFileSync(join(process.cwd(), "componentes/catalogo/seleccion/ListaLineasSeleccion.tsx"), "utf8");
 const archivoAdaptador = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal.ts"), "utf8");
 const archivoBloqueSeleccion = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/BloquePedidoSeleccionMultiple.tsx"), "utf8");
+const archivoSelectorDireccion = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/SelectorDireccionCheckoutReal.tsx"), "utf8");
+const archivoDireccionesCheckout = readFileSync(join(process.cwd(), "contenido/catalogo/checkoutRealDirecciones.ts"), "utf8");
 const archivoNavegacion = readFileSync(join(process.cwd(), "contenido/catalogo/checkoutRealNavegacion.ts"), "utf8");
 
 
@@ -53,7 +55,7 @@ test("checkout real desactiva el CTA engañoso de pedido real cuando el flujo es
 });
 
 test("checkout real separa el modo múltiple del selector único heredado", () => {
-  assert.equal(archivoFlujo.includes('modoCheckout === "producto_unico" ? ('), true);
+  assert.equal(archivoFlujo.includes('modoCheckout === "producto_unico" ? <BloquePedidoProductoUnico'), true);
   assert.equal(archivoFlujo.includes("BloquePedidoSeleccionMultiple"), true);
   assert.equal(archivoBloqueSeleccion.includes("este modo no usa un selector único heredado"), true);
 });
@@ -86,4 +88,26 @@ test("checkout real reutiliza el patrón compartido mediante un adaptador fino e
   assert.equal(archivoAdaptador.includes("Línea bloqueada fuera del pedido real"), true);
   assert.equal(/<ul>\s*\{lineasConvertibles/.test(archivoFlujo), false);
   assert.equal(/<li[^>]*>\s*\{linea\.cantidad\}/.test(archivoFlujo), false);
+});
+
+
+test("checkout real autenticado muestra selector de direcciones guardadas y fallback manual", () => {
+  assert.equal(archivoFlujo.includes("SelectorDireccionCheckoutReal"), true);
+  assert.equal(archivoFlujo.includes("obtenerSesionCuentaCliente"), true);
+  assert.equal(archivoFlujo.includes("obtenerDireccionesCuentaCliente"), true);
+  assert.equal(archivoSelectorDireccion.includes("Usar dirección guardada"), true);
+  assert.equal(archivoSelectorDireccion.includes("Introducir dirección manual"), true);
+  assert.equal(archivoSelectorDireccion.includes("/mi-cuenta/direcciones"), true);
+});
+
+test("checkout real precarga la dirección predeterminada cuando existe", () => {
+  assert.equal(archivoFlujo.includes("resolverDireccionPredeterminadaCheckoutReal"), true);
+  assert.equal(archivoDireccionesCheckout.includes("direccion.predeterminada"), true);
+  assert.equal(archivoDireccionesCheckout.includes("aplicarDireccionGuardadaADatosCheckoutReal"), true);
+});
+
+test("checkout real no expone bloque de libreta al invitado y mantiene modo manual", () => {
+  assert.equal(archivoFlujo.includes('datos.canal_checkout === "web_autenticado"'), true);
+  assert.equal(archivoFlujo.includes('modo_direccion: "manual"'), true);
+  assert.equal(archivoFlujo.includes("Checkout como invitada"), true);
 });

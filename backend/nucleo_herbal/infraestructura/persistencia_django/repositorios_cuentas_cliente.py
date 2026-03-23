@@ -67,6 +67,14 @@ class RepositorioCuentasClienteORM(RepositorioCuentasCliente):
             for modelo in self._query_direcciones(id_usuario)
         )
 
+    def obtener_direccion_por_id(self, *, id_direccion: str) -> DireccionCuentaCliente | None:
+        modelo = (
+            DireccionCuentaClienteModelo.objects.select_related("cuenta", "cuenta__usuario")
+            .filter(id=id_direccion.strip())
+            .first()
+        )
+        return None if modelo is None else a_direccion_cuenta_cliente(modelo)
+
     @transaction.atomic
     def crear_direccion(self, *, id_usuario: str, comando: ComandoDireccionCuentaCliente) -> DireccionCuentaCliente:
         cuenta = self._obtener_cuenta_modelo(id_usuario)

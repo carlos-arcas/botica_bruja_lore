@@ -10,6 +10,10 @@ import {
   validarCheckoutReal,
 } from "../contenido/catalogo/checkoutReal";
 import {
+  aplicarDireccionGuardadaADatosCheckoutReal,
+  resolverDireccionPredeterminadaCheckoutReal,
+} from "../contenido/catalogo/checkoutRealDirecciones";
+import {
   construirRutaConsultaManualCheckoutReal,
   construirRutaRevisionSeleccionCheckoutReal,
 } from "../contenido/catalogo/checkoutRealNavegacion";
@@ -596,4 +600,69 @@ test("regresión: selección totalmente convertible mantiene el CTA real como sa
 
 test("volver a Mi selección desde checkout real usa la ruta visible de la selección", () => {
   assert.equal(construirRutaRevisionSeleccionCheckoutReal([]), "/cesta");
+});
+
+
+test("checkout real autenticado prioriza id_direccion_guardada cuando la selección usa libreta", () => {
+  const lineas = construirLineasPedidoReal([], "vela-intencion-clara", "1");
+  const payload = construirPayloadPedidoReal(
+    {
+      ...construirDatosBaseCheckoutReal(),
+      canal_checkout: "web_autenticado",
+      id_usuario: "usr-1",
+      modo_direccion: "guardada",
+      id_direccion_guardada: "dir-123",
+    },
+    lineas,
+  );
+
+  assert.equal(payload.id_direccion_guardada, "dir-123");
+  assert.equal(payload.direccion_entrega, undefined);
+  assert.equal(payload.id_usuario, "usr-1");
+});
+
+test("checkout real permite fallback a dirección manual en cuenta autenticada", () => {
+  const lineas = construirLineasPedidoReal([], "vela-intencion-clara", "1");
+  const payload = construirPayloadPedidoReal(
+    {
+      ...construirDatosBaseCheckoutReal(),
+      canal_checkout: "web_autenticado",
+      id_usuario: "usr-1",
+      modo_direccion: "manual",
+      id_direccion_guardada: "",
+    },
+    lineas,
+  );
+
+  assert.equal(payload.id_direccion_guardada, undefined);
+  assert.equal(payload.direccion_entrega?.linea_1, "Calle Luna 1");
+});
+
+test("checkout real exige seleccionar dirección guardada cuando ese modo está activo", () => {
+  const errores = validarCheckoutReal(
+    {
+      ...construirDatosBaseCheckoutReal(),
+      canal_checkout: "web_autenticado",
+      id_usuario: "usr-1",
+      modo_direccion: "guardada",
+      id_direccion_guardada: "",
+    },
+    construirLineasPedidoReal([], "vela-intencion-clara", "1"),
+  );
+
+  assert.equal(errores.id_direccion_guardada, "Selecciona una dirección guardada.");
+  assert.equal(errores.nombre_destinatario, undefined);
+});
+
+test("checkout real resuelve y aplica la dirección predeterminada de la libreta", () => {
+  const predeterminada = resolverDireccionPredeterminadaCheckoutReal([
+    { id_direccion: "dir-1", alias: "Trabajo", nombre_destinatario: "Lore", telefono_contacto: "600", linea_1: "Calle Sol 7", linea_2: "", codigo_postal: "28002", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", predeterminada: false, fecha_creacion: "", fecha_actualizacion: "" },
+    { id_direccion: "dir-2", alias: "Casa", nombre_destinatario: "Lore", telefono_contacto: "600", linea_1: "Calle Luna 13", linea_2: "", codigo_postal: "28013", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", predeterminada: true, fecha_creacion: "", fecha_actualizacion: "" },
+  ]);
+  const datos = aplicarDireccionGuardadaADatosCheckoutReal(construirEstadoInicialCheckoutReal(), predeterminada);
+
+  assert.equal(predeterminada?.id_direccion, "dir-2");
+  assert.equal(datos.modo_direccion, "guardada");
+  assert.equal(datos.id_direccion_guardada, "dir-2");
+  assert.equal(datos.linea_1, "Calle Luna 13");
 });

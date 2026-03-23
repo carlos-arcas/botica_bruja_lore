@@ -7,9 +7,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from ..dominio.pedidos import PayloadPedido, Pedido
+from ..dominio.cuentas_cliente import DireccionCuentaCliente
+from ..dominio.excepciones import ErrorDominio
+from ..dominio.pedidos import DireccionEntrega, PayloadPedido, Pedido
 from .casos_de_uso import ErrorAplicacionLookup
 from .dto_pedidos import ClientePedidoDTO, DireccionEntregaDTO, ExpedicionPedidoDTO, LineaPedidoRealDTO, PedidoRealDTO
+from .puertos.repositorios_cuentas_cliente import RepositorioCuentasCliente
 from .puertos.repositorios_pedidos import RepositorioPedidos
 
 logger = logging.getLogger(__name__)
@@ -18,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass(slots=True)
 class RegistrarPedido:
     repositorio_pedidos: RepositorioPedidos
+    repositorio_cuentas_cliente: RepositorioCuentasCliente
 
     def ejecutar(self, payload: PayloadPedido, operation_id: str) -> PedidoRealDTO:
         pedido = Pedido(
@@ -27,7 +31,7 @@ class RegistrarPedido:
             canal_checkout=payload.canal_checkout,
             cliente=payload.cliente,
             lineas=payload.lineas,
-            direccion_entrega=payload.direccion_entrega,
+            direccion_entrega=self._resolver_direccion_entrega(payload, operation_id),
             notas_cliente=payload.notas_cliente,
             moneda=payload.moneda,
         )
@@ -35,6 +39,35 @@ class RegistrarPedido:
         persistido = self.repositorio_pedidos.guardar(pedido)
         logger.info("pedido_real_registrado", extra=_extra_log(operation_id, persistido))
         return _a_dto(persistido)
+
+    def _resolver_direccion_entrega(self, payload: PayloadPedido, operation_id: str) -> DireccionEntrega:
+        if payload.direccion_entrega is not None:
+            logger.info(
+                "pedido_real_direccion_manual",
+                extra=_extra_direccion(operation_id, payload, resultado="ok"),
+            )
+            return payload.direccion_entrega
+
+        direccion_guardada = self.repositorio_cuentas_cliente.obtener_direccion_por_id(
+            id_direccion=payload.id_direccion_guardada or "",
+        )
+        if direccion_guardada is None:
+            logger.warning(
+                "pedido_real_direccion_guardada_no_encontrada",
+                extra=_extra_direccion(operation_id, payload, resultado="error"),
+            )
+            raise ErrorDominio("La dirección guardada indicada no existe.")
+        if direccion_guardada.id_usuario != payload.cliente.id_cliente:
+            logger.warning(
+                "pedido_real_direccion_guardada_ajena",
+                extra=_extra_direccion(operation_id, payload, resultado="error", direccion=direccion_guardada),
+            )
+            raise ErrorDominio("La dirección guardada no pertenece al cliente autenticado.")
+        logger.info(
+            "pedido_real_direccion_guardada_resuelta",
+            extra=_extra_direccion(operation_id, payload, resultado="ok", direccion=direccion_guardada),
+        )
+        return DireccionEntrega(**direccion_guardada.a_direccion_entrega())
 
 
 @dataclass(slots=True)
@@ -120,4 +153,23 @@ def _extra_log(operation_id: str, pedido: Pedido) -> dict[str, object]:
         "subtotal": str(pedido.subtotal),
         "estado_inicial": pedido.estado,
         "id_pedido": pedido.id_pedido,
+    }
+
+
+def _extra_direccion(
+    operation_id: str,
+    payload: PayloadPedido,
+    *,
+    resultado: str,
+    direccion: DireccionCuentaCliente | None = None,
+) -> dict[str, object]:
+    return {
+        "operation_id": operation_id,
+        "flujo": "checkout_real_v1",
+        "resultado": resultado,
+        "usuario_id": payload.cliente.id_cliente,
+        "canal_checkout": payload.canal_checkout,
+        "direccion_fuente": "guardada" if payload.id_direccion_guardada else "manual",
+        "id_direccion_guardada": payload.id_direccion_guardada,
+        "direccion_predeterminada": None if direccion is None else direccion.predeterminada,
     }
