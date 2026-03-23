@@ -172,3 +172,12 @@ test("botica natural refleja disponibilidad mínima en card y ficha sin sobrepro
   assert.equal(ficha.includes("No disponible para compra"), true);
   assert.equal(estado.includes('"bajo_stock"'), true);
 });
+
+
+test("estado de disponibilidad cubre disponible, bajo stock y no disponible con copy sobrio", () => {
+  const estado = leer("componentes/catalogo/disponibilidad/EstadoDisponibilidadProducto.tsx");
+
+  assert.equal(estado.includes("Disponible para compra en este momento."), true);
+  assert.equal(estado.includes("Disponibilidad limitada."), true);
+  assert.equal(estado.includes("Ahora mismo no está disponible para compra."), true);
+});

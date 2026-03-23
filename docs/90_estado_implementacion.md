@@ -742,4 +742,4 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   3. `python manage.py check`;
   4. `python scripts/check_release_gate.py` **falló** por deuda preexistente de frontend en páginas con `useSearchParams()` sin `Suspense` (`/mi-cuenta`, `/mi-cuenta/pedidos`, `/recuperar-password`, `/verificar-email`).
 
-- Prompt 08: exposición pública mínima de disponibilidad de stock conectada al inventario real en APIs públicas de producto, ficha Botica Natural y aviso informativo en checkout real; sin reservas, decremento automático ni promesa de stock duro.
+- Prompt 08: **DONE** para exposición pública mínima de disponibilidad de stock conectada al inventario real en APIs públicas de producto, ficha Botica Natural, productos relacionados de ritual y aviso informativo en checkout real; sin reservas, decremento automático ni promesa de stock duro.

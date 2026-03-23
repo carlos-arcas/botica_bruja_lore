@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from ..dominio.entidades import Intencion, Planta, Producto
 from ..dominio.inventario import InventarioProducto
+from .disponibilidad_publica import resolver_disponibilidad_publica
 from .dto import (
     IntencionDTO,
     PlantaDetalleDTO,
@@ -119,6 +120,7 @@ def _a_planta_detalle(planta: Planta) -> PlantaDetalleDTO:
 
 
 def _a_producto_resumen(producto: Producto, inventario: InventarioProducto | None) -> ProductoResumenDTO:
+    disponibilidad = resolver_disponibilidad_publica(inventario)
     return ProductoResumenDTO(
         sku=producto.sku,
         slug=producto.slug,
@@ -134,8 +136,8 @@ def _a_producto_resumen(producto: Producto, inventario: InventarioProducto | Non
         formato_comercial=producto.formato_comercial,
         modo_uso=producto.modo_uso,
         categoria_visible=producto.categoria_visible,
-        disponible=_es_producto_disponible(inventario),
-        estado_disponibilidad=_estado_disponibilidad(inventario),
+        disponible=disponibilidad.disponible,
+        estado_disponibilidad=disponibilidad.estado_disponibilidad,
     )
 
 
@@ -143,13 +145,3 @@ def _a_intencion_dto(intencion: Intencion) -> IntencionDTO:
     return IntencionDTO(slug=intencion.slug, nombre=intencion.nombre)
 
 
-def _es_producto_disponible(inventario: InventarioProducto | None) -> bool:
-    return inventario is not None and inventario.cantidad_disponible > 0
-
-
-def _estado_disponibilidad(inventario: InventarioProducto | None) -> str:
-    if inventario is None or inventario.cantidad_disponible <= 0:
-        return "no_disponible"
-    if inventario.bajo_stock:
-        return "bajo_stock"
-    return "disponible"

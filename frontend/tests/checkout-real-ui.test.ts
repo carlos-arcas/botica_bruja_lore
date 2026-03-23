@@ -126,4 +126,6 @@ test("checkout real deja claro que la disponibilidad frontend es informativa y n
   assert.equal(archivoFlujo.includes("AvisoDisponibilidadCheckoutReal"), true);
   assert.equal(archivoAviso.includes("backend sigue siendo la última línea de defensa"), true);
   assert.equal(archivoAviso.includes("no existe reserva temporal"), true);
+  assert.equal(archivoAviso.includes("Comprobando disponibilidad pública mínima"), true);
+  assert.equal(archivoAviso.includes("sin_cobertura"), true);
 });

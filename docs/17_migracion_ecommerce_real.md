@@ -189,10 +189,13 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - si un producto no tiene inventario registrado, el pedido se rechaza como no disponible;
   - si la cantidad solicitada supera el disponible, el pedido se rechaza completo con contrato JSON estable (`codigo=stock_no_disponible` + detalle por línea);
   - el checkout real ya refleja este rechazo sin introducir todavía reservas ni decrementos automáticos.
+- Actualización pública mínima activa:
+  - la exposición pública mínima ya reutiliza la fuente real de inventario para `disponible` y `estado_disponibilidad`;
+  - los endpoints de producto por planta, detalle público de producto y productos relacionados desde ritual informan disponibilidad honesta sin cantidades exactas;
+  - Botica Natural y el checkout real consumen ese contrato como señal informativa previa, dejando explícito que no existe reserva temporal.
 - Fuera de alcance preservado:
   - sin descuento automático por pedido o pago;
-  - sin reservas transaccionales ni exposición pública completa del stock.
-- Siguiente bloque recomendado:
-  - conectar exposición pública mínima del stock y futuras transiciones operativas (reservas/decrementos) sin romper esta fuente única de verdad.
+  - sin reservas transaccionales;
+  - sin fechas de reposición, alertas al cliente ni logística avanzada.
 
-- Prompt 08: exposición pública mínima de disponibilidad de stock conectada al inventario real en APIs públicas de producto, ficha Botica Natural y aviso informativo en checkout real; sin reservas, decremento automático ni promesa de stock duro.
+- Prompt 08: **DONE** para exposición pública mínima de disponibilidad de stock conectada al inventario real en APIs públicas de producto, ficha Botica Natural, productos relacionados de ritual y aviso informativo en checkout real; sin reservas, decremento automático ni promesa de stock duro.
