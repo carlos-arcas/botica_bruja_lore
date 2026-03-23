@@ -17,6 +17,10 @@ class RepositorioPedidos(ABC):
         """Recupera un pedido real por identificador."""
 
     @abstractmethod
+    def obtener_por_id_para_actualizar(self, id_pedido: str) -> Pedido | None:
+        """Recupera un pedido real bloqueando la fila para actualización transaccional."""
+
+    @abstractmethod
     def obtener_por_pago_externo(self, proveedor_pago: str, id_externo_pago: str) -> Pedido | None:
         """Recupera un pedido por referencia externa de pago."""
 

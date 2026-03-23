@@ -39,6 +39,12 @@ class RepositorioInventarioORM(RepositorioInventario):
             raise ErrorDominio("No existe inventario previo para el producto indicado.")
         return self._obtener_requerido(inventario.id_producto)
 
+    def obtener_para_actualizar_por_ids_producto(self, ids_producto: tuple[str, ...]) -> tuple[InventarioProducto, ...]:
+        if not ids_producto:
+            return ()
+        queryset = self._base_queryset().select_for_update().filter(producto_id__in=ids_producto)
+        return tuple(a_inventario(modelo) for modelo in queryset)
+
     def listar_operativo(self, *, solo_bajo_stock: bool = False) -> tuple[InventarioProducto, ...]:
         queryset = self._base_queryset()
         if solo_bajo_stock:

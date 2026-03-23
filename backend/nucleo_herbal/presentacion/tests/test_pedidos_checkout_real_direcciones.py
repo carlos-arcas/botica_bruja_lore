@@ -5,7 +5,8 @@ import json
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 
-from backend.nucleo_herbal.infraestructura.persistencia_django.models import CuentaClienteModelo, DireccionCuentaClienteModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import CuentaClienteModelo, DireccionCuentaClienteModelo, ProductoModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
 from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import PedidoRealModelo
 
 
@@ -43,6 +44,19 @@ class PedidoCheckoutRealDireccionesTests(TestCase):
             pais_iso="ES",
             predeterminada=True,
         )
+        self.producto = ProductoModelo.objects.create(
+            id="prod-1",
+            sku="sku-prod-1",
+            slug="vela-intencion-clara",
+            nombre="Vela Intención Clara",
+            tipo_producto="ritual",
+            categoria_comercial="velas",
+            descripcion_corta="",
+            precio_visible="9.90 €",
+            precio_numerico="9.90",
+            publicado=True,
+        )
+        InventarioProductoModelo.objects.create(producto=self.producto, cantidad_disponible=12)
 
     def _payload_base(self) -> dict:
         return {

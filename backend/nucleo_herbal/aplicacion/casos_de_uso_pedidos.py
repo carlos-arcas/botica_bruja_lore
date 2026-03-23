@@ -148,6 +148,8 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
         id_externo_pago=pedido.id_externo_pago,
         url_pago=pedido.url_pago,
         requiere_revision_manual=pedido.requiere_revision_manual,
+        inventario_descontado=pedido.inventario_descontado,
+        incidencia_stock_confirmacion=pedido.incidencia_stock_confirmacion,
         email_post_pago_enviado=pedido.email_post_pago_enviado,
         cliente=ClientePedidoDTO(
             email=pedido.cliente.email,
