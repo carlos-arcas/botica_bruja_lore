@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import {
   CuentaCliente,
@@ -21,22 +21,23 @@ import {
 } from "@/contenido/cuenta_cliente/verificacionEmail";
 import { RUTAS_CUENTA_CLIENTE } from "@/contenido/cuenta_cliente/rutasCuentaCliente";
 
-type Props = { vista: "resumen" | "pedidos" };
+type Props = {
+  vista: "resumen" | "pedidos";
+  mensajeAlta?: string | null;
+};
 
-export function PanelCuentaCliente({ vista }: Props): JSX.Element {
+export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.Element {
   const [cuenta, setCuenta] = useState<CuentaCliente | null>(null);
   const [verificacion, setVerificacion] = useState<EstadoVerificacionEmail | null>(null);
   const [pedidos, setPedidos] = useState<PedidoCuentaCliente[]>([]);
   const [mensaje, setMensaje] = useState("Cargando cuenta real...");
-  const [mensajeVerificacion, setMensajeVerificacion] = useState("");
+  const [mensajeVerificacion, setMensajeVerificacion] = useState(mensajeAlta ?? "");
   const [reenviando, setReenviando] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const mensajeAlta = searchParams.get("mensaje");
-    if (mensajeAlta) setMensajeVerificacion(mensajeAlta);
-  }, [searchParams]);
+    setMensajeVerificacion(mensajeAlta ?? "");
+  }, [mensajeAlta]);
 
   const cargar = useCallback(async (): Promise<void> => {
     const sesion = await obtenerSesionCuentaCliente();
