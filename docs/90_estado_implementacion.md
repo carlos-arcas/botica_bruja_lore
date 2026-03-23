@@ -730,9 +730,11 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. un producto vendible puede tener como máximo un inventario asociado;
   2. la cantidad disponible nunca puede quedar en negativo;
   3. el ajuste manual de stock ya es operable en backend/admin;
-  4. `bajo_stock` queda disponible como señal operativa mínima por umbral opcional.
+  4. `bajo_stock` queda disponible como señal operativa mínima por umbral opcional;
+  5. el checkout real valida stock antes de persistir `Pedido` y rechaza completo cualquier línea sin inventario o con cantidad insuficiente;
+  6. el rechazo de stock sale con contrato JSON estable (`codigo=stock_no_disponible` + detalle por línea) y ya se refleja en el frontend de checkout real.
 - Fuera de alcance preservado:
-  - checkout y catálogo público no consumen todavía esta capacidad;
+  - el catálogo público sigue sin exponer badges de stock;
   - no existe reserva, decremento automático, multi-almacén ni movimientos complejos.
 - Quality gate ejecutado para este incremento:
   1. `pytest -q tests/nucleo_herbal/test_entidades_inventario.py tests/nucleo_herbal/test_casos_de_uso_inventario.py`;

@@ -9,11 +9,12 @@ from uuid import uuid4
 from django.http import HttpRequest, JsonResponse
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
+from ...aplicacion.errores_pedidos import ErrorStockPedido
 from ...dominio.excepciones import ErrorDominio
 from .dependencias import construir_servicios_publicos_pedidos
 from .payload_pedidos import construir_payload_pedido
 from .pedidos_serializadores import serializar_pedido
-from .respuestas_json import json_no_encontrado, json_validacion
+from .respuestas_json import json_conflicto, json_no_encontrado, json_validacion
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,13 @@ def crear_pedido(request: HttpRequest) -> JsonResponse:
         pedido = construir_servicios_publicos_pedidos().registrar_pedido.ejecutar(
             pedido_payload,
             operation_id=operation_id,
+        )
+    except ErrorStockPedido as error_stock:
+        _log_error(operation_id, payload.get("canal_checkout"), payload.get("email_contacto"), error_stock)
+        return json_conflicto(
+            error_stock.detalle,
+            codigo=error_stock.codigo,
+            lineas=[linea.a_payload() for linea in error_stock.lineas],
         )
     except ErrorDominio as error_dominio:
         _log_error(operation_id, payload.get("canal_checkout"), payload.get("email_contacto"), error_dominio)

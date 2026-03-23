@@ -7,6 +7,8 @@ from unittest.mock import patch
 from django.core import mail
 from django.test import TestCase, override_settings
 
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
 from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import EventoWebhookPagoModelo, PedidoRealModelo
 
 
@@ -19,6 +21,18 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos im
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
 )
 class TestApiPagoReal(TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        ProductoModelo.objects.create(
+            id="prod-1",
+            sku="SKU-PROD-1",
+            slug="tarot-bosque-interior",
+            nombre="Tarot bosque interior",
+            tipo_producto="tarot",
+            categoria_comercial="oraculos",
+        )
+        InventarioProductoModelo.objects.create(producto_id="prod-1", cantidad_disponible=5)
+
     @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe._post")
     def test_inicia_pago_real_y_persiste_referencia_externa(self, post_stripe) -> None:
         post_stripe.return_value = {"id": "cs_test_123", "url": "https://checkout.stripe.test/cs_test_123"}

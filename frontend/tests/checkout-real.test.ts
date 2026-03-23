@@ -453,6 +453,45 @@ test("cliente API de pedidos reales usa la ruta nueva /api/v1/pedidos/", async (
   assert.equal(llamadas[0].endsWith("/api/pedidos"), true);
 });
 
+test("checkout real conserva codigo y detalle por línea cuando la API rechaza por stock", async () => {
+  globalThis.fetch = (async () =>
+    ({
+      ok: false,
+      json: async () => ({
+        detalle: "No pudimos crear el pedido porque una o más líneas no tienen stock disponible.",
+        codigo: "stock_no_disponible",
+        lineas: [
+          {
+            id_producto: "prod-1",
+            slug_producto: "vela",
+            nombre_producto: "Vela",
+            cantidad_solicitada: 2,
+            codigo: "stock_insuficiente",
+            detalle: "La cantidad solicitada supera el stock disponible en este momento.",
+            cantidad_disponible: 1,
+          },
+        ],
+      }),
+    }) as Response) as typeof fetch;
+
+  const resultado = await crearPedidoPublico({
+    email_contacto: "real@test.dev",
+    nombre_contacto: "Lore",
+    telefono_contacto: "600",
+    canal_checkout: "web_invitado",
+    direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES" },
+    lineas: [{ id_producto: "p1", slug_producto: "vela", nombre_producto: "Vela", cantidad: 1, precio_unitario: "9.90", moneda: "EUR" }],
+    moneda: "EUR",
+  });
+
+  assert.equal(resultado.estado, "error");
+  if (resultado.estado === "error") {
+    assert.equal(resultado.codigo, "stock_no_disponible");
+    assert.equal(resultado.lineas?.[0]?.codigo, "stock_insuficiente");
+    assert.equal(resultado.lineas?.[0]?.cantidad_disponible, 1);
+  }
+});
+
 test("frontend real consume la nueva API de pago", async () => {
   const llamadas: string[] = [];
   globalThis.fetch = (async (url: string) => {

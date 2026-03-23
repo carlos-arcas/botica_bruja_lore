@@ -4,6 +4,8 @@ import unittest
 try:
     from django.test import TestCase as DjangoTestCase
 
+    from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
+    from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
     from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import PedidoRealModelo
 
     DJANGO_DISPONIBLE = True
@@ -15,6 +17,10 @@ except ModuleNotFoundError:
 
 @unittest.skipUnless(DJANGO_DISPONIBLE, "Django no está instalado en el entorno local.")
 class TestApiPedidosReal(DjangoTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        _crear_producto_con_inventario()
+
     def test_crear_pedido_real_valido_persiste_y_nace_pendiente_pago(self) -> None:
         response = self.client.post(
             "/api/v1/pedidos/",
@@ -61,6 +67,58 @@ class TestApiPedidosReal(DjangoTestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["pedido"]["cliente"]["id_usuario"], None)
+
+    def test_rechaza_producto_sin_inventario_registrado(self) -> None:
+        InventarioProductoModelo.objects.filter(producto_id="prod-1").delete()
+
+        response = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()["codigo"], "stock_no_disponible")
+        self.assertEqual(response.json()["lineas"][0]["codigo"], "inventario_no_registrado")
+        self.assertFalse(PedidoRealModelo.objects.exists())
+
+    def test_rechaza_producto_con_stock_insuficiente(self) -> None:
+        inventario = InventarioProductoModelo.objects.get(producto_id="prod-1")
+        inventario.cantidad_disponible = 1
+        inventario.save(update_fields=["cantidad_disponible", "fecha_actualizacion"])
+
+        response = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()["codigo"], "stock_no_disponible")
+        self.assertEqual(response.json()["lineas"][0]["codigo"], "stock_insuficiente")
+        self.assertEqual(response.json()["lineas"][0]["cantidad_disponible"], 1)
+        self.assertFalse(PedidoRealModelo.objects.exists())
+
+    def test_rechaza_pedido_completo_si_una_linea_falla_stock(self) -> None:
+        ProductoModelo.objects.create(
+            id="prod-2",
+            sku="SKU-PROD-2",
+            slug="vela-intencion-clara",
+            nombre="Vela intención clara",
+            tipo_producto="ritual",
+            categoria_comercial="velas",
+        )
+        InventarioProductoModelo.objects.create(producto_id="prod-2", cantidad_disponible=0)
+        payload = _payload_base()
+        payload["lineas"].append(
+            {
+                "id_producto": "prod-2",
+                "slug_producto": "vela-intencion-clara",
+                "nombre_producto": "Vela intención clara",
+                "cantidad": 1,
+                "precio_unitario": "12.00",
+                "moneda": "EUR",
+            }
+        )
+
+        response = self.client.post("/api/v1/pedidos/", data=json.dumps(payload), content_type="application/json")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(len(response.json()["lineas"]), 1)
+        self.assertEqual(response.json()["lineas"][0]["id_producto"], "prod-2")
+        self.assertFalse(PedidoRealModelo.objects.exists())
 
     def test_flujo_demo_legacy_sigue_operativo(self) -> None:
         response = self.client.post(
@@ -115,3 +173,15 @@ def _payload_base() -> dict:
             }
         ],
     }
+
+
+def _crear_producto_con_inventario() -> None:
+    ProductoModelo.objects.create(
+        id="prod-1",
+        sku="SKU-PROD-1",
+        slug="tarot-bosque-interior",
+        nombre="Tarot bosque interior",
+        tipo_producto="tarot",
+        categoria_comercial="oraculos",
+    )
+    InventarioProductoModelo.objects.create(producto_id="prod-1", cantidad_disponible=5)

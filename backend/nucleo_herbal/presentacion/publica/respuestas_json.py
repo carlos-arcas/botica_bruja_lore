@@ -3,10 +3,11 @@
 from django.http import JsonResponse
 
 
-def json_error(detalle: str, status: int, codigo: str | None = None) -> JsonResponse:
+def json_error(detalle: str, status: int, codigo: str | None = None, **extras: object) -> JsonResponse:
     payload = {"detalle": str(detalle)}
     if codigo:
         payload["codigo"] = codigo
+    payload.update(extras)
     return JsonResponse(payload, status=status)
 
 
@@ -20,3 +21,7 @@ def json_validacion(detalle: str, codigo: str | None = None) -> JsonResponse:
 
 def json_no_autorizado(detalle: str, codigo: str | None = None) -> JsonResponse:
     return json_error(detalle=detalle, status=401, codigo=codigo)
+
+
+def json_conflicto(detalle: str, codigo: str | None = None, **extras: object) -> JsonResponse:
+    return json_error(detalle=detalle, status=409, codigo=codigo, **extras)
