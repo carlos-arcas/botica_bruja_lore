@@ -188,11 +188,12 @@ def construir_servicios_publicos_herbales() -> ServiciosPublicosHerbales:
 
 def construir_servicios_publicos_rituales() -> ServiciosPublicosRituales:
     repositorio_rituales = RepositorioRitualesORM()
+    repositorio_inventario = RepositorioInventarioORM()
     return ServiciosPublicosRituales(
         listado_ritual=ObtenerListadoRitualNavegable(repositorio_rituales),
         detalle_ritual=ObtenerDetalleRitual(repositorio_rituales),
         plantas_por_ritual=ObtenerPlantasRelacionadasDeRitual(repositorio_rituales),
-        productos_por_ritual=ObtenerProductosRelacionadosDeRitual(repositorio_rituales),
+        productos_por_ritual=ObtenerProductosRelacionadosDeRitual(repositorio_rituales, repositorio_inventario),
         rituales_por_intencion=ObtenerRitualesRelacionadosPorIntencion(repositorio_rituales),
     )
 

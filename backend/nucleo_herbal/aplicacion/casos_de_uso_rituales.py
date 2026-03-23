@@ -5,8 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..dominio.entidades import Intencion, Planta, Producto
+from ..dominio.inventario import InventarioProducto
 from ..dominio.rituales import Ritual
 from .casos_de_uso import ErrorAplicacionLookup
+from .disponibilidad_publica import resolver_disponibilidad_publica
 from .dto import (
     IntencionDTO,
     PlantaResumenDTO,
@@ -16,6 +18,7 @@ from .dto import (
     RitualResumenDTO,
 )
 from .puertos.repositorios import RepositorioPlantas
+from .puertos.repositorios_inventario import RepositorioInventario
 from .puertos.repositorios_rituales import RepositorioRituales
 
 
@@ -52,11 +55,18 @@ class ObtenerPlantasRelacionadasDeRitual:
 @dataclass(slots=True)
 class ObtenerProductosRelacionadosDeRitual:
     repositorio_rituales: RepositorioRituales
+    repositorio_inventario: RepositorioInventario
 
     def ejecutar(self, slug_ritual: str) -> tuple[ProductoResumenDTO, ...]:
         ritual = _obtener_ritual_o_error(self.repositorio_rituales, slug_ritual)
         productos = self.repositorio_rituales.listar_productos_relacionados(ritual.id)
-        return tuple(_a_producto_resumen(producto) for producto in productos)
+        return tuple(
+            _a_producto_resumen(
+                producto,
+                self.repositorio_inventario.obtener_por_id_producto(producto.id),
+            )
+            for producto in productos
+        )
 
 
 @dataclass(slots=True)
@@ -152,7 +162,8 @@ def _a_planta_resumen(planta: Planta) -> PlantaResumenDTO:
     )
 
 
-def _a_producto_resumen(producto: Producto) -> ProductoResumenDTO:
+def _a_producto_resumen(producto: Producto, inventario: InventarioProducto | None) -> ProductoResumenDTO:
+    disponibilidad = resolver_disponibilidad_publica(inventario)
     return ProductoResumenDTO(
         sku=producto.sku,
         slug=producto.slug,
@@ -168,8 +179,8 @@ def _a_producto_resumen(producto: Producto) -> ProductoResumenDTO:
         formato_comercial=producto.formato_comercial,
         modo_uso=producto.modo_uso,
         categoria_visible=producto.categoria_visible,
-        disponible=False,
-        estado_disponibilidad="no_disponible",
+        disponible=disponibilidad.disponible,
+        estado_disponibilidad=disponibilidad.estado_disponibilidad,
     )
 
 

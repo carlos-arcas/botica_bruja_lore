@@ -441,6 +441,14 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         self.assertIn("Formato de fecha inválido", response.json()["detalle"])
 
 
+    def test_productos_por_ritual_reutiliza_disponibilidad_real_de_inventario(self) -> None:
+        response = self.client.get("/api/v1/rituales/cierre-sereno/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        producto = response.json()["productos"][0]
+        self.assertTrue(producto["disponible"])
+        self.assertEqual(producto["estado_disponibilidad"], "bajo_stock")
+
     def test_productos_por_planta_expone_estado_disponibilidad(self) -> None:
         response = self.client.get("/api/v1/herbal/plantas/melisa/productos/")
 
