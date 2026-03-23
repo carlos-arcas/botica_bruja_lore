@@ -35,3 +35,11 @@ def serializar_estado_verificacion_email(resultado) -> dict[str, object]:
 
 def serializar_pedidos_cuenta(pedidos) -> list[dict[str, object]]:
     return [serializar_pedido(pedido) for pedido in pedidos]
+
+
+def serializar_recuperacion_password(resultado) -> dict[str, object]:
+    return {
+        "email": resultado.email,
+        "expira_en": resultado.expira_en.isoformat() if resultado.expira_en else None,
+        "solicitud_generada": resultado.solicitud_generada,
+    }

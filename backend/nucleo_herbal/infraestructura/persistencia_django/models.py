@@ -313,6 +313,32 @@ class VerificacionEmailCuentaClienteModelo(models.Model):
         return f"{self.cuenta.email} · {self.expira_en.isoformat()}"
 
 
+class RecuperacionPasswordCuentaClienteModelo(models.Model):
+    cuenta = models.ForeignKey(
+        CuentaClienteModelo,
+        on_delete=models.CASCADE,
+        related_name="recuperaciones_password",
+    )
+    token_hash = models.CharField(max_length=64, unique=True)
+    expira_en = models.DateTimeField()
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_envio = models.DateTimeField(auto_now=True)
+    fecha_uso = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "nucleo_recuperacion_password_cuenta_cliente"
+        ordering = ("-fecha_envio",)
+        verbose_name = "recuperación password cuenta cliente"
+        verbose_name_plural = "recuperaciones password cuenta cliente"
+        indexes = [
+            models.Index(fields=("expira_en", "fecha_uso"), name="nucleo_recovery_pass_exp_idx"),
+            models.Index(fields=("cuenta", "fecha_uso"), name="nucleo_recovery_pass_cta_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.cuenta.email} · {self.expira_en.isoformat()}"
+
+
 class ImportacionLoteModelo(models.Model):
     entidad = models.CharField(max_length=64)
     modo = models.CharField(max_length=32)

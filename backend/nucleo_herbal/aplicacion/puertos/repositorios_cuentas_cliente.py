@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from ...dominio.cuentas_cliente import CuentaCliente, CredencialesCuentaCliente, SolicitudVerificacionEmail
+from ...dominio.cuentas_cliente import (
+    CuentaCliente,
+    CredencialesCuentaCliente,
+    SolicitudRecuperacionPassword,
+    SolicitudVerificacionEmail,
+)
 
 
 class RepositorioCuentasCliente(ABC):
@@ -39,3 +44,15 @@ class RepositorioCuentasCliente(ABC):
     @abstractmethod
     def obtener_solicitud_activa_por_usuario(self, id_usuario: str) -> SolicitudVerificacionEmail | None:
         """Recupera la última solicitud activa para la cuenta."""
+
+    @abstractmethod
+    def crear_solicitud_recuperacion_password(self, *, id_usuario: str, token_hash: str, expira_en) -> SolicitudRecuperacionPassword:
+        """Crea o sustituye la solicitud activa de recuperación para una cuenta existente."""
+
+    @abstractmethod
+    def obtener_solicitud_recuperacion_por_token_hash(self, token_hash: str) -> SolicitudRecuperacionPassword | None:
+        """Recupera una solicitud de recuperación por hash de token."""
+
+    @abstractmethod
+    def actualizar_password(self, *, id_usuario: str, password_plano: str, token_hash: str) -> CuentaCliente | None:
+        """Actualiza la contraseña y marca la solicitud de recuperación como usada."""

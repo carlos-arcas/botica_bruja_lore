@@ -48,6 +48,104 @@ class ApiCuentaClienteTests(DjangoTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("verificar-email?token=", mail.outbox[0].body)
 
+
+    def test_solicitud_recuperacion_email_existente_e_inexistente_es_generica(self) -> None:
+        self._registrar_cuenta(email="reset@test.dev")
+        existente = self.client.post(
+            "/api/v1/cuenta/password/recuperacion/solicitar/",
+            data=json.dumps({"email": "reset@test.dev"}),
+            content_type="application/json",
+        )
+        inexistente = self.client.post(
+            "/api/v1/cuenta/password/recuperacion/solicitar/",
+            data=json.dumps({"email": "nadie@test.dev"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(existente.status_code, 200)
+        self.assertEqual(inexistente.status_code, 200)
+        self.assertEqual(existente.json()["detalle"], inexistente.json()["detalle"])
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn("recuperar-password?token=", mail.outbox[-1].body)
+
+    def test_confirmacion_recuperacion_ok_invalida_expirada_y_reutilizada(self) -> None:
+        self._registrar_cuenta(email="recovery-flow@test.dev")
+        self.client.post(
+            "/api/v1/cuenta/password/recuperacion/solicitar/",
+            data=json.dumps({"email": "recovery-flow@test.dev"}),
+            content_type="application/json",
+        )
+        token = mail.outbox[-1].body.split("token=")[-1].split()[0]
+
+        ok = self.client.post(
+            "/api/v1/cuenta/password/recuperacion/confirmar/",
+            data=json.dumps({"token": token, "password": "ClaveNuevaSegura123$"}),
+            content_type="application/json",
+        )
+        reutilizado = self.client.post(
+            "/api/v1/cuenta/password/recuperacion/confirmar/",
+            data=json.dumps({"token": token, "password": "ClaveNuevaSegura123$"}),
+            content_type="application/json",
+        )
+        invalido = self.client.post(
+            "/api/v1/cuenta/password/recuperacion/confirmar/",
+            data=json.dumps({"token": "token-invalido", "password": "ClaveNuevaSegura123$"}),
+            content_type="application/json",
+        )
+
+        self._registrar_cuenta(email="expirado-reset@test.dev")
+        self.client.post(
+            "/api/v1/cuenta/password/recuperacion/solicitar/",
+            data=json.dumps({"email": "expirado-reset@test.dev"}),
+            content_type="application/json",
+        )
+        token_expirado = mail.outbox[-1].body.split("token=")[-1].split()[0]
+        from backend.nucleo_herbal.infraestructura.persistencia_django.models import RecuperacionPasswordCuentaClienteModelo
+        solicitud = RecuperacionPasswordCuentaClienteModelo.objects.filter(cuenta__email="expirado-reset@test.dev").first()
+        solicitud.expira_en = solicitud.fecha_creacion
+        solicitud.save(update_fields=["expira_en", "fecha_envio"])
+        expirado = self.client.post(
+            "/api/v1/cuenta/password/recuperacion/confirmar/",
+            data=json.dumps({"token": token_expirado, "password": "ClaveNuevaSegura123$"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(reutilizado.json()["codigo"], "token_usado")
+        self.assertEqual(invalido.json()["codigo"], "token_invalido")
+        self.assertEqual(expirado.json()["codigo"], "token_expirado")
+
+    def test_recuperacion_valida_password_y_permite_login_con_nueva_clave(self) -> None:
+        self._registrar_cuenta(email="validacion-reset@test.dev")
+        self.client.post(
+            "/api/v1/cuenta/password/recuperacion/solicitar/",
+            data=json.dumps({"email": "validacion-reset@test.dev"}),
+            content_type="application/json",
+        )
+        token = mail.outbox[-1].body.split("token=")[-1].split()[0]
+
+        invalida = self.client.post(
+            "/api/v1/cuenta/password/recuperacion/confirmar/",
+            data=json.dumps({"token": token, "password": "123"}),
+            content_type="application/json",
+        )
+        ok = self.client.post(
+            "/api/v1/cuenta/password/recuperacion/confirmar/",
+            data=json.dumps({"token": token, "password": "ClaveNuevaSegura123$"}),
+            content_type="application/json",
+        )
+        self.client.post("/api/v1/cuenta/logout/", content_type="application/json")
+        login = self.client.post(
+            "/api/v1/cuenta/login/",
+            data=json.dumps({"email": "validacion-reset@test.dev", "password": "ClaveNuevaSegura123$"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(invalida.status_code, 400)
+        self.assertEqual(invalida.json()["codigo"], "password_invalida")
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(login.status_code, 200)
+
     def test_confirmacion_email_ok_token_invalido_y_expirado(self) -> None:
         self._registrar_cuenta(email="confirmar@test.dev")
         token_ok = mail.outbox[-1].body.split("token=")[-1].split()[0]

@@ -160,6 +160,14 @@ class VerificacionEmailCuentaDTO:
     reenviada: bool = False
 
 
+
+@dataclass(frozen=True, slots=True)
+class RecuperacionPasswordCuentaDTO:
+    email: str
+    expira_en: object | None = None
+    solicitud_generada: bool = False
+
+
 @dataclass(frozen=True, slots=True)
 class ResultadoSesionClienteDTO:
     autenticado: bool

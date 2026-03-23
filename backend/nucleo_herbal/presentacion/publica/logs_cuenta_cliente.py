@@ -12,7 +12,9 @@ EVENTOS_WARNING = {
     "credenciales_invalidas",
     "token_invalido",
     "token_expirado",
+    "token_usado",
     "cuenta_ya_verificada",
+    "password_invalida",
 }
 
 
@@ -21,7 +23,7 @@ def log_evento_cuenta(*, evento: str, operation_id: str, email: str | None, usua
         "operation_id": operation_id,
         "email": email,
         "usuario_id": usuario_id,
-        "flujo": "cuenta_real_v1_1_email_verificacion",
+        "flujo": "cuenta_real_v1_1_password_recovery",
         "resultado": resultado,
     }
     if error:
