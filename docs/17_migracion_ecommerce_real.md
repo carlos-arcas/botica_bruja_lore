@@ -151,7 +151,7 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook: persiste transición, envía email transaccional mínimo e incrementa trazabilidad operativa.
 - El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
 - El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
-- Pendiente para el siguiente bloque: expedición real, tracking, incidencias, SLA operativos y automatización de estados posteriores.
+- Pendiente para el siguiente bloque: expedición real, tracking, SLA operativos y automatización de estados posteriores.
 
 
 ## Actualización cuenta real v1
@@ -199,3 +199,22 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - sin fechas de reposición, alertas al cliente ni logística avanzada.
 
 - Prompt 08: **DONE** para exposición pública mínima de disponibilidad de stock conectada al inventario real en APIs públicas de producto, ficha Botica Natural, productos relacionados de ritual y aviso informativo en checkout real; sin reservas, decremento automático ni promesa de stock duro.
+
+## Actualización inventario post-pago real v1.1
+- Estado técnico: **DONE** para decremento efectivo de inventario al confirmar pago real.
+- Punto de verdad activo: el descuento ocurre dentro del caso de uso post-pago desacoplado del webhook, nunca en checkout previo.
+- Persistencia activa: `Pedido` añade `inventario_descontado` e `incidencia_stock_confirmacion` como marcas explícitas de auditoría mínima.
+- Regla operativa activa:
+  - si Stripe confirma `pagado` y hay stock suficiente, el sistema descuenta todas las líneas en una transacción atómica y marca el pedido como descontado una sola vez;
+  - si el webhook se repite o el caso de uso se reejecuta, la idempotencia evita dobles descuentos;
+  - si falta stock en ese momento, no se descuenta nada, no se permite stock negativo, el pedido queda `pagado` con incidencia operativa y `requiere_revision_manual=True`;
+  - en escenario de incidencia, se omite el email post-pago estándar para no fingir cierre operativo exitoso.
+- Logging activo:
+  - descuento correcto por pedido pagado;
+  - reintento idempotente;
+  - conflicto de stock al confirmar pago;
+  - generación de incidencia operativa.
+- Fuera de alcance preservado:
+  - sin reservas previas;
+  - sin compensaciones automáticas por cancelación o devolución;
+  - sin multi-almacén, lotes, caducidades ni ledger completo de movimientos.

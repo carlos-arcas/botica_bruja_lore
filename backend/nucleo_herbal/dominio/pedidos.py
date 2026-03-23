@@ -115,6 +115,8 @@ class Pedido:
     id_externo_pago: str | None = None
     url_pago: str | None = None
     fecha_pago_confirmado: datetime | None = None
+    inventario_descontado: bool = False
+    incidencia_stock_confirmacion: bool = False
     requiere_revision_manual: bool = False
     email_post_pago_enviado: bool = False
     fecha_email_post_pago: datetime | None = None
@@ -143,6 +145,8 @@ class Pedido:
             raise ErrorDominio("El pedido requiere moneda.")
         if self.estado == "pagado" and self.estado_pago != "pagado":
             raise ErrorDominio("Un pedido pagado requiere estado_pago='pagado'.")
+        if self.incidencia_stock_confirmacion and self.inventario_descontado:
+            raise ErrorDominio("Un pedido no puede marcar incidencia de stock y descuento de inventario a la vez.")
         if self.fecha_email_post_pago and not self.email_post_pago_enviado:
             raise ErrorDominio("La fecha de email post-pago requiere email_post_pago_enviado=True.")
         if self.fecha_email_envio and not self.email_envio_enviado:
@@ -169,6 +173,20 @@ class Pedido:
         if self.estado != "pendiente_pago":
             raise ErrorDominio("Solo un pedido pendiente de pago puede pasar a pagado.")
         return replace(self, estado="pagado", estado_pago="pagado", fecha_pago_confirmado=fecha_confirmacion, requiere_revision_manual=True)
+
+    def marcar_inventario_descontado(self) -> "Pedido":
+        if self.inventario_descontado:
+            return self
+        return replace(self, inventario_descontado=True, incidencia_stock_confirmacion=False)
+
+    def registrar_incidencia_stock_confirmacion(self, detalle: str) -> "Pedido":
+        return replace(
+            self,
+            inventario_descontado=False,
+            incidencia_stock_confirmacion=True,
+            requiere_revision_manual=True,
+            observaciones_operativas=_combinar_observaciones(self.observaciones_operativas, detalle),
+        )
 
     def registrar_fallo_pago(self) -> "Pedido":
         if self.estado == "pagado":

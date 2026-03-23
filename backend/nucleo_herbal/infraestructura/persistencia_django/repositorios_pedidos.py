@@ -32,6 +32,8 @@ class RepositorioPedidosORM(RepositorioPedidos):
                 "direccion_entrega": _serializar_direccion(pedido.direccion_entrega),
                 "fecha_creacion": pedido.fecha_creacion,
                 "fecha_pago_confirmado": pedido.fecha_pago_confirmado,
+                "inventario_descontado": pedido.inventario_descontado,
+                "incidencia_stock_confirmacion": pedido.incidencia_stock_confirmacion,
                 "requiere_revision_manual": pedido.requiere_revision_manual,
                 "email_post_pago_enviado": pedido.email_post_pago_enviado,
                 "fecha_email_post_pago": pedido.fecha_email_post_pago,
@@ -55,6 +57,10 @@ class RepositorioPedidosORM(RepositorioPedidos):
             return self._reconstruir(id_pedido)
         except PedidoRealModelo.DoesNotExist:
             return None
+
+    def obtener_por_id_para_actualizar(self, id_pedido: str) -> Pedido | None:
+        modelo = PedidoRealModelo.objects.select_for_update().prefetch_related("lineas").filter(id_pedido=id_pedido).first()
+        return None if modelo is None else self._a_pedido(modelo)
 
     def obtener_por_pago_externo(self, proveedor_pago: str, id_externo_pago: str) -> Pedido | None:
         if not proveedor_pago or not id_externo_pago:
@@ -117,6 +123,8 @@ class RepositorioPedidosORM(RepositorioPedidos):
             direccion_entrega=_a_direccion(modelo.direccion_entrega),
             fecha_creacion=modelo.fecha_creacion,
             fecha_pago_confirmado=modelo.fecha_pago_confirmado,
+            inventario_descontado=modelo.inventario_descontado,
+            incidencia_stock_confirmacion=modelo.incidencia_stock_confirmacion,
             requiere_revision_manual=modelo.requiere_revision_manual,
             email_post_pago_enviado=modelo.email_post_pago_enviado,
             fecha_email_post_pago=modelo.fecha_email_post_pago,

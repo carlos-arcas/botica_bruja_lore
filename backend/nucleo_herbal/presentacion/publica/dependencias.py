@@ -79,6 +79,7 @@ from ...infraestructura.persistencia_django.repositorios import (
 from ...infraestructura.persistencia_django.repositorios_cuentas_cliente import RepositorioCuentasClienteORM
 from ...infraestructura.persistencia_django.repositorios_inventario import RepositorioInventarioORM
 from ...infraestructura.persistencia_django.repositorios_pedidos import RepositorioPedidosORM
+from ...infraestructura.persistencia_django.transacciones import TransaccionesDjango
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,6 +226,8 @@ def construir_servicios_publicos_pago_pedidos() -> ServiciosPublicosPagoPedidos:
     pasarela = construir_pasarela_pago_stripe()
     procesador_post_pago = ProcesarPostPagoPedido(
         repositorio_pedidos=repositorio,
+        repositorio_inventario=RepositorioInventarioORM(),
+        transacciones=TransaccionesDjango(),
         notificador=NotificadorEmailPostPago(),
     )
     return ServiciosPublicosPagoPedidos(

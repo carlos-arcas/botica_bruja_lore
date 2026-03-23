@@ -19,6 +19,8 @@ def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
         "subtotal": str(dto.subtotal),
         "requiere_revision_manual": dto.requiere_revision_manual,
         "email_post_pago_enviado": dto.email_post_pago_enviado,
+        "inventario_descontado": dto.inventario_descontado,
+        "incidencia_stock_confirmacion": dto.incidencia_stock_confirmacion,
         "cliente": {
             "email_contacto": dto.cliente.email,
             "nombre_contacto": dto.cliente.nombre_contacto,

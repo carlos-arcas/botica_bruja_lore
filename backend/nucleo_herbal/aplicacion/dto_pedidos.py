@@ -63,6 +63,8 @@ class PedidoRealDTO:
     id_externo_pago: str | None
     url_pago: str | None
     requiere_revision_manual: bool
+    inventario_descontado: bool
+    incidencia_stock_confirmacion: bool
     email_post_pago_enviado: bool
     cliente: ClientePedidoDTO
     direccion_entrega: DireccionEntregaDTO

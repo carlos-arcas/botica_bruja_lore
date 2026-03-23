@@ -123,7 +123,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 2. Preservar trazabilidad estado↔roadmap para evitar reabrir capacidades ya cerradas de Ciclos 3 y 4.
 3. No abrir nuevas capacidades sin contrato explícito del siguiente ciclo.
 4. Checkout real v1 en coexistencia: DONE para contrato, ruta API, persistencia y frontend dedicado sin romper el flujo demo legado.
-5. Pago real v1: DONE para intención Stripe desacoplada, webhook mínimo seguro, transición `pendiente_pago` → `pagado` e idempotencia básica.
+5. Pago real v1: DONE para intención Stripe desacoplada, webhook mínimo seguro, transición `pendiente_pago` → `pagado`, decremento real de inventario al confirmar pago e idempotencia reforzada.
 
 ## 10. Reencauce de control por ciclos (actualización de gobierno)
 - Diagnóstico oficial: **C (deriva detectada)**.
@@ -743,3 +743,5 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   4. `python scripts/check_release_gate.py` **falló** por deuda preexistente de frontend en páginas con `useSearchParams()` sin `Suspense` (`/mi-cuenta`, `/mi-cuenta/pedidos`, `/recuperar-password`, `/verificar-email`).
 
 - Prompt 08: **DONE** para exposición pública mínima de disponibilidad de stock conectada al inventario real en APIs públicas de producto, ficha Botica Natural, productos relacionados de ritual y aviso informativo en checkout real; sin reservas, decremento automático ni promesa de stock duro.
+
+- Prompt 09: **DONE** para decremento efectivo de inventario al confirmar pago real con transacción atómica, protección idempotente ante reintentos/webhooks duplicados, incidencia operativa explícita si ya no hay stock suficiente y sin introducir reservas ni compensaciones automáticas.
