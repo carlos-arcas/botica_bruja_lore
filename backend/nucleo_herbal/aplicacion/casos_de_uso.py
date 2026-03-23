@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..dominio.entidades import Intencion, Planta, Producto
+from ..dominio.inventario import InventarioProducto
 from .dto import (
     IntencionDTO,
     PlantaDetalleDTO,
@@ -13,6 +14,7 @@ from .dto import (
     RelacionIntencionHerbalDTO,
 )
 from .puertos.repositorios import RepositorioPlantas, RepositorioProductos
+from .puertos.repositorios_inventario import RepositorioInventario
 
 
 class ErrorAplicacionLookup(LookupError):
@@ -43,33 +45,36 @@ class ObtenerDetallePlanta:
 class ObtenerResolucionComercialMinimaDePlanta:
     repositorio_plantas: RepositorioPlantas
     repositorio_productos: RepositorioProductos
+    repositorio_inventario: RepositorioInventario
 
     def ejecutar(self, slug_planta: str) -> tuple[ProductoResumenDTO, ...]:
         planta = self.repositorio_plantas.obtener_por_slug(slug_planta)
         if planta is None:
             raise ErrorAplicacionLookup(f"Planta no encontrada: {slug_planta}")
         productos = self.repositorio_productos.listar_herbales_por_planta(planta.id)
-        return tuple(_a_producto_resumen(producto) for producto in productos)
+        return tuple(_a_producto_resumen(producto, self.repositorio_inventario.obtener_por_id_producto(producto.id)) for producto in productos)
 
 
 @dataclass(slots=True)
 class ObtenerListadoPublicoProductosPorSeccion:
     repositorio_productos: RepositorioProductos
+    repositorio_inventario: RepositorioInventario
 
     def ejecutar(self, slug_seccion: str, filtros: dict[str, str] | None = None) -> tuple[ProductoResumenDTO, ...]:
         productos = self.repositorio_productos.listar_publicos_por_seccion(slug_seccion, filtros or {})
-        return tuple(_a_producto_resumen(producto) for producto in productos)
+        return tuple(_a_producto_resumen(producto, self.repositorio_inventario.obtener_por_id_producto(producto.id)) for producto in productos)
 
 
 @dataclass(slots=True)
 class ObtenerDetallePublicoProductoPorSlug:
     repositorio_productos: RepositorioProductos
+    repositorio_inventario: RepositorioInventario
 
     def ejecutar(self, slug_producto: str) -> ProductoResumenDTO:
         producto = self.repositorio_productos.obtener_publico_por_slug(slug_producto)
         if producto is None:
             raise ErrorAplicacionLookup(f"Producto no encontrado: {slug_producto}")
-        return _a_producto_resumen(producto)
+        return _a_producto_resumen(producto, self.repositorio_inventario.obtener_por_id_producto(producto.id))
 
 
 @dataclass(slots=True)
@@ -113,7 +118,7 @@ def _a_planta_detalle(planta: Planta) -> PlantaDetalleDTO:
     )
 
 
-def _a_producto_resumen(producto: Producto) -> ProductoResumenDTO:
+def _a_producto_resumen(producto: Producto, inventario: InventarioProducto | None) -> ProductoResumenDTO:
     return ProductoResumenDTO(
         sku=producto.sku,
         slug=producto.slug,
@@ -129,8 +134,22 @@ def _a_producto_resumen(producto: Producto) -> ProductoResumenDTO:
         formato_comercial=producto.formato_comercial,
         modo_uso=producto.modo_uso,
         categoria_visible=producto.categoria_visible,
+        disponible=_es_producto_disponible(inventario),
+        estado_disponibilidad=_estado_disponibilidad(inventario),
     )
 
 
 def _a_intencion_dto(intencion: Intencion) -> IntencionDTO:
     return IntencionDTO(slug=intencion.slug, nombre=intencion.nombre)
+
+
+def _es_producto_disponible(inventario: InventarioProducto | None) -> bool:
+    return inventario is not None and inventario.cantidad_disponible > 0
+
+
+def _estado_disponibilidad(inventario: InventarioProducto | None) -> str:
+    if inventario is None or inventario.cantidad_disponible <= 0:
+        return "no_disponible"
+    if inventario.bajo_stock:
+        return "bajo_stock"
+    return "disponible"

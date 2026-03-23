@@ -86,7 +86,7 @@ class TestContratosApiPublicaConsumidaFrontend(DjangoTestCase):
         self.assertIsInstance(payload["productos"], list)
         producto = payload["productos"][0]
         self.assertTrue(
-            {"sku", "slug", "nombre", "tipo_producto", "categoria_comercial"}.issubset(producto.keys())
+            {"sku", "slug", "nombre", "tipo_producto", "categoria_comercial", "disponible", "estado_disponibilidad"}.issubset(producto.keys())
         )
 
     def test_contrato_rituales_por_planta(self) -> None:
@@ -151,7 +151,7 @@ class TestContratosApiPublicaConsumidaFrontend(DjangoTestCase):
         self.assertIsInstance(payload["productos"], list)
         producto = payload["productos"][0]
         self.assertTrue(
-            {"sku", "slug", "nombre", "tipo_producto", "categoria_comercial"}.issubset(producto.keys())
+            {"sku", "slug", "nombre", "tipo_producto", "categoria_comercial", "disponible", "estado_disponibilidad"}.issubset(producto.keys())
         )
     def test_contrato_errores_404_publicos_shape_y_content_type(self) -> None:
         endpoints = [

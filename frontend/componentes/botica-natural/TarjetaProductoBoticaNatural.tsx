@@ -10,6 +10,7 @@ import { construirHrefFichaProductoPublico } from "@/componentes/catalogo/rutasP
 import type { ProductoSeccionPublica } from "@/infraestructura/api/herbal";
 
 import { ControlUnidadesBoticaNatural } from "./ControlUnidadesBoticaNatural";
+import { EstadoDisponibilidadProducto } from "@/componentes/catalogo/disponibilidad/EstadoDisponibilidadProducto";
 
 type Props = {
   producto: ProductoSeccionPublica;
@@ -56,14 +57,15 @@ export function TarjetaProductoBoticaNatural({ producto }: Props): JSX.Element {
         <h2>{producto.nombre}</h2>
         <p className="botica-natural__descripcion">{producto.descripcion_corta}</p>
         <p className="botica-natural__precio">{producto.precio_visible}</p>
+        <EstadoDisponibilidadProducto producto={producto} compacta />
         <div className="botica-natural__acciones" data-testid="botica-natural-acciones-card">
           <ControlUnidadesBoticaNatural cantidad={cantidad} alDisminuir={disminuir} alAumentar={aumentar} />
           <div className="botica-natural__acciones-cta">
             <Link href={hrefFicha} className="boton boton--secundario">
               Ver detalle
             </Link>
-            <button type="button" className="boton boton--principal" onClick={manejarAgregarCarrito}>
-              Agregar al carrito
+            <button type="button" className="boton boton--principal" onClick={manejarAgregarCarrito} disabled={!producto.disponible} aria-disabled={!producto.disponible}>
+              {producto.disponible ? "Agregar al carrito" : "No disponible"}
             </button>
           </div>
           {agregado && <p className="botica-natural__estado-carrito">Producto agregado al carrito.</p>}

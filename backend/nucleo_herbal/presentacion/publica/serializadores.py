@@ -48,6 +48,8 @@ def serializar_producto_resumen(dto: ProductoResumenDTO) -> dict:
         "formato_comercial": dto.formato_comercial,
         "modo_uso": dto.modo_uso,
         "categoria_visible": dto.categoria_visible,
+        "disponible": dto.disponible,
+        "estado_disponibilidad": dto.estado_disponibilidad,
     }
 
 

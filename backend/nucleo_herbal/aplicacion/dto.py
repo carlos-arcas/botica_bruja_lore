@@ -29,6 +29,12 @@ class PlantaDetalleDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class DisponibilidadPublicaDTO:
+    disponible: bool
+    estado_disponibilidad: str
+
+
+@dataclass(frozen=True, slots=True)
 class ProductoResumenDTO:
     sku: str
     slug: str
@@ -44,6 +50,8 @@ class ProductoResumenDTO:
     formato_comercial: str
     modo_uso: str
     categoria_visible: str
+    disponible: bool
+    estado_disponibilidad: str
 
 
 @dataclass(frozen=True, slots=True)

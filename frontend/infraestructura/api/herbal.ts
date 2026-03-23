@@ -19,6 +19,8 @@ export type RitualRelacionadoHerbal = {
   urlDetalle: string;
 };
 
+export type EstadoDisponibilidadPublica = "disponible" | "bajo_stock" | "no_disponible";
+
 export type ProductoHerbalMinimoPublico = {
   sku: string;
   slug: string;
@@ -34,6 +36,8 @@ export type ProductoHerbalMinimoPublico = {
   formato_comercial?: string;
   modo_uso?: string;
   categoria_visible?: string;
+  disponible: boolean;
+  estado_disponibilidad: EstadoDisponibilidadPublica;
 };
 
 export type ProductoSeccionPublica = ProductoHerbalMinimoPublico;
@@ -73,6 +77,8 @@ type ProductoHerbalApi = {
   formato_comercial?: string;
   modo_uso?: string;
   categoria_visible?: string;
+  disponible?: boolean;
+  estado_disponibilidad?: string;
 };
 
 type RespuestaListadoHerbal = {
@@ -144,6 +150,8 @@ function normalizarProductoApi(producto: ProductoHerbalApi): ProductoHerbalMinim
     formato_comercial: producto.formato_comercial ?? "",
     modo_uso: producto.modo_uso ?? "",
     categoria_visible: producto.categoria_visible ?? "",
+    disponible: producto.disponible ?? false,
+    estado_disponibilidad: producto.estado_disponibilidad ?? "no_disponible",
   };
 }
 

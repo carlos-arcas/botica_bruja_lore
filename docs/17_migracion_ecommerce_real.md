@@ -194,3 +194,5 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - sin reservas transaccionales ni exposición pública completa del stock.
 - Siguiente bloque recomendado:
   - conectar exposición pública mínima del stock y futuras transiciones operativas (reservas/decrementos) sin romper esta fuente única de verdad.
+
+- Prompt 08: exposición pública mínima de disponibilidad de stock conectada al inventario real en APIs públicas de producto, ficha Botica Natural y aviso informativo en checkout real; sin reservas, decremento automático ni promesa de stock duro.
