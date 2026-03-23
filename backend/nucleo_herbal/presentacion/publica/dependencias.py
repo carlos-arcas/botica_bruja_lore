@@ -30,6 +30,13 @@ from ...aplicacion.casos_de_uso_cuentas_cliente import (
     RegistrarCuentaCliente,
     SolicitarRecuperacionPasswordCuentaCliente,
 )
+from ...aplicacion.casos_de_uso_direcciones_cuenta_cliente import (
+    ActualizarDireccionCuentaCliente,
+    CrearDireccionCuentaCliente,
+    EliminarDireccionCuentaCliente,
+    ListarDireccionesCuentaCliente,
+    MarcarDireccionPredeterminadaCuentaCliente,
+)
 from ...aplicacion.casos_de_uso_cuentas_demo import (
     AutenticarCuentaDemo,
     ObtenerHistorialPedidosDemoCuenta,
@@ -124,6 +131,11 @@ class ServiciosPublicosCuentaCliente:
     registrar_cuenta_cliente: RegistrarCuentaCliente
     autenticar_cuenta_cliente: AutenticarCuentaCliente
     obtener_sesion_cuenta_cliente: ObtenerSesionCuentaCliente
+    listar_direcciones_cuenta_cliente: ListarDireccionesCuentaCliente
+    crear_direccion_cuenta_cliente: CrearDireccionCuentaCliente
+    actualizar_direccion_cuenta_cliente: ActualizarDireccionCuentaCliente
+    eliminar_direccion_cuenta_cliente: EliminarDireccionCuentaCliente
+    marcar_direccion_predeterminada_cuenta_cliente: MarcarDireccionPredeterminadaCuentaCliente
     listar_pedidos_cuenta_cliente: ListarPedidosCuentaCliente
     obtener_pedido_cuenta_cliente: ObtenerPedidoCuentaCliente
     confirmar_verificacion_email: ConfirmarVerificacionEmail
@@ -240,6 +252,11 @@ def construir_servicios_publicos_cuenta_cliente() -> ServiciosPublicosCuentaClie
         ),
         autenticar_cuenta_cliente=AutenticarCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
         obtener_sesion_cuenta_cliente=ObtenerSesionCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        listar_direcciones_cuenta_cliente=ListarDireccionesCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        crear_direccion_cuenta_cliente=CrearDireccionCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        actualizar_direccion_cuenta_cliente=ActualizarDireccionCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        eliminar_direccion_cuenta_cliente=EliminarDireccionCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        marcar_direccion_predeterminada_cuenta_cliente=MarcarDireccionPredeterminadaCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
         listar_pedidos_cuenta_cliente=ListarPedidosCuentaCliente(
             repositorio_cuentas_cliente=repositorio_cuentas,
             repositorio_pedidos=repositorio_pedidos,

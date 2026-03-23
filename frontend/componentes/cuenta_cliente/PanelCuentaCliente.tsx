@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -34,15 +34,11 @@ export function PanelCuentaCliente({ vista }: Props): JSX.Element {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    void cargar();
-  }, []);
-
-  useEffect(() => {
     const mensajeAlta = searchParams.get("mensaje");
     if (mensajeAlta) setMensajeVerificacion(mensajeAlta);
   }, [searchParams]);
 
-  const cargar = async (): Promise<void> => {
+  const cargar = useCallback(async (): Promise<void> => {
     const sesion = await obtenerSesionCuentaCliente();
     if (!sesion.autenticado || !sesion.cuenta) {
       router.push(RUTAS_CUENTA_CLIENTE.acceso);
@@ -56,7 +52,11 @@ export function PanelCuentaCliente({ vista }: Props): JSX.Element {
     setVerificacion(estadoVerificacion.estado);
     setPedidos(listado.pedidos);
     setMensaje("");
-  };
+  }, [router]);
+
+  useEffect(() => {
+    void cargar();
+  }, [cargar]);
 
   const salir = async (): Promise<void> => {
     await logoutCuentaCliente();
@@ -98,6 +98,7 @@ export function PanelCuentaCliente({ vista }: Props): JSX.Element {
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.cuenta}>Resumen</Link>
         <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.pedidos}>Mis pedidos</Link>
+        <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.direcciones}>Mis direcciones</Link>
         <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.legadoDemo}>Legado demo</Link>
         <button className="boton boton--principal" type="button" onClick={salir}>Cerrar sesión</button>
       </div>
@@ -107,6 +108,7 @@ export function PanelCuentaCliente({ vista }: Props): JSX.Element {
           <li>Cuenta activa: {cuenta.activo ? "sí" : "no"}</li>
           <li>Estado email: {vistaVerificacion}</li>
           <li>Pedidos reales asociados: {pedidos.length}</li>
+          <li>Libreta de direcciones: disponible desde una vista dedicada</li>
         </ul>
       ) : (
         <ul>

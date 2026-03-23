@@ -21,6 +21,22 @@ export type EstadoRecuperacionPassword = {
   solicitud_generada: boolean;
 };
 
+export type DireccionCuentaCliente = {
+  id_direccion: string;
+  alias: string;
+  nombre_destinatario: string;
+  telefono_contacto: string;
+  linea_1: string;
+  linea_2: string;
+  codigo_postal: string;
+  ciudad: string;
+  provincia: string;
+  pais_iso: string;
+  predeterminada: boolean;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+};
+
 export type PedidoCuentaCliente = {
   id_pedido: string;
   estado: string;
@@ -120,5 +136,49 @@ async function enviarRecuperacion(path: string, payload: Record<string, string>,
     return { estado: "ok", recuperacion: data.recuperacion as EstadoRecuperacionPassword, mensaje: data.detalle as string };
   } catch {
     return { estado: "error", mensaje: "No pudimos conectar con la recuperación de contraseña." };
+  }
+}
+
+
+export async function obtenerDireccionesCuentaCliente(): Promise<{ direcciones: DireccionCuentaCliente[]; detalle?: string }> {
+  const respuesta = await fetch("/api/cuenta/direcciones", { method: "GET", headers: { Accept: "application/json" }, cache: "no-store" });
+  const data = await respuesta.json();
+  return respuesta.ok ? { direcciones: (data.direcciones ?? []) as DireccionCuentaCliente[] } : { direcciones: [], detalle: data.detalle as string | undefined };
+}
+
+export async function crearDireccionCuentaCliente(payload: Record<string, string>): Promise<{ estado: "ok"; direccion: DireccionCuentaCliente } | { estado: "error"; mensaje: string }> {
+  return enviarDireccion("direcciones", { method: "POST", body: JSON.stringify(payload) }, "No se pudo crear la dirección.");
+}
+
+export async function actualizarDireccionCuentaCliente(idDireccion: string, payload: Record<string, string>): Promise<{ estado: "ok"; direccion: DireccionCuentaCliente } | { estado: "error"; mensaje: string }> {
+  return enviarDireccion(`direcciones/${encodeURIComponent(idDireccion)}`, { method: "PUT", body: JSON.stringify(payload) }, "No se pudo actualizar la dirección.");
+}
+
+export async function eliminarDireccionCuentaCliente(idDireccion: string): Promise<{ estado: "ok" } | { estado: "error"; mensaje: string }> {
+  try {
+    const respuesta = await fetch(`/api/cuenta/direcciones/${encodeURIComponent(idDireccion)}`, { method: "DELETE", headers: { Accept: "application/json" } });
+    const data = await respuesta.json();
+    if (!respuesta.ok) return { estado: "error", mensaje: data.detalle ?? "No se pudo eliminar la dirección." };
+    return { estado: "ok" };
+  } catch {
+    return { estado: "error", mensaje: "No pudimos conectar con la libreta de direcciones." };
+  }
+}
+
+export async function marcarDireccionPredeterminadaCuentaCliente(idDireccion: string): Promise<{ estado: "ok"; direccion: DireccionCuentaCliente } | { estado: "error"; mensaje: string }> {
+  return enviarDireccion(`direcciones/${encodeURIComponent(idDireccion)}/predeterminada`, { method: "POST" }, "No se pudo marcar la dirección predeterminada.");
+}
+
+async function enviarDireccion(url: string, init: RequestInit, mensajeDefecto: string): Promise<{ estado: "ok"; direccion: DireccionCuentaCliente } | { estado: "error"; mensaje: string }> {
+  try {
+    const respuesta = await fetch(`/api/cuenta/${url}`, {
+      ...init,
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+    });
+    const data = await respuesta.json();
+    if (!respuesta.ok) return { estado: "error", mensaje: data.detalle ?? mensajeDefecto };
+    return { estado: "ok", direccion: data.direccion as DireccionCuentaCliente };
+  } catch {
+    return { estado: "error", mensaje: "No pudimos conectar con la libreta de direcciones." };
   }
 }

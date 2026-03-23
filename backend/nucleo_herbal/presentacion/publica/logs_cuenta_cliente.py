@@ -15,7 +15,9 @@ EVENTOS_WARNING = {
     "token_usado",
     "cuenta_ya_verificada",
     "password_invalida",
+    "direccion_invalida",
 }
+
 
 
 def log_evento_cuenta(*, evento: str, operation_id: str, email: str | None, usuario_id: str | None, resultado: str, error: str | None = None) -> None:

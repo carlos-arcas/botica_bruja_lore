@@ -5,8 +5,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from ...dominio.cuentas_cliente import (
+    ComandoDireccionCuentaCliente,
     CuentaCliente,
     CredencialesCuentaCliente,
+    DireccionCuentaCliente,
     SolicitudRecuperacionPassword,
     SolicitudVerificacionEmail,
 )
@@ -28,6 +30,26 @@ class RepositorioCuentasCliente(ABC):
     @abstractmethod
     def obtener_por_id_usuario(self, id_usuario: str) -> CuentaCliente | None:
         """Obtiene cuenta real por id canónico."""
+
+    @abstractmethod
+    def listar_direcciones(self, *, id_usuario: str) -> tuple[DireccionCuentaCliente, ...]:
+        """Lista la libreta de direcciones de una cuenta."""
+
+    @abstractmethod
+    def crear_direccion(self, *, id_usuario: str, comando: ComandoDireccionCuentaCliente) -> DireccionCuentaCliente:
+        """Crea una dirección para la cuenta."""
+
+    @abstractmethod
+    def actualizar_direccion(self, *, id_usuario: str, id_direccion: str, comando: ComandoDireccionCuentaCliente) -> DireccionCuentaCliente | None:
+        """Actualiza una dirección propia."""
+
+    @abstractmethod
+    def eliminar_direccion(self, *, id_usuario: str, id_direccion: str) -> bool:
+        """Elimina una dirección propia."""
+
+    @abstractmethod
+    def marcar_direccion_predeterminada(self, *, id_usuario: str, id_direccion: str) -> DireccionCuentaCliente | None:
+        """Marca una dirección propia como predeterminada."""
 
     @abstractmethod
     def crear_solicitud_verificacion(self, *, id_usuario: str, token_hash: str, expira_en) -> SolicitudVerificacionEmail:
