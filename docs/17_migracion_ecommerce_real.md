@@ -162,3 +162,12 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Frontend canónico activo: `/registro`, `/acceso`, `/mi-cuenta`, `/mi-cuenta/pedidos`.
 - Legado preservado: `/cuenta-demo` y `/api/v1/cuentas-demo/` permanecen operativos como compatibilidad explícita y congelada.
 - Siguiente bloque recomendado: identidad/cliente v1.1 (verificación de email, recuperación de contraseña, libreta de direcciones y consolidación de checkout autenticado UX-first).
+
+
+## Actualización cuenta real v1.1 — libreta de direcciones
+- Estado técnico: **DONE** para CRUD autenticado de direcciones de `CuentaCliente`.
+- Contrato activo: dirección separada de pedido real, ligada explícitamente a cuenta y compatible con el shape futuro de `DireccionEntrega`.
+- Rutas activas: `GET|POST /api/v1/cuenta/direcciones/`, `PUT|DELETE /api/v1/cuenta/direcciones/{id}/`, `POST /api/v1/cuenta/direcciones/{id}/predeterminada/`.
+- Regla operativa: una sola predeterminada por cuenta; primera alta automática; reasignación determinista al borrar la predeterminada.
+- Frontend activo: `/mi-cuenta/direcciones` desde la navegación de cuenta real.
+- Fuera de alcance preservado: checkout real todavía no consume direcciones guardadas; el siguiente bloque podrá conectarlo sin reescritura grande.

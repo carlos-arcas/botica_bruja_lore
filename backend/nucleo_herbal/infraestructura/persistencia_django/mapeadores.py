@@ -1,7 +1,7 @@
 """Mapeadores de ORM Django a entidades de dominio."""
 
 from ...dominio.entidades import Intencion, Planta, Producto
-from ...dominio.cuentas_cliente import CuentaCliente, SolicitudRecuperacionPassword, SolicitudVerificacionEmail
+from ...dominio.cuentas_cliente import CuentaCliente, DireccionCuentaCliente, SolicitudRecuperacionPassword, SolicitudVerificacionEmail
 from ...dominio.cuentas_demo import CuentaDemo, CredencialCuentaDemo, PerfilCuentaDemo
 from ...dominio.calendario_ritual import ReglaCalendario
 from ...dominio.pedidos_demo import LineaPedido, PedidoDemo
@@ -9,6 +9,7 @@ from ...dominio.rituales import Ritual
 from .models import (
     CuentaClienteModelo,
     CuentaDemoModelo,
+    DireccionCuentaClienteModelo,
     RecuperacionPasswordCuentaClienteModelo,
     VerificacionEmailCuentaClienteModelo,
     IntencionModelo,
@@ -119,6 +120,25 @@ def a_cuenta_cliente(modelo: CuentaClienteModelo) -> CuentaCliente:
         hash_password=usuario.password,
         activo=usuario.is_active,
         email_verificado=modelo.email_verificado,
+        fecha_creacion=modelo.fecha_creacion,
+        fecha_actualizacion=modelo.fecha_actualizacion,
+    )
+
+
+def a_direccion_cuenta_cliente(modelo: DireccionCuentaClienteModelo) -> DireccionCuentaCliente:
+    return DireccionCuentaCliente(
+        id_direccion=str(modelo.id),
+        id_usuario=str(modelo.cuenta.usuario_id),
+        alias=modelo.alias,
+        nombre_destinatario=modelo.nombre_destinatario,
+        telefono_contacto=modelo.telefono_contacto,
+        linea_1=modelo.linea_1,
+        linea_2=modelo.linea_2,
+        codigo_postal=modelo.codigo_postal,
+        ciudad=modelo.ciudad,
+        provincia=modelo.provincia,
+        pais_iso=modelo.pais_iso,
+        predeterminada=modelo.predeterminada,
         fecha_creacion=modelo.fecha_creacion,
         fecha_actualizacion=modelo.fecha_actualizacion,
     )

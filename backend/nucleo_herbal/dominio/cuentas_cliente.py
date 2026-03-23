@@ -33,6 +33,85 @@ class CuentaCliente:
 
 
 @dataclass(frozen=True, slots=True)
+class DireccionCuentaCliente:
+    id_direccion: str
+    id_usuario: str
+    alias: str
+    nombre_destinatario: str
+    telefono_contacto: str
+    linea_1: str
+    linea_2: str
+    codigo_postal: str
+    ciudad: str
+    provincia: str
+    pais_iso: str
+    predeterminada: bool
+    fecha_creacion: datetime
+    fecha_actualizacion: datetime
+
+    def __post_init__(self) -> None:
+        if not self.id_direccion.strip():
+            raise ErrorDominio("La dirección requiere identificador.")
+        if not self.id_usuario.strip():
+            raise ErrorDominio("La dirección requiere usuario.")
+        if not self.nombre_destinatario.strip():
+            raise ErrorDominio("La dirección requiere nombre destinatario.")
+        if not self.telefono_contacto.strip():
+            raise ErrorDominio("La dirección requiere teléfono de contacto.")
+        if not self.linea_1.strip():
+            raise ErrorDominio("La dirección requiere línea principal.")
+        if not self.codigo_postal.strip():
+            raise ErrorDominio("La dirección requiere código postal.")
+        if not self.ciudad.strip():
+            raise ErrorDominio("La dirección requiere ciudad.")
+        if not self.provincia.strip():
+            raise ErrorDominio("La dirección requiere provincia.")
+        if len(_pais_iso_normalizado(self.pais_iso)) != 2:
+            raise ErrorDominio("La dirección requiere país ISO de 2 letras.")
+
+    def a_direccion_entrega(self) -> dict[str, str]:
+        return {
+            "nombre_destinatario": self.nombre_destinatario,
+            "linea_1": self.linea_1,
+            "linea_2": self.linea_2,
+            "codigo_postal": self.codigo_postal,
+            "ciudad": self.ciudad,
+            "provincia": self.provincia,
+            "pais_iso": _pais_iso_normalizado(self.pais_iso),
+            "observaciones": "",
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ComandoDireccionCuentaCliente:
+    alias: str = ""
+    nombre_destinatario: str = ""
+    telefono_contacto: str = ""
+    linea_1: str = ""
+    linea_2: str = ""
+    codigo_postal: str = ""
+    ciudad: str = ""
+    provincia: str = ""
+    pais_iso: str = "ES"
+
+    def __post_init__(self) -> None:
+        if not self.nombre_destinatario.strip():
+            raise ErrorDominio("El nombre destinatario es obligatorio.")
+        if not self.telefono_contacto.strip():
+            raise ErrorDominio("El teléfono de contacto es obligatorio.")
+        if not self.linea_1.strip():
+            raise ErrorDominio("La línea principal es obligatoria.")
+        if not self.codigo_postal.strip():
+            raise ErrorDominio("El código postal es obligatorio.")
+        if not self.ciudad.strip():
+            raise ErrorDominio("La ciudad es obligatoria.")
+        if not self.provincia.strip():
+            raise ErrorDominio("La provincia es obligatoria.")
+        if len(_pais_iso_normalizado(self.pais_iso)) != 2:
+            raise ErrorDominio("El país debe usar ISO de 2 letras.")
+
+
+@dataclass(frozen=True, slots=True)
 class CredencialesCuentaCliente:
     email: str
     password_plano: str
@@ -94,10 +173,14 @@ ESTRATEGIA_CONVIVENCIA_CUENTAS = {
     "modo": "coexistencia_controlada",
     "ruta_legacy": "/api/v1/cuentas-demo/",
     "ruta_objetivo": "/api/v1/cuenta/",
-    "estado": "cuenta_real_v1_1_password_recovery",
+    "estado": "cuenta_real_v1_1_address_book",
 }
 
 
 def _email_valido(email: str) -> bool:
     normalizado = email.strip()
     return "@" in normalizado and "." in normalizado.split("@")[-1]
+
+
+def _pais_iso_normalizado(pais_iso: str) -> str:
+    return pais_iso.strip().upper()

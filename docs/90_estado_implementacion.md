@@ -702,3 +702,18 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. `CuentaDemo` queda congelada como compatibilidad demo, no como base del producto final.
   2. Todo pedido real autenticado se vincula automáticamente al usuario real.
   3. El siguiente incremento debe cerrar identidad/cliente v1.1: verificación email, recuperación de contraseña y direcciones.
+
+
+## 8.4 Cuenta real v1.1 — libreta de direcciones
+- Capacidad: **DONE** para libreta de direcciones autenticada de `CuentaCliente`.
+- Evidencia implementada:
+  - dominio/aplicación: `backend/nucleo_herbal/dominio/cuentas_cliente.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_direcciones_cuenta_cliente.py`;
+  - persistencia dedicada: `DireccionCuentaClienteModelo` + migración `0021_direcciones_cuenta_cliente.py`;
+  - API pública real: `GET|POST /api/v1/cuenta/direcciones/`, `PUT|DELETE /api/v1/cuenta/direcciones/{id}/`, `POST /api/v1/cuenta/direcciones/{id}/predeterminada/`;
+  - frontend canónico: `/mi-cuenta/direcciones`;
+  - tests: `backend/nucleo_herbal/presentacion/tests/test_cuenta_cliente_direcciones.py` + `frontend/tests/cuenta-cliente-direcciones.test.ts`.
+- Regla activa:
+  1. una cuenta mantiene como máximo una dirección predeterminada activa;
+  2. la primera dirección creada queda predeterminada automáticamente;
+  3. si se elimina la predeterminada y quedan alternativas, se reasigna de forma determinista;
+  4. la libreta queda alineada con el contrato futuro de `DireccionEntrega` sin integrarse todavía en checkout.

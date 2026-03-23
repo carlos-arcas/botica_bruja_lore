@@ -13,5 +13,8 @@ urlpatterns = [
     path("verificacion-email/reenviar/", views_cuentas_cliente.reenviar_verificacion_email, name="publico-reenviar-verificacion-email-cuenta-cliente"),
     path("verificacion-email/confirmar/", views_cuentas_cliente.confirmar_verificacion_email, name="publico-confirmar-verificacion-email-cuenta-cliente"),
     path("pedidos/", views_cuentas_cliente.pedidos_cuenta_cliente, name="publico-pedidos-cuenta-cliente"),
+    path("direcciones/", views_cuentas_cliente.direcciones_cuenta_cliente, name="publico-direcciones-cuenta-cliente"),
+    path("direcciones/<str:id_direccion>/", views_cuentas_cliente.detalle_direccion_cuenta_cliente, name="publico-detalle-direccion-cuenta-cliente"),
+    path("direcciones/<str:id_direccion>/predeterminada/", views_cuentas_cliente.marcar_direccion_predeterminada_cuenta_cliente, name="publico-predeterminada-direccion-cuenta-cliente"),
     path("pedidos/<str:id_pedido>/", views_cuentas_cliente.detalle_pedido_cuenta_cliente, name="publico-detalle-pedido-cuenta-cliente"),
 ]

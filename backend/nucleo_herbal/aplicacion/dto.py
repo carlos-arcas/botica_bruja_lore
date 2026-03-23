@@ -153,6 +153,23 @@ class CuentaClienteDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class DireccionCuentaClienteDTO:
+    id_direccion: str
+    alias: str
+    nombre_destinatario: str
+    telefono_contacto: str
+    linea_1: str
+    linea_2: str
+    codigo_postal: str
+    ciudad: str
+    provincia: str
+    pais_iso: str
+    predeterminada: bool
+    fecha_creacion: object
+    fecha_actualizacion: object
+
+
+@dataclass(frozen=True, slots=True)
 class VerificacionEmailCuentaDTO:
     email: str
     email_verificado: bool

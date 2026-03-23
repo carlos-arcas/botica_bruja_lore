@@ -8,15 +8,17 @@ from django.db.models import Q
 from django.utils import timezone
 
 from ...aplicacion.puertos.repositorios_cuentas_cliente import RepositorioCuentasCliente
-from ...dominio.cuentas_cliente import CuentaCliente, CredencialesCuentaCliente
+from ...dominio.cuentas_cliente import ComandoDireccionCuentaCliente, CuentaCliente, CredencialesCuentaCliente, DireccionCuentaCliente
 from ...dominio.excepciones import ErrorDominio
 from .mapeadores import (
     a_cuenta_cliente,
+    a_direccion_cuenta_cliente,
     a_solicitud_recuperacion_password,
     a_solicitud_verificacion_email,
 )
 from .models import (
     CuentaClienteModelo,
+    DireccionCuentaClienteModelo,
     RecuperacionPasswordCuentaClienteModelo,
     VerificacionEmailCuentaClienteModelo,
 )
@@ -56,12 +58,67 @@ class RepositorioCuentasClienteORM(RepositorioCuentasCliente):
         return None if modelo is None else a_cuenta_cliente(modelo)
 
     def obtener_por_id_usuario(self, id_usuario: str) -> CuentaCliente | None:
-        modelo = (
-            CuentaClienteModelo.objects.select_related("usuario")
-            .filter(usuario_id=id_usuario.strip())
-            .first()
-        )
+        modelo = self._obtener_cuenta_modelo_opcional(id_usuario)
         return None if modelo is None else a_cuenta_cliente(modelo)
+
+    def listar_direcciones(self, *, id_usuario: str) -> tuple[DireccionCuentaCliente, ...]:
+        return tuple(
+            a_direccion_cuenta_cliente(modelo)
+            for modelo in self._query_direcciones(id_usuario)
+        )
+
+    @transaction.atomic
+    def crear_direccion(self, *, id_usuario: str, comando: ComandoDireccionCuentaCliente) -> DireccionCuentaCliente:
+        cuenta = self._obtener_cuenta_modelo(id_usuario)
+        tiene_direcciones = DireccionCuentaClienteModelo.objects.filter(cuenta=cuenta).exists()
+        if not tiene_direcciones:
+            self._desmarcar_predeterminadas(cuenta=cuenta)
+        modelo = DireccionCuentaClienteModelo.objects.create(
+            cuenta=cuenta,
+            alias=comando.alias.strip(),
+            nombre_destinatario=comando.nombre_destinatario.strip(),
+            telefono_contacto=comando.telefono_contacto.strip(),
+            linea_1=comando.linea_1.strip(),
+            linea_2=comando.linea_2.strip(),
+            codigo_postal=comando.codigo_postal.strip(),
+            ciudad=comando.ciudad.strip(),
+            provincia=comando.provincia.strip(),
+            pais_iso=comando.pais_iso.strip().upper(),
+            predeterminada=not tiene_direcciones,
+        )
+        return a_direccion_cuenta_cliente(modelo)
+
+    @transaction.atomic
+    def actualizar_direccion(self, *, id_usuario: str, id_direccion: str, comando: ComandoDireccionCuentaCliente) -> DireccionCuentaCliente | None:
+        modelo = self._obtener_direccion_modelo(id_usuario=id_usuario, id_direccion=id_direccion)
+        if modelo is None:
+            return None
+        for campo, valor in self._datos_direccion(comando).items():
+            setattr(modelo, campo, valor)
+        modelo.save()
+        return a_direccion_cuenta_cliente(modelo)
+
+    @transaction.atomic
+    def eliminar_direccion(self, *, id_usuario: str, id_direccion: str) -> bool:
+        modelo = self._obtener_direccion_modelo(id_usuario=id_usuario, id_direccion=id_direccion)
+        if modelo is None:
+            return False
+        cuenta = modelo.cuenta
+        era_predeterminada = modelo.predeterminada
+        modelo.delete()
+        if era_predeterminada:
+            self._reasignar_predeterminada_si_aplica(cuenta=cuenta)
+        return True
+
+    @transaction.atomic
+    def marcar_direccion_predeterminada(self, *, id_usuario: str, id_direccion: str) -> DireccionCuentaCliente | None:
+        modelo = self._obtener_direccion_modelo(id_usuario=id_usuario, id_direccion=id_direccion)
+        if modelo is None:
+            return None
+        self._desmarcar_predeterminadas(cuenta=modelo.cuenta)
+        modelo.predeterminada = True
+        modelo.save(update_fields=["predeterminada", "fecha_actualizacion"])
+        return a_direccion_cuenta_cliente(modelo)
 
     @transaction.atomic
     def crear_solicitud_verificacion(self, *, id_usuario: str, token_hash: str, expira_en):
@@ -163,3 +220,40 @@ class RepositorioCuentasClienteORM(RepositorioCuentasCliente):
             .filter(usuario_id=id_usuario.strip())
             .first()
         )
+
+    def _obtener_direccion_modelo(self, *, id_usuario: str, id_direccion: str) -> DireccionCuentaClienteModelo | None:
+        return (
+            DireccionCuentaClienteModelo.objects.select_related("cuenta", "cuenta__usuario")
+            .filter(id=id_direccion.strip(), cuenta__usuario_id=id_usuario.strip())
+            .first()
+        )
+
+    def _query_direcciones(self, id_usuario: str):
+        return DireccionCuentaClienteModelo.objects.select_related("cuenta", "cuenta__usuario").filter(
+            cuenta__usuario_id=id_usuario.strip()
+        ).order_by("-predeterminada", "id")
+
+    def _desmarcar_predeterminadas(self, *, cuenta: CuentaClienteModelo) -> None:
+        DireccionCuentaClienteModelo.objects.filter(cuenta=cuenta, predeterminada=True).update(predeterminada=False)
+
+    def _reasignar_predeterminada_si_aplica(self, *, cuenta: CuentaClienteModelo) -> None:
+        siguiente = DireccionCuentaClienteModelo.objects.filter(cuenta=cuenta).order_by("id").first()
+        if siguiente is None:
+            return
+        if siguiente.predeterminada:
+            return
+        siguiente.predeterminada = True
+        siguiente.save(update_fields=["predeterminada", "fecha_actualizacion"])
+
+    def _datos_direccion(self, comando: ComandoDireccionCuentaCliente) -> dict[str, str]:
+        return {
+            "alias": comando.alias.strip(),
+            "nombre_destinatario": comando.nombre_destinatario.strip(),
+            "telefono_contacto": comando.telefono_contacto.strip(),
+            "linea_1": comando.linea_1.strip(),
+            "linea_2": comando.linea_2.strip(),
+            "codigo_postal": comando.codigo_postal.strip(),
+            "ciudad": comando.ciudad.strip(),
+            "provincia": comando.provincia.strip(),
+            "pais_iso": comando.pais_iso.strip().upper(),
+        }

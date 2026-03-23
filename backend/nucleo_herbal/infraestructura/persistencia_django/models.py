@@ -288,6 +288,46 @@ class CuentaClienteModelo(models.Model):
         return self.email
 
 
+class DireccionCuentaClienteModelo(models.Model):
+    cuenta = models.ForeignKey(
+        CuentaClienteModelo,
+        on_delete=models.CASCADE,
+        related_name="direcciones",
+    )
+    alias = models.CharField(max_length=80, blank=True, default="")
+    nombre_destinatario = models.CharField(max_length=120)
+    telefono_contacto = models.CharField(max_length=40)
+    linea_1 = models.CharField(max_length=160)
+    linea_2 = models.CharField(max_length=160, blank=True, default="")
+    codigo_postal = models.CharField(max_length=24)
+    ciudad = models.CharField(max_length=120)
+    provincia = models.CharField(max_length=120)
+    pais_iso = models.CharField(max_length=2, default="ES")
+    predeterminada = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_direccion_cuenta_cliente"
+        ordering = ("-predeterminada", "id")
+        verbose_name = "dirección cuenta cliente"
+        verbose_name_plural = "direcciones cuenta cliente"
+        constraints = [
+            models.UniqueConstraint(
+                fields=("cuenta",),
+                condition=models.Q(predeterminada=True),
+                name="uniq_direccion_predeterminada_por_cuenta",
+            )
+        ]
+        indexes = [
+            models.Index(fields=("cuenta", "predeterminada"), name="nucleo_dir_cta_pred_idx"),
+            models.Index(fields=("cuenta", "codigo_postal"), name="nucleo_dir_cta_cp_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.cuenta.email} · {self.nombre_destinatario}"
+
+
 class VerificacionEmailCuentaClienteModelo(models.Model):
     cuenta = models.OneToOneField(
         CuentaClienteModelo,
