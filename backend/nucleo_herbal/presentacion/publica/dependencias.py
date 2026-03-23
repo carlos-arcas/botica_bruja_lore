@@ -19,6 +19,7 @@ from ...aplicacion.casos_de_uso_backoffice_pedidos import (
 from ...aplicacion.casos_de_uso_calendario_ritual import ConsultarCalendarioRitualPorFecha
 from ...aplicacion.casos_de_uso_cuentas_cliente import (
     AutenticarCuentaCliente,
+    ConfirmarRecuperacionPasswordCuentaCliente,
     ConfirmarVerificacionEmail,
     ConsultarEstadoVerificacionEmail,
     GenerarSolicitudVerificacionEmail,
@@ -27,6 +28,7 @@ from ...aplicacion.casos_de_uso_cuentas_cliente import (
     ObtenerSesionCuentaCliente,
     ReenviarVerificacionEmail,
     RegistrarCuentaCliente,
+    SolicitarRecuperacionPasswordCuentaCliente,
 )
 from ...aplicacion.casos_de_uso_cuentas_demo import (
     AutenticarCuentaDemo,
@@ -54,7 +56,9 @@ from ...aplicacion.casos_de_uso_rituales import (
     ObtenerRitualesRelacionadosPorIntencion,
 )
 from ...infraestructura.notificaciones_email import NotificadorEmailPostPago
+from ...infraestructura.notificaciones_email_recuperacion_password import NotificadorEmailRecuperacionPasswordCuenta
 from ...infraestructura.notificaciones_email_verificacion import NotificadorEmailVerificacionCuenta
+from ...infraestructura.validacion_password_cuenta import ValidadorPasswordCuentaClienteDjango
 from ...infraestructura.pagos_stripe import construir_pasarela_pago_stripe
 from ...infraestructura.persistencia_django.repositorios import (
     ProveedorHistorialPedidosDemoORM,
@@ -125,6 +129,8 @@ class ServiciosPublicosCuentaCliente:
     confirmar_verificacion_email: ConfirmarVerificacionEmail
     reenviar_verificacion_email: ReenviarVerificacionEmail
     consultar_estado_verificacion_email: ConsultarEstadoVerificacionEmail
+    solicitar_recuperacion_password: SolicitarRecuperacionPasswordCuentaCliente
+    confirmar_recuperacion_password: ConfirmarRecuperacionPasswordCuentaCliente
 
 @dataclass(frozen=True, slots=True)
 class ServiciosPublicosCuentaDemo:
@@ -225,6 +231,8 @@ def construir_servicios_publicos_cuenta_cliente() -> ServiciosPublicosCuentaClie
     repositorio_cuentas = RepositorioCuentasClienteORM()
     repositorio_pedidos = RepositorioPedidosORM()
     notificador_verificacion = NotificadorEmailVerificacionCuenta()
+    notificador_recuperacion = NotificadorEmailRecuperacionPasswordCuenta()
+    validador_password = ValidadorPasswordCuentaClienteDjango()
     return ServiciosPublicosCuentaCliente(
         registrar_cuenta_cliente=RegistrarCuentaCliente(
             repositorio_cuentas_cliente=repositorio_cuentas,
@@ -247,6 +255,14 @@ def construir_servicios_publicos_cuenta_cliente() -> ServiciosPublicosCuentaClie
         ),
         consultar_estado_verificacion_email=ConsultarEstadoVerificacionEmail(
             repositorio_cuentas_cliente=repositorio_cuentas,
+        ),
+        solicitar_recuperacion_password=SolicitarRecuperacionPasswordCuentaCliente(
+            repositorio_cuentas_cliente=repositorio_cuentas,
+            notificador_recuperacion_password=notificador_recuperacion,
+        ),
+        confirmar_recuperacion_password=ConfirmarRecuperacionPasswordCuentaCliente(
+            repositorio_cuentas_cliente=repositorio_cuentas,
+            validador_password=validador_password,
         ),
     )
 

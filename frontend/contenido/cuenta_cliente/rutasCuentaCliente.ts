@@ -3,6 +3,7 @@ export const RUTAS_CUENTA_CLIENTE = {
   acceso: "/acceso",
   cuenta: "/mi-cuenta",
   verificarEmail: "/verificar-email",
+  recuperarPassword: "/recuperar-password",
   pedidos: "/mi-cuenta/pedidos",
   legadoDemo: "/cuenta-demo",
 } as const;

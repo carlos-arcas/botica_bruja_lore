@@ -7,6 +7,7 @@ test("rutas canónicas de cuenta real separan acceso real y legado demo", () => 
   assert.equal(RUTAS_CUENTA_CLIENTE.registro, "/registro");
   assert.equal(RUTAS_CUENTA_CLIENTE.acceso, "/acceso");
   assert.equal(RUTAS_CUENTA_CLIENTE.cuenta, "/mi-cuenta");
+  assert.equal(RUTAS_CUENTA_CLIENTE.recuperarPassword, "/recuperar-password");
   assert.equal(RUTAS_CUENTA_CLIENTE.pedidos, "/mi-cuenta/pedidos");
   assert.equal(RUTAS_CUENTA_CLIENTE.legadoDemo, "/cuenta-demo");
 });

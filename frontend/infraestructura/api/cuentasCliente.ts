@@ -15,6 +15,12 @@ export type EstadoVerificacionEmail = {
   reenviada: boolean;
 };
 
+export type EstadoRecuperacionPassword = {
+  email: string;
+  expira_en: string | null;
+  solicitud_generada: boolean;
+};
+
 export type PedidoCuentaCliente = {
   id_pedido: string;
   estado: string;
@@ -31,6 +37,14 @@ export async function registrarCuentaCliente(payload: { email: string; nombre_vi
 
 export async function loginCuentaCliente(payload: { email: string; password: string }) {
   return enviarCuenta("login", payload);
+}
+
+export async function solicitarRecuperacionPassword(payload: { email: string }) {
+  return enviarRecuperacion("password/recuperacion/solicitar", payload, "No pudimos preparar la recuperación de contraseña.");
+}
+
+export async function confirmarRecuperacionPassword(payload: { token: string; password: string }) {
+  return enviarCuenta("password/recuperacion/confirmar", payload, "No pudimos restablecer la contraseña.");
 }
 
 export async function logoutCuentaCliente() {
@@ -54,8 +68,8 @@ export async function reenviarVerificacionEmail(payload: { email: string }): Pro
   return enviarVerificacion("verificacion-email/reenviar", payload);
 }
 
-export async function confirmarVerificacionEmail(payload: { token: string }): Promise<{ estado: "ok"; cuenta: CuentaCliente } | { estado: "error"; mensaje: string }> {
-  return enviarCuenta("verificacion-email/confirmar", payload);
+export async function confirmarVerificacionEmail(payload: { token: string }): Promise<{ estado: "ok"; cuenta: CuentaCliente } | { estado: "error"; mensaje: string; codigo?: string }> {
+  return enviarCuenta("verificacion-email/confirmar", payload, "No se pudo gestionar la verificación.");
 }
 
 export async function obtenerPedidosCuentaCliente(): Promise<{ pedidos: PedidoCuentaCliente[]; detalle?: string }> {
@@ -64,7 +78,7 @@ export async function obtenerPedidosCuentaCliente(): Promise<{ pedidos: PedidoCu
   return respuesta.ok ? { pedidos: (data.pedidos ?? []) as PedidoCuentaCliente[] } : { pedidos: [], detalle: data.detalle as string | undefined };
 }
 
-async function enviarCuenta(path: string, payload: Record<string, string>): Promise<{ estado: "ok"; cuenta: CuentaCliente } | { estado: "error"; mensaje: string }> {
+async function enviarCuenta(path: string, payload: Record<string, string>, mensajeDefecto = "No se pudo completar la autenticación."): Promise<{ estado: "ok"; cuenta: CuentaCliente } | { estado: "error"; mensaje: string; codigo?: string }> {
   try {
     const respuesta = await fetch(`/api/cuenta/${path}`, {
       method: "POST",
@@ -72,7 +86,7 @@ async function enviarCuenta(path: string, payload: Record<string, string>): Prom
       body: JSON.stringify(payload),
     });
     const data = await respuesta.json();
-    if (!respuesta.ok) return { estado: "error", mensaje: data.detalle ?? "No se pudo completar la autenticación." };
+    if (!respuesta.ok) return { estado: "error", mensaje: data.detalle ?? mensajeDefecto, codigo: data.codigo as string | undefined };
     return { estado: "ok", cuenta: data.cuenta as CuentaCliente };
   } catch {
     return { estado: "error", mensaje: "No pudimos conectar con la cuenta real." };
@@ -91,5 +105,20 @@ async function enviarVerificacion(path: string, payload: Record<string, string>)
     return { estado: "ok", verificacion: data.verificacion as EstadoVerificacionEmail };
   } catch {
     return { estado: "error", mensaje: "No pudimos conectar con la verificación de email." };
+  }
+}
+
+async function enviarRecuperacion(path: string, payload: Record<string, string>, mensajeDefecto: string): Promise<{ estado: "ok"; recuperacion: EstadoRecuperacionPassword; mensaje: string } | { estado: "error"; mensaje: string; codigo?: string }> {
+  try {
+    const respuesta = await fetch(`/api/cuenta/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await respuesta.json();
+    if (!respuesta.ok) return { estado: "error", mensaje: data.detalle ?? mensajeDefecto, codigo: data.codigo as string | undefined };
+    return { estado: "ok", recuperacion: data.recuperacion as EstadoRecuperacionPassword, mensaje: data.detalle as string };
+  } catch {
+    return { estado: "error", mensaje: "No pudimos conectar con la recuperación de contraseña." };
   }
 }

@@ -29,7 +29,7 @@ test("flujo de confirmación cubre éxito, token inválido y expirado", () => {
 });
 
 test("api de reenvío devuelve estado ok cuando backend responde verificación", async () => {
-  globalThis.fetch = async () => new Response(JSON.stringify({ verificacion: { email: "lore@test.dev", email_verificado: false, expira_en: null, reenviada: true } }), { status: 200 }) as typeof fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({ verificacion: { email: "lore@test.dev", email_verificado: false, expira_en: null, reenviada: true } }), { status: 200 })) as typeof fetch;
 
   const resultado = await reenviarVerificacionEmail({ email: "lore@test.dev" });
 
@@ -38,7 +38,7 @@ test("api de reenvío devuelve estado ok cuando backend responde verificación",
 });
 
 test("api de confirmación devuelve error estable cuando backend falla", async () => {
-  globalThis.fetch = async () => new Response(JSON.stringify({ detalle: "El token de verificación ha expirado." }), { status: 400 }) as typeof fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({ detalle: "El token de verificación ha expirado." }), { status: 400 })) as typeof fetch;
 
   const resultado = await confirmarVerificacionEmail({ token: "caducado" });
 

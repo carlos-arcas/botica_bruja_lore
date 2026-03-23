@@ -11,12 +11,13 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
-from ...aplicacion.casos_de_uso_cuentas_cliente import ErrorAutenticacionCliente
+from ...aplicacion.casos_de_uso_cuentas_cliente import ErrorAutenticacionCliente, MENSAJE_GENERICO_RECUPERACION
 from ...dominio.excepciones import ErrorDominio
 from .cuentas_cliente_serializadores import (
     serializar_cuenta_cliente,
     serializar_estado_verificacion_email,
     serializar_pedidos_cuenta,
+    serializar_recuperacion_password,
     serializar_sesion_cliente,
 )
 from .dependencias import construir_servicios_publicos_cuenta_cliente
@@ -100,6 +101,51 @@ def sesion_actual_cuenta_cliente(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+def solicitar_recuperacion_password(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"detalle": "Método no permitido."}, status=405)
+    operation_id = _operation_id(request)
+    payload, error = _leer_payload_json(request)
+    if error is not None:
+        return error
+    email = _texto(payload, "email")
+    try:
+        resultado = construir_servicios_publicos_cuenta_cliente().solicitar_recuperacion_password.ejecutar(
+            email=email,
+            operation_id=operation_id,
+        )
+    except ErrorDominio as exc:
+        log_evento_cuenta(evento="cuenta_real_password_recovery_solicitud", operation_id=operation_id, email=email, usuario_id=None, resultado="error", error=str(exc))
+        return json_validacion(str(exc))
+    log_evento_cuenta(evento="cuenta_real_password_recovery_solicitud", operation_id=operation_id, email=email, usuario_id=None, resultado="ok_generico")
+    return JsonResponse({"recuperacion": serializar_recuperacion_password(resultado), "detalle": MENSAJE_GENERICO_RECUPERACION})
+
+
+@csrf_exempt
+def confirmar_recuperacion_password(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"detalle": "Método no permitido."}, status=405)
+    operation_id = _operation_id(request)
+    payload, error = _leer_payload_json(request)
+    if error is not None:
+        return error
+    try:
+        cuenta = construir_servicios_publicos_cuenta_cliente().confirmar_recuperacion_password.ejecutar(
+            token=_texto(payload, "token"),
+            password_nuevo=_texto(payload, "password"),
+        )
+    except ErrorDominio as exc:
+        resultado = _resultado_recuperacion(str(exc))
+        log_evento_cuenta(evento="cuenta_real_password_recovery_confirmacion", operation_id=operation_id, email=None, usuario_id=None, resultado=resultado, error=str(exc))
+        return json_validacion(str(exc), codigo=resultado)
+    except ErrorAplicacionLookup as exc:
+        log_evento_cuenta(evento="cuenta_real_password_recovery_confirmacion", operation_id=operation_id, email=None, usuario_id=None, resultado="error", error=str(exc))
+        return json_no_encontrado(str(exc))
+    log_evento_cuenta(evento="cuenta_real_password_recovery_confirmacion", operation_id=operation_id, email=cuenta.email, usuario_id=cuenta.id_usuario, resultado="ok")
+    return JsonResponse({"cuenta": serializar_cuenta_cliente(cuenta)})
+
+
+@csrf_exempt
 def confirmar_verificacion_email(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"detalle": "Método no permitido."}, status=405)
@@ -113,7 +159,7 @@ def confirmar_verificacion_email(request: HttpRequest) -> JsonResponse:
     except ErrorDominio as exc:
         resultado = "token_expirado" if "expirado" in str(exc).lower() else "token_invalido"
         log_evento_cuenta(evento="cuenta_real_confirmar_email", operation_id=operation_id, email=None, usuario_id=None, resultado=resultado, error=str(exc))
-        return json_validacion(str(exc))
+        return json_validacion(str(exc), codigo=resultado)
     except ErrorAplicacionLookup as exc:
         log_evento_cuenta(evento="cuenta_real_confirmar_email", operation_id=operation_id, email=None, usuario_id=None, resultado="error", error=str(exc))
         return json_no_encontrado(str(exc))
@@ -179,6 +225,17 @@ def estado_verificacion_email(request: HttpRequest) -> JsonResponse:
         return error
     resultado = construir_servicios_publicos_cuenta_cliente().consultar_estado_verificacion_email.ejecutar(id_usuario=usuario_id)
     return JsonResponse({"verificacion": serializar_estado_verificacion_email(resultado)})
+
+
+def _resultado_recuperacion(error: str) -> str:
+    error_normalizado = error.lower()
+    if "expirado" in error_normalizado:
+        return "token_expirado"
+    if "utilizado" in error_normalizado:
+        return "token_usado"
+    if "válido" in error_normalizado:
+        return "token_invalido"
+    return "password_invalida"
 
 
 def _usuario_autenticado(request: HttpRequest) -> tuple[str, JsonResponse | None]:
