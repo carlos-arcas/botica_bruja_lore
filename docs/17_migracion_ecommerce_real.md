@@ -184,9 +184,13 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Operación interna activa:
   - Django Admin ya permite listar, buscar y editar cantidad disponible/umbral de bajo stock;
   - señal visible de `bajo_stock` preparada para operación mínima sin abrir todavía catálogo público.
+- Enforcement transaccional mínimo activo:
+  - `POST /api/v1/pedidos/` valida stock por línea antes de persistir `Pedido`;
+  - si un producto no tiene inventario registrado, el pedido se rechaza como no disponible;
+  - si la cantidad solicitada supera el disponible, el pedido se rechaza completo con contrato JSON estable (`codigo=stock_no_disponible` + detalle por línea);
+  - el checkout real ya refleja este rechazo sin introducir todavía reservas ni decrementos automáticos.
 - Fuera de alcance preservado:
-  - sin bloqueo de checkout por falta de stock;
   - sin descuento automático por pedido o pago;
   - sin reservas transaccionales ni exposición pública completa del stock.
 - Siguiente bloque recomendado:
-  - conectar disponibilidad pública mínima y enforcement transaccional de stock sobre checkout/pedido sin romper esta fuente única de verdad.
+  - conectar exposición pública mínima del stock y futuras transiciones operativas (reservas/decrementos) sin romper esta fuente única de verdad.

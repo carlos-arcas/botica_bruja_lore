@@ -7,7 +7,8 @@ try:
     from django.test import TestCase as DjangoTestCase
     from django.test.utils import override_settings
 
-    from backend.nucleo_herbal.infraestructura.persistencia_django.models import CuentaClienteModelo
+    from backend.nucleo_herbal.infraestructura.persistencia_django.models import CuentaClienteModelo, ProductoModelo
+    from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
     from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import PedidoRealModelo
 
     DJANGO_DISPONIBLE = True
@@ -22,6 +23,18 @@ except ModuleNotFoundError:
 @unittest.skipUnless(DJANGO_DISPONIBLE, "Django no está instalado en el entorno local.")
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", PUBLIC_SITE_URL="http://frontend.test")
 class ApiCuentaClienteTests(DjangoTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        ProductoModelo.objects.create(
+            id="prod-1",
+            sku="SKU-PROD-1",
+            slug="tarot-bosque-interior",
+            nombre="Tarot bosque interior",
+            tipo_producto="tarot",
+            categoria_comercial="oraculos",
+        )
+        InventarioProductoModelo.objects.create(producto_id="prod-1", cantidad_disponible=5)
+
     def test_registro_real_crea_cuenta_y_sesion(self) -> None:
         response = self.client.post(
             "/api/v1/cuenta/registro/",

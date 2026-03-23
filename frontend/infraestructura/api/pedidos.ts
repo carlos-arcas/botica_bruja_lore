@@ -62,21 +62,38 @@ export type PagoPedido = {
   url_pago?: string;
 };
 
+export type LineaErrorStockPedido = {
+  id_producto: string;
+  slug_producto: string;
+  nombre_producto: string;
+  cantidad_solicitada: number;
+  codigo: string;
+  detalle: string;
+  cantidad_disponible?: number;
+};
+
+export type ErrorPedidoApi = {
+  estado: "error";
+  mensaje: string;
+  codigo?: string;
+  lineas?: LineaErrorStockPedido[];
+};
+
 export type RetornoPago = "success" | "cancel" | null;
 
 const API_BASE_URL = "/api/pedidos";
 
-export async function crearPedidoPublico(payload: PayloadPedido): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {
+export async function crearPedidoPublico(payload: PayloadPedido): Promise<{ estado: "ok"; pedido: PedidoCreado } | ErrorPedidoApi> {
   return enviarPedido(API_BASE_URL, { method: "POST", body: JSON.stringify(payload) });
 }
 
-export async function obtenerPedidoPublico(idPedido: string): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {
+export async function obtenerPedidoPublico(idPedido: string): Promise<{ estado: "ok"; pedido: PedidoCreado } | ErrorPedidoApi> {
   const idNormalizado = idPedido.trim();
   if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
   return enviarPedido(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}`, { method: "GET", cache: "no-store" });
 }
 
-export async function iniciarPagoPedido(idPedido: string): Promise<{ estado: "ok"; pago: PagoPedido } | { estado: "error"; mensaje: string }> {
+export async function iniciarPagoPedido(idPedido: string): Promise<{ estado: "ok"; pago: PagoPedido } | ErrorPedidoApi> {
   const idNormalizado = idPedido.trim();
   if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
   return enviarPago(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}/iniciar-pago`, { method: "POST" });
@@ -88,21 +105,28 @@ export function construirUrlRetornoPedido(idPedido: string, retorno: Exclude<Ret
   return `/pedido/${encodeURIComponent(idPedido)}?${query.toString()}`;
 }
 
-async function enviarPedido(url: string, init: RequestInit): Promise<{ estado: "ok"; pedido: PedidoCreado } | { estado: "error"; mensaje: string }> {
+async function enviarPedido(url: string, init: RequestInit): Promise<{ estado: "ok"; pedido: PedidoCreado } | ErrorPedidoApi> {
   const respuesta = await enviar(url, init);
   return respuesta.estado === "error" ? respuesta : { estado: "ok", pedido: respuesta.data.pedido as PedidoCreado };
 }
 
-async function enviarPago(url: string, init: RequestInit): Promise<{ estado: "ok"; pago: PagoPedido } | { estado: "error"; mensaje: string }> {
+async function enviarPago(url: string, init: RequestInit): Promise<{ estado: "ok"; pago: PagoPedido } | ErrorPedidoApi> {
   const respuesta = await enviar(url, init);
   return respuesta.estado === "error" ? respuesta : { estado: "ok", pago: respuesta.data.pago as PagoPedido };
 }
 
-async function enviar(url: string, init: RequestInit): Promise<{ estado: "ok"; data: Record<string, unknown> } | { estado: "error"; mensaje: string }> {
+async function enviar(url: string, init: RequestInit): Promise<{ estado: "ok"; data: Record<string, unknown> } | ErrorPedidoApi> {
   try {
     const respuesta = await fetch(url, { ...init, headers: { "Content-Type": "application/json", Accept: "application/json" } });
     const data = await respuesta.json();
-    if (!respuesta.ok) return { estado: "error", mensaje: data?.detalle ?? "No se pudo completar el checkout real." };
+    if (!respuesta.ok) {
+      return {
+        estado: "error",
+        mensaje: data?.detalle ?? "No se pudo completar el checkout real.",
+        codigo: typeof data?.codigo === "string" ? data.codigo : undefined,
+        lineas: Array.isArray(data?.lineas) ? (data.lineas as LineaErrorStockPedido[]) : undefined,
+      };
+    }
     return { estado: "ok", data: data as Record<string, unknown> };
   } catch {
     return { estado: "error", mensaje: "No pudimos conectar con la API del checkout real." };

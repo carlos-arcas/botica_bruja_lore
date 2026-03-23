@@ -28,6 +28,7 @@ import { SelectorDireccionCheckoutReal } from "@/componentes/catalogo/checkout-r
 import { construirLineasVisualesCheckoutReal } from "@/componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal";
 import { obtenerDireccionesCuentaCliente, obtenerSesionCuentaCliente } from "@/infraestructura/api/cuentasCliente";
 import { crearPedidoPublico } from "@/infraestructura/api/pedidos";
+import type { LineaErrorStockPedido } from "@/infraestructura/api/pedidos";
 import { guardarPreseleccionEncargoLocal } from "@/infraestructura/catalogo/almacenPreseleccionEncargo";
 
 import estilos from "./flujoCheckoutReal.module.css";
@@ -39,6 +40,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
   const [datos, setDatos] = useState(() => construirEstadoInicialCheckoutReal(contexto.productoPreseleccionado?.slug));
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [mensaje, setMensaje] = useState("");
+  const [lineasStock, setLineasStock] = useState<LineaErrorStockPedido[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [cargandoCuenta, setCargandoCuenta] = useState(true);
   const [direcciones, setDirecciones] = useState<Awaited<ReturnType<typeof obtenerDireccionesCuentaCliente>>["direcciones"]>([]);
@@ -110,11 +112,16 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
     const nuevosErrores = validarCheckoutReal(datos, resultadoLineas, modoCheckout);
     setErrores(nuevosErrores);
     setMensaje("");
+    setLineasStock([]);
     if (Object.keys(nuevosErrores).length > 0) return;
     setEnviando(true);
     const resultado = await crearPedidoPublico(construirPayloadPedidoReal(datos, resultadoLineas.lineasConvertibles));
     setEnviando(false);
-    if (resultado.estado === "error") return setMensaje(resultado.mensaje);
+    if (resultado.estado === "error") {
+      setMensaje(resultado.mensaje);
+      setLineasStock(resultado.codigo === "stock_no_disponible" ? resultado.lineas ?? [] : []);
+      return;
+    }
     router.push(`/pedido/${encodeURIComponent(resultado.pedido.id_pedido)}`);
   };
 
@@ -146,7 +153,21 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
           <button className="boton boton--principal" type="submit" disabled={enviando || checkoutBloqueado} aria-disabled={checkoutBloqueado} aria-describedby={checkoutBloqueado ? "ayuda-checkout-bloqueado" : undefined}>{enviando ? "Creando pedido real..." : checkoutBloqueado ? "Pedido real bloqueado por líneas no convertibles" : "Crear pedido real"}</button>
           {checkoutBloqueado && <p id="ayuda-checkout-bloqueado" className={estilos.ayudaBloqueoCta}>Usa la salida artesanal para mantener la selección completa sin quedarte atrapada en este checkout.</p>}
         </div>
-        {mensaje && <p className={estilos.error}>{mensaje}</p>}
+        {mensaje && (
+          <div className={estilos.bloqueErrorStock}>
+            <p className={estilos.error}>{mensaje}</p>
+            {lineasStock.length > 0 && (
+              <ul className={estilos.listaErrorStock}>
+                {lineasStock.map((linea) => (
+                  <li key={`${linea.id_producto}-${linea.codigo}`}>
+                    <strong>{linea.nombre_producto}</strong>: {linea.detalle}
+                    {typeof linea.cantidad_disponible === "number" ? ` Stock disponible: ${linea.cantidad_disponible}.` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </form>
     </section>
   );

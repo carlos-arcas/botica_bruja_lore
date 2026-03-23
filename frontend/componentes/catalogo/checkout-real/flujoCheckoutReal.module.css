@@ -99,3 +99,22 @@
   padding: 0.85rem;
   background: rgba(255, 251, 245, 0.86);
 }
+
+.bloqueErrorStock,
+.listaErrorStock {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.bloqueErrorStock {
+  border: 1px solid rgba(143, 34, 55, 0.2);
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: rgba(143, 34, 55, 0.05);
+}
+
+.listaErrorStock {
+  margin: 0;
+  padding-left: 1rem;
+  color: #4b3d45;
+}

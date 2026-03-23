@@ -12,7 +12,9 @@ from ..dominio.excepciones import ErrorDominio
 from ..dominio.pedidos import DireccionEntrega, PayloadPedido, Pedido
 from .casos_de_uso import ErrorAplicacionLookup
 from .dto_pedidos import ClientePedidoDTO, DireccionEntregaDTO, ExpedicionPedidoDTO, LineaPedidoRealDTO, PedidoRealDTO
+from .errores_pedidos import ErrorStockPedido, LineaStockError
 from .puertos.repositorios_cuentas_cliente import RepositorioCuentasCliente
+from .puertos.repositorios_inventario import RepositorioInventario
 from .puertos.repositorios_pedidos import RepositorioPedidos
 
 logger = logging.getLogger(__name__)
@@ -22,6 +24,7 @@ logger = logging.getLogger(__name__)
 class RegistrarPedido:
     repositorio_pedidos: RepositorioPedidos
     repositorio_cuentas_cliente: RepositorioCuentasCliente
+    repositorio_inventario: RepositorioInventario
 
     def ejecutar(self, payload: PayloadPedido, operation_id: str) -> PedidoRealDTO:
         pedido = Pedido(
@@ -35,6 +38,7 @@ class RegistrarPedido:
             notas_cliente=payload.notas_cliente,
             moneda=payload.moneda,
         )
+        self._validar_stock_disponible(pedido, operation_id)
         logger.info("pedido_real_registro_iniciado", extra=_extra_log(operation_id, pedido))
         persistido = self.repositorio_pedidos.guardar(pedido)
         logger.info("pedido_real_registrado", extra=_extra_log(operation_id, persistido))
@@ -68,6 +72,52 @@ class RegistrarPedido:
             extra=_extra_direccion(operation_id, payload, resultado="ok", direccion=direccion_guardada),
         )
         return DireccionEntrega(**direccion_guardada.a_direccion_entrega())
+
+    def _validar_stock_disponible(self, pedido: Pedido, operation_id: str) -> None:
+        incidencias: list[LineaStockError] = []
+        for linea in pedido.lineas:
+            inventario = self.repositorio_inventario.obtener_por_id_producto(linea.id_producto)
+            if inventario is None:
+                incidencia = LineaStockError(
+                    id_producto=linea.id_producto,
+                    slug_producto=linea.slug_producto,
+                    nombre_producto=linea.nombre_producto,
+                    cantidad_solicitada=linea.cantidad,
+                    codigo="inventario_no_registrado",
+                    detalle="El producto no tiene inventario disponible para crear el pedido.",
+                )
+                incidencias.append(incidencia)
+                logger.warning("pedido_real_stock_sin_inventario", extra=_extra_stock(operation_id, pedido, incidencia))
+                continue
+            if inventario.puede_cubrir(linea.cantidad):
+                continue
+            incidencia = LineaStockError(
+                id_producto=linea.id_producto,
+                slug_producto=linea.slug_producto,
+                nombre_producto=linea.nombre_producto,
+                cantidad_solicitada=linea.cantidad,
+                cantidad_disponible=inventario.cantidad_disponible,
+                codigo="stock_insuficiente",
+                detalle="La cantidad solicitada supera el stock disponible en este momento.",
+            )
+            incidencias.append(incidencia)
+            logger.warning("pedido_real_stock_insuficiente", extra=_extra_stock(operation_id, pedido, incidencia))
+        if incidencias:
+            raise ErrorStockPedido(
+                "No pudimos crear el pedido porque una o más líneas no tienen stock disponible.",
+                lineas=tuple(incidencias),
+            )
+        logger.info(
+            "pedido_real_stock_validado",
+            extra={
+                "operation_id": operation_id,
+                "ruta": "/api/v1/pedidos/",
+                "flujo": "checkout_real_v1",
+                "id_pedido": pedido.id_pedido,
+                "numero_lineas": len(pedido.lineas),
+                "resultado": "ok",
+            },
+        )
 
 
 @dataclass(slots=True)
@@ -172,4 +222,20 @@ def _extra_direccion(
         "direccion_fuente": "guardada" if payload.id_direccion_guardada else "manual",
         "id_direccion_guardada": payload.id_direccion_guardada,
         "direccion_predeterminada": None if direccion is None else direccion.predeterminada,
+    }
+
+
+def _extra_stock(operation_id: str, pedido: Pedido, incidencia: LineaStockError) -> dict[str, object]:
+    return {
+        "operation_id": operation_id,
+        "ruta": "/api/v1/pedidos/",
+        "flujo": "checkout_real_v1",
+        "id_pedido": pedido.id_pedido,
+        "canal_checkout": pedido.canal_checkout,
+        "producto_id": incidencia.id_producto,
+        "slug_producto": incidencia.slug_producto,
+        "cantidad_solicitada": incidencia.cantidad_solicitada,
+        "cantidad_disponible": incidencia.cantidad_disponible,
+        "codigo_error": incidencia.codigo,
+        "resultado": "error",
     }

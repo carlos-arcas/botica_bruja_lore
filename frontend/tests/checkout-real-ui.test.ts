@@ -111,3 +111,9 @@ test("checkout real no expone bloque de libreta al invitado y mantiene modo manu
   assert.equal(archivoFlujo.includes('modo_direccion: "manual"'), true);
   assert.equal(archivoFlujo.includes("Checkout como invitada"), true);
 });
+
+test("checkout real muestra detalle limpio cuando la API rechaza por stock", () => {
+  assert.equal(archivoFlujo.includes('resultado.codigo === "stock_no_disponible" ? resultado.lineas ?? [] : []'), true);
+  assert.equal(archivoFlujo.includes("Stock disponible:"), true);
+  assert.equal(archivoFlujo.includes("linea.detalle"), true);
+});
