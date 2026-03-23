@@ -337,3 +337,5 @@ class PedidoRealAdmin(admin.ModelAdmin):
     ordering = ("-fecha_creacion",)
     readonly_fields = ("fecha_creacion", "direccion_entrega")
     inlines = (LineaPedidoRealInline,)
+
+from . import admin_inventario  # noqa: F401

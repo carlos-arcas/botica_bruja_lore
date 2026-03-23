@@ -72,6 +72,13 @@ class RepositorioPlantasORM(RepositorioPlantas):
 
 
 class RepositorioProductosORM(RepositorioProductos):
+    def obtener_por_id(self, id_producto: str) -> Producto | None:
+        try:
+            producto = ProductoModelo.objects.get(id=id_producto)
+        except ProductoModelo.DoesNotExist:
+            return None
+        return a_producto(producto)
+
     def listar_herbales_por_planta(self, id_planta: str) -> tuple[Producto, ...]:
         queryset = ProductoModelo.objects.filter(
             publicado=True,
@@ -88,7 +95,14 @@ class RepositorioProductosORM(RepositorioProductos):
             seccion_publica__iexact=seccion_normalizada,
         ).order_by("slug")
         queryset = self._aplicar_filtros_publicos(queryset, filtros)
-        return self._filtrar_por_precio(queryset, filtros)
+        productos = self._filtrar_por_precio(queryset, filtros)
+        if productos or seccion_normalizada != "botica-natural":
+            return productos
+        fallback = ProductoModelo.objects.filter(
+            publicado=True,
+            tipo_producto=TIPO_PRODUCTO_HERBAL,
+        ).order_by("slug")
+        return self._filtrar_por_precio(self._aplicar_filtros_publicos(fallback, filtros), filtros)
 
 
 

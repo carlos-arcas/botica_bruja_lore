@@ -717,3 +717,25 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   2. la primera dirección creada queda predeterminada automáticamente;
   3. si se elimina la predeterminada y quedan alternativas, se reasigna de forma determinista;
   4. la libreta queda alineada con el contrato futuro de `DireccionEntrega` y ya se integra en checkout real mediante snapshot histórico, sin referencia viva al pedido.
+
+## 38. Inventario real v1 para productos vendibles
+- Capacidad: **Base mínima de inventario real operable y persistida**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - dominio/aplicación: `backend/nucleo_herbal/dominio/inventario.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_inventario.py`, `backend/nucleo_herbal/aplicacion/dto_inventario.py`;
+  - persistencia dedicada: `backend/nucleo_herbal/infraestructura/persistencia_django/models_inventario.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_inventario.py`, migración `0022_inventarioproductomodelo.py`;
+  - backoffice/admin mínimo: `backend/nucleo_herbal/infraestructura/persistencia_django/admin_inventario.py`;
+  - tests: `tests/nucleo_herbal/test_entidades_inventario.py`, `tests/nucleo_herbal/test_casos_de_uso_inventario.py`, `tests/nucleo_herbal/infraestructura/test_repositorios_django.py`, `tests/nucleo_herbal/infraestructura/test_admin_django.py`.
+- Contrato operativo activo:
+  1. un producto vendible puede tener como máximo un inventario asociado;
+  2. la cantidad disponible nunca puede quedar en negativo;
+  3. el ajuste manual de stock ya es operable en backend/admin;
+  4. `bajo_stock` queda disponible como señal operativa mínima por umbral opcional.
+- Fuera de alcance preservado:
+  - checkout y catálogo público no consumen todavía esta capacidad;
+  - no existe reserva, decremento automático, multi-almacén ni movimientos complejos.
+- Quality gate ejecutado para este incremento:
+  1. `pytest -q tests/nucleo_herbal/test_entidades_inventario.py tests/nucleo_herbal/test_casos_de_uso_inventario.py`;
+  2. `python -m unittest tests.nucleo_herbal.infraestructura.test_repositorios_django tests.nucleo_herbal.infraestructura.test_admin_django`;
+  3. `python manage.py check`;
+  4. `python scripts/check_release_gate.py` **falló** por deuda preexistente de frontend en páginas con `useSearchParams()` sin `Suspense` (`/mi-cuenta`, `/mi-cuenta/pedidos`, `/recuperar-password`, `/verificar-email`).

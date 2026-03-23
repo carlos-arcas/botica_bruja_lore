@@ -173,3 +173,20 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Integración activa en checkout real: `POST /api/v1/pedidos/` acepta exactamente una fuente de dirección (`direccion_entrega` manual o `id_direccion_guardada` autenticada), resuelve la libreta en backend y persiste snapshot limpio en `Pedido`.
 - UX activa en `/checkout`: si la sesión real tiene direcciones, se preselecciona la predeterminada, se puede alternar entre direcciones guardadas y modo manual, y el invitado conserva el flujo manual sin contaminación.
 - Regla histórica preservada: el pedido nunca queda enlazado en vivo a la libreta; editar o borrar después una dirección no muta pedidos ya creados.
+
+## Actualización inventario real v1
+- Estado técnico: **DONE** para base mínima de inventario real por producto vendible.
+- Fuente de verdad activa: tabla dedicada `nucleo_inventario_producto` con unicidad 1:1 respecto a `Producto`.
+- Capacidad activa backend:
+  - agregado puro `InventarioProducto` desacoplado de Django;
+  - casos de uso para crear inventario inicial, consultar stock actual, ajustar stock y listar inventario operativo;
+  - validación explícita para impedir stock negativo y duplicados por producto.
+- Operación interna activa:
+  - Django Admin ya permite listar, buscar y editar cantidad disponible/umbral de bajo stock;
+  - señal visible de `bajo_stock` preparada para operación mínima sin abrir todavía catálogo público.
+- Fuera de alcance preservado:
+  - sin bloqueo de checkout por falta de stock;
+  - sin descuento automático por pedido o pago;
+  - sin reservas transaccionales ni exposición pública completa del stock.
+- Siguiente bloque recomendado:
+  - conectar disponibilidad pública mínima y enforcement transaccional de stock sobre checkout/pedido sin romper esta fuente única de verdad.

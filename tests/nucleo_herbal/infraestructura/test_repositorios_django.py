@@ -22,6 +22,7 @@ class TestRepositoriosDjango(unittest.TestCase):
         from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
             CuentaDemoModelo,
             IntencionModelo,
+            InventarioProductoModelo,
             LineaPedidoModelo,
             PedidoDemoModelo,
             PlantaModelo,
@@ -32,6 +33,7 @@ class TestRepositoriosDjango(unittest.TestCase):
 
         cls.CuentaDemoModelo = CuentaDemoModelo
         cls.IntencionModelo = IntencionModelo
+        cls.InventarioProductoModelo = InventarioProductoModelo
         cls.PlantaModelo = PlantaModelo
         cls.ProductoModelo = ProductoModelo
         cls.RitualModelo = RitualModelo
@@ -49,8 +51,10 @@ class TestRepositoriosDjango(unittest.TestCase):
             RepositorioProductosORM,
             RepositorioRitualesORM,
         )
+        from backend.nucleo_herbal.infraestructura.persistencia_django.repositorios_inventario import RepositorioInventarioORM
 
         self.CuentaDemoModelo.objects.all().delete()
+        self.InventarioProductoModelo.objects.all().delete()
         self.LineaPedidoModelo.objects.all().delete()
         self.PedidoDemoModelo.objects.all().delete()
         self.ReglaCalendarioModelo.objects.all().delete()
@@ -139,6 +143,7 @@ class TestRepositoriosDjango(unittest.TestCase):
         self.repo_cuentas_demo = RepositorioCuentasDemoORM()
         self.proveedor_historial_cuentas = ProveedorHistorialPedidosDemoORM()
         self.repo_reglas_calendario = RepositorioReglasCalendarioORM()
+        self.repo_inventario = RepositorioInventarioORM()
 
     def test_listar_navegables(self) -> None:
         plantas = self.repo_plantas.listar_navegables()
@@ -303,6 +308,38 @@ class TestRepositoriosDjango(unittest.TestCase):
 
         self.assertEqual(len(productos), 1)
         self.assertEqual(productos[0].sku, "HERB-001")
+
+
+    def test_inventario_crear_obtener_ajustar_y_listar(self) -> None:
+        from backend.nucleo_herbal.dominio.inventario import InventarioProducto
+
+        creado = self.repo_inventario.crear_inicial(
+            InventarioProducto(id_producto="prod-1", cantidad_disponible=5, umbral_bajo_stock=2)
+        )
+
+        self.assertEqual(creado.cantidad_disponible, 5)
+        obtenido = self.repo_inventario.obtener_por_id_producto("prod-1")
+        assert obtenido is not None
+        self.assertEqual(obtenido.umbral_bajo_stock, 2)
+
+        ajustado = self.repo_inventario.guardar(obtenido.ajustar(-3))
+
+        self.assertEqual(ajustado.cantidad_disponible, 2)
+        self.assertTrue(ajustado.bajo_stock)
+        self.assertEqual(len(self.repo_inventario.listar_operativo(solo_bajo_stock=True)), 1)
+
+    def test_inventario_rechaza_duplicado_por_producto(self) -> None:
+        from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
+        from backend.nucleo_herbal.dominio.inventario import InventarioProducto
+
+        self.repo_inventario.crear_inicial(
+            InventarioProducto(id_producto="prod-1", cantidad_disponible=5, umbral_bajo_stock=2)
+        )
+
+        with self.assertRaisesRegex(ErrorDominio, "Ya existe inventario"):
+            self.repo_inventario.crear_inicial(
+                InventarioProducto(id_producto="prod-1", cantidad_disponible=3, umbral_bajo_stock=1)
+            )
 
     def test_pedidos_demo_guardar_y_obtener_por_id(self) -> None:
         from backend.nucleo_herbal.dominio.pedidos_demo import LineaPedido, PedidoDemo
