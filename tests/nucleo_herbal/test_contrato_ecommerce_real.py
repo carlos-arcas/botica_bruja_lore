@@ -73,8 +73,43 @@ class ContratoEcommerceRealTests(TestCase):
 
         self.assertEqual(payload.direccion_entrega.ciudad, "Madrid")
         self.assertEqual(pedido.subtotal, Decimal("10.00"))
+        self.assertEqual(pedido.total, Decimal("10.00"))
         self.assertEqual(pedido.cliente.telefono_contacto, "600111222")
         self.assertEqual(pedido.estado_pago, "pendiente")
+
+    def test_pedido_real_no_admite_importe_envio_negativo(self) -> None:
+        cliente = ClientePedido(
+            id_cliente=None,
+            email="lore@test.dev",
+            nombre_contacto="Lore",
+            telefono_contacto="600111222",
+            es_invitado=True,
+        )
+        direccion = DireccionEntrega(
+            nombre_destinatario="Lore",
+            linea_1="Calle Luna 1",
+            codigo_postal="28001",
+            ciudad="Madrid",
+            provincia="Madrid",
+        )
+        linea = LineaPedido(
+            id_producto="PRO-1",
+            slug_producto="bruma-lunar",
+            nombre_producto="Bruma lunar",
+            cantidad=1,
+            precio_unitario=Decimal("5.00"),
+        )
+
+        with self.assertRaisesRegex(Exception, "importe de envío negativo"):
+            Pedido(
+                id_pedido="PED-NEG",
+                estado="pendiente_pago",
+                canal_checkout="web_invitado",
+                cliente=cliente,
+                direccion_entrega=direccion,
+                lineas=(linea,),
+                importe_envio=Decimal("-0.01"),
+            )
 
     def test_adaptador_demo_convive_sin_romper_y_marca_origen_legacy(self) -> None:
         pedido_demo = PedidoDemo(

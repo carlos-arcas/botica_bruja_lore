@@ -14,6 +14,7 @@ EstadoPago = Literal["pendiente", "requiere_accion", "pagado", "fallido", "cance
 EstadoReembolso = Literal["no_iniciado", "fallido", "ejecutado"]
 CanalCheckout = Literal["web_invitado", "web_autenticado", "backoffice"]
 ProveedorPago = Literal["stripe"]
+MetodoEnvio = Literal["envio_estandar"]
 
 ESTADOS_PEDIDO_VALIDOS: tuple[EstadoPedido, ...] = (
     "pendiente_pago",
@@ -26,6 +27,7 @@ ESTADOS_PEDIDO_VALIDOS: tuple[EstadoPedido, ...] = (
 ESTADOS_PAGO_VALIDOS: tuple[EstadoPago, ...] = ("pendiente", "requiere_accion", "pagado", "fallido", "cancelado")
 ESTADOS_REEMBOLSO_VALIDOS: tuple[EstadoReembolso, ...] = ("no_iniciado", "fallido", "ejecutado")
 CANALES_CHECKOUT_VALIDOS: tuple[CanalCheckout, ...] = ("web_invitado", "web_autenticado", "backoffice")
+METODOS_ENVIO_VALIDOS: tuple[MetodoEnvio, ...] = ("envio_estandar",)
 RUTA_API_PEDIDOS = "/api/v1/pedidos/"
 
 ESTRATEGIA_CONVIVENCIA_PEDIDOS = {
@@ -112,6 +114,8 @@ class Pedido:
     fecha_creacion: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
     notas_cliente: str = ""
     moneda: str = "EUR"
+    metodo_envio: MetodoEnvio = "envio_estandar"
+    importe_envio: Decimal = Decimal("0")
     estado_pago: EstadoPago = "pendiente"
     proveedor_pago: ProveedorPago | None = None
     id_externo_pago: str | None = None
@@ -156,6 +160,10 @@ class Pedido:
             raise ErrorDominio("El pedido requiere al menos una línea.")
         if not self.moneda.strip():
             raise ErrorDominio("El pedido requiere moneda.")
+        if self.metodo_envio not in METODOS_ENVIO_VALIDOS:
+            raise ErrorDominio("El pedido requiere método de envío válido.")
+        if self.importe_envio < Decimal("0"):
+            raise ErrorDominio("El pedido no admite importe de envío negativo.")
         if self.estado == "pagado" and self.estado_pago != "pagado":
             raise ErrorDominio("Un pedido pagado requiere estado_pago='pagado'.")
         if self.incidencia_stock_confirmacion and self.inventario_descontado:
@@ -191,6 +199,10 @@ class Pedido:
     @property
     def subtotal(self) -> Decimal:
         return sum((linea.subtotal for linea in self.lineas), Decimal("0"))
+
+    @property
+    def total(self) -> Decimal:
+        return self.subtotal + self.importe_envio
 
     def puede_iniciar_pago(self) -> None:
         if self.estado == "pagado" or self.estado_pago == "pagado":

@@ -54,6 +54,8 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
       <p>Contacto: {pedido.cliente.nombre_contacto} · {pedido.cliente.email_contacto}</p>
       <p>Entrega: {pedido.direccion_entrega.linea_1}, {pedido.direccion_entrega.ciudad}, {pedido.direccion_entrega.codigo_postal}</p>
       <p>Subtotal: {pedido.subtotal} {pedido.moneda}</p>
+      <p>Envío ({pedido.metodo_envio}): {pedido.importe_envio} {pedido.moneda}</p>
+      <p>Total: {pedido.total} {pedido.moneda}</p>
       <p>Proveedor PSP v1: {pedido.pago.proveedor_pago ?? "Stripe preparado para iniciar"}.</p>
       <p>Confirmación email pago: {pedido.email_post_pago_enviado ? "enviada" : "pendiente"}.</p>
       <p>Confirmación email envío: {pedido.expedicion.email_envio_enviado ? "enviada" : "pendiente"}.</p>

@@ -58,7 +58,10 @@ class PedidoRealDTO:
     estado_pago: str
     canal_checkout: str
     moneda: str
+    metodo_envio: str
     subtotal: Decimal
+    importe_envio: Decimal
+    total: Decimal
     proveedor_pago: str | None
     id_externo_pago: str | None
     url_pago: str | None

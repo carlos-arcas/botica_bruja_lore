@@ -129,3 +129,15 @@ test("checkout real deja claro que la disponibilidad frontend es informativa y n
   assert.equal(archivoAviso.includes("Comprobando disponibilidad pública mínima"), true);
   assert.equal(archivoAviso.includes("sin_cobertura"), true);
 });
+
+test("checkout real muestra subtotal, envío estándar y total antes de pagar", () => {
+  assert.equal(archivoFlujo.includes("Subtotal:"), true);
+  assert.equal(archivoFlujo.includes("Envío estándar:"), true);
+  assert.equal(archivoFlujo.includes("Total:"), true);
+});
+
+test("recibo real muestra subtotal, envío y total del pedido", () => {
+  assert.equal(archivoRecibo.includes("Subtotal:"), true);
+  assert.equal(archivoRecibo.includes("Envío ("), true);
+  assert.equal(archivoRecibo.includes("Total:"), true);
+});

@@ -5,6 +5,7 @@ import pytest
 from backend.nucleo_herbal.aplicacion.casos_de_uso_pedidos import RegistrarPedido
 from backend.nucleo_herbal.aplicacion.errores_pedidos import ErrorStockPedido
 from backend.nucleo_herbal.aplicacion.puertos.repositorios_cuentas_cliente import RepositorioCuentasCliente
+from backend.nucleo_herbal.aplicacion.puertos.proveedor_envio import PuertoProveedorEnvio
 from backend.nucleo_herbal.aplicacion.puertos.repositorios_inventario import RepositorioInventario
 from backend.nucleo_herbal.aplicacion.puertos.repositorios_pedidos import RepositorioPedidos
 from backend.nucleo_herbal.dominio.inventario import InventarioProducto
@@ -21,6 +22,9 @@ class RepositorioPedidosMemoria(RepositorioPedidos):
 
     def obtener_por_id(self, id_pedido: str) -> Pedido | None:
         return next((pedido for pedido in self.guardados if pedido.id_pedido == id_pedido), None)
+
+    def obtener_por_id_para_actualizar(self, id_pedido: str) -> Pedido | None:
+        return self.obtener_por_id(id_pedido)
 
     def obtener_por_pago_externo(self, proveedor_pago: str, id_externo_pago: str) -> Pedido | None:
         return None
@@ -55,6 +59,9 @@ class RepositorioInventarioMemoria(RepositorioInventario):
 
     def listar_operativo(self, *, solo_bajo_stock: bool = False) -> tuple[InventarioProducto, ...]:
         return tuple(self.inventarios.values())
+
+    def obtener_para_actualizar_por_ids_producto(self, ids_producto: tuple[str, ...]) -> dict[str, InventarioProducto]:
+        return {id_producto: self.inventarios[id_producto] for id_producto in ids_producto if id_producto in self.inventarios}
 
 
 class RepositorioCuentasClienteStub(RepositorioCuentasCliente):
@@ -110,6 +117,14 @@ class RepositorioCuentasClienteStub(RepositorioCuentasCliente):
         return None
 
 
+class ProveedorEnvioFijoStub(PuertoProveedorEnvio):
+    def __init__(self, importe: Decimal = Decimal("4.90")) -> None:
+        self.importe = importe
+
+    def resolver_importe_envio_estandar(self, *, moneda: str, operation_id: str) -> Decimal:
+        return self.importe
+
+
 def test_registrar_pedido_real_con_stock_suficiente_persiste() -> None:
     repo_pedidos = RepositorioPedidosMemoria()
     caso = RegistrarPedido(
@@ -118,11 +133,14 @@ def test_registrar_pedido_real_con_stock_suficiente_persiste() -> None:
         repositorio_inventario=RepositorioInventarioMemoria(
             {"prod-1": InventarioProducto(id_producto="prod-1", cantidad_disponible=3)}
         ),
+        proveedor_envio=ProveedorEnvioFijoStub(),
     )
 
     resultado = caso.ejecutar(_payload_base(), operation_id="op-stock-ok")
 
     assert resultado.estado == "pendiente_pago"
+    assert resultado.importe_envio == Decimal("4.90")
+    assert resultado.total == Decimal("22.90")
     assert len(repo_pedidos.guardados) == 1
 
 
@@ -132,6 +150,7 @@ def test_rechaza_producto_sin_inventario() -> None:
         repositorio_pedidos=repo_pedidos,
         repositorio_cuentas_cliente=RepositorioCuentasClienteStub(),
         repositorio_inventario=RepositorioInventarioMemoria(),
+        proveedor_envio=ProveedorEnvioFijoStub(),
     )
 
     with pytest.raises(ErrorStockPedido) as error:
@@ -150,6 +169,7 @@ def test_rechaza_producto_con_stock_insuficiente() -> None:
         repositorio_inventario=RepositorioInventarioMemoria(
             {"prod-1": InventarioProducto(id_producto="prod-1", cantidad_disponible=1)}
         ),
+        proveedor_envio=ProveedorEnvioFijoStub(),
     )
 
     with pytest.raises(ErrorStockPedido) as error:
@@ -171,6 +191,7 @@ def test_rechaza_pedido_completo_si_una_linea_falla() -> None:
                 "prod-2": InventarioProducto(id_producto="prod-2", cantidad_disponible=0),
             }
         ),
+        proveedor_envio=ProveedorEnvioFijoStub(),
     )
 
     with pytest.raises(ErrorStockPedido) as error:

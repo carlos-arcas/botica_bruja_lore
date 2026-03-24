@@ -34,6 +34,9 @@ class TestApiPedidosReal(DjangoTestCase):
         self.assertTrue(pedido["id_pedido"].startswith("PED-"))
         self.assertEqual(pedido["estado"], "pendiente_pago")
         self.assertEqual(pedido["estado_pago"], "pendiente")
+        self.assertEqual(pedido["metodo_envio"], "envio_estandar")
+        self.assertEqual(pedido["importe_envio"], "4.90")
+        self.assertEqual(pedido["total"], "22.90")
         self.assertEqual(pedido["direccion_entrega"]["ciudad"], "Madrid")
         self.assertEqual(pedido["cliente"]["es_invitado"], True)
         self.assertTrue(PedidoRealModelo.objects.filter(id_pedido=pedido["id_pedido"]).exists())
@@ -48,6 +51,8 @@ class TestApiPedidosReal(DjangoTestCase):
         pedido = detalle.json()["pedido"]
         self.assertEqual(pedido["id_pedido"], id_pedido)
         self.assertEqual(pedido["resumen"]["subtotal"], "18.00")
+        self.assertEqual(pedido["resumen"]["importe_envio"], "4.90")
+        self.assertEqual(pedido["resumen"]["total"], "22.90")
         self.assertEqual(pedido["pago"]["id_externo_pago"], None)
         self.assertFalse(pedido["email_post_pago_enviado"])
         self.assertEqual(pedido["expedicion"]["transportista"], "")
