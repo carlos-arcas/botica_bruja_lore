@@ -12,8 +12,11 @@ from .dto_pedidos import PedidoRealDTO
 from ..dominio.excepciones import ErrorDominio
 from .puertos.notificador_pedidos import NotificadorPostPagoPedido
 from .puertos.pasarela_pago import PuertoPasarelaPago
+from .puertos.repositorios_inventario import RepositorioInventario
+from .puertos.repositorios_movimientos_inventario import RepositorioMovimientosInventario
 from .puertos.repositorios_pedidos import RepositorioPedidos
 from .puertos.transacciones import PuertoTransacciones
+from ..dominio.inventario_movimientos import MovimientoInventario
 
 logger = logging.getLogger(__name__)
 
@@ -189,6 +192,55 @@ class ReembolsarPedidoCanceladoPorIncidenciaStock:
                 ),
             )
             return _a_dto(persistido)
+
+
+@dataclass(slots=True)
+class RestituirInventarioManualPedidoCancelado:
+    repositorio_pedidos: RepositorioPedidos
+    repositorio_inventario: RepositorioInventario
+    repositorio_movimientos: RepositorioMovimientosInventario
+    transacciones: PuertoTransacciones
+
+    def ejecutar(self, id_pedido: str, operation_id: str, actor: str) -> PedidoRealDTO:
+        with self.transacciones.atomic():
+            pedido = _obtener_pedido_para_actualizar(self.repositorio_pedidos, id_pedido)
+            logger.info("backoffice_pedido_restitucion_manual_intento", extra=_extra_log(operation_id, actor, pedido, pedido, "restitucion_manual", "intento"))
+            if pedido.inventario_restituido:
+                logger.info("backoffice_pedido_restitucion_manual_reintento_idempotente", extra=_extra_log(operation_id, actor, pedido, pedido, "restitucion_manual", "idempotente"))
+                return _a_dto(pedido)
+            try:
+                pedido.validar_restitucion_manual_inventario()
+            except ErrorDominio as error:
+                logger.warning(
+                    "backoffice_pedido_restitucion_manual_rechazada",
+                    extra=_extra_log(operation_id, actor, pedido, pedido, "restitucion_manual", "rechazado", str(error)),
+                )
+                raise
+            self._restituir_lineas(pedido, operation_id)
+            actualizado = pedido.marcar_inventario_restituido(fecha_restitucion=datetime.now(tz=UTC))
+            persistido = self.repositorio_pedidos.guardar(actualizado)
+            logger.info("backoffice_pedido_restitucion_manual_ok", extra=_extra_log(operation_id, actor, pedido, persistido, "restitucion_manual", "ok"))
+            return _a_dto(persistido)
+
+    def _restituir_lineas(self, pedido, operation_id: str) -> None:
+        for indice, linea in enumerate(pedido.lineas):
+            inventario = self.repositorio_inventario.obtener_por_id_producto(linea.id_producto)
+            if inventario is None:
+                raise ErrorDominio(f"No existe inventario para restituir el producto {linea.id_producto}.")
+            if inventario.unidad_base != linea.unidad_comercial:
+                raise ErrorDominio("La unidad comercial de la línea no coincide con la unidad base de inventario.")
+            actualizado = inventario.ajustar(linea.cantidad_comercial, fecha_actualizacion=datetime.now(tz=UTC))
+            persistido = self.repositorio_inventario.guardar(actualizado)
+            self.repositorio_movimientos.registrar(
+                MovimientoInventario(
+                    id_producto=linea.id_producto,
+                    tipo_movimiento="restitucion_manual",
+                    cantidad=linea.cantidad_comercial,
+                    unidad_base=persistido.unidad_base,
+                    referencia=pedido.id_pedido,
+                    operation_id=f"{operation_id}:restitucion_manual:{indice}:{linea.id_producto}",
+                )
+            )
 
 
 def _obtener_pedido(repositorio: RepositorioPedidos, id_pedido: str):

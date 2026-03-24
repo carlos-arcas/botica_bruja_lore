@@ -419,6 +419,26 @@ class TestRepositoriosDjango(unittest.TestCase):
 
         self.assertEqual(self.MovimientoInventarioModelo.objects.filter(tipo_movimiento="descuento_pago").count(), 1)
 
+    def test_movimiento_restitucion_manual_con_operation_id_es_idempotente(self) -> None:
+        from backend.nucleo_herbal.dominio.inventario import InventarioProducto
+        from backend.nucleo_herbal.dominio.inventario_movimientos import MovimientoInventario
+
+        self.repo_inventario.crear_inicial(
+            InventarioProducto(id_producto="prod-1", cantidad_disponible=5, unidad_base="ud", umbral_bajo_stock=1)
+        )
+        movimiento = MovimientoInventario(
+            id_producto="prod-1",
+            tipo_movimiento="restitucion_manual",
+            cantidad=1,
+            unidad_base="ud",
+            referencia="PED-REST-1",
+            operation_id="op-pedido-1:restitucion_manual:0:prod-1",
+        )
+        self.repo_movimientos.registrar(movimiento)
+        self.repo_movimientos.registrar(movimiento)
+
+        self.assertEqual(self.MovimientoInventarioModelo.objects.filter(tipo_movimiento="restitucion_manual").count(), 1)
+
     def test_movimiento_listar_por_producto_ordenado_descendente(self) -> None:
         from backend.nucleo_herbal.dominio.inventario import InventarioProducto
         from backend.nucleo_herbal.dominio.inventario_movimientos import MovimientoInventario

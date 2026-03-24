@@ -153,6 +153,8 @@ class Pedido:
     fecha_reembolso: datetime | None = None
     id_externo_reembolso: str | None = None
     motivo_fallo_reembolso: str = ""
+    inventario_restituido: bool = False
+    fecha_restitucion_inventario: datetime | None = None
 
     def __post_init__(self) -> None:
         if not self.id_pedido.strip():
@@ -203,6 +205,8 @@ class Pedido:
             raise ErrorDominio("La fecha de reembolso solo existe cuando el reembolso está ejecutado.")
         if self.estado_reembolso != "fallido" and self.motivo_fallo_reembolso.strip():
             raise ErrorDominio("El motivo de fallo de reembolso requiere estado_reembolso='fallido'.")
+        if self.fecha_restitucion_inventario and not self.inventario_restituido:
+            raise ErrorDominio("La fecha de restitución requiere inventario_restituido=True.")
         self._validar_operacion_fisica()
 
     @property
@@ -354,6 +358,20 @@ class Pedido:
             id_externo_reembolso=None,
             motivo_fallo_reembolso=motivo,
         )
+
+    def validar_restitucion_manual_inventario(self) -> None:
+        if self.inventario_restituido:
+            return
+        if not self.inventario_descontado:
+            raise ErrorDominio("No se puede restituir inventario de un pedido sin descuento previo.")
+        if self.estado != "cancelado" or not self.cancelado_operativa_incidencia_stock:
+            raise ErrorDominio("Solo se puede restituir inventario de pedidos cancelados operativamente por incidencia.")
+
+    def marcar_inventario_restituido(self, fecha_restitucion: datetime) -> "Pedido":
+        self.validar_restitucion_manual_inventario()
+        if self.inventario_restituido:
+            return self
+        return replace(self, inventario_restituido=True, fecha_restitucion_inventario=fecha_restitucion)
 
     def _validar_operacion_fisica(self) -> None:
         if self.estado in {"preparando", "enviado", "entregado"} and self.fecha_preparacion is None:

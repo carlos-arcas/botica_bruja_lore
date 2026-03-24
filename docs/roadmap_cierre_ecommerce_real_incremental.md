@@ -373,8 +373,55 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R08 — Restitución manual de inventario
-- **Estado**: `PLANNED`.
-- **Lectura actual**: existen cancelación/reembolso manuales por incidencia; restitución explícita de inventario aún no cerrada como flujo formal.
+- **Estado**: `DONE`.
+- **Lectura actual**: existe operación explícita de restitución manual de inventario con elegibilidad conservadora, idempotencia, ajuste de stock y ledger `restitucion_manual` auditable desde Django Admin de pedidos.
+
+**Cierre de R08 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Reutilizar la superficie operativa ya existente (Django Admin de `PedidoReal`) para evitar duplicar UX entre Admin y Next backoffice en este bloque.
+  2. Introducir trazabilidad explícita en `Pedido` para la operación (`inventario_restituido`, `fecha_restitucion_inventario`) y resolver idempotencia de negocio sin heurísticas sobre el ledger.
+  3. Política de elegibilidad conservadora y explícita:
+     - pedido con `inventario_descontado=True`;
+     - pedido en `estado=cancelado` y `cancelado_operativa_incidencia_stock=True`;
+     - sin restitución previa (`inventario_restituido=False`);
+     - rechazo explícito para cualquier estado no elegible o sin descuento previo.
+  4. Restitución transaccional por líneas:
+     - suma `cantidad_comercial` en `InventarioProducto` validando unidad (`unidad_comercial == unidad_base`);
+     - registra movimiento `restitucion_manual` por línea con `operation_id` determinista para no duplicar trazas ante reintentos.
+  5. Sin automatismos nuevos: no se activa restitución automática al cancelar/reembolsar, no se tocan emails ni checkout público.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/dto_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_backoffice_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0032_pedidorealmodelo_fecha_restitucion_inventario_and_more.py`
+  - `tests/nucleo_herbal/test_operacion_pedidos_real.py`
+  - `tests/nucleo_herbal/infraestructura/test_repositorio_pedidos_real.py`
+  - `tests/nucleo_herbal/infraestructura/test_repositorios_django.py`
+  - `tests/nucleo_herbal/infraestructura/test_admin_django.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/17_migracion_ecommerce_real.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+- **Comandos ejecutados**:
+  - `python manage.py makemigrations persistencia_django`
+  - `python manage.py test tests.nucleo_herbal.test_operacion_pedidos_real tests.nucleo_herbal.infraestructura.test_repositorio_pedidos_real tests.nucleo_herbal.infraestructura.test_repositorios_django tests.nucleo_herbal.infraestructura.test_admin_django backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_backend_readiness.py`
+- **Evidencia**:
+  - nueva acción admin `restituir_inventario_manual`;
+  - stock operativo incrementado con cantidad comercial por línea en pedidos elegibles;
+  - ledger guarda `restitucion_manual` con referencia al pedido y sin duplicados por `operation_id`;
+  - rechazos auditables en intentos inválidos e idempotencia en reintento.
+- **Deuda residual**:
+  1. No existe todavía una acción equivalente en backoffice Next de pedidos (se mantiene Admin como superficie operativa única en R08).
+  2. No se automatiza restitución en cancelación/reembolso (se mantiene manual por diseño en este incremento).
+  3. No se añade reporting avanzado ni flujos de devoluciones complejas.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R09 — Disponibilidad pública real para producto a granel
 - **Estado**: `DONE`.
@@ -439,3 +486,5 @@
 - **2026-03-24 — R06 (cierre):** ledger mínimo de inventario implementado y trazado para alta inicial, ajuste manual y descuento post-pago con idempotencia y visibilidad en Django Admin.
 - **2026-03-24 — R07 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de implementar page propia de inventario en backoffice Next.
 - **2026-03-24 — R07 (cierre):** page propia de inventario en backoffice Next cerrada con listado operativo, ajuste manual y ledger mínimo visible sobre API privada staff.
+- **2026-03-24 — R08 (arranque):** estado movido de `PLANNED` a `IN_PROGRESS` antes de implementar restitución manual de inventario.
+- **2026-03-24 — R08 (cierre):** restitución manual de inventario cerrada con elegibilidad explícita, acción operativa en Django Admin, ajuste de stock, ledger `restitucion_manual`, idempotencia y tests backend relevantes en verde.

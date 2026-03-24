@@ -8,8 +8,10 @@ from backend.nucleo_herbal.aplicacion.casos_de_uso_backoffice_pedidos import (
     DatosEnvioBackoffice,
     MarcarPedidoEnviado,
     ReembolsarPedidoCanceladoPorIncidenciaStock,
+    RestituirInventarioManualPedidoCancelado,
 )
 from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
+from backend.nucleo_herbal.dominio.inventario import InventarioProducto
 from backend.nucleo_herbal.dominio.pedidos import ClientePedido, DireccionEntrega, LineaPedido, Pedido
 
 
@@ -212,6 +214,92 @@ class OperacionPedidosRealTests(TestCase):
 
         with self.assertRaisesRegex(ErrorDominio, "pago confirmado"):
             caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-refund-not-paid", actor="staff")
+
+    def test_restitucion_manual_valida_incrementa_stock_y_marca_pedido(self) -> None:
+        pedido_base = (
+            _pedido_base(estado="pagado", estado_pago="pagado")
+            .registrar_incidencia_stock_confirmacion("Sin stock")
+            .cancelar_operativamente_por_incidencia_stock(_pedido_base().fecha_creacion, "Cancelación operativa")
+        )
+        pedido = replace(
+            pedido_base,
+            inventario_descontado=True,
+            incidencia_stock_confirmacion=False,
+        )
+        inventario = InventarioProducto(id_producto="PRO-1", cantidad_disponible=4, unidad_base="ud", umbral_bajo_stock=1)
+        repo_pedidos = Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido), guardar=Mock(side_effect=lambda actual: actual))
+        repo_inventario = Mock(
+            obtener_por_id_producto=Mock(return_value=inventario),
+            guardar=Mock(side_effect=lambda actual: actual),
+        )
+        repo_movimientos = Mock(registrar=Mock())
+        transacciones = Mock(atomic=Mock(return_value=_ContextoNulo()))
+
+        caso = RestituirInventarioManualPedidoCancelado(
+            repositorio_pedidos=repo_pedidos,
+            repositorio_inventario=repo_inventario,
+            repositorio_movimientos=repo_movimientos,
+            transacciones=transacciones,
+        )
+        resultado = caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-rest-1", actor="staff")
+
+        self.assertTrue(resultado.inventario_restituido)
+        self.assertIsNotNone(resultado.fecha_restitucion_inventario)
+        inventario_guardado = repo_inventario.guardar.call_args.args[0]
+        self.assertEqual(inventario_guardado.cantidad_disponible, 5)
+        movimiento = repo_movimientos.registrar.call_args.args[0]
+        self.assertEqual(movimiento.tipo_movimiento, "restitucion_manual")
+        self.assertEqual(movimiento.cantidad, 1)
+
+    def test_restitucion_manual_rechaza_si_no_hubo_descuento(self) -> None:
+        pedido = (
+            _pedido_base(estado="pagado", estado_pago="pagado")
+            .registrar_incidencia_stock_confirmacion("Sin stock")
+            .cancelar_operativamente_por_incidencia_stock(_pedido_base().fecha_creacion, "Cancelación operativa")
+        )
+        caso = RestituirInventarioManualPedidoCancelado(
+            repositorio_pedidos=Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido)),
+            repositorio_inventario=Mock(),
+            repositorio_movimientos=Mock(),
+            transacciones=Mock(atomic=Mock(return_value=_ContextoNulo())),
+        )
+
+        with self.assertRaisesRegex(ErrorDominio, "sin descuento previo"):
+            caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-rest-no-discount", actor="staff")
+
+    def test_restitucion_manual_rechaza_si_estado_no_cancelado(self) -> None:
+        pedido = _pedido_base(estado="pagado", estado_pago="pagado").marcar_inventario_descontado()
+        caso = RestituirInventarioManualPedidoCancelado(
+            repositorio_pedidos=Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido)),
+            repositorio_inventario=Mock(),
+            repositorio_movimientos=Mock(),
+            transacciones=Mock(atomic=Mock(return_value=_ContextoNulo())),
+        )
+
+        with self.assertRaisesRegex(ErrorDominio, "cancelados operativamente"):
+            caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-rest-invalid-state", actor="staff")
+
+    def test_restitucion_manual_reintento_idempotente_no_duplica_movimiento(self) -> None:
+        pedido = replace(
+            _pedido_base(estado="cancelado", estado_pago="pagado").marcar_inventario_descontado(),
+            cancelado_operativa_incidencia_stock=True,
+            fecha_cancelacion_operativa=_pedido_base().fecha_creacion,
+            motivo_cancelacion_operativa="Cancelación operativa",
+            inventario_restituido=True,
+            fecha_restitucion_inventario=_pedido_base().fecha_creacion,
+        )
+        repo_movimientos = Mock()
+        caso = RestituirInventarioManualPedidoCancelado(
+            repositorio_pedidos=Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido)),
+            repositorio_inventario=Mock(),
+            repositorio_movimientos=repo_movimientos,
+            transacciones=Mock(atomic=Mock(return_value=_ContextoNulo())),
+        )
+
+        resultado = caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-rest-idem", actor="staff")
+
+        self.assertTrue(resultado.inventario_restituido)
+        repo_movimientos.registrar.assert_not_called()
 
 
 

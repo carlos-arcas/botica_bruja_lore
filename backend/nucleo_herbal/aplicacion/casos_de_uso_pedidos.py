@@ -186,6 +186,8 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
         fecha_reembolso=pedido.fecha_reembolso,
         id_externo_reembolso=pedido.id_externo_reembolso,
         motivo_fallo_reembolso=pedido.motivo_fallo_reembolso,
+        inventario_restituido=pedido.inventario_restituido,
+        fecha_restitucion_inventario=pedido.fecha_restitucion_inventario,
         email_post_pago_enviado=pedido.email_post_pago_enviado,
         cliente=ClientePedidoDTO(
             email=pedido.cliente.email,

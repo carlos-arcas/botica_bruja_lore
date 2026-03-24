@@ -47,6 +47,8 @@ class PedidoRealModelo(models.Model):
     fecha_reembolso = models.DateTimeField(null=True, blank=True)
     id_externo_reembolso = models.CharField(max_length=128, blank=True, default="")
     motivo_fallo_reembolso = models.CharField(max_length=280, blank=True, default="")
+    inventario_restituido = models.BooleanField(default=False)
+    fecha_restitucion_inventario = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "nucleo_pedido"
