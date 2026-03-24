@@ -44,6 +44,17 @@ class PostPagoInventarioTests(TestCase):
         self.assertEqual(resultado.estado, "pagado")
         self.assertEqual(self.notificador.pedidos_enviados, ["pedido-1"])
 
+    def test_confirmar_pago_granel_descuenta_por_cantidad_comercial_en_unidad_base(self):
+        self._crear_inventario(self.producto_1.id, 1000, unidad_base="g")
+        pedido = self._crear_pedido("pedido-1b", [(self.producto_1.id, "rosa-seca", "Rosa seca", 250, "g")])
+
+        resultado = self.procesador.ejecutar(pedido, "op-1b", "checkout.session.completed")
+
+        self.assertEqual(self._stock(self.producto_1.id), 750)
+        self.assertTrue(resultado.inventario_descontado)
+        self.assertFalse(resultado.incidencia_stock_confirmacion)
+        self.assertEqual(self.notificador.pedidos_enviados, ["pedido-1b"])
+
     def test_repetir_confirmacion_no_vuelve_a_descontar(self):
         self._crear_inventario(self.producto_1.id, 4)
         pedido = self._crear_pedido("pedido-2", [(self.producto_1.id, "rosa-seca", "Rosa seca", 1)])
@@ -96,6 +107,40 @@ class PostPagoInventarioTests(TestCase):
         self.assertIn("requiere revisión manual", resultado.observaciones_operativas)
         self.assertEqual(self.notificador.pedidos_enviados, [])
 
+    def test_unidad_incompatible_genera_incidencia_sin_tocar_inventario(self):
+        self._crear_inventario(self.producto_1.id, 1000, unidad_base="g")
+        pedido = self._crear_pedido("pedido-4b", [(self.producto_1.id, "rosa-seca", "Rosa seca", 250, "ml")])
+
+        resultado = self.procesador.ejecutar(pedido, "op-5b", "checkout.session.completed")
+
+        self.assertEqual(self._stock(self.producto_1.id), 1000)
+        self.assertEqual(resultado.estado, "pagado")
+        self.assertFalse(resultado.inventario_descontado)
+        self.assertTrue(resultado.incidencia_stock_confirmacion)
+        self.assertTrue(resultado.requiere_revision_manual)
+        self.assertIn("requiere revisión manual", resultado.observaciones_operativas)
+        self.assertEqual(self.notificador.pedidos_enviados, [])
+
+    def test_unidad_incompatible_en_multilinea_evita_descuento_parcial(self):
+        self._crear_inventario(self.producto_1.id, 10, unidad_base="ud")
+        self._crear_inventario(self.producto_2.id, 1000, unidad_base="g")
+        pedido = self._crear_pedido(
+            "pedido-4c",
+            [
+                (self.producto_1.id, "rosa-seca", "Rosa seca", 2, "ud"),
+                (self.producto_2.id, "sal-negra", "Sal negra", 250, "ml"),
+            ],
+        )
+
+        resultado = self.procesador.ejecutar(pedido, "op-5c", "checkout.session.completed")
+
+        self.assertEqual(self._stock(self.producto_1.id), 10)
+        self.assertEqual(self._stock(self.producto_2.id), 1000)
+        self.assertFalse(resultado.inventario_descontado)
+        self.assertTrue(resultado.incidencia_stock_confirmacion)
+        self.assertTrue(resultado.requiere_revision_manual)
+        self.assertEqual(self.notificador.pedidos_enviados, [])
+
     def test_webhook_duplicado_no_reprocesa_descuento(self):
         self._crear_inventario(self.producto_1.id, 6)
         self._crear_pedido("pedido-5", [(self.producto_1.id, "rosa-seca", "Rosa seca", 2)], id_externo_pago="cs_123")
@@ -126,10 +171,19 @@ class PostPagoInventarioTests(TestCase):
             publicado=True,
         )
 
-    def _crear_inventario(self, id_producto: str, cantidad: int) -> None:
-        InventarioProductoModelo.objects.create(producto_id=id_producto, cantidad_disponible=cantidad)
+    def _crear_inventario(self, id_producto: str, cantidad: int, unidad_base: str = "ud") -> None:
+        InventarioProductoModelo.objects.create(
+            producto_id=id_producto,
+            cantidad_disponible=cantidad,
+            unidad_base=unidad_base,
+        )
 
-    def _crear_pedido(self, id_pedido: str, lineas: list[tuple[str, str, str, int]], id_externo_pago: str = "") -> Pedido:
+    def _crear_pedido(
+        self,
+        id_pedido: str,
+        lineas: list[tuple[str, str, str, int, str] | tuple[str, str, str, int]],
+        id_externo_pago: str = "",
+    ) -> Pedido:
         pedido = Pedido(
             id_pedido=id_pedido,
             estado="pendiente_pago",
@@ -146,14 +200,14 @@ class PostPagoInventarioTests(TestCase):
             ),
             lineas=tuple(
                 LineaPedido(
-                    id_producto=id_producto,
-                    slug_producto=slug,
-                    nombre_producto=nombre,
-                    cantidad_comercial=cantidad,
-                    unidad_comercial="ud",
+                    id_producto=linea[0],
+                    slug_producto=linea[1],
+                    nombre_producto=linea[2],
+                    cantidad_comercial=linea[3],
+                    unidad_comercial=linea[4] if len(linea) == 5 else "ud",
                     precio_unitario=Decimal("10.00"),
                 )
-                for id_producto, slug, nombre, cantidad in lineas
+                for linea in lineas
             ),
             proveedor_pago="stripe",
             id_externo_pago=id_externo_pago or f"pi_{id_pedido}",

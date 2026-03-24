@@ -246,8 +246,37 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R05 — Descuento post-pago según unidad base
-- **Estado**: `PARTIAL`.
-- **Lectura actual**: el descuento post-pago real existe e idempotente; pendiente cierre explícito contra unidad base comercial definitiva.
+- **Estado**: `DONE`.
+- **Lectura actual**: el descuento post-pago confirma compatibilidad explícita `cantidad_comercial` + `unidad_comercial` contra `unidad_base` de inventario, mantiene atomicidad e idempotencia y genera incidencia auditable sin tocar inventario ante falta de stock o conflicto de unidad.
+
+**Cierre de R05 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Endurecer el caso de uso post-pago existente sin rediseñarlo: se conserva la misma frontera transaccional e idempotente.
+  2. El descuento de inventario usa explícitamente `linea.cantidad_comercial` (sin alias legacy) y nunca floats.
+  3. Se añade validación operativa de compatibilidad de unidad por línea (`linea.unidad_comercial == inventario.unidad_base`) dentro del flujo post-pago antes de cualquier descuento.
+  4. Cualquier incidencia (stock insuficiente, inventario ausente o unidad incompatible) corta el descuento completo: `inventario_descontado=False`, `incidencia_stock_confirmacion=True`, `requiere_revision_manual=True`.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_post_pago_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/tests/test_post_pago_inventario.py`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/17_migracion_ecommerce_real.md`
+- **Comandos ejecutados**:
+  - `python manage.py test backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario`
+  - `python manage.py test tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real`
+  - `python manage.py check`
+  - `python scripts/check_backend_readiness.py`
+- **Evidencia**:
+  - nuevo rechazo auditable por unidad incompatible con código `unidad_incompatible_confirmacion_pago`;
+  - descuento post-pago explícito por `cantidad_comercial` para unitario y granel;
+  - test nuevo de granel (`g`) y test de incompatibilidad de unidad sin descuento parcial;
+  - idempotencia y no doble descuento mantenidos sobre webhook duplicado/reintento.
+- **Deuda residual**:
+  1. R06 sigue pendiente para ledger trazable de movimientos de inventario.
+  2. La incidencia de unidad se registra en observaciones operativas y payload de logs; no existe aún un campo persistente específico por tipo de incidencia.
+  3. No se introducen reservas previas ni devoluciones automáticas (fuera de alcance de R05).
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R06 — Ledger mínimo de movimientos de inventario
 - **Estado**: `PLANNED`.
@@ -317,3 +346,5 @@
 - **2026-03-24 — R03 (cierre):** línea de pedido real migrada a `cantidad_comercial` + `unidad_comercial`, persistencia/migración compatible con históricos, payload legacy preservado (`cantidad`) y pruebas backend críticas en verde.
 - **2026-03-24 — R04 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de tocar checkout real y validaciones comerciales.
 - **2026-03-24 — R04 (cierre):** checkout real actualizado al payload nuevo (`cantidad_comercial` + `unidad_comercial`), validación frontend+backend de incremento/mínimo/unidad cerrada y pruebas de checkout real backend/frontend en verde.
+- **2026-03-24 — R05 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de endurecer descuento post-pago por unidad base.
+- **2026-03-24 — R05 (cierre):** descuento post-pago ajustado a `cantidad_comercial` + compatibilidad explícita de `unidad_comercial` vs `unidad_base`, con incidencia auditable y sin descuento parcial ante conflicto de stock/unidad.
