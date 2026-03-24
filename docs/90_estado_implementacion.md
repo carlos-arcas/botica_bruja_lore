@@ -118,6 +118,17 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   2. El flujo demo legacy no se toca para cobro real.
   3. El siguiente incremento debe cerrar post-pago operativo y gestión administrativa del pedido pagado.
 
+## 8.3 Envío estándar v1 + total real del pedido
+- Capacidad: **DONE**.
+- Evidencia implementada:
+  - `Pedido` incorpora `metodo_envio=envio_estandar`, `importe_envio` y `total=subtotal+importe_envio`;
+  - resolución desacoplada de tarifa fija configurable vía `ENVIO_ESTANDAR_IMPORTE`;
+  - checkout/serialización y recibo real muestran `subtotal`, `importe_envio` y `total`;
+  - el inicio de pago real y Stripe usan el **total real** (incluyendo envío) como importe final.
+- Regla activa:
+  1. sigue existiendo un único método `envio_estandar`;
+  2. no hay selector de métodos, reglas geográficas, impuestos ni promociones en este bloque.
+
 ## 9. Próximos movimientos recomendados
 1. Ejecutar validación de cierre técnico de Ciclo 5 con `python scripts/check_release_gate.py` en cada incremento posterior.
 2. Preservar trazabilidad estado↔roadmap para evitar reabrir capacidades ya cerradas de Ciclos 3 y 4.

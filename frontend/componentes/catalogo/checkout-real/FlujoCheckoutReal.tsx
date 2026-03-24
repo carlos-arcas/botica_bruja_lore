@@ -23,6 +23,7 @@ import {
 } from "@/contenido/catalogo/checkoutRealNavegacion";
 import { resolverContextoPreseleccionado } from "@/contenido/catalogo/encargoConsulta";
 import { resolverLineasSeleccionEncargo, resolverResumenEconomicoSeleccion } from "@/contenido/catalogo/seleccionEncargo";
+import { formatearMonedaEur, resolverImporteEnvioEstandar } from "@/contenido/catalogo/envioEstandar";
 import { AvisoDisponibilidadCheckoutReal } from "@/componentes/catalogo/checkout-real/AvisoDisponibilidadCheckoutReal";
 import { BloquePedidoSeleccionMultiple } from "@/componentes/catalogo/checkout-real/BloquePedidoSeleccionMultiple";
 import { SelectorDireccionCheckoutReal } from "@/componentes/catalogo/checkout-real/SelectorDireccionCheckoutReal";
@@ -52,6 +53,9 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
   const lineasSeleccion = useMemo(() => resolverLineasSeleccionEncargo(contexto.itemsPreseleccionados.map((item) => ({ ...item, actualizadoEn: new Date().toISOString() }))), [contexto.itemsPreseleccionados]);
   const lineasVisualesCheckout = useMemo(() => construirLineasVisualesCheckoutReal(contexto.itemsPreseleccionados, resultadoLineas), [contexto.itemsPreseleccionados, resultadoLineas]);
   const resumenEconomico = useMemo(() => resolverResumenEconomicoSeleccion(lineasVisualesCheckout.lineasConvertibles.map(({ linea }) => linea), "pedido_real"), [lineasVisualesCheckout.lineasConvertibles]);
+  const importeEnvio = useMemo(() => resolverImporteEnvioEstandar(), []);
+  const subtotalPedidoVisible = useMemo(() => lineasVisualesCheckout.lineasConvertibles.reduce((acumulado, item) => acumulado + Number.parseFloat(item.linea.precio_unitario) * item.linea.cantidad, 0), [lineasVisualesCheckout.lineasConvertibles]);
+  const totalPedidoVisible = useMemo(() => subtotalPedidoVisible + importeEnvio, [subtotalPedidoVisible, importeEnvio]);
   const resumenEconomicoBloqueado = useMemo(() => lineasVisualesCheckout.lineasBloqueadas.length > 0 ? resolverResumenEconomicoSeleccion(lineasVisualesCheckout.lineasBloqueadas.map(({ linea }) => linea), "fuera_pedido_real") : null, [lineasVisualesCheckout.lineasBloqueadas]);
   const resumenSeleccionVisible = useMemo(() => lineasVisualesCheckout.lineasBloqueadas.length > 0 ? resolverResumenEconomicoSeleccion(lineasSeleccion) : null, [lineasSeleccion, lineasVisualesCheckout.lineasBloqueadas.length]);
   const producto = useMemo(() => modoCheckout === "producto_unico" ? PRODUCTOS_CATALOGO.find((item) => item.slug === datos.producto_slug) ?? null : null, [datos.producto_slug, modoCheckout]);
@@ -145,6 +149,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
           <p className={estilos.estadoCuenta}>La disponibilidad visible en frontend es orientativa: no reserva unidades y el backend vuelve a validar stock al crear el pedido real.</p>
           <label>Intención y observaciones del pedido<textarea value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} /></label>
           {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
+          <p className={estilos.estadoCuenta}>Subtotal: <strong>{formatearMonedaEur(subtotalPedidoVisible)}</strong> · Envío estándar: <strong>{formatearMonedaEur(importeEnvio)}</strong> · Total: <strong>{formatearMonedaEur(totalPedidoVisible)}</strong></p>
         </fieldset>
         <fieldset>
           <legend>Dirección de entrega</legend>

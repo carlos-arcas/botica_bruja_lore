@@ -163,7 +163,7 @@ class ReembolsarPedidoCanceladoPorIncidenciaStock:
             respuesta = self.pasarela_pago.ejecutar_reembolso_total(
                 id_externo_pago=pedido.id_externo_pago or "",
                 moneda=pedido.moneda,
-                importe=pedido.subtotal,
+                importe=pedido.total,
                 operation_id=operation_id,
             )
             if respuesta["resultado"] == "ejecutado":

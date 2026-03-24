@@ -38,7 +38,7 @@ class IniciarPagoPedido:
             id_externo_pago=persistido.id_externo_pago or "",
             estado_pago=persistido.estado_pago,
             moneda=persistido.moneda,
-            importe=persistido.subtotal,
+            importe=persistido.total,
             url_pago=persistido.url_pago,
         )
 
@@ -93,7 +93,7 @@ def _extra_pago(operation_id: str, pedido, resultado: str, tipo_evento: str | No
         "id_externo_pago": pedido.id_externo_pago,
         "email_contacto": pedido.cliente.email,
         "moneda": pedido.moneda,
-        "importe": str(pedido.subtotal),
+        "importe": str(pedido.total),
         "estado_anterior": estado_anterior or pedido.estado,
         "estado_nuevo": pedido.estado,
         "evento": tipo_evento,

@@ -44,6 +44,7 @@ class TestApiPagoReal(TestCase):
         pago = response.json()["pago"]
         self.assertEqual(pago["id_externo_pago"], "cs_test_123")
         self.assertEqual(pago["proveedor_pago"], "stripe")
+        self.assertEqual(pago["importe"], "13.90")
         modelo = PedidoRealModelo.objects.get(id_pedido=id_pedido)
         self.assertEqual(modelo.id_externo_pago, "cs_test_123")
         self.assertEqual(modelo.estado_pago, "requiere_accion")
@@ -151,7 +152,7 @@ def _payload_webhook(id_pedido: str, id_evento: str = "evt_1") -> bytes:
                 "id": "cs_test_123",
                 "client_reference_id": id_pedido,
                 "payment_status": "paid",
-                "amount_total": 900,
+                "amount_total": 1390,
                 "currency": "eur",
                 "metadata": {"id_pedido": id_pedido},
             }
