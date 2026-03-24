@@ -93,13 +93,16 @@ class ProductoAdmin(admin.ModelAdmin):
         "beneficio_principal",
         "formato_comercial",
         "modo_uso",
+        "unidad_comercial",
+        "incremento_minimo_venta",
+        "cantidad_minima_compra",
         "orden_publicacion",
         "publicado",
     )
     search_fields = ("nombre", "sku", "slug", "categoria_comercial", "seccion_publica")
     list_filter = ("publicado", "tipo_producto", "categoria_comercial", "seccion_publica", "beneficio_principal", "formato_comercial", "modo_uso")
     ordering = ("orden_publicacion", "nombre")
-    list_editable = ("orden_publicacion", "publicado")
+    list_editable = ("incremento_minimo_venta", "cantidad_minima_compra", "orden_publicacion", "publicado")
     prepopulated_fields = {"slug": ("nombre",)}
     autocomplete_fields = ("planta",)
     actions = (publicar_productos, despublicar_productos)
@@ -119,6 +122,9 @@ class ProductoAdmin(admin.ModelAdmin):
                     "formato_comercial",
                     "modo_uso",
                     "categoria_visible",
+                    "unidad_comercial",
+                    "incremento_minimo_venta",
+                    "cantidad_minima_compra",
                     "orden_publicacion",
                     "publicado",
                 )

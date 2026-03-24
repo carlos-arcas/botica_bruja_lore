@@ -218,6 +218,18 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Fuera de alcance preservado:
   - sin reservas previas;
   - sin compensaciones automáticas por cancelación o devolución;
+
+## Actualización semántica comercial de producto (R02)
+- Estado técnico: **DONE** para contrato comercial explícito en `Producto`.
+- Contrato activo:
+  - `unidad_comercial` en catálogo cerrado (`ud`, `g`, `ml`);
+  - `incremento_minimo_venta` entero > 0;
+  - `cantidad_minima_compra` entero > 0 y múltiplo del incremento.
+- Coherencia activa con R01:
+  - validación mínima de backoffice para impedir que un producto con inventario existente quede con `unidad_comercial` distinta de `unidad_base`.
+- Compatibilidad:
+  - migración no destructiva con defaults conservadores (`ud`, `1`, `1`) para productos existentes;
+  - sin cambios todavía en línea de pedido real ni checkout granel completo (quedan en R03/R04).
   - sin multi-almacén, lotes, caducidades ni ledger completo de movimientos.
 
 ## Actualización operativa backoffice incidencias stock post-pago v1.2
