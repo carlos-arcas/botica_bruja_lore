@@ -233,3 +233,15 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - sin workflow complejo de soporte;
   - sin automatismos de resolución de negocio;
   - sin panel administrativo adicional en Next para este caso.
+
+## Actualización cancelación operativa manual por incidencia stock v1.3
+- Estado técnico: **DONE** para salida mínima real de cancelación operativa manual de pedidos incidenciados tras pago.
+- Persistencia activa: `Pedido` añade `cancelado_operativa_incidencia_stock`, `fecha_cancelacion_operativa` y `motivo_cancelacion_operativa` para auditar la decisión sin borrar el histórico de pago e incidencia.
+- Regla operativa activa:
+  - solo se permite cancelar cuando existe `incidencia_stock_confirmacion=True` y el pedido permanece en `estado=pagado`;
+  - la cancelación cambia `estado` a `cancelado` y deja constancia explícita de motivo y fecha;
+  - no hay reembolso automático, ni devolución automática de inventario, ni emails automáticos.
+- Backoffice activo:
+  - Django Admin incorpora acción `Cancelar operativamente por incidencia de stock`;
+  - la vista de listado/detalle muestra de forma explícita la nueva trazabilidad de cancelación;
+  - se registran logs estructurados tanto en cancelaciones correctas como en intentos rechazados por estado inválido o falta de incidencia.

@@ -67,6 +67,9 @@ class PedidoRealDTO:
     incidencia_stock_confirmacion: bool
     incidencia_stock_revisada: bool
     fecha_revision_incidencia_stock: datetime | None
+    cancelado_operativa_incidencia_stock: bool
+    fecha_cancelacion_operativa: datetime | None
+    motivo_cancelacion_operativa: str
     email_post_pago_enviado: bool
     cliente: ClientePedidoDTO
     direccion_entrega: DireccionEntregaDTO

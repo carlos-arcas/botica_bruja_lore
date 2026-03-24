@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from .casos_de_uso import ErrorAplicacionLookup
 from .casos_de_uso_pedidos import _a_dto
 from .dto_pedidos import PedidoRealDTO
+from ..dominio.excepciones import ErrorDominio
 from .puertos.notificador_pedidos import NotificadorPostPagoPedido
 from .puertos.repositorios_pedidos import RepositorioPedidos
 
@@ -103,6 +104,37 @@ class MarcarPedidoEntregado:
         )
         _log_transition(operation_id, actor, pedido, actualizado, "marcar_entregado", "ok")
         return _a_dto(actualizado)
+
+
+@dataclass(slots=True)
+class CancelarPedidoOperativoPorIncidenciaStock:
+    repositorio_pedidos: RepositorioPedidos
+
+    def ejecutar(self, id_pedido: str, operation_id: str, actor: str, motivo_cancelacion: str) -> PedidoRealDTO:
+        pedido = _obtener_pedido(self.repositorio_pedidos, id_pedido)
+        try:
+            actualizado = pedido.cancelar_operativamente_por_incidencia_stock(
+                fecha_cancelacion=datetime.now(tz=UTC),
+                motivo_cancelacion=motivo_cancelacion,
+            )
+        except ErrorDominio as error:
+            _log_transition(operation_id, actor, pedido, pedido, "cancelacion_operativa_incidencia_stock", "rechazado")
+            logger.warning(
+                "backoffice_pedido_cancelacion_operativa_rechazada",
+                extra=_extra_log(
+                    operation_id,
+                    actor,
+                    pedido,
+                    pedido,
+                    "cancelacion_operativa_incidencia_stock",
+                    "rechazado",
+                    str(error),
+                ),
+            )
+            raise
+        persistido = self.repositorio_pedidos.guardar(actualizado)
+        _log_transition(operation_id, actor, pedido, persistido, "cancelacion_operativa_incidencia_stock", "ok")
+        return _a_dto(persistido)
 
 
 def _obtener_pedido(repositorio: RepositorioPedidos, id_pedido: str):

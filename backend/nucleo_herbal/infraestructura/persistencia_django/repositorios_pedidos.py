@@ -48,6 +48,9 @@ class RepositorioPedidosORM(RepositorioPedidos):
                 "observaciones_operativas": pedido.observaciones_operativas,
                 "email_envio_enviado": pedido.email_envio_enviado,
                 "fecha_email_envio": pedido.fecha_email_envio,
+                "cancelado_operativa_incidencia_stock": pedido.cancelado_operativa_incidencia_stock,
+                "fecha_cancelacion_operativa": pedido.fecha_cancelacion_operativa,
+                "motivo_cancelacion_operativa": pedido.motivo_cancelacion_operativa,
             },
         )
         modelo.lineas.all().delete()
@@ -141,6 +144,9 @@ class RepositorioPedidosORM(RepositorioPedidos):
             observaciones_operativas=modelo.observaciones_operativas,
             email_envio_enviado=modelo.email_envio_enviado,
             fecha_email_envio=modelo.fecha_email_envio,
+            cancelado_operativa_incidencia_stock=modelo.cancelado_operativa_incidencia_stock,
+            fecha_cancelacion_operativa=modelo.fecha_cancelacion_operativa,
+            motivo_cancelacion_operativa=modelo.motivo_cancelacion_operativa,
             notas_cliente=modelo.notas_cliente,
             moneda=modelo.moneda,
         )

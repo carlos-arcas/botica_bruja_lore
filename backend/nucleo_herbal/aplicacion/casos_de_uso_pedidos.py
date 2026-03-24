@@ -152,6 +152,9 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
         incidencia_stock_confirmacion=pedido.incidencia_stock_confirmacion,
         incidencia_stock_revisada=pedido.incidencia_stock_revisada,
         fecha_revision_incidencia_stock=pedido.fecha_revision_incidencia_stock,
+        cancelado_operativa_incidencia_stock=pedido.cancelado_operativa_incidencia_stock,
+        fecha_cancelacion_operativa=pedido.fecha_cancelacion_operativa,
+        motivo_cancelacion_operativa=pedido.motivo_cancelacion_operativa,
         email_post_pago_enviado=pedido.email_post_pago_enviado,
         cliente=ClientePedidoDTO(
             email=pedido.cliente.email,

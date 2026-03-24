@@ -8,7 +8,8 @@ from django.contrib import admin, messages
 from django.http import HttpRequest
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
-from ...aplicacion.casos_de_uso_backoffice_pedidos import MarcarIncidenciaStockRevisada
+from ...aplicacion.casos_de_uso_backoffice_pedidos import CancelarPedidoOperativoPorIncidenciaStock, MarcarIncidenciaStockRevisada
+from ...dominio.excepciones import ErrorDominio
 from .models_pedidos import LineaPedidoRealModelo, PedidoRealModelo
 from .repositorios_pedidos import RepositorioPedidosORM
 
@@ -68,6 +69,41 @@ def marcar_incidencia_stock_revisada(modeladmin, request: HttpRequest, queryset)
         modeladmin.message_user(request, f"{omitidos} pedido(s) omitido(s): sin incidencia activa o ya revisados.", level=messages.WARNING)
 
 
+@admin.action(description="Cancelar operativamente por incidencia de stock")
+def cancelar_operativa_incidencia_stock(modeladmin, request: HttpRequest, queryset):
+    caso = CancelarPedidoOperativoPorIncidenciaStock(repositorio_pedidos=RepositorioPedidosORM())
+    actor = request.user.get_username() or "admin"
+    cancelados = 0
+    omitidos = 0
+    for pedido in queryset:
+        try:
+            actualizado = caso.ejecutar(
+                id_pedido=pedido.id_pedido,
+                operation_id=f"admin-cancel-inc-stock-{uuid4().hex}",
+                actor=actor,
+                motivo_cancelacion="Cancelación operativa manual por incidencia de stock",
+            )
+        except (ErrorAplicacionLookup, ErrorDominio):
+            omitidos += 1
+            continue
+        if actualizado.cancelado_operativa_incidencia_stock:
+            cancelados += 1
+        else:
+            omitidos += 1
+    if cancelados:
+        modeladmin.message_user(
+            request,
+            f"{cancelados} pedido(s) cancelado(s) operativamente por incidencia de stock.",
+            level=messages.SUCCESS,
+        )
+    if omitidos:
+        modeladmin.message_user(
+            request,
+            f"{omitidos} pedido(s) omitido(s): estado no cancelable o sin incidencia de stock.",
+            level=messages.WARNING,
+        )
+
+
 @admin.register(PedidoRealModelo)
 class PedidoRealAdmin(admin.ModelAdmin):
     list_display = (
@@ -78,6 +114,7 @@ class PedidoRealAdmin(admin.ModelAdmin):
         "inventario_descontado",
         "incidencia_stock_confirmacion",
         "incidencia_stock_revisada",
+        "cancelado_operativa_incidencia_stock",
         "requiere_revision_manual",
         "fecha_operativa",
     )
@@ -88,6 +125,7 @@ class PedidoRealAdmin(admin.ModelAdmin):
         IncidenciaStockFilter,
         "inventario_descontado",
         "requiere_revision_manual",
+        "cancelado_operativa_incidencia_stock",
         "canal_checkout",
         "es_invitado",
         "moneda",
@@ -100,7 +138,7 @@ class PedidoRealAdmin(admin.ModelAdmin):
         "direccion_entrega",
     )
     inlines = (LineaPedidoRealInline,)
-    actions = (marcar_incidencia_stock_revisada,)
+    actions = (marcar_incidencia_stock_revisada, cancelar_operativa_incidencia_stock)
     fieldsets = (
         (
             "Pedido",
@@ -138,6 +176,9 @@ class PedidoRealAdmin(admin.ModelAdmin):
                     "incidencia_stock_confirmacion",
                     "incidencia_stock_revisada",
                     "fecha_revision_incidencia_stock",
+                    "cancelado_operativa_incidencia_stock",
+                    "fecha_cancelacion_operativa",
+                    "motivo_cancelacion_operativa",
                     "requiere_revision_manual",
                     "observaciones_operativas",
                 )
@@ -172,4 +213,4 @@ class PedidoRealAdmin(admin.ModelAdmin):
 
     @admin.display(description="Fecha operativa", ordering="fecha_pago_confirmado")
     def fecha_operativa(self, obj: PedidoRealModelo):
-        return obj.fecha_revision_incidencia_stock or obj.fecha_pago_confirmado or obj.fecha_creacion
+        return obj.fecha_cancelacion_operativa or obj.fecha_revision_incidencia_stock or obj.fecha_pago_confirmado or obj.fecha_creacion
