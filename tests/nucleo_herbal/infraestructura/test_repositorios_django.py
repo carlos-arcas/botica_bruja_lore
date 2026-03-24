@@ -170,6 +170,24 @@ class TestRepositoriosDjango(unittest.TestCase):
 
         self.assertEqual(len(productos), 1)
         self.assertEqual(productos[0].sku, "HERB-001")
+        self.assertEqual(productos[0].unidad_comercial, "ud")
+        self.assertEqual(productos[0].incremento_minimo_venta, 1)
+        self.assertEqual(productos[0].cantidad_minima_compra, 1)
+
+    def test_producto_orm_usa_defaults_comerciales_conservadores(self) -> None:
+        producto = self.ProductoModelo.objects.create(
+            id="prod-default-comercial",
+            sku="SKU-DEF-COM-1",
+            slug="producto-default-comercial",
+            nombre="Producto default comercial",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            publicado=True,
+        )
+
+        self.assertEqual(producto.unidad_comercial, "ud")
+        self.assertEqual(producto.incremento_minimo_venta, 1)
+        self.assertEqual(producto.cantidad_minima_compra, 1)
 
 
     def test_listar_publicos_por_seccion_devuelve_todos_y_ordena_por_slug(self) -> None:

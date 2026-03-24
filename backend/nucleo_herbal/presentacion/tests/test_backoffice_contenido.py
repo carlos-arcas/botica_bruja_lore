@@ -12,6 +12,7 @@ from django.test import Client, RequestFactory, TestCase
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.importacion.imagenes import ErrorImagenWebP, ErrorValidacionImagen, guardar_imagen_fila
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ArticuloEditorialModelo, PlantaModelo, ProductoModelo, RitualModelo, SeccionPublicaModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
 from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.presentacion.backoffice_auth import crear_token_backoffice
 from backend.nucleo_herbal.presentacion.backoffice_views.importacion_helpers import json_importacion
@@ -711,6 +712,87 @@ class BackofficeContenidoTests(TestCase):
         listado = self.client.get("/api/v1/herbal/secciones/botica-natural/productos/").json()["productos"]
         self.assertGreaterEqual(len(listado), 7)
 
+    def test_guardar_producto_rechaza_unidad_comercial_invalida(self):
+        payload = {
+            "sku": "SKU-INV-UNIT-1",
+            "nombre": "Producto unidad inválida",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "inciensos",
+            "seccion_publica": "botica-natural",
+            "precio_numerico": "7.08",
+            "unidad_comercial": "kg",
+        }
+
+        respuesta = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn("unidad_comercial", respuesta.json()["errores"])
+
+    def test_guardar_producto_rechaza_incremento_minimo_invalido(self):
+        payload = {
+            "sku": "SKU-INV-INC-1",
+            "nombre": "Producto incremento inválido",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "inciensos",
+            "seccion_publica": "botica-natural",
+            "precio_numerico": "7.08",
+            "incremento_minimo_venta": 0,
+            "cantidad_minima_compra": 1,
+        }
+
+        respuesta = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn("incremento_minimo_venta", respuesta.json()["errores"])
+
+    def test_guardar_producto_rechaza_cantidad_minima_incompatible(self):
+        payload = {
+            "sku": "SKU-INV-MIN-1",
+            "nombre": "Producto mínimo inválido",
+            "tipo_producto": "inciensos-y-sahumerios",
+            "categoria_comercial": "inciensos",
+            "seccion_publica": "botica-natural",
+            "precio_numerico": "7.08",
+            "incremento_minimo_venta": 5,
+            "cantidad_minima_compra": 3,
+        }
+
+        respuesta = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn("cantidad_minima_compra", respuesta.json()["errores"])
+
+    def test_guardar_producto_rechaza_unidad_comercial_incompatible_con_inventario(self):
+        producto = ProductoModelo.objects.create(
+            id="prod-coherencia-1",
+            sku="SKU-COH-1",
+            slug="producto-coherencia-1",
+            nombre="Producto coherencia",
+            tipo_producto="inciensos-y-sahumerios",
+            categoria_comercial="inciensos",
+            seccion_publica="botica-natural",
+            publicado=False,
+            unidad_comercial="ud",
+        )
+        InventarioProductoModelo.objects.create(producto=producto, cantidad_disponible=10, unidad_base="g", umbral_bajo_stock=2)
+        payload = {
+            "id": producto.id,
+            "sku": producto.sku,
+            "nombre": "Producto coherencia",
+            "tipo_producto": producto.tipo_producto,
+            "categoria_comercial": producto.categoria_comercial,
+            "seccion_publica": producto.seccion_publica,
+            "precio_numerico": "7.08",
+            "unidad_comercial": "ud",
+            "incremento_minimo_venta": 1,
+            "cantidad_minima_compra": 1,
+            "publicado": False,
+        }
+
+        respuesta = self.client.post("/api/v1/backoffice/productos/guardar/", data=json.dumps(payload), content_type="application/json", **self._auth())
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn("unidad_comercial", respuesta.json()["errores"])
 
     def test_precio_visible_y_categoria_visible_se_derivan_del_contrato_normalizado(self):
         payload = {

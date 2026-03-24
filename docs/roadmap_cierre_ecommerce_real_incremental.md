@@ -112,8 +112,48 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R02 — Producto vendible y cantidad comercial
-- **Estado**: `PARTIAL`.
-- **Lectura actual**: hay producto vendible y checkout real funcional; pendiente endurecer contrato formal de cantidad comercial por unidad en todo el flujo.
+- **Estado**: `DONE`.
+- **Lectura actual**: el producto vendible ahora expone contrato comercial explícito (`unidad_comercial`, `incremento_minimo_venta`, `cantidad_minima_compra`) con defaults conservadores y validación de integridad.
+
+**Cierre de R02 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. La semántica comercial vive en `Producto` (dominio + ORM + DTO/serialización) para evitar un modelo paralelo y mantener una frontera única de producto vendible.
+  2. Se fija catálogo cerrado de unidad comercial (`ud`, `g`, `ml`) y cantidades enteras estrictas, con reglas `> 0` para incremento/mínimo y compatibilidad por múltiplo.
+  3. Se añade validación mínima de coherencia R01↔R02 en backoffice: si existe inventario persistido para el producto, `unidad_comercial` debe coincidir con `unidad_base`.
+  4. Se mantienen defaults seguros para registros existentes (`ud`, `1`, `1`) mediante migración no destructiva.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/dominio/entidades.py`
+  - `backend/nucleo_herbal/aplicacion/dto.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_rituales.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/mapeadores.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0029_productomodelo_cantidad_minima_compra_and_more.py`
+  - `backend/nucleo_herbal/presentacion/publica/serializadores.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/productos.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/productos_contrato.py`
+  - `tests/nucleo_herbal/test_entidades.py`
+  - `tests/nucleo_herbal/test_contratos_api_publica_frontend.py`
+  - `tests/nucleo_herbal/infraestructura/test_repositorios_django.py`
+  - `backend/nucleo_herbal/presentacion/tests/test_backoffice_contenido.py`
+- **Comandos ejecutados**:
+  - `python manage.py makemigrations persistencia_django`
+  - `python manage.py test tests.nucleo_herbal.test_entidades tests.nucleo_herbal.test_contratos_api_publica_frontend tests.nucleo_herbal.infraestructura.test_repositorios_django backend.nucleo_herbal.presentacion.tests.test_backoffice_contenido`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_backend_readiness.py`
+- **Evidencia**:
+  - persistencia de semántica comercial en producto con constraints y migración compatible;
+  - exposición pública/DTO/backoffice del contrato comercial sin introducir checkout granel ni cambiar línea real de pedido;
+  - validaciones negativas cubiertas en dominio y backoffice (unidad inválida, incremento inválido, mínimo inválido, incompatibilidad);
+  - pruebas backend relevantes en verde para dominio/repositorio/contratos/admin-backoffice tocado.
+- **Deuda residual**:
+  1. R03 debe trasladar el contrato de cantidad+unidad a línea de pedido real sin romper coexistencia demo.
+  2. R04 debe cerrar UX/checkout granel extremo a extremo con reglas comerciales ya definidas.
+  3. R06 sigue pendiente para ledger trazable de inventario.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R03 — Línea de pedido real con cantidad + unidad
 - **Estado**: `PARTIAL`.
@@ -189,3 +229,5 @@
 - **2026-03-24 — R00 (cierre):** creación de roadmap vivo incremental R00-R15 y cierre `DONE` de R00 sin cambios de negocio.
 - **2026-03-24 — R01 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de tocar código.
 - **2026-03-24 — R01 (cierre):** unidad base explícita de inventario (`ud`, `g`, `ml`) implementada con validación dominio+ORM, migración compatible y pruebas backend relevantes en verde.
+- **2026-03-24 — R02 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de implementar semántica comercial de producto vendible.
+- **2026-03-24 — R02 (cierre):** contrato comercial de producto (`unidad_comercial`, `incremento_minimo_venta`, `cantidad_minima_compra`) implementado con defaults compatibles, validaciones de integridad/coherencia con inventario y pruebas backend relevantes en verde.

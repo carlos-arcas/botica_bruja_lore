@@ -54,6 +54,9 @@ CAMPOS_UI_CANONICOS_PRODUCTO = {
     "beneficios_secundarios",
     "formato_comercial",
     "modo_uso",
+    "unidad_comercial",
+    "incremento_minimo_venta",
+    "cantidad_minima_compra",
     "__forzar_error_respuesta__",
 }
 CAMPOS_LEGACY_TOLERADOS_PRODUCTO = {
@@ -80,9 +83,13 @@ CAMPOS_PERSISTIDOS_PRODUCTO = (
     "modo_uso",
     "categoria_visible",
     "planta_id",
+    "unidad_comercial",
+    "incremento_minimo_venta",
+    "cantidad_minima_compra",
     "publicado",
     "orden_publicacion",
 )
+UNIDADES_COMERCIALES_VALIDAS = {"ud", "g", "ml"}
 
 
 class ErrorValidacionProducto(ValueError):
@@ -209,6 +216,12 @@ def normalizar_payload_producto(data: dict[str, object]) -> ProductoNormalizado:
     formato_comercial = _a_slug_catalogo(str(data.get("formato_comercial", "")))
     modo_uso = _a_slug_catalogo(str(data.get("modo_uso", "")))
     categoria_visible = _derivar_categoria_visible(tipo_producto, categoria_comercial)
+    unidad_comercial = _a_slug_catalogo(str(data.get("unidad_comercial", "ud") or "ud"))
+    if unidad_comercial not in UNIDADES_COMERCIALES_VALIDAS:
+        raise ErrorValidacionProducto(
+            "Unidad comercial inválida.",
+            errores={"unidad_comercial": "Selecciona una unidad comercial válida (ud, g, ml)."},
+        )
 
     if seccion == "botica-natural":
         beneficio_principal = _validar_opcion(data.get("beneficio_principal", ""), VALORES_BENEFICIO, "beneficio_principal", "calma")
@@ -221,6 +234,38 @@ def normalizar_payload_producto(data: dict[str, object]) -> ProductoNormalizado:
 
     planta_id = str(data.get("planta_id", "")).strip()
     _validar_publicacion(tipo_producto, categoria_comercial, planta_id, publicado)
+    incremento_raw = data.get("incremento_minimo_venta", 1)
+    cantidad_raw = data.get("cantidad_minima_compra", 1)
+    if incremento_raw in (None, ""):
+        incremento_raw = 1
+    if cantidad_raw in (None, ""):
+        cantidad_raw = 1
+    try:
+        incremento_minimo_venta = int(incremento_raw)
+        cantidad_minima_compra = int(cantidad_raw)
+    except (TypeError, ValueError) as exc:
+        raise ErrorValidacionProducto(
+            "Incremento mínimo de venta y cantidad mínima deben ser enteros.",
+            errores={
+                "incremento_minimo_venta": "Debe ser entero.",
+                "cantidad_minima_compra": "Debe ser entero.",
+            },
+        ) from exc
+    if incremento_minimo_venta <= 0:
+        raise ErrorValidacionProducto(
+            "Incremento mínimo de venta inválido.",
+            errores={"incremento_minimo_venta": "Debe ser un entero mayor que cero."},
+        )
+    if cantidad_minima_compra <= 0:
+        raise ErrorValidacionProducto(
+            "Cantidad mínima de compra inválida.",
+            errores={"cantidad_minima_compra": "Debe ser un entero mayor que cero."},
+        )
+    if cantidad_minima_compra % incremento_minimo_venta != 0:
+        raise ErrorValidacionProducto(
+            "Cantidad mínima de compra incompatible con incremento mínimo.",
+            errores={"cantidad_minima_compra": "Debe ser múltiplo del incremento mínimo de venta."},
+        )
     normalizado = {
         "nombre": nombre,
         "tipo_producto": tipo_producto,
@@ -236,6 +281,9 @@ def normalizar_payload_producto(data: dict[str, object]) -> ProductoNormalizado:
         "modo_uso": modo_uso,
         "categoria_visible": categoria_visible,
         "planta_id": planta_id or None,
+        "unidad_comercial": unidad_comercial,
+        "incremento_minimo_venta": incremento_minimo_venta,
+        "cantidad_minima_compra": cantidad_minima_compra,
         "publicado": publicado,
         "orden_publicacion": int(data.get("orden_publicacion", 100) or 100),
     }

@@ -9,6 +9,7 @@ from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import PlantaModelo, ProductoModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
 
 from .auth import usuario_staff
 from .identificadores import generar_id_si_falta, generar_slug_unico
@@ -61,6 +62,9 @@ def producto_dict(obj: ProductoModelo) -> dict:
         "formato_comercial": obj.formato_comercial,
         "modo_uso": obj.modo_uso,
         "categoria_visible": obj.categoria_visible,
+        "unidad_comercial": obj.unidad_comercial,
+        "incremento_minimo_venta": obj.incremento_minimo_venta,
+        "cantidad_minima_compra": obj.cantidad_minima_compra,
         "planta_id": obj.planta_id or "",
         "publicado": obj.publicado,
         "orden_publicacion": obj.orden_publicacion,
@@ -158,6 +162,10 @@ def guardar_producto_backoffice(request: HttpRequest) -> JsonResponse:
             LOGGER.info("payload_legacy_detectado", extra=contexto)
         with transaction.atomic():
             if existente:
+                _validar_coherencia_unidad_con_inventario(
+                    producto_id=existente.id,
+                    unidad_comercial=str(campos_persistencia["unidad_comercial"]),
+                )
                 for clave, valor in campos_persistencia.items():
                     if clave == "slug":
                         continue
@@ -225,3 +233,12 @@ def cambiar_publicacion_producto_backoffice(request: HttpRequest, producto_id: s
     except ValueError as exc:
         LOGGER.warning("backoffice_producto_publicacion_payload_invalido", extra={**contexto, "exception_class": exc.__class__.__name__, "exception_message": str(exc)})
         return JsonResponse({"detalle": str(exc), "errores": {}, "operation_id": operation_id_actual}, status=400)
+
+
+def _validar_coherencia_unidad_con_inventario(*, producto_id: str, unidad_comercial: str) -> None:
+    inventario = InventarioProductoModelo.objects.filter(producto_id=producto_id).only("unidad_base").first()
+    if inventario and inventario.unidad_base != unidad_comercial:
+        raise ErrorValidacionProducto(
+            "Unidad comercial incompatible con unidad base de inventario.",
+            errores={"unidad_comercial": "Debe coincidir con la unidad base del inventario vigente."},
+        )
