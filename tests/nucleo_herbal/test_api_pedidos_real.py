@@ -125,6 +125,87 @@ class TestApiPedidosReal(DjangoTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("entero", response.json()["detalle"].lower())
 
+    def test_rechaza_cantidad_no_multiple_incremento_minimo_producto(self) -> None:
+        producto = ProductoModelo.objects.get(id="prod-1")
+        producto.unidad_comercial = "g"
+        producto.incremento_minimo_venta = 50
+        producto.cantidad_minima_compra = 100
+        producto.save(update_fields=["unidad_comercial", "incremento_minimo_venta", "cantidad_minima_compra"])
+        inventario = InventarioProductoModelo.objects.get(producto_id="prod-1")
+        inventario.unidad_base = "g"
+        inventario.cantidad_disponible = 1000
+        inventario.save(update_fields=["unidad_base", "cantidad_disponible", "fecha_actualizacion"])
+        payload = _payload_base()
+        payload["lineas"][0]["cantidad_comercial"] = 125
+        payload["lineas"][0]["unidad_comercial"] = "g"
+        payload["lineas"][0].pop("cantidad")
+
+        response = self.client.post("/api/v1/pedidos/", data=json.dumps(payload), content_type="application/json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("incremento mínimo", response.json()["detalle"].lower())
+
+    def test_rechaza_cantidad_menor_minimo_compra_producto(self) -> None:
+        producto = ProductoModelo.objects.get(id="prod-1")
+        producto.unidad_comercial = "g"
+        producto.incremento_minimo_venta = 50
+        producto.cantidad_minima_compra = 100
+        producto.save(update_fields=["unidad_comercial", "incremento_minimo_venta", "cantidad_minima_compra"])
+        inventario = InventarioProductoModelo.objects.get(producto_id="prod-1")
+        inventario.unidad_base = "g"
+        inventario.cantidad_disponible = 1000
+        inventario.save(update_fields=["unidad_base", "cantidad_disponible", "fecha_actualizacion"])
+        payload = _payload_base()
+        payload["lineas"][0]["cantidad_comercial"] = 50
+        payload["lineas"][0]["unidad_comercial"] = "g"
+        payload["lineas"][0].pop("cantidad")
+
+        response = self.client.post("/api/v1/pedidos/", data=json.dumps(payload), content_type="application/json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("cantidad mínima", response.json()["detalle"].lower())
+
+    def test_rechaza_unidad_linea_distinta_unidad_comercial_producto(self) -> None:
+        producto = ProductoModelo.objects.get(id="prod-1")
+        producto.unidad_comercial = "g"
+        producto.incremento_minimo_venta = 50
+        producto.cantidad_minima_compra = 100
+        producto.save(update_fields=["unidad_comercial", "incremento_minimo_venta", "cantidad_minima_compra"])
+        inventario = InventarioProductoModelo.objects.get(producto_id="prod-1")
+        inventario.unidad_base = "g"
+        inventario.cantidad_disponible = 1000
+        inventario.save(update_fields=["unidad_base", "cantidad_disponible", "fecha_actualizacion"])
+        payload = _payload_base()
+        payload["lineas"][0]["cantidad_comercial"] = 100
+        payload["lineas"][0]["unidad_comercial"] = "ud"
+        payload["lineas"][0].pop("cantidad")
+
+        response = self.client.post("/api/v1/pedidos/", data=json.dumps(payload), content_type="application/json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("unidad de línea", response.json()["detalle"].lower())
+
+    def test_crear_pedido_real_granel_valido(self) -> None:
+        producto = ProductoModelo.objects.get(id="prod-1")
+        producto.unidad_comercial = "g"
+        producto.incremento_minimo_venta = 50
+        producto.cantidad_minima_compra = 100
+        producto.save(update_fields=["unidad_comercial", "incremento_minimo_venta", "cantidad_minima_compra"])
+        inventario = InventarioProductoModelo.objects.get(producto_id="prod-1")
+        inventario.unidad_base = "g"
+        inventario.cantidad_disponible = 1000
+        inventario.save(update_fields=["unidad_base", "cantidad_disponible", "fecha_actualizacion"])
+        payload = _payload_base()
+        payload["lineas"][0]["cantidad_comercial"] = 150
+        payload["lineas"][0]["unidad_comercial"] = "g"
+        payload["lineas"][0].pop("cantidad")
+
+        response = self.client.post("/api/v1/pedidos/", data=json.dumps(payload), content_type="application/json")
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["pedido"]["lineas"][0]["cantidad_comercial"], 150)
+        self.assertEqual(response.json()["pedido"]["lineas"][0]["unidad_comercial"], "g")
+
     def test_rechaza_pedido_completo_si_una_linea_falla_stock(self) -> None:
         ProductoModelo.objects.create(
             id="prod-2",

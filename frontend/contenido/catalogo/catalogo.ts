@@ -16,6 +16,9 @@ export type ProductoCatalogo = {
   notasSensoriales: string;
   imagen_url: string;
   imagen_alt: string;
+  unidad_comercial: "ud" | "g" | "ml";
+  incremento_minimo_venta: number;
+  cantidad_minima_compra: number;
 };
 
 export type OpcionFiltro = { valor: string; etiqueta: string };
@@ -120,13 +123,19 @@ export const PRODUCTOS_CATALOGO: ProductoCatalogo[] = [
   }),
 ];
 
-type ProductoBase = Omit<ProductoCatalogo, "imagen_url" | "imagen_alt">;
+type ProductoBase = Omit<
+  ProductoCatalogo,
+  "imagen_url" | "imagen_alt" | "unidad_comercial" | "incremento_minimo_venta" | "cantidad_minima_compra"
+>;
 
 function crearProductoCatalogo(producto: ProductoBase): ProductoCatalogo {
   return {
     ...producto,
     imagen_url: construirImagenProducto(producto),
     imagen_alt: `Lámina editorial de ${producto.nombre}`,
+    unidad_comercial: "ud",
+    incremento_minimo_venta: 1,
+    cantidad_minima_compra: 1,
   };
 }
 

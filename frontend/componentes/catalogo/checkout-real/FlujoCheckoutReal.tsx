@@ -29,6 +29,7 @@ import { BloquePedidoSeleccionMultiple } from "@/componentes/catalogo/checkout-r
 import { SelectorDireccionCheckoutReal } from "@/componentes/catalogo/checkout-real/SelectorDireccionCheckoutReal";
 import { construirLineasVisualesCheckoutReal } from "@/componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal";
 import { obtenerDireccionesCuentaCliente, obtenerSesionCuentaCliente } from "@/infraestructura/api/cuentasCliente";
+import { obtenerDetalleProductoPublico, ProductoSeccionPublica } from "@/infraestructura/api/herbal";
 import { crearPedidoPublico, obtenerTarifaEnvioEstandar } from "@/infraestructura/api/pedidos";
 import type { LineaErrorStockPedido } from "@/infraestructura/api/pedidos";
 import { guardarPreseleccionEncargoLocal } from "@/infraestructura/catalogo/almacenPreseleccionEncargo";
@@ -47,6 +48,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
   const [cargandoCuenta, setCargandoCuenta] = useState(true);
   const [direcciones, setDirecciones] = useState<Awaited<ReturnType<typeof obtenerDireccionesCuentaCliente>>["direcciones"]>([]);
   const [importeEnvioApi, setImporteEnvioApi] = useState<number | null>(null);
+  const [productoPublico, setProductoPublico] = useState<ProductoSeccionPublica | null>(null);
   const router = useRouter();
 
   const modoCheckout = useMemo(() => resolverModoCheckoutReal(contexto.itemsPreseleccionados), [contexto.itemsPreseleccionados]);
@@ -67,6 +69,11 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
   const resumenEconomicoBloqueado = useMemo(() => lineasVisualesCheckout.lineasBloqueadas.length > 0 ? resolverResumenEconomicoSeleccion(lineasVisualesCheckout.lineasBloqueadas.map(({ linea }) => linea), "fuera_pedido_real") : null, [lineasVisualesCheckout.lineasBloqueadas]);
   const resumenSeleccionVisible = useMemo(() => lineasVisualesCheckout.lineasBloqueadas.length > 0 ? resolverResumenEconomicoSeleccion(lineasSeleccion) : null, [lineasSeleccion, lineasVisualesCheckout.lineasBloqueadas.length]);
   const producto = useMemo(() => modoCheckout === "producto_unico" ? PRODUCTOS_CATALOGO.find((item) => item.slug === datos.producto_slug) ?? null : null, [datos.producto_slug, modoCheckout]);
+  const productoCheckout = useMemo(() => {
+    if (modoCheckout !== "producto_unico") return null;
+    if (productoPublico?.slug === datos.producto_slug) return productoPublico;
+    return producto;
+  }, [modoCheckout, productoPublico, datos.producto_slug, producto]);
   const checkoutBloqueado = resultadoLineas.lineasNoConvertibles.length > 0;
   const rutaConsultaManual = useMemo(() => construirRutaConsultaManualCheckoutReal(contexto.itemsPreseleccionados), [contexto.itemsPreseleccionados]);
   const rutaRevisionSeleccion = useMemo(() => construirRutaRevisionSeleccionCheckoutReal(contexto.itemsPreseleccionados), [contexto.itemsPreseleccionados]);
@@ -113,6 +120,27 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
 
   useEffect(() => {
     let activa = true;
+    const cargarProductoCheckout = async (): Promise<void> => {
+      if (modoCheckout !== "producto_unico" || !datos.producto_slug.trim()) {
+        setProductoPublico(null);
+        return;
+      }
+      const resultado = await obtenerDetalleProductoPublico(datos.producto_slug.trim());
+      if (!activa) return;
+      if (resultado.estado !== "ok") {
+        setProductoPublico(null);
+        return;
+      }
+      setProductoPublico(resultado.producto);
+    };
+    void cargarProductoCheckout();
+    return () => {
+      activa = false;
+    };
+  }, [modoCheckout, datos.producto_slug]);
+
+  useEffect(() => {
+    let activa = true;
     const cargarTarifaEnvio = async (): Promise<void> => {
       const respuesta = await obtenerTarifaEnvioEstandar();
       if (!activa) return;
@@ -139,7 +167,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
 
   const enviar = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    const nuevosErrores = validarCheckoutReal(datos, resultadoLineas, modoCheckout);
+    const nuevosErrores = validarCheckoutReal(datos, resultadoLineas, modoCheckout, productoCheckout);
     setErrores(nuevosErrores);
     setMensaje("");
     setLineasStock([]);
@@ -170,7 +198,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
         </fieldset>
         <fieldset>
           <legend>Pedido</legend>
-          {modoCheckout === "producto_unico" ? <BloquePedidoProductoUnico datos={datos} errores={errores} producto={producto} setDatos={setDatos} /> : <BloquePedidoSeleccionMultiple lineasConvertiblesVisuales={lineasVisualesCheckout.lineasConvertibles} lineasBloqueadasVisuales={lineasVisualesCheckout.lineasBloqueadas} resumenEconomico={resumenEconomico} resumenEconomicoBloqueado={resumenEconomicoBloqueado} resumenSeleccionVisible={resumenSeleccionVisible} rutaConsultaManual={rutaConsultaManual} rutaRevisionSeleccion={rutaRevisionSeleccion} />}
+          {modoCheckout === "producto_unico" ? <BloquePedidoProductoUnico datos={datos} errores={errores} producto={productoCheckout} setDatos={setDatos} /> : <BloquePedidoSeleccionMultiple lineasConvertiblesVisuales={lineasVisualesCheckout.lineasConvertibles} lineasBloqueadasVisuales={lineasVisualesCheckout.lineasBloqueadas} resumenEconomico={resumenEconomico} resumenEconomicoBloqueado={resumenEconomicoBloqueado} resumenSeleccionVisible={resumenSeleccionVisible} rutaConsultaManual={rutaConsultaManual} rutaRevisionSeleccion={rutaRevisionSeleccion} />}
           <p className={estilos.estadoCuenta}>La disponibilidad visible en frontend es orientativa: no reserva unidades y el backend vuelve a validar stock al crear el pedido real.</p>
           <label>Intención y observaciones del pedido<textarea value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} /></label>
           {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
@@ -206,7 +234,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
 }
 
 type CampoProps = { nombre: string; etiqueta: string; valor: string; onChange: React.Dispatch<React.SetStateAction<DatosCheckoutReal>>; error?: string; tipo?: "text" | "email" | "tel" };
-type BloquePedidoProductoUnicoProps = { datos: { producto_slug: string; cantidad: string }; errores: Record<string, string>; producto: (typeof PRODUCTOS_CATALOGO)[number] | null; setDatos: React.Dispatch<React.SetStateAction<DatosCheckoutReal>> };
+type BloquePedidoProductoUnicoProps = { datos: { producto_slug: string; cantidad: string }; errores: Record<string, string>; producto: (typeof PRODUCTOS_CATALOGO)[number] | ProductoSeccionPublica | null; setDatos: React.Dispatch<React.SetStateAction<DatosCheckoutReal>> };
 type BloqueDireccionManualProps = { datos: DatosCheckoutReal; errores: Record<string, string>; setDatos: React.Dispatch<React.SetStateAction<DatosCheckoutReal>> };
 
 function Campo({ nombre, etiqueta, valor, onChange, error, tipo = "text" }: CampoProps): JSX.Element {
@@ -214,10 +242,15 @@ function Campo({ nombre, etiqueta, valor, onChange, error, tipo = "text" }: Camp
 }
 
 function BloquePedidoProductoUnico({ datos, errores, producto, setDatos }: BloquePedidoProductoUnicoProps): JSX.Element {
+  const unidad = producto?.unidad_comercial ?? "ud";
+  const incremento = producto?.incremento_minimo_venta ?? 1;
+  const minimo = producto?.cantidad_minima_compra ?? 1;
+  const precioVisible = producto ? ("precioVisible" in producto ? producto.precioVisible : producto.precio_visible) : "";
   return <>
-    {producto ? <p className={estilos.resumenProducto}>Producto seleccionado: <strong>{producto.nombre}</strong> · {producto.precioVisible}</p> : <Campo nombre="producto_slug" etiqueta="Slug del producto" valor={datos.producto_slug} error={errores.producto_slug} onChange={setDatos} /> }
+    {producto ? <p className={estilos.resumenProducto}>Producto seleccionado: <strong>{producto.nombre}</strong> · {precioVisible}</p> : <Campo nombre="producto_slug" etiqueta="Slug del producto" valor={datos.producto_slug} error={errores.producto_slug} onChange={setDatos} /> }
     <AvisoDisponibilidadCheckoutReal slugProducto={datos.producto_slug} />
-    <Campo nombre="cantidad" etiqueta="Cantidad" valor={datos.cantidad} onChange={setDatos} />
+    <Campo nombre="cantidad" etiqueta={`Cantidad comercial (${unidad})`} valor={datos.cantidad} onChange={setDatos} error={errores.cantidad} />
+    <p className={estilos.estadoCuenta}>Mínimo de compra: {minimo} {unidad}. Incremento mínimo: {incremento} {unidad}.</p>
   </>;
 }
 

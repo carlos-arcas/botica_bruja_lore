@@ -227,8 +227,21 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - migración compatible con datos existentes mediante defaults conservadores (`ud`, `1`, `1`);
   - validaciones de backoffice para unidad válida, incremento/mínimo > 0, compatibilidad mínimo↔incremento y coherencia mínima con `InventarioProducto.unidad_base` cuando ya existe inventario.
 - Regla activa:
-  1. la línea de pedido real ya usa `cantidad_comercial` + `unidad_comercial` con compatibilidad transitoria de payload legacy; queda pendiente R04 para UX/checkout granel explícito;
+  1. la línea de pedido real y el checkout real ya usan `cantidad_comercial` + `unidad_comercial`; el payload legacy `cantidad` se mantiene solo como compatibilidad transitoria en backend;
   2. las cantidades comerciales siguen siendo enteras (sin floats) y controladas por catálogo cerrado de unidades.
+
+## 16. Actualización incremental — R04 checkout real compatible con granel
+- Capacidad: **Checkout real con semántica comercial explícita para unitario y granel**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - frontend checkout real construye líneas con `cantidad_comercial` + `unidad_comercial` y muestra unidad/incremento/mínimo en UX mínima;
+  - validación frontend de enteros sin floats, múltiplos de incremento y mínimo de compra por producto;
+  - backend aplica validación final de semántica comercial por línea (`unidad_comercial`, `incremento_minimo_venta`, `cantidad_minima_compra`) antes de validar stock;
+  - pruebas backend y frontend de checkout real cubren caso unitario, caso granel válido y rechazos por unidad/incremento/mínimo.
+- Regla activa:
+  1. frontend converge al contrato nuevo de R03 y evita depender del alias legacy para construir pedidos reales;
+  2. la compatibilidad legacy de `cantidad` queda restringida al backend mientras existan consumidores transitorios;
+  3. no se amplía alcance a fiscalidad, promociones, métodos de envío múltiples ni logística avanzada.
 - **Estado**: DONE.
 - **Ciclo asociado**: evolución ecommerce demo (frontend).
 - **Evidencia técnica**:

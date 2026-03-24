@@ -25,7 +25,8 @@ export type LineaPedidoPayload = {
   id_producto: string;
   slug_producto: string;
   nombre_producto: string;
-  cantidad: number;
+  cantidad_comercial: number;
+  unidad_comercial: "ud" | "g" | "ml";
   precio_unitario: string;
   moneda: string;
 };
@@ -67,6 +68,12 @@ export type DatosCheckoutReal = {
 export type ResultadoLineasPedidoReal = {
   lineasConvertibles: LineaPedidoPayload[];
   lineasNoConvertibles: LineaNoConvertiblePedido[];
+};
+
+type ProductoConSemanticaComercial = {
+  unidad_comercial?: "ud" | "g" | "ml";
+  incremento_minimo_venta?: number;
+  cantidad_minima_compra?: number;
 };
 
 export function resolverModoCheckoutReal(items: ItemEncargoPreseleccionado[]): ModoCheckoutReal {
@@ -120,6 +127,7 @@ export function validarCheckoutReal(
   datos: DatosCheckoutReal,
   resultadoLineas: LineaPedidoPayload[] | ResultadoLineasPedidoReal,
   modo: ModoCheckoutReal = "producto_unico",
+  productoParaValidacion?: ProductoConSemanticaComercial | null,
 ): Record<string, string> {
   const errores: Record<string, string> = {};
   for (const campo of ["email_contacto", "nombre_contacto", "telefono_contacto"] as const) {
@@ -132,6 +140,15 @@ export function validarCheckoutReal(
   } else {
     for (const campo of ["nombre_destinatario", "linea_1", "codigo_postal", "ciudad", "provincia"] as const) {
       if (!datos[campo].trim()) errores[campo] = "Campo obligatorio.";
+    }
+  }
+  if (modo === "producto_unico") {
+    const reglas = resolverReglasComercialesProducto(productoParaValidacion);
+    const cantidad = resolverCantidadTextoEstricto(datos.cantidad);
+    if (cantidad === null) errores.cantidad = "Introduce una cantidad entera positiva sin decimales.";
+    else {
+      const errorCantidad = validarCantidadComercial(cantidad, reglas);
+      if (errorCantidad) errores.cantidad = errorCantidad;
     }
   }
   return { ...errores, ...validarLineasCheckoutReal(resultadoLineas) };
@@ -198,7 +215,15 @@ function construirLineaReal(slug: string | null, cantidad: number, productos: Pr
   if (!slug) return null;
   const producto = productos.find((item) => item.slug === slug);
   if (!producto || !producto.id) return null;
-  return { id_producto: producto.id, slug_producto: producto.slug, nombre_producto: producto.nombre, cantidad, precio_unitario: convertirPrecioVisibleADecimal(producto.precioVisible), moneda: "EUR" };
+  return {
+    id_producto: producto.id,
+    slug_producto: producto.slug,
+    nombre_producto: producto.nombre,
+    cantidad_comercial: cantidad,
+    unidad_comercial: producto.unidad_comercial ?? "ud",
+    precio_unitario: convertirPrecioVisibleADecimal(producto.precioVisible),
+    moneda: "EUR",
+  };
 }
 
 function convertirPrecioVisibleADecimal(precioVisible: string): string {
@@ -208,7 +233,41 @@ function convertirPrecioVisibleADecimal(precioVisible: string): string {
 }
 
 function resolverCantidadCheckoutReal(cantidadTexto: string): number {
-  const cantidad = Number.parseInt(cantidadTexto, 10);
-  if (Number.isNaN(cantidad)) return CANTIDAD_MINIMA_CESTA;
+  const cantidad = resolverCantidadTextoEstricto(cantidadTexto);
+  if (cantidad === null) return CANTIDAD_MINIMA_CESTA;
   return Math.max(CANTIDAD_MINIMA_CESTA, Math.min(CANTIDAD_MAXIMA_CESTA, cantidad));
+}
+
+function resolverCantidadTextoEstricto(cantidadTexto: string): number | null {
+  const texto = cantidadTexto.trim();
+  if (!/^\d+$/.test(texto)) return null;
+  const cantidad = Number.parseInt(texto, 10);
+  if (Number.isNaN(cantidad)) return null;
+  return cantidad;
+}
+
+function resolverReglasComercialesProducto(producto?: ProductoConSemanticaComercial | null): {
+  incremento_minimo_venta: number;
+  cantidad_minima_compra: number;
+  unidad_comercial: "ud" | "g" | "ml";
+} {
+  return {
+    incremento_minimo_venta: producto?.incremento_minimo_venta ?? 1,
+    cantidad_minima_compra: producto?.cantidad_minima_compra ?? 1,
+    unidad_comercial: producto?.unidad_comercial ?? "ud",
+  };
+}
+
+function validarCantidadComercial(
+  cantidad: number,
+  reglas: { incremento_minimo_venta: number; cantidad_minima_compra: number; unidad_comercial: "ud" | "g" | "ml" },
+): string | null {
+  if (cantidad <= 0) return "La cantidad debe ser mayor que cero.";
+  if (cantidad < reglas.cantidad_minima_compra) {
+    return `La cantidad mínima para este producto es ${reglas.cantidad_minima_compra} ${reglas.unidad_comercial}.`;
+  }
+  if (cantidad % reglas.incremento_minimo_venta !== 0) {
+    return `La cantidad debe avanzar en incrementos de ${reglas.incremento_minimo_venta} ${reglas.unidad_comercial}.`;
+  }
+  return null;
 }

@@ -137,6 +137,12 @@ test("checkout real muestra subtotal, envío estándar y total antes de pagar", 
   assert.equal(archivoFlujo.includes("Total:"), true);
 });
 
+test("checkout real expone cantidad comercial y unidad cuando prepara compra a granel", () => {
+  assert.equal(archivoFlujo.includes("Cantidad comercial ("), true);
+  assert.equal(archivoFlujo.includes("Mínimo de compra:"), true);
+  assert.equal(archivoFlujo.includes("Incremento mínimo:"), true);
+});
+
 test("recibo real muestra subtotal, envío y total del pedido", () => {
   assert.equal(archivoRecibo.includes("Subtotal:"), true);
   assert.equal(archivoRecibo.includes("Envío ("), true);

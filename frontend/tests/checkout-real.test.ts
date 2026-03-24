@@ -93,6 +93,76 @@ test("checkout real puede operar como invitado sin id_usuario", () => {
   assert.equal(payload.canal_checkout, "web_invitado");
 });
 
+test("checkout real muestra error por incremento mínimo cuando la cantidad no cuadra", () => {
+  const datos = {
+    ...construirDatosBaseCheckoutReal(),
+    producto_slug: "infusion-bruma-lavanda",
+    cantidad: "125",
+  };
+  const resultado = construirResultadoLineasPedidoReal([], "infusion-bruma-lavanda", "125");
+  const errores = validarCheckoutReal(
+    datos,
+    resultado,
+    "producto_unico",
+    {
+      id: "prod-granel",
+      slug: "infusion-bruma-lavanda",
+      nombre: "Infusión",
+      subtitulo: "",
+      descripcion: "",
+      precioVisible: "€1,00",
+      categoria: "mezcla-herbal",
+      intencion: "calma",
+      etiquetas: [],
+      destacado: false,
+      disponible: true,
+      notasSensoriales: "",
+      imagen_url: "",
+      imagen_alt: "",
+      unidad_comercial: "g",
+      incremento_minimo_venta: 50,
+      cantidad_minima_compra: 100,
+    },
+  );
+
+  assert.match(errores.cantidad ?? "", /incrementos de 50 g/i);
+});
+
+test("checkout real muestra error por cantidad mínima de compra", () => {
+  const datos = {
+    ...construirDatosBaseCheckoutReal(),
+    producto_slug: "infusion-bruma-lavanda",
+    cantidad: "50",
+  };
+  const resultado = construirResultadoLineasPedidoReal([], "infusion-bruma-lavanda", "50");
+  const errores = validarCheckoutReal(
+    datos,
+    resultado,
+    "producto_unico",
+    {
+      id: "prod-granel",
+      slug: "infusion-bruma-lavanda",
+      nombre: "Infusión",
+      subtitulo: "",
+      descripcion: "",
+      precioVisible: "€1,00",
+      categoria: "mezcla-herbal",
+      intencion: "calma",
+      etiquetas: [],
+      destacado: false,
+      disponible: true,
+      notasSensoriales: "",
+      imagen_url: "",
+      imagen_alt: "",
+      unidad_comercial: "g",
+      incremento_minimo_venta: 50,
+      cantidad_minima_compra: 100,
+    },
+  );
+
+  assert.match(errores.cantidad ?? "", /mínima.*100 g/i);
+});
+
 test("checkout real en modo múltiple no exige producto_slug y construye el payload desde la selección", () => {
   const itemsPreseleccionados = [
     {
@@ -134,7 +204,7 @@ test("checkout real en modo múltiple no exige producto_slug y construye el payl
   assert.equal(errores.producto_slug, undefined);
   assert.equal(resultado.lineasNoConvertibles.length, 0);
   assert.deepEqual(
-    payload.lineas.map((linea) => ({ slug: linea.slug_producto, cantidad: linea.cantidad })),
+    payload.lineas.map((linea) => ({ slug: linea.slug_producto, cantidad: linea.cantidad_comercial })),
     [
       { slug: "vela-intencion-clara", cantidad: 2 },
       { slug: "pack-bosque-dorado", cantidad: 1 },
@@ -446,7 +516,7 @@ test("cliente API de pedidos reales usa la ruta nueva /api/v1/pedidos/", async (
     telefono_contacto: "600",
     canal_checkout: "web_invitado",
     direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES" },
-    lineas: [{ id_producto: "p1", slug_producto: "vela", nombre_producto: "Vela", cantidad: 1, precio_unitario: "9.90", moneda: "EUR" }],
+    lineas: [{ id_producto: "p1", slug_producto: "vela", nombre_producto: "Vela", cantidad_comercial: 1, unidad_comercial: "ud", precio_unitario: "9.90", moneda: "EUR" }],
     moneda: "EUR",
   });
 
@@ -481,7 +551,7 @@ test("checkout real conserva codigo y detalle por línea cuando la API rechaza p
     telefono_contacto: "600",
     canal_checkout: "web_invitado",
     direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES" },
-    lineas: [{ id_producto: "p1", slug_producto: "vela", nombre_producto: "Vela", cantidad: 1, precio_unitario: "9.90", moneda: "EUR" }],
+    lineas: [{ id_producto: "p1", slug_producto: "vela", nombre_producto: "Vela", cantidad_comercial: 1, unidad_comercial: "ud", precio_unitario: "9.90", moneda: "EUR" }],
     moneda: "EUR",
   });
 

@@ -17,6 +17,7 @@ from .puertos.repositorios_cuentas_cliente import RepositorioCuentasCliente
 from .puertos.proveedor_envio import PuertoProveedorEnvio
 from .puertos.repositorios_inventario import RepositorioInventario
 from .puertos.repositorios_pedidos import RepositorioPedidos
+from .puertos.repositorios_productos_checkout import RepositorioProductosCheckout
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ class RegistrarPedido:
     repositorio_pedidos: RepositorioPedidos
     repositorio_cuentas_cliente: RepositorioCuentasCliente
     repositorio_inventario: RepositorioInventario
+    repositorio_productos_checkout: RepositorioProductosCheckout
     proveedor_envio: PuertoProveedorEnvio
 
     def ejecutar(self, payload: PayloadPedido, operation_id: str) -> PedidoRealDTO:
@@ -43,6 +45,7 @@ class RegistrarPedido:
             metodo_envio="envio_estandar",
             importe_envio=importe_envio,
         )
+        self._validar_semantica_comercial_lineas(pedido)
         self._validar_stock_disponible(pedido, operation_id)
         logger.info("pedido_real_registro_iniciado", extra=_extra_log(operation_id, pedido))
         persistido = self.repositorio_pedidos.guardar(pedido)
@@ -125,6 +128,20 @@ class RegistrarPedido:
                 "resultado": "ok",
             },
         )
+
+    def _validar_semantica_comercial_lineas(self, pedido: Pedido) -> None:
+        for linea in pedido.lineas:
+            producto = self.repositorio_productos_checkout.obtener_semantica_comercial_por_id(
+                linea.id_producto
+            )
+            if producto is None:
+                raise ErrorDominio("No pudimos validar la semántica comercial porque el producto no existe.")
+            if linea.unidad_comercial != producto.unidad_comercial:
+                raise ErrorDominio("La unidad de línea no coincide con la unidad comercial del producto.")
+            if linea.cantidad_comercial < producto.cantidad_minima_compra:
+                raise ErrorDominio("La cantidad comercial no cumple la cantidad mínima de compra configurada para el producto.")
+            if linea.cantidad_comercial % producto.incremento_minimo_venta != 0:
+                raise ErrorDominio("La cantidad comercial no cumple el incremento mínimo de venta configurado para el producto.")
 
 
 @dataclass(slots=True)
