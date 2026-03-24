@@ -89,6 +89,24 @@ class TestAdminNucleoHerbal(TestCase):
             requiere_revision_manual=True,
             observaciones_operativas="Falta stock tras confirmar pago",
         )
+        cls.pedido_real_sin_incidencia = PedidoRealModelo.objects.create(
+            id_pedido="PR-ADMIN-0002",
+            estado="pagado",
+            estado_pago="pagado",
+            canal_checkout="web_invitado",
+            email_contacto="sin-incidencia@lore.test",
+            nombre_contacto="Pedido sin incidencia",
+            telefono_contacto="600333445",
+            es_invitado=True,
+            moneda="EUR",
+            subtotal=Decimal("12.00"),
+            direccion_entrega={"nombre_destinatario": "Sin Incidencia", "linea_1": "Calle Luna 2", "codigo_postal": "28002", "ciudad": "Madrid", "provincia": "Madrid", "pais_iso": "ES"},
+            fecha_creacion=datetime(2026, 1, 2, tzinfo=UTC),
+            fecha_pago_confirmado=datetime(2026, 1, 2, 1, tzinfo=UTC),
+            incidencia_stock_confirmacion=False,
+            requiere_revision_manual=False,
+            observaciones_operativas="Pedido pagado sin incidencia",
+        )
         LineaPedidoRealModelo.objects.create(
             pedido=cls.pedido_real_stock,
             id_producto="prod-admin-1",
@@ -231,3 +249,44 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertTrue(self.pedido_real_stock.incidencia_stock_revisada)
         self.assertFalse(self.pedido_real_stock.requiere_revision_manual)
         self.assertIsNotNone(self.pedido_real_stock.fecha_revision_incidencia_stock)
+
+    def test_accion_admin_cancela_pedido_incidenciado(self) -> None:
+        self.client.force_login(self.superusuario)
+
+        response = self.client.post(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {
+                "action": "cancelar_operativa_incidencia_stock",
+                "_selected_action": ["PR-ADMIN-0001"],
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.pedido_real_stock.refresh_from_db()
+        self.assertEqual(self.pedido_real_stock.estado, "cancelado")
+        self.assertTrue(self.pedido_real_stock.cancelado_operativa_incidencia_stock)
+        self.assertIsNotNone(self.pedido_real_stock.fecha_cancelacion_operativa)
+        self.assertTrue(self.pedido_real_stock.incidencia_stock_confirmacion)
+        change_response = self.client.get(
+            reverse("admin:persistencia_django_pedidorealmodelo_change", args=["PR-ADMIN-0001"])
+        )
+        self.assertEqual(change_response.status_code, 200)
+        self.assertContains(change_response, "Cancelación operativa manual por incidencia de stock")
+
+    def test_accion_admin_rechaza_cancelacion_sin_incidencia(self) -> None:
+        self.client.force_login(self.superusuario)
+
+        response = self.client.post(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {
+                "action": "cancelar_operativa_incidencia_stock",
+                "_selected_action": ["PR-ADMIN-0002"],
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.pedido_real_sin_incidencia.refresh_from_db()
+        self.assertEqual(self.pedido_real_sin_incidencia.estado, "pagado")
+        self.assertFalse(self.pedido_real_sin_incidencia.cancelado_operativa_incidencia_stock)

@@ -747,3 +747,5 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Prompt 09: **DONE** para decremento efectivo de inventario al confirmar pago real con transacción atómica, protección idempotente ante reintentos/webhooks duplicados, incidencia operativa explícita si ya no hay stock suficiente y sin introducir reservas ni compensaciones automáticas.
 
 - Prompt 10: **DONE** para soporte mínimo de backoffice en Django Admin sobre pedidos pagados con incidencia de stock post-pago: listado filtrable por incidencia, detalle operativo del pedido, marca explícita `incidencia_stock_revisada` con `fecha_revision_incidencia_stock` y acción manual honesta de revisión sin borrar la incidencia histórica ni automatizar reembolsos, cancelaciones o compensaciones.
+
+- Prompt 12: **DONE** para cancelación operativa manual explícita de pedidos pagados con incidencia de stock, con acción de Django Admin restringida a estados coherentes y trazabilidad auditada (`cancelado_operativa_incidencia_stock`, `fecha_cancelacion_operativa`, `motivo_cancelacion_operativa`) sin automatizar reembolsos ni devolución de inventario.

@@ -131,6 +131,9 @@ class Pedido:
     observaciones_operativas: str = ""
     email_envio_enviado: bool = False
     fecha_email_envio: datetime | None = None
+    cancelado_operativa_incidencia_stock: bool = False
+    fecha_cancelacion_operativa: datetime | None = None
+    motivo_cancelacion_operativa: str = ""
 
     def __post_init__(self) -> None:
         if not self.id_pedido.strip():
@@ -157,6 +160,14 @@ class Pedido:
             raise ErrorDominio("La fecha de email post-pago requiere email_post_pago_enviado=True.")
         if self.fecha_email_envio and not self.email_envio_enviado:
             raise ErrorDominio("La fecha de email de envío requiere email_envio_enviado=True.")
+        if self.cancelado_operativa_incidencia_stock and self.fecha_cancelacion_operativa is None:
+            raise ErrorDominio("La cancelación operativa requiere fecha de cancelación.")
+        if self.cancelado_operativa_incidencia_stock and not self.motivo_cancelacion_operativa.strip():
+            raise ErrorDominio("La cancelación operativa requiere motivo.")
+        if self.fecha_cancelacion_operativa and not self.cancelado_operativa_incidencia_stock:
+            raise ErrorDominio("La fecha de cancelación operativa requiere cancelado_operativa_incidencia_stock=True.")
+        if self.motivo_cancelacion_operativa.strip() and not self.cancelado_operativa_incidencia_stock:
+            raise ErrorDominio("El motivo de cancelación operativa requiere cancelado_operativa_incidencia_stock=True.")
         self._validar_operacion_fisica()
 
     @property
@@ -252,6 +263,25 @@ class Pedido:
         if self.estado != "enviado":
             raise ErrorDominio("Solo un pedido enviado puede pasar a entregado.")
         return replace(self, estado="entregado", fecha_entrega=fecha_entrega, observaciones_operativas=_combinar_observaciones(self.observaciones_operativas, observaciones_operativas))
+
+    def cancelar_operativamente_por_incidencia_stock(self, fecha_cancelacion: datetime, motivo_cancelacion: str) -> "Pedido":
+        if self.cancelado_operativa_incidencia_stock:
+            return self
+        if not self.incidencia_stock_confirmacion:
+            raise ErrorDominio("Solo se puede cancelar operativamente un pedido con incidencia de stock.")
+        if self.estado != "pagado":
+            raise ErrorDominio("Solo un pedido pagado con incidencia de stock puede cancelarse operativamente.")
+        motivo = motivo_cancelacion.strip()
+        if not motivo:
+            raise ErrorDominio("La cancelación operativa requiere motivo.")
+        return replace(
+            self,
+            estado="cancelado",
+            requiere_revision_manual=False,
+            cancelado_operativa_incidencia_stock=True,
+            fecha_cancelacion_operativa=fecha_cancelacion,
+            motivo_cancelacion_operativa=motivo,
+        )
 
     def _validar_operacion_fisica(self) -> None:
         if self.estado in {"preparando", "enviado", "entregado"} and self.fecha_preparacion is None:

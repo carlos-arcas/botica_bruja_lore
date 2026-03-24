@@ -38,6 +38,9 @@ class PedidoRealModelo(models.Model):
     observaciones_operativas = models.TextField(blank=True, default="")
     email_envio_enviado = models.BooleanField(default=False)
     fecha_email_envio = models.DateTimeField(null=True, blank=True)
+    cancelado_operativa_incidencia_stock = models.BooleanField(default=False)
+    fecha_cancelacion_operativa = models.DateTimeField(null=True, blank=True)
+    motivo_cancelacion_operativa = models.CharField(max_length=280, blank=True, default="")
 
     class Meta:
         db_table = "nucleo_pedido"

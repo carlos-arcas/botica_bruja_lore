@@ -2,7 +2,11 @@ from decimal import Decimal
 from unittest import TestCase
 from unittest.mock import Mock
 
-from backend.nucleo_herbal.aplicacion.casos_de_uso_backoffice_pedidos import DatosEnvioBackoffice, MarcarPedidoEnviado
+from backend.nucleo_herbal.aplicacion.casos_de_uso_backoffice_pedidos import (
+    CancelarPedidoOperativoPorIncidenciaStock,
+    DatosEnvioBackoffice,
+    MarcarPedidoEnviado,
+)
 from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.dominio.pedidos import ClientePedido, DireccionEntrega, LineaPedido, Pedido
 
@@ -44,6 +48,68 @@ class OperacionPedidosRealTests(TestCase):
         resultado = caso._enviar_email_si_aplica(pedido, "op-1", "staff")
         self.assertTrue(resultado.email_envio_enviado)
         notificador.enviar_confirmacion_envio.assert_not_called()
+
+    def test_cancelacion_operativa_valida_en_pedido_pagado_con_incidencia(self) -> None:
+        pedido = _pedido_base(estado="pagado", estado_pago="pagado").registrar_incidencia_stock_confirmacion("Sin stock real")
+        actualizado = pedido.cancelar_operativamente_por_incidencia_stock(
+            fecha_cancelacion=pedido.fecha_creacion,
+            motivo_cancelacion="Cancelación manual por incidencia de stock",
+        )
+        self.assertEqual(actualizado.estado, "cancelado")
+        self.assertTrue(actualizado.cancelado_operativa_incidencia_stock)
+        self.assertIsNotNone(actualizado.fecha_cancelacion_operativa)
+        self.assertEqual(actualizado.motivo_cancelacion_operativa, "Cancelación manual por incidencia de stock")
+        self.assertTrue(actualizado.incidencia_stock_confirmacion)
+
+    def test_cancelacion_operativa_rechaza_sin_incidencia_stock(self) -> None:
+        with self.assertRaisesRegex(ErrorDominio, "incidencia de stock"):
+            _pedido_base(estado="pagado", estado_pago="pagado").cancelar_operativamente_por_incidencia_stock(
+                fecha_cancelacion=_pedido_base().fecha_creacion,
+                motivo_cancelacion="Sin incidencia previa",
+            )
+
+    def test_cancelacion_operativa_rechaza_estado_no_cancelable(self) -> None:
+        pedido = _pedido_enviado().registrar_incidencia_stock_confirmacion("Incidencia tardía")
+        with self.assertRaisesRegex(ErrorDominio, "pedido pagado"):
+            pedido.cancelar_operativamente_por_incidencia_stock(
+                fecha_cancelacion=pedido.fecha_creacion,
+                motivo_cancelacion="Ya enviado",
+            )
+
+    def test_caso_uso_cancelacion_operativa_persiste_trazabilidad(self) -> None:
+        pedido = _pedido_base(estado="pagado", estado_pago="pagado").registrar_incidencia_stock_confirmacion("Sin stock")
+        repositorio = Mock(
+            obtener_por_id=Mock(return_value=pedido),
+            guardar=Mock(side_effect=lambda actual: actual),
+        )
+        caso = CancelarPedidoOperativoPorIncidenciaStock(repositorio_pedidos=repositorio)
+
+        resultado = caso.ejecutar(
+            id_pedido=pedido.id_pedido,
+            operation_id="op-cancel-1",
+            actor="staff",
+            motivo_cancelacion="Cancelación operativa manual",
+        )
+
+        self.assertEqual(resultado.estado, "cancelado")
+        self.assertTrue(resultado.cancelado_operativa_incidencia_stock)
+        self.assertEqual(resultado.estado_pago, "pagado")
+
+    def test_caso_uso_cancelacion_operativa_registra_warning_en_rechazo(self) -> None:
+        pedido = _pedido_base(estado="pagado", estado_pago="pagado")
+        repositorio = Mock(obtener_por_id=Mock(return_value=pedido), guardar=Mock())
+        caso = CancelarPedidoOperativoPorIncidenciaStock(repositorio_pedidos=repositorio)
+
+        with self.assertLogs("backend.nucleo_herbal.aplicacion.casos_de_uso_backoffice_pedidos", level="WARNING") as logs:
+            with self.assertRaisesRegex(ErrorDominio, "incidencia de stock"):
+                caso.ejecutar(
+                    id_pedido=pedido.id_pedido,
+                    operation_id="op-cancel-warning",
+                    actor="staff",
+                    motivo_cancelacion="Cancelación inválida",
+                )
+
+        self.assertTrue(any("backoffice_pedido_cancelacion_operativa_rechazada" in mensaje for mensaje in logs.output))
 
 
 
