@@ -67,6 +67,9 @@ def a_producto(modelo: ProductoModelo) -> Producto:
         formato_comercial=modelo.formato_comercial,
         modo_uso=modelo.modo_uso,
         categoria_visible=modelo.categoria_visible,
+        unidad_comercial=modelo.unidad_comercial,
+        incremento_minimo_venta=modelo.incremento_minimo_venta,
+        cantidad_minima_compra=modelo.cantidad_minima_compra,
     )
 
 

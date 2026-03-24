@@ -74,6 +74,46 @@ class TestEntidadesDominio(unittest.TestCase):
         self.assertEqual(producto.categoria_comercial, "destacados-temporada")
         self.assertNotEqual(producto.tipo_producto, producto.categoria_comercial)
 
+    def test_producto_rechaza_unidad_comercial_invalida(self) -> None:
+        with self.assertRaises(ErrorDominio):
+            Producto(
+                id="prod-5",
+                sku="SKU-005",
+                slug="sahumerio-rosa",
+                nombre="Sahumerio rosa",
+                tipo_producto="inciensos-y-sahumerios",
+                categoria_comercial="inciensos",
+                planta_id=None,
+                unidad_comercial="kg",
+            )
+
+    def test_producto_rechaza_incremento_minimo_invalido(self) -> None:
+        with self.assertRaises(ErrorDominio):
+            Producto(
+                id="prod-6",
+                sku="SKU-006",
+                slug="sahumerio-jazmin",
+                nombre="Sahumerio jazmín",
+                tipo_producto="inciensos-y-sahumerios",
+                categoria_comercial="inciensos",
+                planta_id=None,
+                incremento_minimo_venta=0,
+            )
+
+    def test_producto_rechaza_cantidad_minima_no_compatible_con_incremento(self) -> None:
+        with self.assertRaises(ErrorDominio):
+            Producto(
+                id="prod-7",
+                sku="SKU-007",
+                slug="resina-lunar",
+                nombre="Resina lunar",
+                tipo_producto="inciensos-y-sahumerios",
+                categoria_comercial="inciensos",
+                planta_id=None,
+                incremento_minimo_venta=5,
+                cantidad_minima_compra=3,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

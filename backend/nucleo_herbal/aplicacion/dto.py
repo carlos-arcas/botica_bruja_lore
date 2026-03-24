@@ -50,6 +50,9 @@ class ProductoResumenDTO:
     formato_comercial: str
     modo_uso: str
     categoria_visible: str
+    unidad_comercial: str
+    incremento_minimo_venta: int
+    cantidad_minima_compra: int
     disponible: bool
     estado_disponibilidad: str
 
