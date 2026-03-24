@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { resolverEstadoVisiblePedidoCliente } from "@/infraestructura/api/estadoPedidoCliente";
 import {
   CuentaCliente,
   EstadoVerificacionEmail,
@@ -115,12 +116,20 @@ export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.El
         <ul>
           {pedidos.map((pedido) => (
             <li key={pedido.id_pedido}>
-              <Link href={`/pedido/${pedido.id_pedido}`}>{pedido.id_pedido}</Link> · {pedido.estado} · {pedido.subtotal} {pedido.moneda}
-              {pedido.expedicion?.codigo_seguimiento ? ` · tracking ${pedido.expedicion.codigo_seguimiento}` : ""}
+              <Link href={`/pedido/${pedido.id_pedido}`}>{pedido.id_pedido}</Link> · {renderResumenPedidoCuenta(pedido)}
             </li>
           ))}
         </ul>
       )}
     </section>
   );
+}
+
+function renderResumenPedidoCuenta(pedido: PedidoCuentaCliente): string {
+  const estadoVisible = resolverEstadoVisiblePedidoCliente(pedido);
+  const partes = [pedido.estado, `${pedido.subtotal} ${pedido.moneda}`];
+  if (estadoVisible.cancelacion.visible) partes.push("cancelación operativa");
+  partes.push(estadoVisible.reembolso.titulo.toLowerCase());
+  if (pedido.expedicion?.codigo_seguimiento) partes.push(`tracking ${pedido.expedicion.codigo_seguimiento}`);
+  return partes.join(" · ");
 }

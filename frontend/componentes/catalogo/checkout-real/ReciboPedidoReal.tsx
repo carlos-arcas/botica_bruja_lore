@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { resolverEstadoVisiblePedidoCliente } from "@/infraestructura/api/estadoPedidoCliente";
 import { iniciarPagoPedido, obtenerPedidoPublico, PedidoCreado, RetornoPago } from "@/infraestructura/api/pedidos";
 
 type Props = { idPedidoRuta?: string; retornoPago?: RetornoPago };
@@ -31,6 +32,7 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
   if (!pedido) return <section className="bloque-home"><p>{mensaje}</p></section>;
   const puedePagar = pedido.estado === "pendiente_pago" && pedido.estado_pago !== "pagado";
   const mensajeEstado = resolverMensajeEstado(pedido);
+  const estadoVisible = resolverEstadoVisiblePedidoCliente(pedido);
 
   return (
     <section className="bloque-home" aria-labelledby="titulo-recibo-real">
@@ -39,6 +41,15 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
       <p><strong>{resumenRetorno.titulo}</strong> {resumenRetorno.descripcion}</p>
       <p>Estado visible del pedido: <strong>{mensajeEstado.titulo}</strong>.</p>
       <p>{mensajeEstado.descripcion}</p>
+      {estadoVisible.cancelacion.visible && (
+        <>
+          <p><strong>{estadoVisible.cancelacion.titulo}.</strong></p>
+          <p>{estadoVisible.cancelacion.descripcion}</p>
+        </>
+      )}
+      <p><strong>{estadoVisible.reembolso.titulo}.</strong></p>
+      <p>{estadoVisible.reembolso.descripcion}</p>
+      {estadoVisible.reembolso.fechaReembolso && <p>Fecha de reembolso: {estadoVisible.reembolso.fechaReembolso}.</p>}
       <p>Estado del pago: <strong>{pedido.estado_pago}</strong>.</p>
       <p>Contacto: {pedido.cliente.nombre_contacto} · {pedido.cliente.email_contacto}</p>
       <p>Entrega: {pedido.direccion_entrega.linea_1}, {pedido.direccion_entrega.ciudad}, {pedido.direccion_entrega.codigo_postal}</p>

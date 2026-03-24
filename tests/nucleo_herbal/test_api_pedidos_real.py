@@ -52,6 +52,14 @@ class TestApiPedidosReal(DjangoTestCase):
         self.assertFalse(pedido["email_post_pago_enviado"])
         self.assertEqual(pedido["expedicion"]["transportista"], "")
         self.assertEqual(pedido["expedicion"]["fecha_envio"], None)
+        self.assertEqual(
+            pedido["estado_cliente"],
+            {
+                "cancelado_operativamente": False,
+                "estado_reembolso": "no_iniciado",
+                "fecha_reembolso": None,
+            },
+        )
 
     def test_direccion_entrega_es_obligatoria(self) -> None:
         payload = _payload_base()
