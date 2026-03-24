@@ -1,3 +1,8 @@
+import {
+  normalizarEstadoDisponibilidadPublica,
+  type EstadoDisponibilidadPublica,
+} from "./herbal";
+
 export type IntencionPublica = {
   slug: string;
   nombre: string;
@@ -29,6 +34,8 @@ export type ProductoRelacionadoRitual = {
   descripcion_corta: string;
   precio_visible: string;
   imagen_url: string;
+  disponible: boolean;
+  estado_disponibilidad: EstadoDisponibilidadPublica;
 };
 
 export type RitualDetallePublico = {
@@ -60,7 +67,19 @@ type PlantaApi = {
   intenciones: IntencionPublica[];
 };
 
-type ProductoApi = ProductoRelacionadoRitual;
+type ProductoApi = {
+  sku?: string;
+  slug?: string;
+  nombre?: string;
+  tipo_producto?: string;
+  categoria_comercial?: string;
+  seccion_publica?: string;
+  descripcion_corta?: string;
+  precio_visible?: string;
+  imagen_url?: string;
+  disponible?: boolean;
+  estado_disponibilidad?: string;
+};
 
 type RespuestaListadoRituales = {
   rituales: RitualApi[];
@@ -103,6 +122,28 @@ function mapearPlantaRelacionada(planta: PlantaApi): PlantaRelacionadaRitual {
   return {
     ...planta,
     urlDetalle: `/hierbas/${planta.slug}`,
+  };
+}
+
+function normalizarProductoRelacionadoRitual(producto: ProductoApi): ProductoRelacionadoRitual | null {
+  if (!producto.sku || !producto.slug || !producto.nombre) {
+    return null;
+  }
+
+  return {
+    sku: producto.sku,
+    slug: producto.slug,
+    nombre: producto.nombre,
+    tipo_producto: producto.tipo_producto ?? "",
+    categoria_comercial: producto.categoria_comercial ?? "",
+    seccion_publica: producto.seccion_publica ?? "",
+    descripcion_corta: producto.descripcion_corta ?? "",
+    precio_visible: producto.precio_visible ?? "",
+    imagen_url: producto.imagen_url ?? "",
+    disponible: producto.disponible ?? false,
+    estado_disponibilidad: normalizarEstadoDisponibilidadPublica(
+      producto.estado_disponibilidad,
+    ),
   };
 }
 
@@ -180,7 +221,9 @@ export async function obtenerFichaRitualConectada(slugRitual: string): Promise<R
       ficha: {
         ritual: detalle.ritual,
         plantas: plantas.plantas.map(mapearPlantaRelacionada),
-        productos: productos.productos,
+        productos: productos.productos
+          .map(normalizarProductoRelacionadoRitual)
+          .filter((producto): producto is ProductoRelacionadoRitual => producto !== null),
       },
     };
   } catch {

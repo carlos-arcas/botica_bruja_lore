@@ -19,7 +19,13 @@ export type RitualRelacionadoHerbal = {
   urlDetalle: string;
 };
 
-export type EstadoDisponibilidadPublica = "disponible" | "bajo_stock" | "no_disponible";
+export const ESTADOS_DISPONIBILIDAD_PUBLICA = [
+  "disponible",
+  "bajo_stock",
+  "no_disponible",
+] as const;
+
+export type EstadoDisponibilidadPublica = (typeof ESTADOS_DISPONIBILIDAD_PUBLICA)[number];
 
 export type ProductoHerbalMinimoPublico = {
   sku: string;
@@ -130,6 +136,18 @@ function mapearRitual(ritual: RitualApi): RitualRelacionadoHerbal {
   };
 }
 
+export function normalizarEstadoDisponibilidadPublica(
+  estado?: string,
+): EstadoDisponibilidadPublica {
+  if (!estado) {
+    return "no_disponible";
+  }
+  if (estado === "disponible" || estado === "bajo_stock" || estado === "no_disponible") {
+    return estado;
+  }
+  return "no_disponible";
+}
+
 function normalizarProductoApi(producto: ProductoHerbalApi): ProductoHerbalMinimoPublico | null {
   if (!producto.sku || !producto.slug || !producto.nombre) {
     return null;
@@ -151,7 +169,9 @@ function normalizarProductoApi(producto: ProductoHerbalApi): ProductoHerbalMinim
     modo_uso: producto.modo_uso ?? "",
     categoria_visible: producto.categoria_visible ?? "",
     disponible: producto.disponible ?? false,
-    estado_disponibilidad: producto.estado_disponibilidad ?? "no_disponible",
+    estado_disponibilidad: normalizarEstadoDisponibilidadPublica(
+      producto.estado_disponibilidad,
+    ),
   };
 }
 
