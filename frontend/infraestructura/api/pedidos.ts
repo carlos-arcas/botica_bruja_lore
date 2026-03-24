@@ -17,7 +17,10 @@ export type PedidoCreado = {
   estado_pago: string;
   canal_checkout: string;
   moneda: string;
+  metodo_envio: string;
   subtotal: string;
+  importe_envio: string;
+  total: string;
   requiere_revision_manual: boolean;
   email_post_pago_enviado: boolean;
   cliente: {
@@ -37,7 +40,7 @@ export type PedidoCreado = {
     pais_iso: string;
     observaciones: string;
   };
-  resumen: { cantidad_total_items: number; subtotal: string };
+  resumen: { cantidad_total_items: number; subtotal: string; importe_envio: string; total: string };
   estado_cliente?: {
     cancelado_operativamente: boolean;
     estado_reembolso: "no_iniciado" | "fallido" | "ejecutado";

@@ -259,6 +259,22 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - `id_externo_reembolso`;
   - `motivo_fallo_reembolso`.
 
+## Actualización envío estándar v1 y total real de pedido
+- Estado técnico: **DONE** para coste de envío mínimo honesto sin motor de tarifas.
+- Contrato activo:
+  - `Pedido` expone `metodo_envio` (v1: `envio_estandar`), `importe_envio` y `total`.
+  - `total` se calcula de forma canónica como `subtotal + importe_envio`.
+- Configuración activa:
+  - tarifa fija desacoplada por entorno con `ENVIO_ESTANDAR_IMPORTE` (default local/test: `4.90`).
+- Integración activa:
+  - checkout y detalle de pedido muestran subtotal + envío + total;
+  - la intención de pago real y el payload hacia Stripe usan el total real (incluyendo envío).
+- Fuera de alcance preservado:
+  - sin múltiples métodos de envío;
+  - sin reglas por provincia/país;
+  - sin impuestos/IVA;
+  - sin envío gratis por umbral ni promociones.
+
 ## Actualización visibilidad cliente cancelación/reembolso v1.5
 - Estado técnico: **DONE** para visibilidad cliente de cancelación operativa y reembolso en `detalle de pedido` y `mi cuenta`.
 - Contrato backend consumido por frontend:

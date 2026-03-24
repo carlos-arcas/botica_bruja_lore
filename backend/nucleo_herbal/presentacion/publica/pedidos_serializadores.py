@@ -16,7 +16,10 @@ def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
         "estado_pago": dto.estado_pago,
         "canal_checkout": dto.canal_checkout,
         "moneda": dto.moneda,
+        "metodo_envio": dto.metodo_envio,
         "subtotal": str(dto.subtotal),
+        "importe_envio": str(dto.importe_envio),
+        "total": str(dto.total),
         "requiere_revision_manual": dto.requiere_revision_manual,
         "email_post_pago_enviado": dto.email_post_pago_enviado,
         "inventario_descontado": dto.inventario_descontado,
@@ -59,6 +62,8 @@ def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
         "resumen": {
             "cantidad_total_items": sum(linea.cantidad for linea in dto.lineas),
             "subtotal": str(dto.subtotal),
+            "importe_envio": str(dto.importe_envio),
+            "total": str(dto.total),
         },
         "estado_cliente": {
             "cancelado_operativamente": dto.cancelado_operativa_incidencia_stock,

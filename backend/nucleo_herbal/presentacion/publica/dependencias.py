@@ -66,6 +66,7 @@ from ...infraestructura.notificaciones_email import NotificadorEmailPostPago
 from ...infraestructura.notificaciones_email_recuperacion_password import NotificadorEmailRecuperacionPasswordCuenta
 from ...infraestructura.notificaciones_email_verificacion import NotificadorEmailVerificacionCuenta
 from ...infraestructura.validacion_password_cuenta import ValidadorPasswordCuentaClienteDjango
+from ...infraestructura.proveedor_envio_estandar import ProveedorEnvioEstandarFijo
 from ...infraestructura.pagos_stripe import construir_pasarela_pago_stripe
 from ...infraestructura.persistencia_django.repositorios import (
     ProveedorHistorialPedidosDemoORM,
@@ -216,6 +217,7 @@ def construir_servicios_publicos_pedidos() -> ServiciosPublicosPedidos:
             repositorio_pedidos=repositorio,
             repositorio_cuentas_cliente=repositorio_cuentas,
             repositorio_inventario=RepositorioInventarioORM(),
+            proveedor_envio=ProveedorEnvioEstandarFijo(),
         ),
         obtener_pedido=ObtenerPedidoPorId(repositorio_pedidos=repositorio),
     )

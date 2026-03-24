@@ -41,9 +41,16 @@ class PagoRealTests(TestCase):
         pedido = _pedido_base(estado="pagado", estado_pago="pagado")
         pedido = pedido.marcar_email_post_pago_enviado(pedido.fecha_creacion)
         repositorio = Mock(guardar=Mock(side_effect=lambda actual: actual))
+        repositorio_inventario = Mock()
+        transacciones = Mock()
         notificador = Mock()
 
-        resultado = ProcesarPostPagoPedido(repositorio_pedidos=repositorio, notificador=notificador)._enviar_email_si_aplica(pedido, "op-test", "checkout.session.completed")
+        resultado = ProcesarPostPagoPedido(
+            repositorio_pedidos=repositorio,
+            repositorio_inventario=repositorio_inventario,
+            transacciones=transacciones,
+            notificador=notificador,
+        )._enviar_email_si_aplica(pedido, "op-test", "checkout.session.completed")
 
         self.assertTrue(resultado.email_post_pago_enviado)
         notificador.enviar_confirmacion_pago.assert_not_called()

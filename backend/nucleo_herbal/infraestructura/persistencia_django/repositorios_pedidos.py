@@ -27,7 +27,9 @@ class RepositorioPedidosORM(RepositorioPedidos):
                 "id_usuario": pedido.cliente.id_cliente,
                 "es_invitado": pedido.cliente.es_invitado,
                 "moneda": pedido.moneda,
+                "metodo_envio": pedido.metodo_envio,
                 "subtotal": pedido.subtotal,
+                "importe_envio": pedido.importe_envio,
                 "notas_cliente": pedido.notas_cliente,
                 "direccion_entrega": _serializar_direccion(pedido.direccion_entrega),
                 "fecha_creacion": pedido.fecha_creacion,
@@ -157,6 +159,8 @@ class RepositorioPedidosORM(RepositorioPedidos):
             motivo_fallo_reembolso=modelo.motivo_fallo_reembolso,
             notas_cliente=modelo.notas_cliente,
             moneda=modelo.moneda,
+            metodo_envio=modelo.metodo_envio,
+            importe_envio=modelo.importe_envio,
         )
 
 

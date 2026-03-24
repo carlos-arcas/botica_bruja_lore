@@ -109,6 +109,7 @@ def _en_entorno_railway() -> bool:
 
 DEBUG = _leer_booleano("DEBUG", os.getenv("DATABASE_URL") is None)
 LOG_LEVEL = _normalizar_log_level(os.getenv("LOG_LEVEL"), "INFO")
+ENVIO_ESTANDAR_IMPORTE = os.getenv("ENVIO_ESTANDAR_IMPORTE", "4.90")
 DEBUG_LOG_VIEWER_ENABLED = _leer_booleano("DEBUG_LOG_VIEWER_ENABLED", False)
 DEBUG_LOG_VIEWER_KEY = os.getenv("DEBUG_LOG_VIEWER_KEY", "").strip()
 DEBUG_LOG_APP_FILE = str(LOG_DIR / "app.log")
