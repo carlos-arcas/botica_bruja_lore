@@ -218,3 +218,18 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - sin reservas previas;
   - sin compensaciones automáticas por cancelación o devolución;
   - sin multi-almacén, lotes, caducidades ni ledger completo de movimientos.
+
+## Actualización operativa backoffice incidencias stock post-pago v1.2
+- Estado técnico: **DONE** para operación mínima en Django Admin sobre pedidos pagados con incidencia de stock tras confirmación de pago.
+- Persistencia activa: `Pedido` añade `incidencia_stock_revisada` y `fecha_revision_incidencia_stock` para distinguir entre “hubo incidencia” y “ya fue revisada operativamente” sin borrar la señal histórica `incidencia_stock_confirmacion`.
+- Backoffice activo:
+  - changelist de pedidos reales con filtros directos para incidencias de stock pendientes/revisadas;
+  - visibilidad explícita de estado, estado de pago, descuento de inventario, incidencia, revisión manual y fecha operativa relevante;
+  - acción administrativa mínima para marcar la incidencia como revisada desde Django Admin.
+- Regla operativa activa:
+  - revisar una incidencia no recompone inventario, no reembolsa, no cancela y no envía emails automáticos;
+  - la revisión baja `requiere_revision_manual` y deja trazabilidad con fecha de revisión y logging estructurado de actor/operation_id.
+- Fuera de alcance preservado:
+  - sin workflow complejo de soporte;
+  - sin automatismos de resolución de negocio;
+  - sin panel administrativo adicional en Next para este caso.

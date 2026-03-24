@@ -745,3 +745,5 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Prompt 08: **DONE** para exposición pública mínima de disponibilidad de stock conectada al inventario real en APIs públicas de producto, ficha Botica Natural, productos relacionados de ritual y aviso informativo en checkout real; sin reservas, decremento automático ni promesa de stock duro.
 
 - Prompt 09: **DONE** para decremento efectivo de inventario al confirmar pago real con transacción atómica, protección idempotente ante reintentos/webhooks duplicados, incidencia operativa explícita si ya no hay stock suficiente y sin introducir reservas ni compensaciones automáticas.
+
+- Prompt 10: **DONE** para soporte mínimo de backoffice en Django Admin sobre pedidos pagados con incidencia de stock post-pago: listado filtrable por incidencia, detalle operativo del pedido, marca explícita `incidencia_stock_revisada` con `fecha_revision_incidencia_stock` y acción manual honesta de revisión sin borrar la incidencia histórica ni automatizar reembolsos, cancelaciones o compensaciones.

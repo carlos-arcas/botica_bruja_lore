@@ -6,16 +6,10 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
     ArticuloEditorialModelo,
     CuentaDemoModelo,
     IntencionModelo,
-    LineaPedidoModelo,
-    LineaPedidoRealModelo,
-    PedidoDemoModelo,
-    PedidoRealModelo,
     PlantaModelo,
     ProductoModelo,
     RitualModelo,
     SeccionPublicaModelo,
-    ImportacionLoteModelo,
-    ImportacionFilaModelo,
 )
 
 
@@ -273,69 +267,7 @@ class CuentaDemoAdmin(admin.ModelAdmin):
     readonly_fields = ("id_usuario", "email", "fecha_creacion", "fecha_actualizacion")
 
 
-class LineaPedidoInline(admin.TabularInline):
-    model = LineaPedidoModelo
-    extra = 0
-    can_delete = False
-    fields = (
-        "id_producto",
-        "slug_producto",
-        "nombre_producto",
-        "cantidad",
-        "precio_unitario_demo",
-    )
-    readonly_fields = fields
-
-
-@admin.register(PedidoDemoModelo)
-class PedidoDemoAdmin(admin.ModelAdmin):
-    list_display = (
-        "id_pedido",
-        "email_contacto",
-        "canal_compra",
-        "estado",
-        "total_lineas",
-        "fecha_creacion",
-    )
-    search_fields = ("id_pedido", "email_contacto")
-    list_filter = ("estado", "canal_compra", "fecha_creacion")
-    ordering = ("-fecha_creacion",)
-    list_editable = ("estado",)
-    readonly_fields = ("id_pedido", "email_contacto", "canal_compra", "fecha_creacion", "id_usuario")
-    inlines = (LineaPedidoInline,)
-
-    @admin.display(description="nº líneas")
-    def total_lineas(self, obj):
-        return obj.lineas.count()
-
-
-@admin.register(ImportacionLoteModelo)
-class ImportacionLoteAdmin(admin.ModelAdmin):
-    list_display = ("id", "entidad", "modo", "nombre_archivo", "total_filas", "usuario", "fecha_creacion")
-    readonly_fields = ("entidad", "modo", "nombre_archivo", "columnas_detectadas", "total_filas", "usuario", "fecha_creacion", "fecha_actualizacion")
-
-
-@admin.register(ImportacionFilaModelo)
-class ImportacionFilaAdmin(admin.ModelAdmin):
-    list_display = ("id", "lote", "numero_fila_original", "estado", "seleccionado")
-    list_filter = ("estado", "seleccionado")
-    readonly_fields = ("lote", "numero_fila_original", "datos", "errores", "warnings", "estado", "imagen", "resultado_confirmacion")
-
-
-class LineaPedidoRealInline(admin.TabularInline):
-    model = LineaPedidoRealModelo
-    extra = 0
-    can_delete = False
-    readonly_fields = ("id_producto", "slug_producto", "nombre_producto", "cantidad", "precio_unitario", "moneda")
-
-
-@admin.register(PedidoRealModelo)
-class PedidoRealAdmin(admin.ModelAdmin):
-    list_display = ("id_pedido", "estado", "canal_checkout", "email_contacto", "subtotal", "moneda", "fecha_creacion")
-    search_fields = ("id_pedido", "email_contacto", "nombre_contacto")
-    list_filter = ("estado", "canal_checkout", "es_invitado", "moneda")
-    ordering = ("-fecha_creacion",)
-    readonly_fields = ("fecha_creacion", "direccion_entrega")
-    inlines = (LineaPedidoRealInline,)
-
+from . import admin_importacion  # noqa: F401
 from . import admin_inventario  # noqa: F401
+from . import admin_pedidos  # noqa: F401
+from . import admin_pedidos_demo  # noqa: F401

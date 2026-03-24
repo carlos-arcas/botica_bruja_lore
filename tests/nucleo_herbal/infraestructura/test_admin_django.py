@@ -21,6 +21,8 @@ try:
         InventarioProductoModelo,
         LineaPedidoModelo,
         PedidoDemoModelo,
+        PedidoRealModelo,
+        LineaPedidoRealModelo,
         PlantaModelo,
         ProductoModelo,
         RitualModelo,
@@ -69,6 +71,33 @@ class TestAdminNucleoHerbal(TestCase):
             cantidad=2,
             precio_unitario_demo=Decimal("5.00"),
         )
+        cls.pedido_real_stock = PedidoRealModelo.objects.create(
+            id_pedido="PR-ADMIN-0001",
+            estado="pagado",
+            estado_pago="pagado",
+            canal_checkout="web_invitado",
+            email_contacto="real@lore.test",
+            nombre_contacto="Lore Real",
+            telefono_contacto="600333444",
+            es_invitado=True,
+            moneda="EUR",
+            subtotal=Decimal("12.00"),
+            direccion_entrega={"nombre_destinatario": "Lore Real", "linea_1": "Calle Luna 1", "codigo_postal": "28001", "ciudad": "Madrid", "provincia": "Madrid", "pais_iso": "ES"},
+            fecha_creacion=datetime(2026, 1, 2, tzinfo=UTC),
+            fecha_pago_confirmado=datetime(2026, 1, 2, 1, tzinfo=UTC),
+            incidencia_stock_confirmacion=True,
+            requiere_revision_manual=True,
+            observaciones_operativas="Falta stock tras confirmar pago",
+        )
+        LineaPedidoRealModelo.objects.create(
+            pedido=cls.pedido_real_stock,
+            id_producto="prod-admin-1",
+            slug_producto="producto-inventario-admin",
+            nombre_producto="Producto inventario admin",
+            cantidad=1,
+            precio_unitario=Decimal("12.00"),
+            moneda="EUR",
+        )
 
     def test_admin_site_registra_modelos_ciclo_1_2_y_prompt_4(self) -> None:
         self.assertTrue(admin.site.is_registered(CuentaDemoModelo))
@@ -77,6 +106,7 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertTrue(admin.site.is_registered(ProductoModelo))
         self.assertTrue(admin.site.is_registered(RitualModelo))
         self.assertTrue(admin.site.is_registered(PedidoDemoModelo))
+        self.assertTrue(admin.site.is_registered(PedidoRealModelo))
         self.assertTrue(admin.site.is_registered(InventarioProductoModelo))
 
     def test_superusuario_puede_abrir_index_admin(self) -> None:
@@ -96,6 +126,7 @@ class TestAdminNucleoHerbal(TestCase):
             reverse("admin:persistencia_django_productomodelo_changelist"),
             reverse("admin:persistencia_django_inventarioproductomodelo_changelist"),
             reverse("admin:persistencia_django_pedidodemomodelo_changelist"),
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
         ]
 
         for vista in vistas:
@@ -169,3 +200,34 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Producto inventario admin")
         self.assertContains(response, "icon-yes.svg")
+
+    def test_changelist_pedidos_reales_visibiliza_incidencia_stock_y_filtro(self) -> None:
+        self.client.force_login(self.superusuario)
+
+        response = self.client.get(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {"incidencia_stock": "pendiente_revision", "q": "PR-ADMIN-0001"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "PR-ADMIN-0001")
+        self.assertContains(response, "Lore Real")
+
+    def test_accion_admin_marca_incidencia_stock_como_revisada(self) -> None:
+        self.client.force_login(self.superusuario)
+
+        response = self.client.post(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {
+                "action": "marcar_incidencia_stock_revisada",
+                "_selected_action": ["PR-ADMIN-0001"],
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.pedido_real_stock.refresh_from_db()
+        self.assertTrue(self.pedido_real_stock.incidencia_stock_confirmacion)
+        self.assertTrue(self.pedido_real_stock.incidencia_stock_revisada)
+        self.assertFalse(self.pedido_real_stock.requiere_revision_manual)
+        self.assertIsNotNone(self.pedido_real_stock.fecha_revision_incidencia_stock)

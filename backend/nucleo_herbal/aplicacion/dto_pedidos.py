@@ -65,6 +65,8 @@ class PedidoRealDTO:
     requiere_revision_manual: bool
     inventario_descontado: bool
     incidencia_stock_confirmacion: bool
+    incidencia_stock_revisada: bool
+    fecha_revision_incidencia_stock: datetime | None
     email_post_pago_enviado: bool
     cliente: ClientePedidoDTO
     direccion_entrega: DireccionEntregaDTO

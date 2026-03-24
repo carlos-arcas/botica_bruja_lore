@@ -150,6 +150,8 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
         requiere_revision_manual=pedido.requiere_revision_manual,
         inventario_descontado=pedido.inventario_descontado,
         incidencia_stock_confirmacion=pedido.incidencia_stock_confirmacion,
+        incidencia_stock_revisada=pedido.incidencia_stock_revisada,
+        fecha_revision_incidencia_stock=pedido.fecha_revision_incidencia_stock,
         email_post_pago_enviado=pedido.email_post_pago_enviado,
         cliente=ClientePedidoDTO(
             email=pedido.cliente.email,

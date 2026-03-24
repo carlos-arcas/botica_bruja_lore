@@ -91,6 +91,8 @@ class PostPagoInventarioTests(TestCase):
         self.assertFalse(resultado.inventario_descontado)
         self.assertTrue(resultado.incidencia_stock_confirmacion)
         self.assertTrue(resultado.requiere_revision_manual)
+        self.assertFalse(resultado.incidencia_stock_revisada)
+        self.assertIsNone(resultado.fecha_revision_incidencia_stock)
         self.assertIn("requiere revisión manual", resultado.observaciones_operativas)
         self.assertEqual(self.notificador.pedidos_enviados, [])
 

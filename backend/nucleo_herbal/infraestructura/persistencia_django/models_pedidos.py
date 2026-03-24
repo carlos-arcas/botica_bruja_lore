@@ -25,6 +25,8 @@ class PedidoRealModelo(models.Model):
     inventario_descontado = models.BooleanField(default=False)
     incidencia_stock_confirmacion = models.BooleanField(default=False)
     requiere_revision_manual = models.BooleanField(default=False)
+    incidencia_stock_revisada = models.BooleanField(default=False)
+    fecha_revision_incidencia_stock = models.DateTimeField(null=True, blank=True)
     email_post_pago_enviado = models.BooleanField(default=False)
     fecha_email_post_pago = models.DateTimeField(null=True, blank=True)
     transportista = models.CharField(max_length=120, blank=True, default="")

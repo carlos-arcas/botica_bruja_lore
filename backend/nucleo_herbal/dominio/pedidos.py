@@ -118,6 +118,8 @@ class Pedido:
     inventario_descontado: bool = False
     incidencia_stock_confirmacion: bool = False
     requiere_revision_manual: bool = False
+    incidencia_stock_revisada: bool = False
+    fecha_revision_incidencia_stock: datetime | None = None
     email_post_pago_enviado: bool = False
     fecha_email_post_pago: datetime | None = None
     transportista: str = ""
@@ -147,6 +149,10 @@ class Pedido:
             raise ErrorDominio("Un pedido pagado requiere estado_pago='pagado'.")
         if self.incidencia_stock_confirmacion and self.inventario_descontado:
             raise ErrorDominio("Un pedido no puede marcar incidencia de stock y descuento de inventario a la vez.")
+        if self.incidencia_stock_revisada and not self.incidencia_stock_confirmacion:
+            raise ErrorDominio("La revisión operativa de stock requiere incidencia previa.")
+        if self.fecha_revision_incidencia_stock and not self.incidencia_stock_revisada:
+            raise ErrorDominio("La fecha de revisión de incidencia requiere incidencia_stock_revisada=True.")
         if self.fecha_email_post_pago and not self.email_post_pago_enviado:
             raise ErrorDominio("La fecha de email post-pago requiere email_post_pago_enviado=True.")
         if self.fecha_email_envio and not self.email_envio_enviado:
@@ -185,7 +191,22 @@ class Pedido:
             inventario_descontado=False,
             incidencia_stock_confirmacion=True,
             requiere_revision_manual=True,
+            incidencia_stock_revisada=False,
+            fecha_revision_incidencia_stock=None,
             observaciones_operativas=_combinar_observaciones(self.observaciones_operativas, detalle),
+        )
+
+    def marcar_incidencia_stock_revisada(self, fecha_revision: datetime, observaciones_operativas: str | None = None) -> "Pedido":
+        if not self.incidencia_stock_confirmacion:
+            raise ErrorDominio("Solo se puede revisar una incidencia de stock existente.")
+        if self.incidencia_stock_revisada:
+            return self
+        return replace(
+            self,
+            incidencia_stock_revisada=True,
+            fecha_revision_incidencia_stock=fecha_revision,
+            requiere_revision_manual=False,
+            observaciones_operativas=_combinar_observaciones(self.observaciones_operativas, observaciones_operativas),
         )
 
     def registrar_fallo_pago(self) -> "Pedido":
