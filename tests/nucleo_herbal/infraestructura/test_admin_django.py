@@ -249,6 +249,7 @@ class TestAdminNucleoHerbal(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Producto inventario admin")
+        self.assertContains(response, "ud")
         self.assertContains(response, "icon-yes.svg")
 
     def test_changelist_pedidos_reales_visibiliza_incidencia_stock_y_filtro(self) -> None:

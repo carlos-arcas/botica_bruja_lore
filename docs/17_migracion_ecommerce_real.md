@@ -177,12 +177,13 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 ## Actualización inventario real v1
 - Estado técnico: **DONE** para base mínima de inventario real por producto vendible.
 - Fuente de verdad activa: tabla dedicada `nucleo_inventario_producto` con unicidad 1:1 respecto a `Producto`.
+- Semántica base activa: inventario en enteros con `unidad_base` canónica (`ud`, `g`, `ml`) validada en dominio y persistencia; migración compatible de existentes con default conservador `ud`.
 - Capacidad activa backend:
   - agregado puro `InventarioProducto` desacoplado de Django;
   - casos de uso para crear inventario inicial, consultar stock actual, ajustar stock y listar inventario operativo;
-  - validación explícita para impedir stock negativo y duplicados por producto.
+  - validación explícita para impedir stock negativo, unidades inválidas, decimales ambiguos y duplicados por producto.
 - Operación interna activa:
-  - Django Admin ya permite listar, buscar y editar cantidad disponible/umbral de bajo stock;
+  - Django Admin ya permite listar, buscar y editar cantidad disponible/unidad base/umbral de bajo stock;
   - señal visible de `bajo_stock` preparada para operación mínima sin abrir todavía catálogo público.
 - Enforcement transaccional mínimo activo:
   - `POST /api/v1/pedidos/` valida stock por línea antes de persistir `Pedido`;

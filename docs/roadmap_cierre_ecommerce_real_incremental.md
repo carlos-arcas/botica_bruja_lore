@@ -72,8 +72,44 @@
 - **Siguiente incremento correcto**: **R01 — Semántica de inventario por unidad de medida**.
 
 ### R01 — Semántica de inventario por unidad de medida
-- **Estado**: `PARTIAL`.
-- **Lectura actual**: existe base de inventario real por producto y validación de disponibilidad, pero falta cerrar semántica explícita por unidad base/comercial para granel.
+- **Estado**: `DONE`.
+- **Lectura actual**: el inventario real ahora persiste y valida unidad base canónica (`ud`, `g`, `ml`) con stock entero obligatorio y valor por defecto conservador `ud` para compatibilidad de registros existentes.
+
+**Cierre de R01 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. La unidad base vive en `InventarioProducto` (dominio + persistencia) y no en `Producto`, para mantener el producto comercial desacoplado de la granularidad operativa de stock en este bloque.
+  2. Se establece catálogo cerrado de unidad base (`ud`, `g`, `ml`) con validación en dominio y `CheckConstraint` en ORM.
+  3. Se mantiene modelo de stock en enteros estrictos (sin floats) para cantidad disponible, umbral y ajustes.
+  4. Para inventarios existentes, el default de migración es `ud` por ser el valor conservador y compatible con el estado real previo.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/dominio/inventario.py`
+  - `backend/nucleo_herbal/aplicacion/dto_inventario.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/mapeadores_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0028_inventarioproductomodelo_unidad_base_and_more.py`
+  - `tests/nucleo_herbal/test_entidades_inventario.py`
+  - `tests/nucleo_herbal/test_casos_de_uso_inventario.py`
+  - `tests/nucleo_herbal/infraestructura/test_repositorios_django.py`
+  - `tests/nucleo_herbal/infraestructura/test_admin_django.py`
+- **Comandos ejecutados**:
+  - `python manage.py makemigrations persistencia_django`
+  - `python manage.py test tests.nucleo_herbal.test_entidades_inventario tests.nucleo_herbal.test_casos_de_uso_inventario tests.nucleo_herbal.infraestructura.test_repositorios_django tests.nucleo_herbal.infraestructura.test_admin_django`
+  - `python manage.py test tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_api_pago_real`
+  - `python manage.py check`
+  - `python scripts/check_backend_readiness.py`
+- **Evidencia**:
+  - nueva columna persistente `unidad_base` con choices y constraint en inventario;
+  - validaciones de dominio para unidad válida y enteros estrictos;
+  - admin mínimo muestra/edita unidad base sin rediseño de UX;
+  - tests backend de dominio, repositorio, admin y API en verde.
+- **Deuda residual**:
+  1. R02/R03 deben cerrar la semántica de unidad comercial por línea de pedido (aún no implementada).
+  2. R06 sigue pendiente para ledger de movimientos de inventario.
+  3. No se introduce aún UX pública de granel ni selector de checkout.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R02 — Producto vendible y cantidad comercial
 - **Estado**: `PARTIAL`.
@@ -133,14 +169,14 @@
 
 ## 4. Riesgos transversales
 1. **Deriva de alcance** por coexistencia de flujo demo y real sin tablero único estricto.
-2. **Semántica incompleta de granel** (unidad/cantidad) con riesgo de inconsistencias en inventario, pedido y post-pago.
+2. **Semántica comercial de granel aún incompleta** (unidad/cantidad por línea de pedido), aunque la unidad base de inventario ya quedó cerrada en R01.
 3. **Ausencia de ledger operativo completo** para auditoría detallada de inventario.
 4. **Gap fiscal/legal** hasta cerrar R11-R12 (importe legal, documento fiscal trazable).
 5. **Madurez operativa parcial** en tracking, conciliación e incident response.
 6. **Riesgo de sobredeclarar DONE** por apoyarse en documentación sin validar evidencia en código/tests.
 
 ## 5. Decisiones abiertas
-1. Definir contrato canónico de unidad base vs unidad comercial para granel y su impacto en inventario/pedido.
+1. Cerrar contrato canónico de unidad comercial por línea de pedido y su acoplamiento controlado con la unidad base ya definida.
 2. Elegir diseño mínimo del ledger (eventos, claves de idempotencia, origen movimiento, actor).
 3. Definir alcance exacto de page/backoffice inventario Next para no duplicar admin Django.
 4. Cerrar política operativa de restitución manual y su compatibilidad con cancelación/reembolso.
@@ -151,3 +187,5 @@
 - **2026-03-24 — R00 (arranque):** estado `IN_PROGRESS`; lectura obligatoria de AGENTS + documentación troncal + inspección del repo.
 - **2026-03-24 — R00 (verificación):** contraste de estado real usando `docs/17`, `docs/90`, estructura de carpetas y evidencia en rutas/casos de uso/tests.
 - **2026-03-24 — R00 (cierre):** creación de roadmap vivo incremental R00-R15 y cierre `DONE` de R00 sin cambios de negocio.
+- **2026-03-24 — R01 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de tocar código.
+- **2026-03-24 — R01 (cierre):** unidad base explícita de inventario (`ud`, `g`, `ml`) implementada con validación dominio+ORM, migración compatible y pruebas backend relevantes en verde.

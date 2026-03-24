@@ -27,3 +27,18 @@ def test_ajuste_no_permite_stock_negativo() -> None:
 
     with pytest.raises(ErrorDominio, match="stock negativo"):
         inventario.ajustar(-2, fecha_actualizacion=datetime.now(tz=UTC))
+
+
+def test_inventario_rechaza_unidad_base_invalida() -> None:
+    with pytest.raises(ErrorDominio, match="unidad base"):
+        InventarioProducto(
+            id_producto="prod-1",
+            cantidad_disponible=1,
+            unidad_base="kg",
+            umbral_bajo_stock=0,
+        )
+
+
+def test_inventario_rechaza_cantidad_decimal() -> None:
+    with pytest.raises(ErrorDominio, match="cantidades enteras"):
+        InventarioProducto(id_producto="prod-1", cantidad_disponible=1.5)

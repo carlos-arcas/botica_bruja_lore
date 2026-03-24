@@ -735,14 +735,14 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Estado: **DONE**.
 - Evidencia implementada:
   - dominio/aplicación: `backend/nucleo_herbal/dominio/inventario.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_inventario.py`, `backend/nucleo_herbal/aplicacion/dto_inventario.py`;
-  - persistencia dedicada: `backend/nucleo_herbal/infraestructura/persistencia_django/models_inventario.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_inventario.py`, migración `0022_inventarioproductomodelo.py`;
+  - persistencia dedicada: `backend/nucleo_herbal/infraestructura/persistencia_django/models_inventario.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_inventario.py`, migraciones `0022_inventarioproductomodelo.py` y `0028_inventarioproductomodelo_unidad_base_and_more.py`;
   - backoffice/admin mínimo: `backend/nucleo_herbal/infraestructura/persistencia_django/admin_inventario.py`;
   - tests: `tests/nucleo_herbal/test_entidades_inventario.py`, `tests/nucleo_herbal/test_casos_de_uso_inventario.py`, `tests/nucleo_herbal/infraestructura/test_repositorios_django.py`, `tests/nucleo_herbal/infraestructura/test_admin_django.py`.
 - Contrato operativo activo:
   1. un producto vendible puede tener como máximo un inventario asociado;
-  2. la cantidad disponible nunca puede quedar en negativo;
+  2. la cantidad disponible y ajustes se expresan en enteros de `unidad_base` (`ud`, `g`, `ml`) sin floats;
   3. el ajuste manual de stock ya es operable en backend/admin;
-  4. `bajo_stock` queda disponible como señal operativa mínima por umbral opcional;
+  4. `bajo_stock` queda disponible como señal operativa mínima por umbral opcional y misma unidad base;
   5. el checkout real valida stock antes de persistir `Pedido` y rechaza completo cualquier línea sin inventario o con cantidad insuficiente;
   6. el rechazo de stock sale con contrato JSON estable (`codigo=stock_no_disponible` + detalle por línea) y ya se refleja en el frontend de checkout real.
 - Fuera de alcance preservado:

@@ -11,6 +11,7 @@ class InventarioProductoAdmin(admin.ModelAdmin):
     list_display = (
         "producto",
         "cantidad_disponible",
+        "unidad_base",
         "umbral_bajo_stock",
         "mostrar_bajo_stock",
         "fecha_actualizacion",
@@ -19,10 +20,10 @@ class InventarioProductoAdmin(admin.ModelAdmin):
     list_filter = ("producto__tipo_producto",)
     autocomplete_fields = ("producto",)
     ordering = ("producto__nombre",)
-    list_editable = ("cantidad_disponible", "umbral_bajo_stock")
+    list_editable = ("cantidad_disponible", "unidad_base", "umbral_bajo_stock")
     readonly_fields = ("fecha_creacion", "fecha_actualizacion")
     fieldsets = (
-        ("Inventario", {"fields": ("producto", "cantidad_disponible", "umbral_bajo_stock")}),
+        ("Inventario", {"fields": ("producto", "cantidad_disponible", "unidad_base", "umbral_bajo_stock")}),
         ("Trazabilidad", {"fields": ("fecha_creacion", "fecha_actualizacion")}),
     )
 
