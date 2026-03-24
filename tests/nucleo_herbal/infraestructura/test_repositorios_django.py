@@ -314,13 +314,15 @@ class TestRepositoriosDjango(unittest.TestCase):
         from backend.nucleo_herbal.dominio.inventario import InventarioProducto
 
         creado = self.repo_inventario.crear_inicial(
-            InventarioProducto(id_producto="prod-1", cantidad_disponible=5, umbral_bajo_stock=2)
+            InventarioProducto(id_producto="prod-1", cantidad_disponible=5, unidad_base="ml", umbral_bajo_stock=2)
         )
 
         self.assertEqual(creado.cantidad_disponible, 5)
+        self.assertEqual(creado.unidad_base, "ml")
         obtenido = self.repo_inventario.obtener_por_id_producto("prod-1")
         assert obtenido is not None
         self.assertEqual(obtenido.umbral_bajo_stock, 2)
+        self.assertEqual(obtenido.unidad_base, "ml")
 
         ajustado = self.repo_inventario.guardar(obtenido.ajustar(-3))
 
@@ -340,6 +342,14 @@ class TestRepositoriosDjango(unittest.TestCase):
             self.repo_inventario.crear_inicial(
                 InventarioProducto(id_producto="prod-1", cantidad_disponible=3, umbral_bajo_stock=1)
             )
+
+    def test_inventario_orm_usa_unidad_ud_por_defecto_en_registros_existentes(self) -> None:
+        modelo = self.InventarioProductoModelo.objects.create(producto_id="prod-1", cantidad_disponible=4)
+
+        self.assertEqual(modelo.unidad_base, "ud")
+        inventario = self.repo_inventario.obtener_por_id_producto("prod-1")
+        assert inventario is not None
+        self.assertEqual(inventario.unidad_base, "ud")
 
     def test_pedidos_demo_guardar_y_obtener_por_id(self) -> None:
         from backend.nucleo_herbal.dominio.pedidos_demo import LineaPedido, PedidoDemo

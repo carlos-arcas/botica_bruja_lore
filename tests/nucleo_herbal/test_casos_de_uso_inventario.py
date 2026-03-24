@@ -80,7 +80,38 @@ def test_crear_inventario_inicial(producto: Producto) -> None:
     resultado = caso.ejecutar(id_producto=producto.id, cantidad_inicial=5, umbral_bajo_stock=2, operation_id="op-1")
 
     assert resultado.cantidad_disponible == 5
+    assert resultado.unidad_base == "ud"
     assert resultado.bajo_stock is False
+
+
+def test_crear_inventario_inicial_con_unidad_base_valida(producto: Producto) -> None:
+    repo_inventario = RepositorioInventarioMemoria()
+    caso = CrearInventarioInicialProducto(repo_inventario, RepositorioProductosMemoria({producto.id: producto}))
+
+    resultado = caso.ejecutar(
+        id_producto=producto.id,
+        cantidad_inicial=250,
+        umbral_bajo_stock=100,
+        operation_id="op-unidad-g",
+        unidad_base="g",
+    )
+
+    assert resultado.unidad_base == "g"
+    assert resultado.cantidad_disponible == 250
+
+
+def test_crear_inventario_inicial_rechaza_unidad_base_invalida(producto: Producto) -> None:
+    repo_inventario = RepositorioInventarioMemoria()
+    caso = CrearInventarioInicialProducto(repo_inventario, RepositorioProductosMemoria({producto.id: producto}))
+
+    with pytest.raises(ErrorDominio, match="unidad base"):
+        caso.ejecutar(
+            id_producto=producto.id,
+            cantidad_inicial=1,
+            umbral_bajo_stock=0,
+            operation_id="op-unidad-bad",
+            unidad_base="kg",
+        )
 
 
 

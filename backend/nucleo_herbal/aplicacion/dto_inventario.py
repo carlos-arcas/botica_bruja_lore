@@ -10,6 +10,7 @@ from datetime import datetime
 class InventarioProductoDTO:
     id_producto: str
     cantidad_disponible: int
+    unidad_base: str
     umbral_bajo_stock: int | None
     bajo_stock: bool
     fecha_creacion: datetime | None

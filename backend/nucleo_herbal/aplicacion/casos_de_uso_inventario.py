@@ -32,12 +32,21 @@ class CrearInventarioInicialProducto:
     repositorio_inventario: RepositorioInventario
     repositorio_productos: RepositorioProductos
 
-    def ejecutar(self, *, id_producto: str, cantidad_inicial: int, umbral_bajo_stock: int | None, operation_id: str) -> InventarioProductoDTO:
+    def ejecutar(
+        self,
+        *,
+        id_producto: str,
+        cantidad_inicial: int,
+        umbral_bajo_stock: int | None,
+        operation_id: str,
+        unidad_base: str = "ud",
+    ) -> InventarioProductoDTO:
         if self.repositorio_productos.obtener_por_id(id_producto) is None:
             raise ErrorAplicacionLookup(f"Producto no encontrado para inventario: {id_producto}")
         inventario = InventarioProducto(
             id_producto=id_producto,
             cantidad_disponible=cantidad_inicial,
+            unidad_base=unidad_base,
             umbral_bajo_stock=umbral_bajo_stock,
             fecha_creacion=datetime.now(tz=UTC),
             fecha_actualizacion=datetime.now(tz=UTC),
@@ -83,6 +92,7 @@ def _a_dto(inventario: InventarioProducto) -> InventarioProductoDTO:
     return InventarioProductoDTO(
         id_producto=inventario.id_producto,
         cantidad_disponible=inventario.cantidad_disponible,
+        unidad_base=inventario.unidad_base,
         umbral_bajo_stock=inventario.umbral_bajo_stock,
         bajo_stock=inventario.bajo_stock,
         fecha_creacion=inventario.fecha_creacion,
