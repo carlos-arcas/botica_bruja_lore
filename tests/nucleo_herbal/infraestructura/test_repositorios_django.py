@@ -30,6 +30,7 @@ class TestRepositoriosDjango(unittest.TestCase):
             RitualModelo,
             ReglaCalendarioModelo,
         )
+        from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import MovimientoInventarioModelo
 
         cls.CuentaDemoModelo = CuentaDemoModelo
         cls.IntencionModelo = IntencionModelo
@@ -40,6 +41,7 @@ class TestRepositoriosDjango(unittest.TestCase):
         cls.PedidoDemoModelo = PedidoDemoModelo
         cls.LineaPedidoModelo = LineaPedidoModelo
         cls.ReglaCalendarioModelo = ReglaCalendarioModelo
+        cls.MovimientoInventarioModelo = MovimientoInventarioModelo
 
     def setUp(self) -> None:
         from backend.nucleo_herbal.infraestructura.persistencia_django.repositorios import (
@@ -51,9 +53,13 @@ class TestRepositoriosDjango(unittest.TestCase):
             RepositorioProductosORM,
             RepositorioRitualesORM,
         )
-        from backend.nucleo_herbal.infraestructura.persistencia_django.repositorios_inventario import RepositorioInventarioORM
+        from backend.nucleo_herbal.infraestructura.persistencia_django.repositorios_inventario import (
+            RepositorioInventarioORM,
+            RepositorioMovimientosInventarioORM,
+        )
 
         self.CuentaDemoModelo.objects.all().delete()
+        self.MovimientoInventarioModelo.objects.all().delete()
         self.InventarioProductoModelo.objects.all().delete()
         self.LineaPedidoModelo.objects.all().delete()
         self.PedidoDemoModelo.objects.all().delete()
@@ -144,6 +150,7 @@ class TestRepositoriosDjango(unittest.TestCase):
         self.proveedor_historial_cuentas = ProveedorHistorialPedidosDemoORM()
         self.repo_reglas_calendario = RepositorioReglasCalendarioORM()
         self.repo_inventario = RepositorioInventarioORM()
+        self.repo_movimientos = RepositorioMovimientosInventarioORM()
 
     def test_listar_navegables(self) -> None:
         plantas = self.repo_plantas.listar_navegables()
@@ -368,6 +375,49 @@ class TestRepositoriosDjango(unittest.TestCase):
         inventario = self.repo_inventario.obtener_por_id_producto("prod-1")
         assert inventario is not None
         self.assertEqual(inventario.unidad_base, "ud")
+
+    def test_movimiento_inventario_registra_y_persiste_campos_minimos(self) -> None:
+        from backend.nucleo_herbal.dominio.inventario import InventarioProducto
+        from backend.nucleo_herbal.dominio.inventario_movimientos import MovimientoInventario
+
+        self.repo_inventario.crear_inicial(
+            InventarioProducto(id_producto="prod-1", cantidad_disponible=5, unidad_base="g", umbral_bajo_stock=1)
+        )
+        self.repo_movimientos.registrar(
+            MovimientoInventario(
+                id_producto="prod-1",
+                tipo_movimiento="ajuste_manual",
+                cantidad=-2,
+                unidad_base="g",
+                referencia="admin",
+                operation_id="op-mov-1",
+            )
+        )
+
+        movimiento = self.MovimientoInventarioModelo.objects.get(operation_id="op-mov-1")
+        self.assertEqual(movimiento.tipo_movimiento, "ajuste_manual")
+        self.assertEqual(movimiento.cantidad, -2)
+        self.assertEqual(movimiento.unidad_base, "g")
+
+    def test_movimiento_descuento_pago_con_operation_id_es_idempotente(self) -> None:
+        from backend.nucleo_herbal.dominio.inventario import InventarioProducto
+        from backend.nucleo_herbal.dominio.inventario_movimientos import MovimientoInventario
+
+        self.repo_inventario.crear_inicial(
+            InventarioProducto(id_producto="prod-1", cantidad_disponible=5, unidad_base="ud", umbral_bajo_stock=1)
+        )
+        movimiento = MovimientoInventario(
+            id_producto="prod-1",
+            tipo_movimiento="descuento_pago",
+            cantidad=-1,
+            unidad_base="ud",
+            referencia="PED-1",
+            operation_id="op-pedido-1:descuento_pago:0:prod-1",
+        )
+        self.repo_movimientos.registrar(movimiento)
+        self.repo_movimientos.registrar(movimiento)
+
+        self.assertEqual(self.MovimientoInventarioModelo.objects.filter(tipo_movimiento="descuento_pago").count(), 1)
 
     def test_pedidos_demo_guardar_y_obtener_por_id(self) -> None:
         from backend.nucleo_herbal.dominio.pedidos_demo import LineaPedido, PedidoDemo

@@ -450,5 +450,5 @@ class ImportacionFilaModelo(models.Model):
         verbose_name_plural = "filas de importación"
 
 
-from .models_inventario import InventarioProductoModelo
+from .models_inventario import InventarioProductoModelo, MovimientoInventarioModelo
 from .models_pedidos import LineaPedidoRealModelo, PedidoRealModelo

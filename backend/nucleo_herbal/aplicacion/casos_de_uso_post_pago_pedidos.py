@@ -11,8 +11,10 @@ from .errores_pedidos import LineaStockError
 from .errores_post_pago import IncidenciaStockPostPago
 from .puertos.notificador_pedidos import NotificadorPostPagoPedido
 from .puertos.repositorios_inventario import RepositorioInventario
+from .puertos.repositorios_movimientos_inventario import RepositorioMovimientosInventario
 from .puertos.repositorios_pedidos import RepositorioPedidos
 from .puertos.transacciones import PuertoTransacciones
+from ..dominio.inventario_movimientos import MovimientoInventario
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +23,7 @@ logger = logging.getLogger(__name__)
 class ProcesarPostPagoPedido:
     repositorio_pedidos: RepositorioPedidos
     repositorio_inventario: RepositorioInventario
+    repositorio_movimientos: RepositorioMovimientosInventario
     transacciones: PuertoTransacciones
     notificador: NotificadorPostPagoPedido
 
@@ -46,7 +49,7 @@ class ProcesarPostPagoPedido:
                 persistido = self.repositorio_pedidos.guardar(pagado.registrar_incidencia_stock_confirmacion(incidencia.detalle))
                 logger.warning("pedido_post_pago_stock_insuficiente", extra={**_extra(persistido, operation_id, tipo_evento, actual.estado, "sin_stock"), "lineas": [linea.a_payload() for linea in incidencia.lineas]})
                 return persistido
-            _descontar_inventario(pagado, self.repositorio_inventario)
+            _descontar_inventario(pagado, operation_id, self.repositorio_inventario, self.repositorio_movimientos)
             persistido = self.repositorio_pedidos.guardar(pagado.marcar_inventario_descontado())
             logger.info("pedido_post_pago_inventario_descontado", extra=_extra(persistido, operation_id, tipo_evento, actual.estado, "ok"))
             return persistido
@@ -118,11 +121,26 @@ def _detectar_incidencia_stock(pedido: Pedido, repositorio_inventario: Repositor
     )
 
 
-def _descontar_inventario(pedido: Pedido, repositorio_inventario: RepositorioInventario) -> None:
+def _descontar_inventario(
+    pedido: Pedido,
+    operation_id: str,
+    repositorio_inventario: RepositorioInventario,
+    repositorio_movimientos: RepositorioMovimientosInventario,
+) -> None:
     inventarios = {item.id_producto: item for item in repositorio_inventario.obtener_para_actualizar_por_ids_producto(_ids_producto(pedido))}
-    for linea in pedido.lineas:
+    for indice, linea in enumerate(pedido.lineas):
         actualizado = inventarios[linea.id_producto].ajustar(-linea.cantidad_comercial, fecha_actualizacion=datetime.now(tz=UTC))
         repositorio_inventario.guardar(actualizado)
+        repositorio_movimientos.registrar(
+            MovimientoInventario(
+                id_producto=linea.id_producto,
+                tipo_movimiento="descuento_pago",
+                cantidad=-linea.cantidad_comercial,
+                unidad_base=actualizado.unidad_base,
+                referencia=pedido.id_pedido,
+                operation_id=f"{operation_id}:descuento_pago:{indice}:{linea.id_producto}",
+            )
+        )
 
 
 def _ids_producto(pedido: Pedido) -> tuple[str, ...]:

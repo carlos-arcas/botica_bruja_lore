@@ -52,3 +52,59 @@ class InventarioProductoModelo(models.Model):
 
     def __str__(self) -> str:
         return f"{self.producto.nombre} · {self.cantidad_disponible} {self.unidad_base}"
+
+
+class MovimientoInventarioModelo(models.Model):
+    TIPO_ALTA_INICIAL = "alta_inicial"
+    TIPO_AJUSTE_MANUAL = "ajuste_manual"
+    TIPO_DESCUENTO_PAGO = "descuento_pago"
+    TIPO_RESTITUCION_MANUAL = "restitucion_manual"
+    TIPOS_MOVIMIENTO = (
+        (TIPO_ALTA_INICIAL, "Alta inicial"),
+        (TIPO_AJUSTE_MANUAL, "Ajuste manual"),
+        (TIPO_DESCUENTO_PAGO, "Descuento pago"),
+        (TIPO_RESTITUCION_MANUAL, "Restitución manual"),
+    )
+
+    inventario = models.ForeignKey(
+        InventarioProductoModelo,
+        on_delete=models.PROTECT,
+        related_name="movimientos",
+    )
+    tipo_movimiento = models.CharField(max_length=20, choices=TIPOS_MOVIMIENTO)
+    cantidad = models.IntegerField()
+    unidad_base = models.CharField(max_length=2, choices=InventarioProductoModelo.UNIDADES_BASE_CHOICES)
+    referencia = models.CharField(max_length=100, blank=True, default="")
+    metadata = models.JSONField(default=dict, blank=True)
+    operation_id = models.CharField(max_length=64, blank=True, default="")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "nucleo_movimiento_inventario"
+        ordering = ("-fecha_creacion", "-id")
+        verbose_name = "movimiento de inventario"
+        verbose_name_plural = "movimientos de inventario"
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(cantidad=0),
+                name="mov_inv_cant_no_cero",
+            ),
+            models.CheckConstraint(
+                check=models.Q(unidad_base__in=("ud", "g", "ml")),
+                name="mov_inv_unidad_valida",
+            ),
+            models.CheckConstraint(
+                check=models.Q(tipo_movimiento__in=("alta_inicial", "ajuste_manual", "descuento_pago", "restitucion_manual")),
+                name="mov_inv_tipo_valido",
+            ),
+            models.UniqueConstraint(
+                fields=("inventario", "tipo_movimiento", "operation_id"),
+                condition=~models.Q(operation_id=""),
+                name="mov_inv_operacion_unica",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=("inventario", "fecha_creacion"), name="mov_inv_inv_fecha_idx"),
+            models.Index(fields=("tipo_movimiento", "fecha_creacion"), name="mov_inv_tipo_fecha_idx"),
+            models.Index(fields=("operation_id",), name="mov_inv_op_idx"),
+        ]

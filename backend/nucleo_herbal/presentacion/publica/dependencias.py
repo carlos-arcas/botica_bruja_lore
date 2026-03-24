@@ -78,7 +78,7 @@ from ...infraestructura.persistencia_django.repositorios import (
     RepositorioRitualesORM,
 )
 from ...infraestructura.persistencia_django.repositorios_cuentas_cliente import RepositorioCuentasClienteORM
-from ...infraestructura.persistencia_django.repositorios_inventario import RepositorioInventarioORM
+from ...infraestructura.persistencia_django.repositorios_inventario import RepositorioInventarioORM, RepositorioMovimientosInventarioORM
 from ...infraestructura.persistencia_django.repositorios_pedidos import RepositorioPedidosORM
 from ...infraestructura.persistencia_django.repositorios_productos_checkout import RepositorioProductosCheckoutORM
 from ...infraestructura.persistencia_django.transacciones import TransaccionesDjango
@@ -231,6 +231,7 @@ def construir_servicios_publicos_pago_pedidos() -> ServiciosPublicosPagoPedidos:
     procesador_post_pago = ProcesarPostPagoPedido(
         repositorio_pedidos=repositorio,
         repositorio_inventario=RepositorioInventarioORM(),
+        repositorio_movimientos=RepositorioMovimientosInventarioORM(),
         transacciones=TransaccionesDjango(),
         notificador=NotificadorEmailPostPago(),
     )

@@ -20,6 +20,7 @@ try:
         CuentaDemoModelo,
         IntencionModelo,
         InventarioProductoModelo,
+        MovimientoInventarioModelo,
         LineaPedidoModelo,
         PedidoDemoModelo,
         PedidoRealModelo,
@@ -251,6 +252,26 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertContains(response, "Producto inventario admin")
         self.assertContains(response, "ud")
         self.assertContains(response, "icon-yes.svg")
+
+    def test_change_inventario_muestra_inline_de_movimientos(self) -> None:
+        self.client.force_login(self.superusuario)
+        MovimientoInventarioModelo.objects.create(
+            inventario=self.inventario,
+            tipo_movimiento="alta_inicial",
+            cantidad=2,
+            unidad_base="ud",
+            referencia="seed_admin",
+            operation_id="op-seed-admin",
+        )
+
+        response = self.client.get(
+            reverse("admin:persistencia_django_inventarioproductomodelo_change", args=[self.inventario.id]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "movimientos")
+        self.assertContains(response, "Alta inicial")
+        self.assertContains(response, "seed_admin")
 
     def test_changelist_pedidos_reales_visibiliza_incidencia_stock_y_filtro(self) -> None:
         self.client.force_login(self.superusuario)
