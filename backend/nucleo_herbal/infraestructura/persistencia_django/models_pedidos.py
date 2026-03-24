@@ -69,6 +69,8 @@ class LineaPedidoRealModelo(models.Model):
     slug_producto = models.SlugField(max_length=140)
     nombre_producto = models.CharField(max_length=180)
     cantidad = models.PositiveIntegerField()
+    cantidad_comercial = models.PositiveIntegerField(default=1)
+    unidad_comercial = models.CharField(max_length=8, default="ud")
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     moneda = models.CharField(max_length=8, default="EUR")
 

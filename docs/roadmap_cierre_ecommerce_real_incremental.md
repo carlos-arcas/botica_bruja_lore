@@ -156,8 +156,49 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R03 — Línea de pedido real con cantidad + unidad
-- **Estado**: `PARTIAL`.
-- **Lectura actual**: líneas de pedido real existen; pendiente cierre normativo completo cantidad+unidad para granel con trazabilidad homogénea.
+- **Estado**: `DONE`.
+- **Lectura actual**: la línea real ya persiste y expone cantidad+unidad comercial (`cantidad_comercial`, `unidad_comercial`) con compatibilidad transitoria del payload legado (`cantidad`) y validación mínima contra unidad base de inventario.
+
+**Cierre de R03 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. El agregado de pedido real migra a semántica explícita de línea (`cantidad_comercial` + `unidad_comercial`) manteniendo propiedad `cantidad` en dominio y serialización de respuesta para no romper consumidores actuales.
+  2. La compatibilidad transitoria se resuelve aceptando en API tanto `cantidad_comercial` como el campo legacy `cantidad` (prioridad al nuevo cuando existe), sin abrir todavía UX pública de granel.
+  3. La coherencia mínima línea↔operación se valida en checkout real contra `InventarioProducto.unidad_base`, preservando catálogo cerrado (`ud`, `g`, `ml`) y enteros estrictos.
+  4. La persistencia añade columnas explícitas en línea de pedido real con migración compatible e hidratación histórica (`cantidad_comercial <- cantidad`, `unidad_comercial='ud'` por default conservador).
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/dto_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/payload_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/pedidos_serializadores.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0030_lineapedidorealmodelo_cantidad_comercial_and_more.py`
+  - `backend/nucleo_herbal/infraestructura/pagos_stripe.py`
+  - `backend/nucleo_herbal/infraestructura/notificaciones_email.py`
+  - `tests/nucleo_herbal/test_api_pedidos_real.py`
+  - `tests/nucleo_herbal/test_casos_de_uso_pedidos_real.py`
+  - `tests/nucleo_herbal/infraestructura/test_repositorio_pedidos_real.py`
+  - `tests/nucleo_herbal/test_pago_real.py`
+  - `tests/nucleo_herbal/test_operacion_pedidos_real.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/tests/test_post_pago_inventario.py`
+- **Comandos ejecutados**:
+  - `python manage.py makemigrations persistencia_django`
+  - `python manage.py test tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_api_pago_real tests.nucleo_herbal.test_casos_de_uso_pedidos_real tests.nucleo_herbal.infraestructura.test_repositorio_pedidos_real backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario tests.nucleo_herbal.test_pago_real`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_backend_readiness.py`
+- **Evidencia**:
+  - payload real acepta contrato nuevo y legacy;
+  - respuesta y DTO exponen unidad+cantidad comercial por línea;
+  - persistencia guarda ambos campos de línea con migración compatible para históricos;
+  - tests de API, casos de uso, repositorio, pago y post-pago en verde.
+- **Deuda residual**:
+  1. R04 debe conectar UX/checkout granel explícito en frontend sin depender de fallback legacy.
+  2. R05 sigue pendiente para endurecer descuento post-pago por semántica definitiva de unidad.
+  3. Falta endurecer validación línea↔producto comercial (incrementos/mínimos) cuando se active flujo granel explícito.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R04 — Checkout real compatible con granel
 - **Estado**: `PARTIAL`.
@@ -231,3 +272,5 @@
 - **2026-03-24 — R01 (cierre):** unidad base explícita de inventario (`ud`, `g`, `ml`) implementada con validación dominio+ORM, migración compatible y pruebas backend relevantes en verde.
 - **2026-03-24 — R02 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de implementar semántica comercial de producto vendible.
 - **2026-03-24 — R02 (cierre):** contrato comercial de producto (`unidad_comercial`, `incremento_minimo_venta`, `cantidad_minima_compra`) implementado con defaults compatibles, validaciones de integridad/coherencia con inventario y pruebas backend relevantes en verde.
+- **2026-03-24 — R03 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de tocar código transaccional de línea real.
+- **2026-03-24 — R03 (cierre):** línea de pedido real migrada a `cantidad_comercial` + `unidad_comercial`, persistencia/migración compatible con históricos, payload legacy preservado (`cantidad`) y pruebas backend críticas en verde.

@@ -87,20 +87,22 @@ class RegistrarPedido:
                     id_producto=linea.id_producto,
                     slug_producto=linea.slug_producto,
                     nombre_producto=linea.nombre_producto,
-                    cantidad_solicitada=linea.cantidad,
+                    cantidad_solicitada=linea.cantidad_comercial,
                     codigo="inventario_no_registrado",
                     detalle="El producto no tiene inventario disponible para crear el pedido.",
                 )
                 incidencias.append(incidencia)
                 logger.warning("pedido_real_stock_sin_inventario", extra=_extra_stock(operation_id, pedido, incidencia))
                 continue
-            if inventario.puede_cubrir(linea.cantidad):
+            if linea.unidad_comercial != inventario.unidad_base:
+                raise ErrorDominio("La unidad comercial de la línea no coincide con la unidad base operativa del producto.")
+            if inventario.puede_cubrir(linea.cantidad_comercial):
                 continue
             incidencia = LineaStockError(
                 id_producto=linea.id_producto,
                 slug_producto=linea.slug_producto,
                 nombre_producto=linea.nombre_producto,
-                cantidad_solicitada=linea.cantidad,
+                cantidad_solicitada=linea.cantidad_comercial,
                 cantidad_disponible=inventario.cantidad_disponible,
                 codigo="stock_insuficiente",
                 detalle="La cantidad solicitada supera el stock disponible en este momento.",
@@ -190,7 +192,8 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
                 id_producto=linea.id_producto,
                 slug_producto=linea.slug_producto,
                 nombre_producto=linea.nombre_producto,
-                cantidad=linea.cantidad,
+                cantidad_comercial=linea.cantidad_comercial,
+                unidad_comercial=linea.unidad_comercial,
                 precio_unitario=linea.precio_unitario,
                 moneda=linea.moneda,
                 subtotal=linea.subtotal,

@@ -39,6 +39,8 @@ class TestApiPedidosReal(DjangoTestCase):
         self.assertEqual(pedido["total"], "22.90")
         self.assertEqual(pedido["direccion_entrega"]["ciudad"], "Madrid")
         self.assertEqual(pedido["cliente"]["es_invitado"], True)
+        self.assertEqual(pedido["lineas"][0]["cantidad_comercial"], 2)
+        self.assertEqual(pedido["lineas"][0]["unidad_comercial"], "ud")
         self.assertTrue(PedidoRealModelo.objects.filter(id_pedido=pedido["id_pedido"]).exists())
 
     def test_detalle_pedido_real_devuelve_pedido_persistido(self) -> None:
@@ -103,6 +105,25 @@ class TestApiPedidosReal(DjangoTestCase):
         self.assertEqual(response.json()["lineas"][0]["codigo"], "stock_insuficiente")
         self.assertEqual(response.json()["lineas"][0]["cantidad_disponible"], 1)
         self.assertFalse(PedidoRealModelo.objects.exists())
+
+    def test_rechaza_unidad_comercial_invalida(self) -> None:
+        payload = _payload_base()
+        payload["lineas"][0]["unidad_comercial"] = "kg"
+
+        response = self.client.post("/api/v1/pedidos/", data=json.dumps(payload), content_type="application/json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("unidad comercial válida", response.json()["detalle"].lower())
+
+    def test_rechaza_cantidad_no_entera(self) -> None:
+        payload = _payload_base()
+        payload["lineas"][0]["cantidad_comercial"] = "2"
+        payload["lineas"][0].pop("cantidad")
+
+        response = self.client.post("/api/v1/pedidos/", data=json.dumps(payload), content_type="application/json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("entero", response.json()["detalle"].lower())
 
     def test_rechaza_pedido_completo_si_una_linea_falla_stock(self) -> None:
         ProductoModelo.objects.create(

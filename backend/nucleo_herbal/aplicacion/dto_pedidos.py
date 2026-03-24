@@ -33,7 +33,8 @@ class LineaPedidoRealDTO:
     id_producto: str
     slug_producto: str
     nombre_producto: str
-    cantidad: int
+    cantidad_comercial: int
+    unidad_comercial: str
     precio_unitario: Decimal
     moneda: str
     subtotal: Decimal

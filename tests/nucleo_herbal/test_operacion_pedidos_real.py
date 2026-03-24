@@ -223,7 +223,7 @@ def _pedido_base(estado: str = "pendiente_pago", estado_pago: str = "pendiente")
         canal_checkout="web_invitado",
         cliente=ClientePedido(id_cliente=None, email="real@test.dev", nombre_contacto="Lore", telefono_contacto="600111222"),
         direccion_entrega=DireccionEntrega(nombre_destinatario="Lore", linea_1="Calle Luna 1", codigo_postal="28001", ciudad="Madrid", provincia="Madrid"),
-        lineas=(LineaPedido(id_producto="PRO-1", slug_producto="bruma", nombre_producto="Bruma", cantidad=1, precio_unitario=Decimal("9.90")),),
+        lineas=(LineaPedido(id_producto="PRO-1", slug_producto="bruma", nombre_producto="Bruma", cantidad_comercial=1, unidad_comercial="ud", precio_unitario=Decimal("9.90")),),
         moneda="EUR",
     )
 

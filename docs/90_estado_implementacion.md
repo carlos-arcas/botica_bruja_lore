@@ -227,7 +227,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - migración compatible con datos existentes mediante defaults conservadores (`ud`, `1`, `1`);
   - validaciones de backoffice para unidad válida, incremento/mínimo > 0, compatibilidad mínimo↔incremento y coherencia mínima con `InventarioProducto.unidad_base` cuando ya existe inventario.
 - Regla activa:
-  1. aún no se modifica la línea de pedido real ni checkout para compra granel completa (queda en R03/R04);
+  1. la línea de pedido real ya usa `cantidad_comercial` + `unidad_comercial` con compatibilidad transitoria de payload legacy; queda pendiente R04 para UX/checkout granel explícito;
   2. las cantidades comerciales siguen siendo enteras (sin floats) y controladas por catálogo cerrado de unidades.
 - **Estado**: DONE.
 - **Ciclo asociado**: evolución ecommerce demo (frontend).
