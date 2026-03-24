@@ -21,6 +21,8 @@ def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
         "email_post_pago_enviado": dto.email_post_pago_enviado,
         "inventario_descontado": dto.inventario_descontado,
         "incidencia_stock_confirmacion": dto.incidencia_stock_confirmacion,
+        "incidencia_stock_revisada": dto.incidencia_stock_revisada,
+        "fecha_revision_incidencia_stock": dto.fecha_revision_incidencia_stock.isoformat().replace('+00:00', 'Z') if dto.fecha_revision_incidencia_stock else None,
         "cliente": {
             "email_contacto": dto.cliente.email,
             "nombre_contacto": dto.cliente.nombre_contacto,

@@ -77,6 +77,22 @@ class MarcarPedidoEnviado:
 
 
 @dataclass(slots=True)
+class MarcarIncidenciaStockRevisada:
+    repositorio_pedidos: RepositorioPedidos
+
+    def ejecutar(self, id_pedido: str, operation_id: str, actor: str, observaciones_operativas: str = "") -> PedidoRealDTO:
+        pedido = _obtener_pedido(self.repositorio_pedidos, id_pedido)
+        actualizado = self.repositorio_pedidos.guardar(
+            pedido.marcar_incidencia_stock_revisada(
+                datetime.now(tz=UTC),
+                observaciones_operativas=observaciones_operativas,
+            )
+        )
+        _log_transition(operation_id, actor, pedido, actualizado, "marcar_incidencia_stock_revisada", "ok")
+        return _a_dto(actualizado)
+
+
+@dataclass(slots=True)
 class MarcarPedidoEntregado:
     repositorio_pedidos: RepositorioPedidos
 

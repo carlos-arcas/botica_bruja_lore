@@ -46,6 +46,18 @@ class TestRepositorioPedidosReal(DjangoTestCase):
         self.assertIsNotNone(recuperado.fecha_envio)
 
 
+    def test_persiste_revision_operativa_de_incidencia_stock(self) -> None:
+        repo = RepositorioPedidosORM()
+        pedido = _pedido_base(id_pedido="PED-20260319010101-test0003", estado="pagado", estado_pago="pagado")
+        pedido = repo.guardar(pedido.registrar_incidencia_stock_confirmacion("Incidencia detectada"))
+
+        revisado = repo.guardar(pedido.marcar_incidencia_stock_revisada(datetime.now(tz=UTC), "Caso revisado en admin"))
+
+        self.assertTrue(revisado.incidencia_stock_confirmacion)
+        self.assertTrue(revisado.incidencia_stock_revisada)
+        self.assertFalse(revisado.requiere_revision_manual)
+        self.assertIn("Caso revisado en admin", revisado.observaciones_operativas)
+
 
 def _pedido_base(id_pedido: str, estado: str = "pendiente_pago", estado_pago: str = "pendiente", canal_checkout: str = "web_invitado", id_cliente: str | None = None, es_invitado: bool = True) -> Pedido:
     return Pedido(
@@ -59,3 +71,4 @@ def _pedido_base(id_pedido: str, estado: str = "pendiente_pago", estado_pago: st
         notas_cliente="Sin prisa.",
         moneda="EUR",
     )
+
