@@ -8,10 +8,12 @@ from datetime import UTC, datetime
 
 from ..dominio.excepciones import ErrorDominio
 from ..dominio.inventario import InventarioProducto
+from ..dominio.inventario_movimientos import MovimientoInventario
 from .casos_de_uso import ErrorAplicacionLookup
 from .dto_inventario import InventarioProductoDTO
 from .puertos.repositorios import RepositorioProductos
 from .puertos.repositorios_inventario import RepositorioInventario
+from .puertos.repositorios_movimientos_inventario import RepositorioMovimientosInventario
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,7 @@ class ObtenerInventarioProducto:
 class CrearInventarioInicialProducto:
     repositorio_inventario: RepositorioInventario
     repositorio_productos: RepositorioProductos
+    repositorio_movimientos: RepositorioMovimientosInventario
 
     def ejecutar(
         self,
@@ -56,6 +59,16 @@ class CrearInventarioInicialProducto:
         except ErrorDominio:
             logger.warning("inventario_inicial_duplicado", extra=_extra_log(operation_id, id_producto, "crear_inicial", "error", cantidad_inicial, umbral_bajo_stock))
             raise
+        self.repositorio_movimientos.registrar(
+            MovimientoInventario(
+                id_producto=id_producto,
+                tipo_movimiento="alta_inicial",
+                cantidad=cantidad_inicial,
+                unidad_base=creado.unidad_base,
+                referencia="inventario_inicial",
+                operation_id=operation_id,
+            )
+        )
         logger.info("inventario_inicial_creado", extra=_extra_log(operation_id, id_producto, "crear_inicial", "ok", creado.cantidad_disponible, creado.umbral_bajo_stock))
         return _a_dto(creado)
 
@@ -63,6 +76,7 @@ class CrearInventarioInicialProducto:
 @dataclass(slots=True)
 class AjustarInventarioProducto:
     repositorio_inventario: RepositorioInventario
+    repositorio_movimientos: RepositorioMovimientosInventario
 
     def ejecutar(self, *, id_producto: str, delta: int, operation_id: str) -> InventarioProductoDTO:
         inventario = self.repositorio_inventario.obtener_por_id_producto(id_producto)
@@ -74,6 +88,16 @@ class AjustarInventarioProducto:
             logger.warning("inventario_ajuste_rechazado", extra=_extra_log(operation_id, id_producto, "ajuste", "error", delta, inventario.umbral_bajo_stock))
             raise
         persistido = self.repositorio_inventario.guardar(actualizado)
+        self.repositorio_movimientos.registrar(
+            MovimientoInventario(
+                id_producto=id_producto,
+                tipo_movimiento="ajuste_manual",
+                cantidad=delta,
+                unidad_base=persistido.unidad_base,
+                referencia="ajuste_admin",
+                operation_id=operation_id,
+            )
+        )
         logger.info("inventario_ajustado", extra=_extra_log(operation_id, id_producto, "ajuste", "ok", delta, persistido.umbral_bajo_stock, persistido.cantidad_disponible))
         return _a_dto(persistido)
 

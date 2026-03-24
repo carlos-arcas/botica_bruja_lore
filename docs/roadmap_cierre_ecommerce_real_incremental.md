@@ -279,8 +279,47 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R06 — Ledger mínimo de movimientos de inventario
-- **Estado**: `PLANNED`.
-- **Lectura actual**: hoy hay marcas e incidencias mínimas, pero no ledger operativo completo de movimientos trazables.
+- **Estado**: `DONE`.
+- **Lectura actual**: el inventario mantiene la fuente de verdad operativa en `nucleo_inventario_producto` y ahora queda acompañado por ledger auditable mínimo en `nucleo_movimiento_inventario`.
+
+**Cierre de R06 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Mantener `InventarioProducto` como fuente operativa de stock y añadir `MovimientoInventario` como traza de auditoría, sin recalcular stock histórico desde movimientos.
+  2. Cerrar catálogo mínimo de tipos de movimiento: `alta_inicial`, `ajuste_manual`, `descuento_pago`, `restitucion_manual` (reservado para R08).
+  3. Registrar movimientos en tres operaciones reales: alta inicial de inventario, ajuste manual y descuento post-pago exitoso.
+  4. Reutilizar idempotencia existente del post-pago y reforzar ledger con unicidad condicional por `(inventario, tipo_movimiento, operation_id)` para no duplicar `descuento_pago` en reintentos.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/dominio/inventario_movimientos.py`
+  - `backend/nucleo_herbal/aplicacion/puertos/repositorios_movimientos_inventario.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_inventario.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_post_pago_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/mapeadores_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`
+  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0031_movimientoinventariomodelo.py`
+  - `tests/nucleo_herbal/test_casos_de_uso_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/tests/test_post_pago_inventario.py`
+  - `tests/nucleo_herbal/infraestructura/test_repositorios_django.py`
+  - `tests/nucleo_herbal/infraestructura/test_admin_django.py`
+- **Comandos ejecutados**:
+  - `python manage.py makemigrations persistencia_django`
+  - `python manage.py test tests.nucleo_herbal.test_casos_de_uso_inventario backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario tests.nucleo_herbal.infraestructura.test_repositorios_django tests.nucleo_herbal.infraestructura.test_admin_django tests.nucleo_herbal.test_pago_real`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_backend_readiness.py`
+- **Evidencia**:
+  - nueva tabla de ledger con constraints de cantidad no cero, unidad/tipo válidos e índices operativos;
+  - alta inicial y ajuste manual generan movimiento en capa de aplicación;
+  - descuento post-pago exitoso genera `descuento_pago` y no deja trazas espurias cuando hay incidencia;
+  - reintentos idempotentes de webhook no duplican descuento ni movimiento.
+- **Deuda residual**:
+  1. `restitucion_manual` queda tipado y persistible, pero su operación explícita se mantiene para R08.
+  2. El ajuste manual automático por edición directa en admin no se prueba de forma end-to-end (se cubre visibilidad del inline y trazas desde casos de uso/repositorios).
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R07 — Page propia de inventario en backoffice Next
 - **Estado**: `PARTIAL`.
@@ -321,14 +360,14 @@
 ## 4. Riesgos transversales
 1. **Deriva de alcance** por coexistencia de flujo demo y real sin tablero único estricto.
 2. **Semántica comercial de granel aún incompleta** (unidad/cantidad por línea de pedido), aunque la unidad base de inventario ya quedó cerrada en R01.
-3. **Ausencia de ledger operativo completo** para auditoría detallada de inventario.
+3. **Riesgo de deriva del ledger** si operaciones futuras de inventario no registran movimiento en el catálogo cerrado.
 4. **Gap fiscal/legal** hasta cerrar R11-R12 (importe legal, documento fiscal trazable).
 5. **Madurez operativa parcial** en tracking, conciliación e incident response.
 6. **Riesgo de sobredeclarar DONE** por apoyarse en documentación sin validar evidencia en código/tests.
 
 ## 5. Decisiones abiertas
 1. Cerrar contrato canónico de unidad comercial por línea de pedido y su acoplamiento controlado con la unidad base ya definida.
-2. Elegir diseño mínimo del ledger (eventos, claves de idempotencia, origen movimiento, actor).
+2. Extender R08 con caso de uso de `restitucion_manual` conectado al ledger ya introducido.
 3. Definir alcance exacto de page/backoffice inventario Next para no duplicar admin Django.
 4. Cerrar política operativa de restitución manual y su compatibilidad con cancelación/reembolso.
 5. Fijar estrategia fiscal mínima legal (impuestos/moneda/redondeo) antes de factura/recibo descargable.
@@ -348,3 +387,6 @@
 - **2026-03-24 — R04 (cierre):** checkout real actualizado al payload nuevo (`cantidad_comercial` + `unidad_comercial`), validación frontend+backend de incremento/mínimo/unidad cerrada y pruebas de checkout real backend/frontend en verde.
 - **2026-03-24 — R05 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de endurecer descuento post-pago por unidad base.
 - **2026-03-24 — R05 (cierre):** descuento post-pago ajustado a `cantidad_comercial` + compatibilidad explícita de `unidad_comercial` vs `unidad_base`, con incidencia auditable y sin descuento parcial ante conflicto de stock/unidad.
+
+- **2026-03-24 — R06 (arranque):** estado movido de `PLANNED` a `IN_PROGRESS` antes de implementar ledger mínimo.
+- **2026-03-24 — R06 (cierre):** ledger mínimo de inventario implementado y trazado para alta inicial, ajuste manual y descuento post-pago con idempotencia y visibilidad en Django Admin.

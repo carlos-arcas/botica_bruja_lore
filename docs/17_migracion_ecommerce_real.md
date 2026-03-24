@@ -302,3 +302,14 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   3. sin exponer detalle operativo interno adicional en la UI cliente.
 - Backoffice activo: acción en Django Admin para ejecutar reembolso manual explícito y visualización del resultado real (éxito o fallo) sin maquillar estados.
 - Límites preservados en este bloque: sin reembolso automático al cancelar, sin devolución automática de inventario y sin emails automáticos al cliente.
+
+## Actualización inventario ledger mínimo v1.2 (R06)
+- Estado técnico: **DONE** para trazabilidad mínima auditable de movimientos de inventario.
+- Persistencia activa: nueva tabla `nucleo_movimiento_inventario` con cantidad entera, unidad base, tipo cerrado, referencia contextual, `operation_id` y fecha.
+- Regla operativa activa:
+  - el stock actual sigue viviendo en `nucleo_inventario_producto` como fuente de verdad operativa;
+  - alta inicial, ajuste manual y descuento post-pago exitoso generan movimiento;
+  - los reintentos idempotentes de confirmación de pago no duplican `descuento_pago`.
+- Fuera de alcance preservado:
+  - sin recálculo de stock desde ledger;
+  - sin multi-almacén, lotes, caducidades ni panel analítico nuevo.

@@ -812,3 +812,17 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. sin emails automáticos nuevos;
   2. sin formularios de soporte;
   3. sin cambios de inventario ni nuevos flujos financieros.
+
+## 40. Ledger mínimo de movimientos de inventario (R06)
+- Capacidad: **Ledger auditable mínimo que acompaña la fuente actual de stock**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - dominio/puertos nuevos: `backend/nucleo_herbal/dominio/inventario_movimientos.py`, `backend/nucleo_herbal/aplicacion/puertos/repositorios_movimientos_inventario.py`;
+  - persistencia dedicada: `MovimientoInventarioModelo` + migración `0031_movimientoinventariomodelo.py`;
+  - repositorio/mapeadores desacoplados: `repositorios_inventario.py`, `mapeadores_inventario.py`;
+  - integración operativa: alta inicial y ajuste manual en `casos_de_uso_inventario.py`, descuento post-pago en `casos_de_uso_post_pago_pedidos.py`;
+  - visibilidad mínima backoffice: inline de movimientos en `admin_inventario.py`.
+- Regla activa:
+  1. `InventarioProducto` sigue siendo fuente de verdad operativa de stock;
+  2. el ledger no recalcula stock histórico ni sustituye lectura operativa;
+  3. `descuento_pago` se registra sin duplicados en reintentos idempotentes y no se genera si el post-pago falla con incidencia de stock/unidad.

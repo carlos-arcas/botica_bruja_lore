@@ -48,6 +48,7 @@ class PagoRealTests(TestCase):
         resultado = ProcesarPostPagoPedido(
             repositorio_pedidos=repositorio,
             repositorio_inventario=repositorio_inventario,
+            repositorio_movimientos=Mock(),
             transacciones=transacciones,
             notificador=notificador,
         )._enviar_email_si_aplica(pedido, "op-test", "checkout.session.completed")

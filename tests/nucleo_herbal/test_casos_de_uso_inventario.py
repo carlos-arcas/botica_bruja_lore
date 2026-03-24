@@ -11,9 +11,11 @@ from backend.nucleo_herbal.aplicacion.casos_de_uso_inventario import (
 )
 from backend.nucleo_herbal.aplicacion.puertos.repositorios import RepositorioProductos
 from backend.nucleo_herbal.aplicacion.puertos.repositorios_inventario import RepositorioInventario
+from backend.nucleo_herbal.aplicacion.puertos.repositorios_movimientos_inventario import RepositorioMovimientosInventario
 from backend.nucleo_herbal.dominio.entidades import Producto
 from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.dominio.inventario import InventarioProducto
+from backend.nucleo_herbal.dominio.inventario_movimientos import MovimientoInventario
 
 
 class RepositorioProductosMemoria(RepositorioProductos):
@@ -59,6 +61,14 @@ class RepositorioInventarioMemoria(RepositorioInventario):
         return tuple(item for item in inventarios if item.bajo_stock)
 
 
+class RepositorioMovimientosInventarioMemoria(RepositorioMovimientosInventario):
+    def __init__(self):
+        self.movimientos: list[MovimientoInventario] = []
+
+    def registrar(self, movimiento: MovimientoInventario) -> None:
+        self.movimientos.append(movimiento)
+
+
 @pytest.fixture
 def producto() -> Producto:
     return Producto(
@@ -75,18 +85,25 @@ def producto() -> Producto:
 
 def test_crear_inventario_inicial(producto: Producto) -> None:
     repo_inventario = RepositorioInventarioMemoria()
-    caso = CrearInventarioInicialProducto(repo_inventario, RepositorioProductosMemoria({producto.id: producto}))
+    repo_movimientos = RepositorioMovimientosInventarioMemoria()
+    caso = CrearInventarioInicialProducto(repo_inventario, RepositorioProductosMemoria({producto.id: producto}), repo_movimientos)
 
     resultado = caso.ejecutar(id_producto=producto.id, cantidad_inicial=5, umbral_bajo_stock=2, operation_id="op-1")
 
     assert resultado.cantidad_disponible == 5
     assert resultado.unidad_base == "ud"
     assert resultado.bajo_stock is False
+    assert repo_movimientos.movimientos[0].tipo_movimiento == "alta_inicial"
+    assert repo_movimientos.movimientos[0].cantidad == 5
 
 
 def test_crear_inventario_inicial_con_unidad_base_valida(producto: Producto) -> None:
     repo_inventario = RepositorioInventarioMemoria()
-    caso = CrearInventarioInicialProducto(repo_inventario, RepositorioProductosMemoria({producto.id: producto}))
+    caso = CrearInventarioInicialProducto(
+        repo_inventario,
+        RepositorioProductosMemoria({producto.id: producto}),
+        RepositorioMovimientosInventarioMemoria(),
+    )
 
     resultado = caso.ejecutar(
         id_producto=producto.id,
@@ -102,7 +119,11 @@ def test_crear_inventario_inicial_con_unidad_base_valida(producto: Producto) -> 
 
 def test_crear_inventario_inicial_rechaza_unidad_base_invalida(producto: Producto) -> None:
     repo_inventario = RepositorioInventarioMemoria()
-    caso = CrearInventarioInicialProducto(repo_inventario, RepositorioProductosMemoria({producto.id: producto}))
+    caso = CrearInventarioInicialProducto(
+        repo_inventario,
+        RepositorioProductosMemoria({producto.id: producto}),
+        RepositorioMovimientosInventarioMemoria(),
+    )
 
     with pytest.raises(ErrorDominio, match="unidad base"):
         caso.ejecutar(
@@ -118,7 +139,11 @@ def test_crear_inventario_inicial_rechaza_unidad_base_invalida(producto: Product
 def test_rechazar_inventario_duplicado(producto: Producto) -> None:
     actual = InventarioProducto(id_producto=producto.id, cantidad_disponible=1, umbral_bajo_stock=0, fecha_creacion=datetime.now(tz=UTC))
     repo_inventario = RepositorioInventarioMemoria({producto.id: actual})
-    caso = CrearInventarioInicialProducto(repo_inventario, RepositorioProductosMemoria({producto.id: producto}))
+    caso = CrearInventarioInicialProducto(
+        repo_inventario,
+        RepositorioProductosMemoria({producto.id: producto}),
+        RepositorioMovimientosInventarioMemoria(),
+    )
 
     with pytest.raises(ErrorDominio, match="Ya existe inventario"):
         caso.ejecutar(id_producto=producto.id, cantidad_inicial=5, umbral_bajo_stock=2, operation_id="op-2")
@@ -129,12 +154,14 @@ def test_ajustar_stock_al_alza_y_a_la_baja(producto: Producto) -> None:
     inventario = InventarioProducto(id_producto=producto.id, cantidad_disponible=4, umbral_bajo_stock=2, fecha_creacion=datetime.now(tz=UTC))
     repo = RepositorioInventarioMemoria({producto.id: inventario})
 
-    aumento = AjustarInventarioProducto(repo).ejecutar(id_producto=producto.id, delta=3, operation_id="op-3")
-    bajada = AjustarInventarioProducto(repo).ejecutar(id_producto=producto.id, delta=-5, operation_id="op-4")
+    repo_movimientos = RepositorioMovimientosInventarioMemoria()
+    aumento = AjustarInventarioProducto(repo, repo_movimientos).ejecutar(id_producto=producto.id, delta=3, operation_id="op-3")
+    bajada = AjustarInventarioProducto(repo, repo_movimientos).ejecutar(id_producto=producto.id, delta=-5, operation_id="op-4")
 
     assert aumento.cantidad_disponible == 7
     assert bajada.cantidad_disponible == 2
     assert bajada.bajo_stock is True
+    assert [mov.cantidad for mov in repo_movimientos.movimientos] == [3, -5]
 
 
 
@@ -143,7 +170,11 @@ def test_rechazar_ajuste_que_deja_stock_negativo(producto: Producto) -> None:
     repo = RepositorioInventarioMemoria({producto.id: inventario})
 
     with pytest.raises(ErrorDominio, match="stock negativo"):
-        AjustarInventarioProducto(repo).ejecutar(id_producto=producto.id, delta=-2, operation_id="op-5")
+        AjustarInventarioProducto(repo, RepositorioMovimientosInventarioMemoria()).ejecutar(
+            id_producto=producto.id,
+            delta=-2,
+            operation_id="op-5",
+        )
 
 
 
@@ -160,7 +191,11 @@ def test_obtener_y_listar_inventario(producto: Producto) -> None:
 
 
 def test_crear_inventario_falla_si_producto_no_existe() -> None:
-    caso = CrearInventarioInicialProducto(RepositorioInventarioMemoria(), RepositorioProductosMemoria({}))
+    caso = CrearInventarioInicialProducto(
+        RepositorioInventarioMemoria(),
+        RepositorioProductosMemoria({}),
+        RepositorioMovimientosInventarioMemoria(),
+    )
 
     with pytest.raises(ErrorAplicacionLookup, match="Producto no encontrado"):
         caso.ejecutar(id_producto="prod-x", cantidad_inicial=1, umbral_bajo_stock=None, operation_id="op-6")

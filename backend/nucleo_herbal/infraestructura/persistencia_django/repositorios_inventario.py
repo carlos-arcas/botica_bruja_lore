@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from django.db import IntegrityError, transaction, models
+from django.db import IntegrityError, models, transaction
 
 from ...aplicacion.puertos.repositorios_inventario import RepositorioInventario
+from ...aplicacion.puertos.repositorios_movimientos_inventario import RepositorioMovimientosInventario
 from ...dominio.excepciones import ErrorDominio
 from ...dominio.inventario import InventarioProducto
-from .mapeadores_inventario import a_datos_inventario, a_inventario
-from .models_inventario import InventarioProductoModelo
+from ...dominio.inventario_movimientos import MovimientoInventario
+from .mapeadores_inventario import a_datos_inventario, a_datos_movimiento, a_inventario
+from .models_inventario import InventarioProductoModelo, MovimientoInventarioModelo
 
 
 class RepositorioInventarioORM(RepositorioInventario):
@@ -62,3 +64,20 @@ class RepositorioInventarioORM(RepositorioInventario):
 
     def _base_queryset(self):
         return InventarioProductoModelo.objects.select_related("producto").order_by("producto__nombre")
+
+
+class RepositorioMovimientosInventarioORM(RepositorioMovimientosInventario):
+    @transaction.atomic
+    def registrar(self, movimiento: MovimientoInventario) -> None:
+        inventario = InventarioProductoModelo.objects.filter(producto_id=movimiento.id_producto).first()
+        if inventario is None:
+            raise ErrorDominio("No existe inventario previo para registrar el movimiento.")
+        try:
+            MovimientoInventarioModelo.objects.create(
+                inventario=inventario,
+                **a_datos_movimiento(movimiento),
+            )
+        except IntegrityError as error:
+            if movimiento.operation_id:
+                return
+            raise ErrorDominio("No fue posible registrar el movimiento de inventario.") from error

@@ -11,9 +11,12 @@ from backend.nucleo_herbal.aplicacion.puertos.notificador_pedidos import Notific
 from backend.nucleo_herbal.aplicacion.puertos.pasarela_pago import PuertoPasarelaPago
 from backend.nucleo_herbal.dominio.pedidos import ClientePedido, DireccionEntrega, LineaPedido, Pedido
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
-from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo, MovimientoInventarioModelo
 from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import PedidoRealModelo
-from backend.nucleo_herbal.infraestructura.persistencia_django.repositorios_inventario import RepositorioInventarioORM
+from backend.nucleo_herbal.infraestructura.persistencia_django.repositorios_inventario import (
+    RepositorioInventarioORM,
+    RepositorioMovimientosInventarioORM,
+)
 from backend.nucleo_herbal.infraestructura.persistencia_django.repositorios_pedidos import RepositorioPedidosORM
 from backend.nucleo_herbal.infraestructura.persistencia_django.transacciones import TransaccionesDjango
 
@@ -26,6 +29,7 @@ class PostPagoInventarioTests(TestCase):
         self.procesador = ProcesarPostPagoPedido(
             repositorio_pedidos=self.repo_pedidos,
             repositorio_inventario=self.repo_inventario,
+            repositorio_movimientos=RepositorioMovimientosInventarioORM(),
             transacciones=TransaccionesDjango(),
             notificador=self.notificador,
         )
@@ -43,6 +47,7 @@ class PostPagoInventarioTests(TestCase):
         self.assertFalse(resultado.incidencia_stock_confirmacion)
         self.assertEqual(resultado.estado, "pagado")
         self.assertEqual(self.notificador.pedidos_enviados, ["pedido-1"])
+        self.assertEqual(MovimientoInventarioModelo.objects.filter(tipo_movimiento="descuento_pago").count(), 1)
 
     def test_confirmar_pago_granel_descuenta_por_cantidad_comercial_en_unidad_base(self):
         self._crear_inventario(self.producto_1.id, 1000, unidad_base="g")
@@ -54,6 +59,9 @@ class PostPagoInventarioTests(TestCase):
         self.assertTrue(resultado.inventario_descontado)
         self.assertFalse(resultado.incidencia_stock_confirmacion)
         self.assertEqual(self.notificador.pedidos_enviados, ["pedido-1b"])
+        movimiento = MovimientoInventarioModelo.objects.get(tipo_movimiento="descuento_pago")
+        self.assertEqual(movimiento.cantidad, -250)
+        self.assertEqual(movimiento.unidad_base, "g")
 
     def test_repetir_confirmacion_no_vuelve_a_descontar(self):
         self._crear_inventario(self.producto_1.id, 4)
@@ -106,6 +114,7 @@ class PostPagoInventarioTests(TestCase):
         self.assertIsNone(resultado.fecha_revision_incidencia_stock)
         self.assertIn("requiere revisión manual", resultado.observaciones_operativas)
         self.assertEqual(self.notificador.pedidos_enviados, [])
+        self.assertEqual(MovimientoInventarioModelo.objects.filter(tipo_movimiento="descuento_pago").count(), 0)
 
     def test_unidad_incompatible_genera_incidencia_sin_tocar_inventario(self):
         self._crear_inventario(self.producto_1.id, 1000, unidad_base="g")
@@ -120,6 +129,7 @@ class PostPagoInventarioTests(TestCase):
         self.assertTrue(resultado.requiere_revision_manual)
         self.assertIn("requiere revisión manual", resultado.observaciones_operativas)
         self.assertEqual(self.notificador.pedidos_enviados, [])
+        self.assertEqual(MovimientoInventarioModelo.objects.filter(tipo_movimiento="descuento_pago").count(), 0)
 
     def test_unidad_incompatible_en_multilinea_evita_descuento_parcial(self):
         self._crear_inventario(self.producto_1.id, 10, unidad_base="ud")
@@ -156,6 +166,7 @@ class PostPagoInventarioTests(TestCase):
         self.assertEqual(primero["resultado"], "pagado")
         self.assertEqual(segundo["resultado"], "duplicado")
         self.assertEqual(self._stock(self.producto_1.id), 4)
+        self.assertEqual(MovimientoInventarioModelo.objects.filter(tipo_movimiento="descuento_pago").count(), 1)
 
     def _crear_producto(self, id_producto: str, slug: str) -> ProductoModelo:
         return ProductoModelo.objects.create(
