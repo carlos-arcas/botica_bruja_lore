@@ -72,13 +72,39 @@ def _detectar_incidencia_stock(pedido: Pedido, repositorio_inventario: Repositor
     for linea in pedido.lineas:
         inventario = inventarios.get(linea.id_producto)
         cantidad_disponible = 0 if inventario is None else inventario.cantidad_disponible
-        if inventario is None or not inventario.puede_cubrir(linea.cantidad):
+        if inventario is None:
             lineas.append(
                 LineaStockError(
                     id_producto=linea.id_producto,
                     slug_producto=linea.slug_producto,
                     nombre_producto=linea.nombre_producto,
-                    cantidad_solicitada=linea.cantidad,
+                    cantidad_solicitada=linea.cantidad_comercial,
+                    cantidad_disponible=cantidad_disponible,
+                    codigo="stock_insuficiente_confirmacion_pago",
+                    detalle="No hay stock suficiente para confirmar operativamente el pedido pagado.",
+                )
+            )
+            continue
+        if linea.unidad_comercial != inventario.unidad_base:
+            lineas.append(
+                LineaStockError(
+                    id_producto=linea.id_producto,
+                    slug_producto=linea.slug_producto,
+                    nombre_producto=linea.nombre_producto,
+                    cantidad_solicitada=linea.cantidad_comercial,
+                    cantidad_disponible=cantidad_disponible,
+                    codigo="unidad_incompatible_confirmacion_pago",
+                    detalle=f"La unidad comercial '{linea.unidad_comercial}' no coincide con la unidad base '{inventario.unidad_base}' del inventario.",
+                )
+            )
+            continue
+        if not inventario.puede_cubrir(linea.cantidad_comercial):
+            lineas.append(
+                LineaStockError(
+                    id_producto=linea.id_producto,
+                    slug_producto=linea.slug_producto,
+                    nombre_producto=linea.nombre_producto,
+                    cantidad_solicitada=linea.cantidad_comercial,
                     cantidad_disponible=cantidad_disponible,
                     codigo="stock_insuficiente_confirmacion_pago",
                     detalle="No hay stock suficiente para confirmar operativamente el pedido pagado.",
@@ -95,7 +121,7 @@ def _detectar_incidencia_stock(pedido: Pedido, repositorio_inventario: Repositor
 def _descontar_inventario(pedido: Pedido, repositorio_inventario: RepositorioInventario) -> None:
     inventarios = {item.id_producto: item for item in repositorio_inventario.obtener_para_actualizar_por_ids_producto(_ids_producto(pedido))}
     for linea in pedido.lineas:
-        actualizado = inventarios[linea.id_producto].ajustar(-linea.cantidad, fecha_actualizacion=datetime.now(tz=UTC))
+        actualizado = inventarios[linea.id_producto].ajustar(-linea.cantidad_comercial, fecha_actualizacion=datetime.now(tz=UTC))
         repositorio_inventario.guardar(actualizado)
 
 

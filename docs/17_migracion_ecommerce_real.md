@@ -209,11 +209,13 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - si Stripe confirma `pagado` y hay stock suficiente, el sistema descuenta todas las líneas en una transacción atómica y marca el pedido como descontado una sola vez;
   - si el webhook se repite o el caso de uso se reejecuta, la idempotencia evita dobles descuentos;
   - si falta stock en ese momento, no se descuenta nada, no se permite stock negativo, el pedido queda `pagado` con incidencia operativa y `requiere_revision_manual=True`;
+  - si la `unidad_comercial` de una línea no coincide con la `unidad_base` del inventario, no se descuenta inventario, se registra incidencia operativa auditable y el pedido queda en revisión manual;
   - en escenario de incidencia, se omite el email post-pago estándar para no fingir cierre operativo exitoso.
 - Logging activo:
   - descuento correcto por pedido pagado;
   - reintento idempotente;
   - conflicto de stock al confirmar pago;
+  - conflicto de unidad línea↔inventario al confirmar pago;
   - generación de incidencia operativa.
 - Fuera de alcance preservado:
   - sin reservas previas;

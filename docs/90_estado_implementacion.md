@@ -256,6 +256,18 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - Contador de cesta integrado en navegación global sin convertir el layout entero en componente cliente.
   - Responsive base resuelta sin dependencias nuevas ni rediseño masivo.
 
+## 17. Actualización incremental — R05 descuento post-pago según unidad base
+- Capacidad: **Descuento post-pago unit-aware (cantidad + unidad comercial contra unidad base de inventario)**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - el caso de uso post-pago valida por línea la compatibilidad de unidad (`unidad_comercial` de la línea vs `unidad_base` de inventario) antes de cualquier descuento;
+  - el descuento usa explícitamente `cantidad_comercial` (sin alias legacy) para unitarios y granel;
+  - ante unidad incompatible o stock insuficiente, el pedido queda `pagado` con incidencia operativa (`inventario_descontado=False`, `incidencia_stock_confirmacion=True`, `requiere_revision_manual=True`) y sin descuento parcial;
+  - pruebas backend de post-pago cubren unitario, granel `g`, idempotencia, no descuento parcial y conflicto de unidad.
+- Regla activa:
+  1. no se introducen conversiones entre unidades diferentes en R05: la unidad de línea debe coincidir exactamente con la unidad base;
+  2. no se abren reservas previas, devoluciones automáticas ni ledger completo de inventario (queda para R06).
+
 ## 15. Página editorial de marca / La Botica (Ciclo 3 en progreso)
 - Capacidad: **Capa de marca sólida conectada al flujo comercial**.
 - Estado: **EN_PROGRESO**.
