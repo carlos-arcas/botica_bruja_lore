@@ -19,6 +19,11 @@ from .importacion import (
     eliminar_imagen_fila_importacion_backoffice,
     revalidar_lote_importacion_backoffice,
 )
+from .inventario import (
+    ajustar_inventario_backoffice,
+    detalle_inventario_backoffice,
+    listado_inventario_backoffice,
+)
 from .productos import (
     cambiar_publicacion_producto_backoffice,
     guardar_producto_backoffice,
@@ -64,6 +69,9 @@ __all__ = [
     "actualizar_seleccion_fila_importacion_backoffice",
     "descartar_fila_importacion_backoffice",
     "subir_imagen_backoffice",
+    "listado_inventario_backoffice",
+    "detalle_inventario_backoffice",
+    "ajustar_inventario_backoffice",
     "listado_pedidos_backoffice",
     "marcar_pedido_preparando_backoffice",
     "marcar_pedido_enviado_backoffice",

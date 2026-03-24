@@ -11,3 +11,7 @@ class RepositorioMovimientosInventario(ABC):
     @abstractmethod
     def registrar(self, movimiento: MovimientoInventario) -> None:
         """Registra un movimiento de inventario auditable."""
+
+    @abstractmethod
+    def listar_por_producto(self, id_producto: str, *, limite: int = 10) -> tuple[MovimientoInventario, ...]:
+        """Devuelve los últimos movimientos de inventario para un producto."""

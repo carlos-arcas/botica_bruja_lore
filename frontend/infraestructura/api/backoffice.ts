@@ -20,7 +20,7 @@ function construirUrlBackoffice(ruta: string): string {
   return `${resolverBaseBackoffice(true)}${normalizada}`;
 }
 
-export type ModuloAdmin = "productos" | "pedidos" | "rituales" | "editorial" | "secciones";
+export type ModuloAdmin = "productos" | "inventario" | "pedidos" | "rituales" | "editorial" | "secciones";
 export type EstadoImagenImportacion = "optimizada" | "pendiente" | "ausente";
 
 export type ResumenImportacion = {
@@ -72,6 +72,24 @@ export type PayloadEnvioPedido = {
   codigo_seguimiento: string;
   envio_sin_seguimiento: boolean;
   observaciones_operativas: string;
+};
+
+export type ItemInventario = {
+  id_producto: string;
+  producto_nombre: string;
+  unidad_base: "ud" | "g" | "ml";
+  cantidad_disponible: number;
+  umbral_bajo_stock: number | null;
+  bajo_stock: boolean;
+  fecha_actualizacion: string | null;
+  fecha_creacion?: string | null;
+};
+
+export type MovimientoInventario = {
+  tipo_movimiento: string;
+  cantidad: number;
+  unidad_base: "ud" | "g" | "ml";
+  fecha_creacion: string | null;
 };
 
 function formatearErroresValidacion(errores?: ErrorBackoffice["errores"]): string {
@@ -297,6 +315,24 @@ export async function marcarPedidoEnviado(id: string, payload: PayloadEnvioPedid
 
 export async function marcarPedidoEntregado(id: string, observaciones_operativas: string, token?: string): Promise<Record<string, unknown>> {
   return ejecutarAccionPedido(`/api/v1/backoffice/pedidos/${id}/entregado/`, { observaciones_operativas }, token, "No se pudo marcar el pedido como entregado.");
+}
+
+export async function obtenerDetalleInventario(idProducto: string, token?: string): Promise<{ item: ItemInventario; movimientos: MovimientoInventario[] }> {
+  const respuesta = await fetch(construirUrlBackoffice(`/api/v1/backoffice/inventario/${idProducto}/`), { headers: cabecerasConToken(token, false), cache: "no-store" });
+  if (!respuesta.ok) return parsearErrorBackoffice(respuesta, "No se pudo cargar el detalle de inventario.");
+  const data = (await respuesta.json()) as { item: ItemInventario; movimientos: MovimientoInventario[] };
+  return { item: data.item, movimientos: data.movimientos ?? [] };
+}
+
+export async function ajustarInventarioManual(idProducto: string, delta: number, token?: string): Promise<{ item: ItemInventario; movimientos: MovimientoInventario[] }> {
+  const respuesta = await fetch(construirUrlBackoffice(`/api/v1/backoffice/inventario/${idProducto}/ajustar/`), {
+    method: "POST",
+    headers: cabecerasConToken(token),
+    body: JSON.stringify({ delta }),
+  });
+  if (!respuesta.ok) return parsearErrorBackoffice(respuesta, "No se pudo aplicar el ajuste manual de inventario.");
+  const data = (await respuesta.json()) as { item: ItemInventario; movimientos: MovimientoInventario[] };
+  return { item: data.item, movimientos: data.movimientos ?? [] };
 }
 
 async function ejecutarAccionPedido(ruta: string, payload: Record<string, unknown>, token: string | undefined, mensajeError: string): Promise<Record<string, unknown>> {

@@ -313,3 +313,18 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Fuera de alcance preservado:
   - sin recálculo de stock desde ledger;
   - sin multi-almacén, lotes, caducidades ni panel analítico nuevo.
+
+## Actualización backoffice inventario Next v1.3 (R07)
+- Estado técnico: **DONE** para superficie propia de inventario en backoffice Next.
+- Superficie operativa principal:
+  - nueva ruta `frontend/app/admin/(panel)/inventario/page.tsx`;
+  - navegación integrada con módulos existentes del panel admin (`Inventario` visible junto a productos/pedidos/rituales).
+- API privada mínima usada por Next:
+  - `GET /api/v1/backoffice/inventario/` (listado operativo);
+  - `GET /api/v1/backoffice/inventario/<producto_id>/` (detalle + últimos movimientos);
+  - `POST /api/v1/backoffice/inventario/<producto_id>/ajustar/` (ajuste manual con enteros);
+  - contratos servidos desde `backend/nucleo_herbal/presentacion/backoffice_views/inventario.py`.
+- Límites preservados:
+  - backend sigue siendo fuente de verdad (dominio + persistencia + ledger);
+  - Django Admin se mantiene como soporte/fallback;
+  - sin cálculo de stock desde ledger, sin multi-almacén ni reporting avanzado en este incremento.

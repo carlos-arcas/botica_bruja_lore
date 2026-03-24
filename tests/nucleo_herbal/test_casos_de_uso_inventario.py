@@ -7,6 +7,7 @@ from backend.nucleo_herbal.aplicacion.casos_de_uso_inventario import (
     AjustarInventarioProducto,
     CrearInventarioInicialProducto,
     ListarInventarioOperativo,
+    ObtenerMovimientosInventarioProducto,
     ObtenerInventarioProducto,
 )
 from backend.nucleo_herbal.aplicacion.puertos.repositorios import RepositorioProductos
@@ -67,6 +68,10 @@ class RepositorioMovimientosInventarioMemoria(RepositorioMovimientosInventario):
 
     def registrar(self, movimiento: MovimientoInventario) -> None:
         self.movimientos.append(movimiento)
+
+    def listar_por_producto(self, id_producto: str, *, limite: int = 10) -> tuple[MovimientoInventario, ...]:
+        filtrados = [mov for mov in self.movimientos if mov.id_producto == id_producto]
+        return tuple(filtrados[:limite]) if limite > 0 else ()
 
 
 @pytest.fixture
@@ -199,3 +204,33 @@ def test_crear_inventario_falla_si_producto_no_existe() -> None:
 
     with pytest.raises(ErrorAplicacionLookup, match="Producto no encontrado"):
         caso.ejecutar(id_producto="prod-x", cantidad_inicial=1, umbral_bajo_stock=None, operation_id="op-6")
+
+
+def test_obtener_movimientos_inventario_por_producto(producto: Producto) -> None:
+    inventario = InventarioProducto(id_producto=producto.id, cantidad_disponible=10, unidad_base="g", umbral_bajo_stock=3)
+    repo_inventario = RepositorioInventarioMemoria({producto.id: inventario})
+    repo_movimientos = RepositorioMovimientosInventarioMemoria()
+    repo_movimientos.registrar(
+        MovimientoInventario(
+            id_producto=producto.id,
+            tipo_movimiento="alta_inicial",
+            cantidad=10,
+            unidad_base="g",
+            operation_id="op-mov-1",
+        )
+    )
+    repo_movimientos.registrar(
+        MovimientoInventario(
+            id_producto=producto.id,
+            tipo_movimiento="ajuste_manual",
+            cantidad=-2,
+            unidad_base="g",
+            operation_id="op-mov-2",
+        )
+    )
+
+    movimientos = ObtenerMovimientosInventarioProducto(repo_inventario, repo_movimientos).ejecutar(id_producto=producto.id, limite=5)
+
+    assert len(movimientos) == 2
+    assert movimientos[0].tipo_movimiento == "alta_inicial"
+    assert movimientos[1].cantidad == -2

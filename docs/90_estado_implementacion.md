@@ -826,3 +826,16 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. `InventarioProducto` sigue siendo fuente de verdad operativa de stock;
   2. el ledger no recalcula stock histórico ni sustituye lectura operativa;
   3. `descuento_pago` se registra sin duplicados en reintentos idempotentes y no se genera si el post-pago falla con incidencia de stock/unidad.
+
+## 41. Backoffice Next con page propia de inventario (R07)
+- Capacidad: **Operativa de inventario real en Next como superficie principal**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - página dedicada `frontend/app/admin/(panel)/inventario/page.tsx` integrada al layout y navegación real del backoffice;
+  - módulo `frontend/componentes/admin/ModuloInventarioAdmin.tsx` con listado operativo (producto, unidad base, stock actual, umbral, estado bajo stock, timestamp);
+  - API privada staff en backend para inventario (`listado`, `detalle`, `ajuste_manual`, `ledger`): `backend/nucleo_herbal/presentacion/backoffice_views/inventario.py` + `backoffice_urls.py`;
+  - ajuste manual desde Next consume backend real y mantiene trazabilidad en ledger vía `AjustarInventarioProducto` + `RepositorioMovimientosInventarioORM`.
+- Límites preservados:
+  1. Django Admin no se elimina y permanece como soporte/fallback;
+  2. no se recalcula stock desde ledger;
+  3. no se introduce multi-almacén, lotes/caducidad, reporting avanzado ni bulk actions complejas.

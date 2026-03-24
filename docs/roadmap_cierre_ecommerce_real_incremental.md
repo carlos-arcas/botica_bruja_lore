@@ -322,8 +322,55 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R07 — Page propia de inventario en backoffice Next
-- **Estado**: `PARTIAL`.
-- **Lectura actual**: existe operación/admin e interfaces de soporte, pero la página propia de inventario dedicada en backoffice Next debe consolidarse como capacidad cerrada.
+- **Estado**: `DONE`.
+- **Lectura actual**: el backoffice Next ya incorpora página propia de inventario (`/admin/inventario`) para operación diaria mínima (listado, detalle, ajuste manual y ledger visible) con backend como fuente de verdad y Django Admin preservado como soporte/fallback.
+
+**Cierre de R07 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Reutilizar patrón de backoffice existente (`/api/v1/backoffice/*` + BFF proxy Next + sesión staff) sin crear micro-backoffice paralelo.
+  2. Exponer API privada mínima de inventario con cuatro operaciones: listado, detalle, ajuste manual y consulta de últimos movimientos.
+  3. Mantener invariantes R01-R06 en backend (enteros, unidad base canónica y rechazo de stock negativo) y registrar ajustes vía ledger `ajuste_manual`.
+  4. Mantener Django Admin de inventario como superficie de soporte y consolidar Next como superficie operativa principal para este bloque.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/presentacion/backoffice_views/inventario.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/__init__.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_urls.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_inventario.py`
+  - `backend/nucleo_herbal/aplicacion/dto_inventario.py`
+  - `backend/nucleo_herbal/aplicacion/puertos/repositorios_movimientos_inventario.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_inventario.py`
+  - `backend/nucleo_herbal/presentacion/tests/test_backoffice_inventario.py`
+  - `tests/nucleo_herbal/test_casos_de_uso_inventario.py`
+  - `tests/nucleo_herbal/infraestructura/test_repositorios_django.py`
+  - `frontend/app/admin/(panel)/inventario/page.tsx`
+  - `frontend/componentes/admin/ModuloInventarioAdmin.tsx`
+  - `frontend/infraestructura/api/backoffice.ts`
+  - `frontend/infraestructura/configuracion/modulosAdmin.ts`
+  - `frontend/tests/backoffice-inventario-ui.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/17_migracion_ecommerce_real.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+- **Comandos ejecutados**:
+  - `python manage.py test backend.nucleo_herbal.presentacion.tests.test_backoffice_inventario tests.nucleo_herbal.test_casos_de_uso_inventario tests.nucleo_herbal.infraestructura.test_repositorios_django`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_backend_readiness.py`
+  - `npm --prefix frontend run clean:tmp-tests && (cd frontend && npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/backoffice-inventario-ui.test.ts infraestructura/api/backoffice.ts infraestructura/configuracion/modulosAdmin.ts componentes/admin/enlacesAdmin.ts && node .tmp-tests/tests/backoffice-inventario-ui.test.js)`
+  - `npm --prefix frontend run test:backoffice-rituales-nav`
+  - `npm --prefix frontend run test:backoffice-flujos`
+  - `npm --prefix frontend run lint`
+  - `npm --prefix frontend run build`
+- **Evidencia**:
+  - nueva ruta Next de backoffice `/admin/inventario` integrada en navegación existente;
+  - listado operativo muestra producto, unidad base, stock, umbral, estado bajo stock y fecha de actualización;
+  - ajuste manual real desde Next consume endpoint privado, respeta validaciones de dominio y actualiza ledger;
+  - detalle de inventario muestra ledger mínimo (tipo, cantidad, unidad, fecha) sin dashboard analítico.
+- **Deuda residual**:
+  1. R08 sigue pendiente para flujo explícito de `restitucion_manual`.
+  2. El ledger visible de R07 no incluye filtros avanzados ni paginación (fuera de alcance).
+  3. No se abre aún multi-almacén, lotes/caducidad ni reporting avanzado.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R08 — Restitución manual de inventario
 - **Estado**: `PLANNED`.
@@ -390,3 +437,5 @@
 
 - **2026-03-24 — R06 (arranque):** estado movido de `PLANNED` a `IN_PROGRESS` antes de implementar ledger mínimo.
 - **2026-03-24 — R06 (cierre):** ledger mínimo de inventario implementado y trazado para alta inicial, ajuste manual y descuento post-pago con idempotencia y visibilidad en Django Admin.
+- **2026-03-24 — R07 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de implementar page propia de inventario en backoffice Next.
+- **2026-03-24 — R07 (cierre):** page propia de inventario en backoffice Next cerrada con listado operativo, ajuste manual y ledger mínimo visible sobre API privada staff.
