@@ -218,6 +218,17 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 
 ## 14. Actualización puntual — Shell comercial global (frontend)
 - **Capacidad**: shell comercial global con cabecera, navegación unificada, acceso visible a cesta y footer editorial.
+
+## 15. Actualización incremental — R02 producto vendible y cantidad comercial
+- Capacidad: **Semántica comercial explícita de producto vendible**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `Producto` incorpora contrato comercial (`unidad_comercial`, `incremento_minimo_venta`, `cantidad_minima_compra`) en dominio, ORM, DTO y serialización pública;
+  - migración compatible con datos existentes mediante defaults conservadores (`ud`, `1`, `1`);
+  - validaciones de backoffice para unidad válida, incremento/mínimo > 0, compatibilidad mínimo↔incremento y coherencia mínima con `InventarioProducto.unidad_base` cuando ya existe inventario.
+- Regla activa:
+  1. aún no se modifica la línea de pedido real ni checkout para compra granel completa (queda en R03/R04);
+  2. las cantidades comerciales siguen siendo enteras (sin floats) y controladas por catálogo cerrado de unidades.
 - **Estado**: DONE.
 - **Ciclo asociado**: evolución ecommerce demo (frontend).
 - **Evidencia técnica**:

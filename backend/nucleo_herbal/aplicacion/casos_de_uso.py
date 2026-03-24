@@ -136,6 +136,9 @@ def _a_producto_resumen(producto: Producto, inventario: InventarioProducto | Non
         formato_comercial=producto.formato_comercial,
         modo_uso=producto.modo_uso,
         categoria_visible=producto.categoria_visible,
+        unidad_comercial=producto.unidad_comercial,
+        incremento_minimo_venta=producto.incremento_minimo_venta,
+        cantidad_minima_compra=producto.cantidad_minima_compra,
         disponible=disponibilidad.disponible,
         estado_disponibilidad=disponibilidad.estado_disponibilidad,
     )
@@ -143,5 +146,4 @@ def _a_producto_resumen(producto: Producto, inventario: InventarioProducto | Non
 
 def _a_intencion_dto(intencion: Intencion) -> IntencionDTO:
     return IntencionDTO(slug=intencion.slug, nombre=intencion.nombre)
-
 

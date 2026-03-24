@@ -44,6 +44,12 @@ class PlantaModelo(models.Model):
 
 
 class ProductoModelo(models.Model):
+    UNIDADES_COMERCIALES_CHOICES = (
+        ("ud", "unidad"),
+        ("g", "gramo"),
+        ("ml", "mililitro"),
+    )
+
     id = models.CharField(primary_key=True, max_length=36)
     sku = models.CharField(unique=True, max_length=40)
     slug = models.SlugField(unique=True, max_length=120)
@@ -60,6 +66,9 @@ class ProductoModelo(models.Model):
     formato_comercial = models.SlugField(max_length=80, blank=True, default="")
     modo_uso = models.SlugField(max_length=80, blank=True, default="")
     categoria_visible = models.SlugField(max_length=80, blank=True, default="")
+    unidad_comercial = models.CharField(max_length=2, choices=UNIDADES_COMERCIALES_CHOICES, default="ud")
+    incremento_minimo_venta = models.PositiveIntegerField(default=1)
+    cantidad_minima_compra = models.PositiveIntegerField(default=1)
     orden_publicacion = models.PositiveIntegerField(default=100)
     planta = models.ForeignKey(
         PlantaModelo,
@@ -78,6 +87,20 @@ class ProductoModelo(models.Model):
         verbose_name_plural = "productos"
         indexes = [
             models.Index(fields=("seccion_publica", "publicado", "slug"), name="nucleo_prod_seccion_public_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(unidad_comercial__in=("ud", "g", "ml")),
+                name="nucleo_producto_unidad_comercial_valida",
+            ),
+            models.CheckConstraint(
+                check=models.Q(incremento_minimo_venta__gt=0),
+                name="nucleo_producto_incremento_minimo_positivo",
+            ),
+            models.CheckConstraint(
+                check=models.Q(cantidad_minima_compra__gt=0),
+                name="nucleo_producto_cantidad_minima_positiva",
+            ),
         ]
 
     def __str__(self) -> str:

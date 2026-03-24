@@ -15,6 +15,7 @@ TIPOS_PRODUCTO_VALIDOS = {
     "packs-y-cestas",
 }
 TIPO_PRODUCTO_HERBAL = "hierbas-a-granel"
+UNIDADES_COMERCIALES_VALIDAS = {"ud", "g", "ml"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +72,9 @@ class Producto:
     formato_comercial: str = ""
     modo_uso: str = ""
     categoria_visible: str = ""
+    unidad_comercial: str = "ud"
+    incremento_minimo_venta: int = 1
+    cantidad_minima_compra: int = 1
 
     def __post_init__(self) -> None:
         if not self.sku.strip():
@@ -89,6 +93,14 @@ class Producto:
             raise ErrorDominio(
                 "Un producto de tipo hierbas-a-granel debe vincularse a una planta."
             )
+        if self.unidad_comercial not in UNIDADES_COMERCIALES_VALIDAS:
+            raise ErrorDominio("El producto requiere una unidad comercial válida.")
+        if not _es_entero_positivo(self.incremento_minimo_venta):
+            raise ErrorDominio("El incremento mínimo de venta debe ser un entero mayor que cero.")
+        if not _es_entero_positivo(self.cantidad_minima_compra):
+            raise ErrorDominio("La cantidad mínima de compra debe ser un entero mayor que cero.")
+        if self.cantidad_minima_compra % self.incremento_minimo_venta != 0:
+            raise ErrorDominio("La cantidad mínima de compra debe ser compatible con el incremento mínimo de venta.")
 
 
 
@@ -103,3 +115,7 @@ def _hay_texto(valor: str | None) -> bool:
     if valor is None:
         return False
     return bool(valor.strip())
+
+
+def _es_entero_positivo(valor: object) -> bool:
+    return isinstance(valor, int) and valor > 0
