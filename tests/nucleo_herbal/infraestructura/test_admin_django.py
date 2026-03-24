@@ -2,6 +2,7 @@ import os
 import unittest
 from datetime import UTC, datetime
 from decimal import Decimal
+from unittest.mock import patch
 
 try:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.configuracion_django.settings")
@@ -107,6 +108,28 @@ class TestAdminNucleoHerbal(TestCase):
             requiere_revision_manual=False,
             observaciones_operativas="Pedido pagado sin incidencia",
         )
+        cls.pedido_real_cancelado_reembolsable = PedidoRealModelo.objects.create(
+            id_pedido="PR-ADMIN-0003",
+            estado="cancelado",
+            estado_pago="pagado",
+            canal_checkout="web_invitado",
+            email_contacto="refund@lore.test",
+            nombre_contacto="Pedido reembolsable",
+            telefono_contacto="600333446",
+            es_invitado=True,
+            moneda="EUR",
+            subtotal=Decimal("22.00"),
+            direccion_entrega={"nombre_destinatario": "Refund", "linea_1": "Calle Luna 3", "codigo_postal": "28003", "ciudad": "Madrid", "provincia": "Madrid", "pais_iso": "ES"},
+            fecha_creacion=datetime(2026, 1, 2, tzinfo=UTC),
+            fecha_pago_confirmado=datetime(2026, 1, 2, 1, tzinfo=UTC),
+            id_externo_pago="cs_admin_refund_ok",
+            incidencia_stock_confirmacion=True,
+            cancelado_operativa_incidencia_stock=True,
+            fecha_cancelacion_operativa=datetime(2026, 1, 2, 2, tzinfo=UTC),
+            motivo_cancelacion_operativa="Cancelación operativa por incidencia de stock",
+            requiere_revision_manual=False,
+            observaciones_operativas="Cancelado y pendiente de reembolso",
+        )
         LineaPedidoRealModelo.objects.create(
             pedido=cls.pedido_real_stock,
             id_producto="prod-admin-1",
@@ -114,6 +137,15 @@ class TestAdminNucleoHerbal(TestCase):
             nombre_producto="Producto inventario admin",
             cantidad=1,
             precio_unitario=Decimal("12.00"),
+            moneda="EUR",
+        )
+        LineaPedidoRealModelo.objects.create(
+            pedido=cls.pedido_real_cancelado_reembolsable,
+            id_producto="prod-admin-1",
+            slug_producto="producto-inventario-admin",
+            nombre_producto="Producto inventario admin",
+            cantidad=1,
+            precio_unitario=Decimal("22.00"),
             moneda="EUR",
         )
 
@@ -290,3 +322,47 @@ class TestAdminNucleoHerbal(TestCase):
         self.pedido_real_sin_incidencia.refresh_from_db()
         self.assertEqual(self.pedido_real_sin_incidencia.estado, "pagado")
         self.assertFalse(self.pedido_real_sin_incidencia.cancelado_operativa_incidencia_stock)
+
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe._obligatoria")
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe.ejecutar_reembolso_total")
+    def test_accion_admin_ejecuta_reembolso_manual_y_muestra_resultado(self, mock_reembolso, obligatoria) -> None:
+        obligatoria.return_value = "ok"
+        mock_reembolso.return_value = {"resultado": "ejecutado", "id_externo_reembolso": "re_admin_123", "detalle": ""}
+        self.client.force_login(self.superusuario)
+
+        response = self.client.post(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {
+                "action": "ejecutar_reembolso_manual_incidencia_stock",
+                "_selected_action": ["PR-ADMIN-0003"],
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.pedido_real_cancelado_reembolsable.refresh_from_db()
+        self.assertEqual(self.pedido_real_cancelado_reembolsable.estado_reembolso, "ejecutado")
+        self.assertEqual(self.pedido_real_cancelado_reembolsable.id_externo_reembolso, "re_admin_123")
+        self.assertContains(response, "reembolsado")
+
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe._obligatoria")
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe.ejecutar_reembolso_total")
+    def test_accion_admin_reembolso_manual_fallido_no_maquilla_exito(self, mock_reembolso, obligatoria) -> None:
+        obligatoria.return_value = "ok"
+        mock_reembolso.return_value = {"resultado": "fallido", "id_externo_reembolso": "re_admin_fail", "detalle": "bank_error"}
+        self.client.force_login(self.superusuario)
+
+        response = self.client.post(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {
+                "action": "ejecutar_reembolso_manual_incidencia_stock",
+                "_selected_action": ["PR-ADMIN-0003"],
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.pedido_real_cancelado_reembolsable.refresh_from_db()
+        self.assertEqual(self.pedido_real_cancelado_reembolsable.estado_reembolso, "fallido")
+        self.assertEqual(self.pedido_real_cancelado_reembolsable.motivo_fallo_reembolso, "bank_error")
+        self.assertContains(response, "rechazo o fallo de reembolso")

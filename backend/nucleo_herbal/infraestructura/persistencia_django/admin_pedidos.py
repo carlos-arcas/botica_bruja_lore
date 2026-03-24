@@ -8,10 +8,16 @@ from django.contrib import admin, messages
 from django.http import HttpRequest
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
-from ...aplicacion.casos_de_uso_backoffice_pedidos import CancelarPedidoOperativoPorIncidenciaStock, MarcarIncidenciaStockRevisada
+from ...aplicacion.casos_de_uso_backoffice_pedidos import (
+    CancelarPedidoOperativoPorIncidenciaStock,
+    MarcarIncidenciaStockRevisada,
+    ReembolsarPedidoCanceladoPorIncidenciaStock,
+)
 from ...dominio.excepciones import ErrorDominio
+from ..pagos_stripe import construir_pasarela_pago_stripe
 from .models_pedidos import LineaPedidoRealModelo, PedidoRealModelo
 from .repositorios_pedidos import RepositorioPedidosORM
+from .transacciones import TransaccionesDjango
 
 
 class IncidenciaStockFilter(admin.SimpleListFilter):
@@ -104,6 +110,49 @@ def cancelar_operativa_incidencia_stock(modeladmin, request: HttpRequest, querys
         )
 
 
+@admin.action(description="Ejecutar reembolso manual por incidencia de stock")
+def ejecutar_reembolso_manual_incidencia_stock(modeladmin, request: HttpRequest, queryset):
+    caso = ReembolsarPedidoCanceladoPorIncidenciaStock(
+        repositorio_pedidos=RepositorioPedidosORM(),
+        pasarela_pago=construir_pasarela_pago_stripe(),
+        transacciones=TransaccionesDjango(),
+    )
+    actor = request.user.get_username() or "admin"
+    reembolsados = 0
+    fallidos = 0
+    omitidos = 0
+    for pedido in queryset:
+        try:
+            resultado = caso.ejecutar(
+                id_pedido=pedido.id_pedido,
+                operation_id=f"admin-refund-inc-stock-{uuid4().hex}",
+                actor=actor,
+            )
+        except (ErrorAplicacionLookup, ErrorDominio):
+            fallidos += 1
+            continue
+        if resultado.estado_reembolso == "ejecutado":
+            reembolsados += 1
+        elif resultado.estado_reembolso == "fallido":
+            fallidos += 1
+        else:
+            omitidos += 1
+    if reembolsados:
+        modeladmin.message_user(request, f"{reembolsados} pedido(s) reembolsado(s) manualmente.", level=messages.SUCCESS)
+    if fallidos:
+        modeladmin.message_user(
+            request,
+            f"{fallidos} pedido(s) con rechazo o fallo de reembolso. Revisa trazabilidad operativa.",
+            level=messages.ERROR,
+        )
+    if omitidos:
+        modeladmin.message_user(
+            request,
+            f"{omitidos} pedido(s) omitido(s): no reembolsables o ya reembolsados.",
+            level=messages.WARNING,
+        )
+
+
 @admin.register(PedidoRealModelo)
 class PedidoRealAdmin(admin.ModelAdmin):
     list_display = (
@@ -115,6 +164,7 @@ class PedidoRealAdmin(admin.ModelAdmin):
         "incidencia_stock_confirmacion",
         "incidencia_stock_revisada",
         "cancelado_operativa_incidencia_stock",
+        "estado_reembolso",
         "requiere_revision_manual",
         "fecha_operativa",
     )
@@ -126,6 +176,7 @@ class PedidoRealAdmin(admin.ModelAdmin):
         "inventario_descontado",
         "requiere_revision_manual",
         "cancelado_operativa_incidencia_stock",
+        "estado_reembolso",
         "canal_checkout",
         "es_invitado",
         "moneda",
@@ -138,7 +189,7 @@ class PedidoRealAdmin(admin.ModelAdmin):
         "direccion_entrega",
     )
     inlines = (LineaPedidoRealInline,)
-    actions = (marcar_incidencia_stock_revisada, cancelar_operativa_incidencia_stock)
+    actions = (marcar_incidencia_stock_revisada, cancelar_operativa_incidencia_stock, ejecutar_reembolso_manual_incidencia_stock)
     fieldsets = (
         (
             "Pedido",
@@ -179,6 +230,10 @@ class PedidoRealAdmin(admin.ModelAdmin):
                     "cancelado_operativa_incidencia_stock",
                     "fecha_cancelacion_operativa",
                     "motivo_cancelacion_operativa",
+                    "estado_reembolso",
+                    "fecha_reembolso",
+                    "id_externo_reembolso",
+                    "motivo_fallo_reembolso",
                     "requiere_revision_manual",
                     "observaciones_operativas",
                 )
@@ -213,4 +268,4 @@ class PedidoRealAdmin(admin.ModelAdmin):
 
     @admin.display(description="Fecha operativa", ordering="fecha_pago_confirmado")
     def fecha_operativa(self, obj: PedidoRealModelo):
-        return obj.fecha_cancelacion_operativa or obj.fecha_revision_incidencia_stock or obj.fecha_pago_confirmado or obj.fecha_creacion
+        return obj.fecha_reembolso or obj.fecha_cancelacion_operativa or obj.fecha_revision_incidencia_stock or obj.fecha_pago_confirmado or obj.fecha_creacion

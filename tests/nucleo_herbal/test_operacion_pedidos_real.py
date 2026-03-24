@@ -1,4 +1,5 @@
 from decimal import Decimal
+from dataclasses import replace
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -6,6 +7,7 @@ from backend.nucleo_herbal.aplicacion.casos_de_uso_backoffice_pedidos import (
     CancelarPedidoOperativoPorIncidenciaStock,
     DatosEnvioBackoffice,
     MarcarPedidoEnviado,
+    ReembolsarPedidoCanceladoPorIncidenciaStock,
 )
 from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.dominio.pedidos import ClientePedido, DireccionEntrega, LineaPedido, Pedido
@@ -111,6 +113,106 @@ class OperacionPedidosRealTests(TestCase):
 
         self.assertTrue(any("backoffice_pedido_cancelacion_operativa_rechazada" in mensaje for mensaje in logs.output))
 
+    def test_reembolso_manual_exitoso_en_cancelado_por_incidencia_stock(self) -> None:
+        pedido = (
+            _pedido_base(estado="pagado", estado_pago="pagado")
+            .registrar_incidencia_stock_confirmacion("Sin stock")
+            .cancelar_operativamente_por_incidencia_stock(_pedido_base().fecha_creacion, "Cancelación operativa")
+        )
+        pedido = replace(pedido, id_externo_pago="cs_test_1", proveedor_pago="stripe")
+        repositorio = Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido), guardar=Mock(side_effect=lambda actual: actual))
+        transacciones = Mock(atomic=Mock(return_value=_ContextoNulo()))
+        pasarela = Mock(ejecutar_reembolso_total=Mock(return_value={"resultado": "ejecutado", "id_externo_reembolso": "re_123", "detalle": ""}))
+
+        caso = ReembolsarPedidoCanceladoPorIncidenciaStock(repositorio_pedidos=repositorio, pasarela_pago=pasarela, transacciones=transacciones)
+        resultado = caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-refund-1", actor="staff")
+
+        self.assertEqual(resultado.estado_reembolso, "ejecutado")
+        self.assertEqual(resultado.id_externo_reembolso, "re_123")
+
+    def test_reembolso_manual_reintento_idempotente_no_duplica_operacion(self) -> None:
+        pedido = (
+            _pedido_base(estado="pagado", estado_pago="pagado")
+            .registrar_incidencia_stock_confirmacion("Sin stock")
+            .cancelar_operativamente_por_incidencia_stock(_pedido_base().fecha_creacion, "Cancelación operativa")
+        )
+        pedido = replace(
+            pedido,
+            id_externo_pago="cs_test_1",
+            estado_reembolso="ejecutado",
+            fecha_reembolso=pedido.fecha_creacion,
+            id_externo_reembolso="re_1",
+        )
+        repositorio = Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido), guardar=Mock())
+        transacciones = Mock(atomic=Mock(return_value=_ContextoNulo()))
+        pasarela = Mock()
+        caso = ReembolsarPedidoCanceladoPorIncidenciaStock(repositorio_pedidos=repositorio, pasarela_pago=pasarela, transacciones=transacciones)
+
+        resultado = caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-refund-idem", actor="staff")
+
+        self.assertEqual(resultado.estado_reembolso, "ejecutado")
+        pasarela.ejecutar_reembolso_total.assert_not_called()
+
+    def test_reembolso_manual_fallido_deja_estado_auditable(self) -> None:
+        pedido = (
+            _pedido_base(estado="pagado", estado_pago="pagado")
+            .registrar_incidencia_stock_confirmacion("Sin stock")
+            .cancelar_operativamente_por_incidencia_stock(_pedido_base().fecha_creacion, "Cancelación operativa")
+        )
+        pedido = replace(pedido, id_externo_pago="cs_test_1", proveedor_pago="stripe")
+        repositorio = Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido), guardar=Mock(side_effect=lambda actual: actual))
+        transacciones = Mock(atomic=Mock(return_value=_ContextoNulo()))
+        pasarela = Mock(ejecutar_reembolso_total=Mock(return_value={"resultado": "fallido", "id_externo_reembolso": "re_fail", "detalle": "insufficient_funds"}))
+        caso = ReembolsarPedidoCanceladoPorIncidenciaStock(repositorio_pedidos=repositorio, pasarela_pago=pasarela, transacciones=transacciones)
+        resultado = caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-refund-fail", actor="staff")
+
+        guardado = repositorio.guardar.call_args.args[0]
+        self.assertEqual(resultado.estado_reembolso, "fallido")
+        self.assertEqual(guardado.estado_reembolso, "fallido")
+        self.assertEqual(guardado.motivo_fallo_reembolso, "insufficient_funds")
+
+    def test_reembolso_manual_rechaza_si_no_esta_cancelado_por_incidencia(self) -> None:
+        pedido = replace(_pedido_base(estado="pagado", estado_pago="pagado"), id_externo_pago="cs_test_1", proveedor_pago="stripe")
+        repositorio = Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido), guardar=Mock())
+        transacciones = Mock(atomic=Mock(return_value=_ContextoNulo()))
+        caso = ReembolsarPedidoCanceladoPorIncidenciaStock(repositorio_pedidos=repositorio, pasarela_pago=Mock(), transacciones=transacciones)
+
+        with self.assertRaisesRegex(ErrorDominio, "cancelado operativamente"):
+            caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-refund-invalid-state", actor="staff")
+
+    def test_reembolso_manual_rechaza_si_falta_referencia_externa_pago(self) -> None:
+        pedido = (
+            _pedido_base(estado="pagado", estado_pago="pagado")
+            .registrar_incidencia_stock_confirmacion("Sin stock")
+            .cancelar_operativamente_por_incidencia_stock(_pedido_base().fecha_creacion, "Cancelación operativa")
+        )
+        repositorio = Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido), guardar=Mock())
+        transacciones = Mock(atomic=Mock(return_value=_ContextoNulo()))
+        caso = ReembolsarPedidoCanceladoPorIncidenciaStock(repositorio_pedidos=repositorio, pasarela_pago=Mock(), transacciones=transacciones)
+
+        with self.assertRaisesRegex(ErrorDominio, "referencia externa de pago"):
+            caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-refund-no-ref", actor="staff")
+
+    def test_reembolso_manual_rechaza_si_pedido_no_esta_pagado(self) -> None:
+        pedido = (
+            _pedido_base(estado="pendiente_pago", estado_pago="pendiente")
+            .registrar_incidencia_stock_confirmacion("Sin stock")
+        )
+        pedido = replace(
+            pedido,
+            estado="cancelado",
+            cancelado_operativa_incidencia_stock=True,
+            fecha_cancelacion_operativa=pedido.fecha_creacion,
+            motivo_cancelacion_operativa="Cancelación operativa",
+            id_externo_pago="cs_test_1",
+        )
+        repositorio = Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido), guardar=Mock())
+        transacciones = Mock(atomic=Mock(return_value=_ContextoNulo()))
+        caso = ReembolsarPedidoCanceladoPorIncidenciaStock(repositorio_pedidos=repositorio, pasarela_pago=Mock(), transacciones=transacciones)
+
+        with self.assertRaisesRegex(ErrorDominio, "pago confirmado"):
+            caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-refund-not-paid", actor="staff")
+
 
 
 def _pedido_base(estado: str = "pendiente_pago", estado_pago: str = "pendiente") -> Pedido:
@@ -129,3 +231,11 @@ def _pedido_base(estado: str = "pendiente_pago", estado_pago: str = "pendiente")
 def _pedido_enviado() -> Pedido:
     pedido = _pedido_base(estado="pagado", estado_pago="pagado").marcar_preparando(_pedido_base().fecha_creacion)
     return pedido.marcar_enviado(fecha_envio=pedido.fecha_creacion, transportista="Correos", codigo_seguimiento="TRK-1")
+
+
+class _ContextoNulo:
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc, tb):
+        return False

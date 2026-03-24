@@ -51,6 +51,10 @@ class RepositorioPedidosORM(RepositorioPedidos):
                 "cancelado_operativa_incidencia_stock": pedido.cancelado_operativa_incidencia_stock,
                 "fecha_cancelacion_operativa": pedido.fecha_cancelacion_operativa,
                 "motivo_cancelacion_operativa": pedido.motivo_cancelacion_operativa,
+                "estado_reembolso": pedido.estado_reembolso,
+                "fecha_reembolso": pedido.fecha_reembolso,
+                "id_externo_reembolso": pedido.id_externo_reembolso or "",
+                "motivo_fallo_reembolso": pedido.motivo_fallo_reembolso,
             },
         )
         modelo.lineas.all().delete()
@@ -147,6 +151,10 @@ class RepositorioPedidosORM(RepositorioPedidos):
             cancelado_operativa_incidencia_stock=modelo.cancelado_operativa_incidencia_stock,
             fecha_cancelacion_operativa=modelo.fecha_cancelacion_operativa,
             motivo_cancelacion_operativa=modelo.motivo_cancelacion_operativa,
+            estado_reembolso=modelo.estado_reembolso,
+            fecha_reembolso=modelo.fecha_reembolso,
+            id_externo_reembolso=modelo.id_externo_reembolso or None,
+            motivo_fallo_reembolso=modelo.motivo_fallo_reembolso,
             notas_cliente=modelo.notas_cliente,
             moneda=modelo.moneda,
         )

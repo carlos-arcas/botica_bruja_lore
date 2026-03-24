@@ -70,6 +70,10 @@ class PedidoRealDTO:
     cancelado_operativa_incidencia_stock: bool
     fecha_cancelacion_operativa: datetime | None
     motivo_cancelacion_operativa: str
+    estado_reembolso: str
+    fecha_reembolso: datetime | None
+    id_externo_reembolso: str | None
+    motivo_fallo_reembolso: str
     email_post_pago_enviado: bool
     cliente: ClientePedidoDTO
     direccion_entrega: DireccionEntregaDTO
