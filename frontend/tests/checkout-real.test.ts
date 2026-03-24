@@ -26,6 +26,7 @@ import {
   construirUrlRetornoPedido,
   crearPedidoPublico,
   iniciarPagoPedido,
+  obtenerTarifaEnvioEstandar,
 } from "../infraestructura/api/pedidos";
 
 function construirDatosBaseCheckoutReal() {
@@ -509,6 +510,25 @@ test("frontend real consume la nueva API de pago", async () => {
     assert.equal(resultado.pago.proveedor_pago, "stripe");
   }
   assert.equal(llamadas[0].endsWith("/api/pedidos/PED-1/iniciar-pago"), true);
+});
+
+test("frontend consulta la tarifa de envío estándar desde backend proxy", async () => {
+  const llamadas: string[] = [];
+  globalThis.fetch = (async (url: string) => {
+    llamadas.push(url);
+    return {
+      ok: true,
+      json: async () => ({ envio_estandar: { metodo_envio: "envio_estandar", moneda: "EUR", importe_envio: "4.90" } }),
+    } as Response;
+  }) as typeof fetch;
+
+  const resultado = await obtenerTarifaEnvioEstandar();
+  assert.equal(resultado.estado, "ok");
+  if (resultado.estado === "ok") {
+    assert.equal(resultado.envio.metodo_envio, "envio_estandar");
+    assert.equal(resultado.envio.importe_envio, "4.90");
+  }
+  assert.equal(llamadas[0].endsWith("/api/pedidos/envio-estandar"), true);
 });
 
 test("frontend construye retornos success y cancel para la pantalla de pedido", () => {
