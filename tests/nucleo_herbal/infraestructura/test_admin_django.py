@@ -131,6 +131,28 @@ class TestAdminNucleoHerbal(TestCase):
             requiere_revision_manual=False,
             observaciones_operativas="Cancelado y pendiente de reembolso",
         )
+        cls.pedido_real_cancelado_restituible = PedidoRealModelo.objects.create(
+            id_pedido="PR-ADMIN-0004",
+            estado="cancelado",
+            estado_pago="pagado",
+            canal_checkout="web_invitado",
+            email_contacto="restock@lore.test",
+            nombre_contacto="Pedido restituible",
+            telefono_contacto="600333447",
+            es_invitado=True,
+            moneda="EUR",
+            subtotal=Decimal("10.00"),
+            direccion_entrega={"nombre_destinatario": "Restock", "linea_1": "Calle Luna 4", "codigo_postal": "28004", "ciudad": "Madrid", "provincia": "Madrid", "pais_iso": "ES"},
+            fecha_creacion=datetime(2026, 1, 2, tzinfo=UTC),
+            fecha_pago_confirmado=datetime(2026, 1, 2, 1, tzinfo=UTC),
+            inventario_descontado=True,
+            incidencia_stock_confirmacion=False,
+            cancelado_operativa_incidencia_stock=True,
+            fecha_cancelacion_operativa=datetime(2026, 1, 2, 2, tzinfo=UTC),
+            motivo_cancelacion_operativa="Cancelación operativa por incidencia de stock",
+            requiere_revision_manual=False,
+            observaciones_operativas="Cancelado y pendiente de restitución",
+        )
         LineaPedidoRealModelo.objects.create(
             pedido=cls.pedido_real_stock,
             id_producto="prod-admin-1",
@@ -147,6 +169,17 @@ class TestAdminNucleoHerbal(TestCase):
             nombre_producto="Producto inventario admin",
             cantidad=1,
             precio_unitario=Decimal("22.00"),
+            moneda="EUR",
+        )
+        LineaPedidoRealModelo.objects.create(
+            pedido=cls.pedido_real_cancelado_restituible,
+            id_producto="prod-admin-1",
+            slug_producto="producto-inventario-admin",
+            nombre_producto="Producto inventario admin",
+            cantidad=2,
+            cantidad_comercial=2,
+            unidad_comercial="ud",
+            precio_unitario=Decimal("5.00"),
             moneda="EUR",
         )
 
@@ -388,3 +421,48 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertEqual(self.pedido_real_cancelado_reembolsable.estado_reembolso, "fallido")
         self.assertEqual(self.pedido_real_cancelado_reembolsable.motivo_fallo_reembolso, "bank_error")
         self.assertContains(response, "rechazo o fallo de reembolso")
+
+    def test_accion_admin_restituye_inventario_manual_y_registra_ledger(self) -> None:
+        self.client.force_login(self.superusuario)
+
+        response = self.client.post(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {
+                "action": "restituir_inventario_manual",
+                "_selected_action": ["PR-ADMIN-0004"],
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.pedido_real_cancelado_restituible.refresh_from_db()
+        self.assertTrue(self.pedido_real_cancelado_restituible.inventario_restituido)
+        self.assertIsNotNone(self.pedido_real_cancelado_restituible.fecha_restitucion_inventario)
+        self.inventario.refresh_from_db()
+        self.assertEqual(self.inventario.cantidad_disponible, 4)
+        self.assertEqual(
+            MovimientoInventarioModelo.objects.filter(
+                inventario=self.inventario,
+                tipo_movimiento="restitucion_manual",
+                referencia="PR-ADMIN-0004",
+            ).count(),
+            1,
+        )
+        self.assertContains(response, "inventario restituido")
+
+    def test_accion_admin_restitucion_manual_omite_no_elegibles(self) -> None:
+        self.client.force_login(self.superusuario)
+
+        response = self.client.post(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {
+                "action": "restituir_inventario_manual",
+                "_selected_action": ["PR-ADMIN-0002"],
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.pedido_real_sin_incidencia.refresh_from_db()
+        self.assertFalse(self.pedido_real_sin_incidencia.inventario_restituido)
+        self.assertContains(response, "omitido")

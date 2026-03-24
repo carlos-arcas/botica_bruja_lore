@@ -358,10 +358,20 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   3. devolver contrato de respuesta mínimo (`id_pedido`, `estado`, `canal`, `email`, `resumen`, `lineas`).
 - Tests añadidos:
   - `tests/nucleo_herbal/test_api_pedidos_demo.py` (creación válida, payload inválido, línea inválida, autenticado sin usuario, consulta existente e inexistente).
-- Trazabilidad del roadmap:
-  - este cambio cubre el alcance oficial del **Prompt 3** (API del flujo);
-  - sigue pendiente Prompt 4 (backoffice mínimo), sin adelantar frontend checkout, confirmación/email ni pagos.
 
+## 42. Actualización incremental — R08 restitución manual de inventario
+- Capacidad: **Restitución manual explícita, auditable e idempotente de inventario**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `Pedido` añade trazabilidad explícita (`inventario_restituido`, `fecha_restitucion_inventario`) para marcar restituciones manuales cerradas;
+  - nuevo caso de uso `RestituirInventarioManualPedidoCancelado` en backoffice aplicación, con política de elegibilidad conservadora y rechazo explícito por estado inválido/sin descuento;
+  - restitución transaccional de stock por `cantidad_comercial` + validación de unidad contra `unidad_base`, registrando movimiento `restitucion_manual` en ledger existente;
+  - Django Admin incorpora la acción `restituir_inventario_manual` sobre pedidos reales y visibilidad del estado de restitución;
+  - pruebas backend de dominio/aplicación/repositorio/admin cubren caso válido, rechazos e idempotencia sin duplicar movimiento.
+- Regla activa:
+  1. la restitución **no** se automatiza en cancelación ni en reembolso;
+  2. solo aplica sobre pedidos cancelados operativamente que sí descontaron inventario y no fueron restituidos antes;
+  3. cualquier intento no elegible se rechaza de forma auditable y sin efectos parciales sobre stock/ledger.
 ## 20. Backoffice mínimo de pedidos demo (Prompt 4 oficial Ciclo 3)
 - Capacidad: **Backoffice/admin mínimo para consulta y gestión operativa básica de `PedidoDemo`**.
 - Estado: **EN_PROGRESO**.

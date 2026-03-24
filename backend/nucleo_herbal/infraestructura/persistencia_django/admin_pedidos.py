@@ -12,9 +12,11 @@ from ...aplicacion.casos_de_uso_backoffice_pedidos import (
     CancelarPedidoOperativoPorIncidenciaStock,
     MarcarIncidenciaStockRevisada,
     ReembolsarPedidoCanceladoPorIncidenciaStock,
+    RestituirInventarioManualPedidoCancelado,
 )
 from ...dominio.excepciones import ErrorDominio
 from ..pagos_stripe import construir_pasarela_pago_stripe
+from .repositorios_inventario import RepositorioInventarioORM, RepositorioMovimientosInventarioORM
 from .models_pedidos import LineaPedidoRealModelo, PedidoRealModelo
 from .repositorios_pedidos import RepositorioPedidosORM
 from .transacciones import TransaccionesDjango
@@ -153,6 +155,48 @@ def ejecutar_reembolso_manual_incidencia_stock(modeladmin, request: HttpRequest,
         )
 
 
+@admin.action(description="Restituir inventario manualmente (pedido cancelado)")
+def restituir_inventario_manual(modeladmin, request: HttpRequest, queryset):
+    caso = RestituirInventarioManualPedidoCancelado(
+        repositorio_pedidos=RepositorioPedidosORM(),
+        repositorio_inventario=RepositorioInventarioORM(),
+        repositorio_movimientos=RepositorioMovimientosInventarioORM(),
+        transacciones=TransaccionesDjango(),
+    )
+    actor = request.user.get_username() or "admin"
+    restituidos = 0
+    omitidos = 0
+    for pedido in queryset:
+        if pedido.inventario_restituido:
+            omitidos += 1
+            continue
+        try:
+            resultado = caso.ejecutar(
+                id_pedido=pedido.id_pedido,
+                operation_id=f"admin-restitucion-manual-{uuid4().hex}",
+                actor=actor,
+            )
+        except (ErrorAplicacionLookup, ErrorDominio):
+            omitidos += 1
+            continue
+        if resultado.inventario_restituido:
+            restituidos += 1
+        else:
+            omitidos += 1
+    if restituidos:
+        modeladmin.message_user(
+            request,
+            f"{restituidos} pedido(s) con inventario restituido manualmente.",
+            level=messages.SUCCESS,
+        )
+    if omitidos:
+        modeladmin.message_user(
+            request,
+            f"{omitidos} pedido(s) omitido(s): no elegibles o ya restituidos.",
+            level=messages.WARNING,
+        )
+
+
 @admin.register(PedidoRealModelo)
 class PedidoRealAdmin(admin.ModelAdmin):
     list_display = (
@@ -165,6 +209,7 @@ class PedidoRealAdmin(admin.ModelAdmin):
         "incidencia_stock_revisada",
         "cancelado_operativa_incidencia_stock",
         "estado_reembolso",
+        "inventario_restituido",
         "requiere_revision_manual",
         "fecha_operativa",
     )
@@ -177,6 +222,7 @@ class PedidoRealAdmin(admin.ModelAdmin):
         "requiere_revision_manual",
         "cancelado_operativa_incidencia_stock",
         "estado_reembolso",
+        "inventario_restituido",
         "canal_checkout",
         "es_invitado",
         "moneda",
@@ -189,7 +235,12 @@ class PedidoRealAdmin(admin.ModelAdmin):
         "direccion_entrega",
     )
     inlines = (LineaPedidoRealInline,)
-    actions = (marcar_incidencia_stock_revisada, cancelar_operativa_incidencia_stock, ejecutar_reembolso_manual_incidencia_stock)
+    actions = (
+        marcar_incidencia_stock_revisada,
+        cancelar_operativa_incidencia_stock,
+        ejecutar_reembolso_manual_incidencia_stock,
+        restituir_inventario_manual,
+    )
     fieldsets = (
         (
             "Pedido",
@@ -234,6 +285,8 @@ class PedidoRealAdmin(admin.ModelAdmin):
                     "fecha_reembolso",
                     "id_externo_reembolso",
                     "motivo_fallo_reembolso",
+                    "inventario_restituido",
+                    "fecha_restitucion_inventario",
                     "requiere_revision_manual",
                     "observaciones_operativas",
                 )

@@ -318,6 +318,20 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Estado técnico: **DONE** para superficie propia de inventario en backoffice Next.
 - Superficie operativa principal:
   - nueva ruta `frontend/app/admin/(panel)/inventario/page.tsx`;
+
+## Actualización restitución manual de inventario v1.4 (R08)
+- Estado técnico: **DONE** para restitución manual explícita e idempotente de inventario en pedidos cancelados operativamente.
+- Operativa activa:
+  - caso de uso dedicado en backoffice (`RestituirInventarioManualPedidoCancelado`) con validación de elegibilidad conservadora;
+  - solo permite restituir cuando el pedido ya descontó inventario, está cancelado operativamente y no fue restituido antes;
+  - incrementa stock actual por `cantidad_comercial` y registra `restitucion_manual` en ledger mínimo por línea;
+  - reintentos idempotentes no duplican movimiento ni vuelven a incrementar stock.
+- Superficie activa:
+  - acción Django Admin en pedidos reales: **Restituir inventario manualmente (pedido cancelado)**.
+- Fuera de alcance preservado:
+  - sin automatización al cancelar o reembolsar;
+  - sin reglas complejas de devoluciones;
+  - sin cambios en checkout público, fiscalidad o logística.
   - navegación integrada con módulos existentes del panel admin (`Inventario` visible junto a productos/pedidos/rituales).
 - API privada mínima usada por Next:
   - `GET /api/v1/backoffice/inventario/` (listado operativo);

@@ -76,6 +76,18 @@ class TestRepositorioPedidosReal(DjangoTestCase):
         self.assertEqual(fallido.estado_reembolso, "fallido")
         self.assertEqual(fallido.motivo_fallo_reembolso, "error_manual")
 
+    def test_persiste_marca_restitucion_manual_inventario(self) -> None:
+        repo = RepositorioPedidosORM()
+        pedido = _pedido_base(id_pedido="PED-20260319010101-test0005", estado="pagado", estado_pago="pagado")
+        pedido = repo.guardar(pedido.registrar_incidencia_stock_confirmacion("Incidencia detectada"))
+        pedido = repo.guardar(pedido.cancelar_operativamente_por_incidencia_stock(datetime.now(tz=UTC), "Cancelación operativa"))
+        pedido = repo.guardar(replace(pedido, inventario_descontado=True, incidencia_stock_confirmacion=False))
+
+        restituido = repo.guardar(pedido.marcar_inventario_restituido(datetime.now(tz=UTC)))
+
+        self.assertTrue(restituido.inventario_restituido)
+        self.assertIsNotNone(restituido.fecha_restitucion_inventario)
+
 
 def _pedido_base(id_pedido: str, estado: str = "pendiente_pago", estado_pago: str = "pendiente", canal_checkout: str = "web_invitado", id_cliente: str | None = None, es_invitado: bool = True) -> Pedido:
     return Pedido(

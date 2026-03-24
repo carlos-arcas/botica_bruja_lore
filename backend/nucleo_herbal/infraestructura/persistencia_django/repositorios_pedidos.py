@@ -57,6 +57,8 @@ class RepositorioPedidosORM(RepositorioPedidos):
                 "fecha_reembolso": pedido.fecha_reembolso,
                 "id_externo_reembolso": pedido.id_externo_reembolso or "",
                 "motivo_fallo_reembolso": pedido.motivo_fallo_reembolso,
+                "inventario_restituido": pedido.inventario_restituido,
+                "fecha_restitucion_inventario": pedido.fecha_restitucion_inventario,
             },
         )
         modelo.lineas.all().delete()
@@ -157,6 +159,8 @@ class RepositorioPedidosORM(RepositorioPedidos):
             fecha_reembolso=modelo.fecha_reembolso,
             id_externo_reembolso=modelo.id_externo_reembolso or None,
             motivo_fallo_reembolso=modelo.motivo_fallo_reembolso,
+            inventario_restituido=modelo.inventario_restituido,
+            fecha_restitucion_inventario=modelo.fecha_restitucion_inventario,
             notas_cliente=modelo.notas_cliente,
             moneda=modelo.moneda,
             metodo_envio=modelo.metodo_envio,

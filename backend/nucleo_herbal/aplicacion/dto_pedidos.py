@@ -78,6 +78,8 @@ class PedidoRealDTO:
     fecha_reembolso: datetime | None
     id_externo_reembolso: str | None
     motivo_fallo_reembolso: str
+    inventario_restituido: bool
+    fecha_restitucion_inventario: datetime | None
     email_post_pago_enviado: bool
     cliente: ClientePedidoDTO
     direccion_entrega: DireccionEntregaDTO
