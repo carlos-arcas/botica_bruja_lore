@@ -139,6 +139,12 @@ def _payload_checkout_session(pedido: Pedido, config: ConfiguracionStripe) -> di
         payload[f"{base}[price_data][currency]"] = linea.moneda.lower()
         payload[f"{base}[price_data][unit_amount]"] = str(int(linea.precio_unitario * 100))
         payload[f"{base}[price_data][product_data][name]"] = linea.nombre_producto
+    indice_envio = len(pedido.lineas)
+    base_envio = f"line_items[{indice_envio}]"
+    payload[f"{base_envio}[quantity]"] = "1"
+    payload[f"{base_envio}[price_data][currency]"] = pedido.moneda.lower()
+    payload[f"{base_envio}[price_data][unit_amount]"] = str(int(pedido.importe_envio * 100))
+    payload[f"{base_envio}[price_data][product_data][name]"] = "Envío estándar"
     return payload
 
 
@@ -215,7 +221,7 @@ def _extra(operation_id: str, pedido: Pedido, id_externo_pago: str, resultado: s
         "proveedor_pago": "stripe",
         "id_externo_pago": id_externo_pago,
         "moneda": pedido.moneda,
-        "importe": str(pedido.subtotal),
+        "importe": str(pedido.total),
         "estado_anterior": pedido.estado,
         "estado_nuevo": pedido.estado,
         "tipo_evento": "create_checkout_session",

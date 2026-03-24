@@ -14,6 +14,7 @@ from .casos_de_uso import ErrorAplicacionLookup
 from .dto_pedidos import ClientePedidoDTO, DireccionEntregaDTO, ExpedicionPedidoDTO, LineaPedidoRealDTO, PedidoRealDTO
 from .errores_pedidos import ErrorStockPedido, LineaStockError
 from .puertos.repositorios_cuentas_cliente import RepositorioCuentasCliente
+from .puertos.proveedor_envio import PuertoProveedorEnvio
 from .puertos.repositorios_inventario import RepositorioInventario
 from .puertos.repositorios_pedidos import RepositorioPedidos
 
@@ -25,8 +26,10 @@ class RegistrarPedido:
     repositorio_pedidos: RepositorioPedidos
     repositorio_cuentas_cliente: RepositorioCuentasCliente
     repositorio_inventario: RepositorioInventario
+    proveedor_envio: PuertoProveedorEnvio
 
     def ejecutar(self, payload: PayloadPedido, operation_id: str) -> PedidoRealDTO:
+        importe_envio = self.proveedor_envio.resolver_importe_envio_estandar(moneda=payload.moneda, operation_id=operation_id)
         pedido = Pedido(
             id_pedido=_generar_id_pedido(),
             estado="pendiente_pago",
@@ -37,6 +40,8 @@ class RegistrarPedido:
             direccion_entrega=self._resolver_direccion_entrega(payload, operation_id),
             notas_cliente=payload.notas_cliente,
             moneda=payload.moneda,
+            metodo_envio="envio_estandar",
+            importe_envio=importe_envio,
         )
         self._validar_stock_disponible(pedido, operation_id)
         logger.info("pedido_real_registro_iniciado", extra=_extra_log(operation_id, pedido))
@@ -143,7 +148,10 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
         estado_pago=pedido.estado_pago,
         canal_checkout=pedido.canal_checkout,
         moneda=pedido.moneda,
+        metodo_envio=pedido.metodo_envio,
         subtotal=pedido.subtotal,
+        importe_envio=pedido.importe_envio,
+        total=pedido.total,
         proveedor_pago=pedido.proveedor_pago,
         id_externo_pago=pedido.id_externo_pago,
         url_pago=pedido.url_pago,
@@ -212,6 +220,9 @@ def _extra_log(operation_id: str, pedido: Pedido) -> dict[str, object]:
         "email_contacto": pedido.cliente.email,
         "numero_lineas": len(pedido.lineas),
         "subtotal": str(pedido.subtotal),
+        "metodo_envio": pedido.metodo_envio,
+        "importe_envio": str(pedido.importe_envio),
+        "total": str(pedido.total),
         "estado_inicial": pedido.estado,
         "id_pedido": pedido.id_pedido,
     }
