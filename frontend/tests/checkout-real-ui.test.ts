@@ -49,9 +49,10 @@ test("checkout real deriva a /encargo preservando la selección rica cuando est�
 });
 
 test("checkout real desactiva el CTA engañoso de pedido real cuando el flujo está bloqueado", () => {
-  assert.equal(archivoFlujo.includes("disabled={enviando || checkoutBloqueado}"), true);
+  assert.equal(archivoFlujo.includes("disabled={enviando || checkoutBloqueado || importeEnvioApi === null}"), true);
   assert.equal(archivoFlujo.includes("Pedido real bloqueado por líneas no convertibles"), true);
   assert.equal(archivoFlujo.includes("ayuda-checkout-bloqueado"), true);
+  assert.equal(archivoFlujo.includes("obtenerTarifaEnvioEstandar"), true);
 });
 
 test("checkout real separa el modo múltiple del selector único heredado", () => {

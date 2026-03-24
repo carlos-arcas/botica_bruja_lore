@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import CuentaClienteModelo, DireccionCuentaClienteModelo, ProductoModelo
 from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
@@ -150,3 +150,13 @@ class PedidoCheckoutRealDireccionesTests(TestCase):
         pedido = respuesta.json()["pedido"]
         self.assertTrue(pedido["cliente"]["es_invitado"])
         self.assertEqual(pedido["direccion_entrega"]["linea_1"], "Calle Sol 1")
+
+    @override_settings(ENVIO_ESTANDAR_IMPORTE="6.25")
+    def test_detalle_envio_estandar_usa_importe_backend_configurado(self):
+        respuesta = self.client.get("/api/v1/pedidos/envio-estandar/?moneda=eur")
+
+        self.assertEqual(respuesta.status_code, 200)
+        payload = respuesta.json()["envio_estandar"]
+        self.assertEqual(payload["metodo_envio"], "envio_estandar")
+        self.assertEqual(payload["moneda"], "EUR")
+        self.assertEqual(payload["importe_envio"], "6.25")
