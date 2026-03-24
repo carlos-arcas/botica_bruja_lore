@@ -11,12 +11,22 @@ from django.http import HttpRequest, JsonResponse
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
 from ...aplicacion.errores_pedidos import ErrorStockPedido
 from ...dominio.excepciones import ErrorDominio
+from ...infraestructura.proveedor_envio_estandar import ProveedorEnvioEstandarFijo
 from .dependencias import construir_servicios_publicos_pedidos
 from .payload_pedidos import construir_payload_pedido
 from .pedidos_serializadores import serializar_pedido
 from .respuestas_json import json_conflicto, json_no_encontrado, json_validacion
 
 logger = logging.getLogger(__name__)
+
+
+def detalle_envio_estandar(request: HttpRequest) -> JsonResponse:
+    if request.method != "GET":
+        return JsonResponse({"detalle": "Método no permitido."}, status=405)
+    operation_id = request.headers.get("X-Operation-Id", "").strip() or str(uuid4())
+    moneda = request.GET.get("moneda", "EUR").strip().upper() or "EUR"
+    importe = ProveedorEnvioEstandarFijo().resolver_importe_envio_estandar(moneda=moneda, operation_id=operation_id)
+    return JsonResponse({"envio_estandar": {"metodo_envio": "envio_estandar", "moneda": moneda, "importe_envio": str(importe)}})
 
 
 def crear_pedido(request: HttpRequest) -> JsonResponse:

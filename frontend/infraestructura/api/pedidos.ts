@@ -80,6 +80,12 @@ export type LineaErrorStockPedido = {
   cantidad_disponible?: number;
 };
 
+export type TarifaEnvioEstandar = {
+  metodo_envio: string;
+  moneda: string;
+  importe_envio: string;
+};
+
 export type ErrorPedidoApi = {
   estado: "error";
   mensaje: string;
@@ -105,6 +111,11 @@ export async function iniciarPagoPedido(idPedido: string): Promise<{ estado: "ok
   const idNormalizado = idPedido.trim();
   if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
   return enviarPago(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}/iniciar-pago`, { method: "POST" });
+}
+
+export async function obtenerTarifaEnvioEstandar(): Promise<{ estado: "ok"; envio: TarifaEnvioEstandar } | ErrorPedidoApi> {
+  const respuesta = await enviar(`${API_BASE_URL}/envio-estandar`, { method: "GET", cache: "no-store" });
+  return respuesta.estado === "error" ? respuesta : { estado: "ok", envio: respuesta.data.envio_estandar as TarifaEnvioEstandar };
 }
 
 export function construirUrlRetornoPedido(idPedido: string, retorno: Exclude<RetornoPago, null>, sessionId?: string | null): string {
