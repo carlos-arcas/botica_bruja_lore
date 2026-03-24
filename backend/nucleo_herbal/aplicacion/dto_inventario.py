@@ -15,3 +15,14 @@ class InventarioProductoDTO:
     bajo_stock: bool
     fecha_creacion: datetime | None
     fecha_actualizacion: datetime | None
+
+
+@dataclass(frozen=True, slots=True)
+class MovimientoInventarioDTO:
+    id_producto: str
+    tipo_movimiento: str
+    cantidad: int
+    unidad_base: str
+    referencia: str
+    operation_id: str
+    fecha_creacion: datetime | None

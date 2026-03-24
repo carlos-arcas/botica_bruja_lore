@@ -10,7 +10,7 @@ from ..dominio.excepciones import ErrorDominio
 from ..dominio.inventario import InventarioProducto
 from ..dominio.inventario_movimientos import MovimientoInventario
 from .casos_de_uso import ErrorAplicacionLookup
-from .dto_inventario import InventarioProductoDTO
+from .dto_inventario import InventarioProductoDTO, MovimientoInventarioDTO
 from .puertos.repositorios import RepositorioProductos
 from .puertos.repositorios_inventario import RepositorioInventario
 from .puertos.repositorios_movimientos_inventario import RepositorioMovimientosInventario
@@ -111,6 +111,19 @@ class ListarInventarioOperativo:
         return tuple(_a_dto(inventario) for inventario in inventarios)
 
 
+@dataclass(slots=True)
+class ObtenerMovimientosInventarioProducto:
+    repositorio_inventario: RepositorioInventario
+    repositorio_movimientos: RepositorioMovimientosInventario
+
+    def ejecutar(self, *, id_producto: str, limite: int = 10) -> tuple[MovimientoInventarioDTO, ...]:
+        inventario = self.repositorio_inventario.obtener_por_id_producto(id_producto)
+        if inventario is None:
+            raise ErrorAplicacionLookup(f"Inventario no encontrado para producto: {id_producto}")
+        movimientos = self.repositorio_movimientos.listar_por_producto(id_producto, limite=limite)
+        return tuple(_a_movimiento_dto(movimiento) for movimiento in movimientos)
+
+
 
 def _a_dto(inventario: InventarioProducto) -> InventarioProductoDTO:
     return InventarioProductoDTO(
@@ -121,6 +134,18 @@ def _a_dto(inventario: InventarioProducto) -> InventarioProductoDTO:
         bajo_stock=inventario.bajo_stock,
         fecha_creacion=inventario.fecha_creacion,
         fecha_actualizacion=inventario.fecha_actualizacion,
+    )
+
+
+def _a_movimiento_dto(movimiento: MovimientoInventario) -> MovimientoInventarioDTO:
+    return MovimientoInventarioDTO(
+        id_producto=movimiento.id_producto,
+        tipo_movimiento=movimiento.tipo_movimiento,
+        cantidad=movimiento.cantidad,
+        unidad_base=movimiento.unidad_base,
+        referencia=movimiento.referencia,
+        operation_id=movimiento.operation_id,
+        fecha_creacion=movimiento.fecha_creacion,
     )
 
 

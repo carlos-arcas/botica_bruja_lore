@@ -9,7 +9,7 @@ from ...aplicacion.puertos.repositorios_movimientos_inventario import Repositori
 from ...dominio.excepciones import ErrorDominio
 from ...dominio.inventario import InventarioProducto
 from ...dominio.inventario_movimientos import MovimientoInventario
-from .mapeadores_inventario import a_datos_inventario, a_datos_movimiento, a_inventario
+from .mapeadores_inventario import a_datos_inventario, a_datos_movimiento, a_inventario, a_movimiento
 from .models_inventario import InventarioProductoModelo, MovimientoInventarioModelo
 
 
@@ -81,3 +81,13 @@ class RepositorioMovimientosInventarioORM(RepositorioMovimientosInventario):
             if movimiento.operation_id:
                 return
             raise ErrorDominio("No fue posible registrar el movimiento de inventario.") from error
+
+    def listar_por_producto(self, id_producto: str, *, limite: int = 10) -> tuple[MovimientoInventario, ...]:
+        if limite <= 0:
+            return ()
+        queryset = (
+            MovimientoInventarioModelo.objects.select_related("inventario")
+            .filter(inventario__producto_id=id_producto)
+            .order_by("-fecha_creacion", "-id")[:limite]
+        )
+        return tuple(a_movimiento(modelo) for modelo in queryset)
