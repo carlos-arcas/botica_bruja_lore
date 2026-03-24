@@ -11,7 +11,9 @@ from .casos_de_uso_pedidos import _a_dto
 from .dto_pedidos import PedidoRealDTO
 from ..dominio.excepciones import ErrorDominio
 from .puertos.notificador_pedidos import NotificadorPostPagoPedido
+from .puertos.pasarela_pago import PuertoPasarelaPago
 from .puertos.repositorios_pedidos import RepositorioPedidos
+from .puertos.transacciones import PuertoTransacciones
 
 logger = logging.getLogger(__name__)
 
@@ -137,8 +139,67 @@ class CancelarPedidoOperativoPorIncidenciaStock:
         return _a_dto(persistido)
 
 
+@dataclass(slots=True)
+class ReembolsarPedidoCanceladoPorIncidenciaStock:
+    repositorio_pedidos: RepositorioPedidos
+    pasarela_pago: PuertoPasarelaPago
+    transacciones: PuertoTransacciones
+
+    def ejecutar(self, id_pedido: str, operation_id: str, actor: str) -> PedidoRealDTO:
+        with self.transacciones.atomic():
+            pedido = _obtener_pedido_para_actualizar(self.repositorio_pedidos, id_pedido)
+            logger.info("backoffice_pedido_reembolso_manual_intento", extra=_extra_log(operation_id, actor, pedido, pedido, "reembolso_manual", "intento"))
+            if pedido.estado_reembolso == "ejecutado":
+                logger.info("backoffice_pedido_reembolso_manual_reintento_idempotente", extra=_extra_log(operation_id, actor, pedido, pedido, "reembolso_manual", "idempotente"))
+                return _a_dto(pedido)
+            try:
+                pedido.validar_reembolso_manual()
+            except ErrorDominio as error:
+                logger.warning(
+                    "backoffice_pedido_reembolso_manual_invalido",
+                    extra=_extra_log(operation_id, actor, pedido, pedido, "reembolso_manual", "rechazado", str(error)),
+                )
+                raise
+            respuesta = self.pasarela_pago.ejecutar_reembolso_total(
+                id_externo_pago=pedido.id_externo_pago or "",
+                moneda=pedido.moneda,
+                importe=pedido.subtotal,
+                operation_id=operation_id,
+            )
+            if respuesta["resultado"] == "ejecutado":
+                actualizado = pedido.registrar_reembolso_exitoso(
+                    fecha_reembolso=datetime.now(tz=UTC),
+                    id_externo_reembolso=str(respuesta["id_externo_reembolso"]),
+                )
+                persistido = self.repositorio_pedidos.guardar(actualizado)
+                logger.info("backoffice_pedido_reembolso_manual_ok", extra=_extra_log(operation_id, actor, pedido, persistido, "reembolso_manual", "ok"))
+                return _a_dto(persistido)
+            actualizado = pedido.registrar_fallo_reembolso(motivo_fallo=str(respuesta.get("detalle", "")))
+            persistido = self.repositorio_pedidos.guardar(actualizado)
+            logger.error(
+                "backoffice_pedido_reembolso_manual_fallido",
+                extra=_extra_log(
+                    operation_id,
+                    actor,
+                    pedido,
+                    persistido,
+                    "reembolso_manual",
+                    "fallido",
+                    str(respuesta.get("detalle", "")),
+                ),
+            )
+            return _a_dto(persistido)
+
+
 def _obtener_pedido(repositorio: RepositorioPedidos, id_pedido: str):
     pedido = repositorio.obtener_por_id(id_pedido)
+    if pedido is None:
+        raise ErrorAplicacionLookup(f"Pedido real no encontrado: {id_pedido}")
+    return pedido
+
+
+def _obtener_pedido_para_actualizar(repositorio: RepositorioPedidos, id_pedido: str):
+    pedido = repositorio.obtener_por_id_para_actualizar(id_pedido)
     if pedido is None:
         raise ErrorAplicacionLookup(f"Pedido real no encontrado: {id_pedido}")
     return pedido

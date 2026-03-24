@@ -41,6 +41,10 @@ class PedidoRealModelo(models.Model):
     cancelado_operativa_incidencia_stock = models.BooleanField(default=False)
     fecha_cancelacion_operativa = models.DateTimeField(null=True, blank=True)
     motivo_cancelacion_operativa = models.CharField(max_length=280, blank=True, default="")
+    estado_reembolso = models.CharField(max_length=24, default="no_iniciado")
+    fecha_reembolso = models.DateTimeField(null=True, blank=True)
+    id_externo_reembolso = models.CharField(max_length=128, blank=True, default="")
+    motivo_fallo_reembolso = models.CharField(max_length=280, blank=True, default="")
 
     class Meta:
         db_table = "nucleo_pedido"

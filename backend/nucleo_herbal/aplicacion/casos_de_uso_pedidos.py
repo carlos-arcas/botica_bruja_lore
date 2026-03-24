@@ -155,6 +155,10 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
         cancelado_operativa_incidencia_stock=pedido.cancelado_operativa_incidencia_stock,
         fecha_cancelacion_operativa=pedido.fecha_cancelacion_operativa,
         motivo_cancelacion_operativa=pedido.motivo_cancelacion_operativa,
+        estado_reembolso=pedido.estado_reembolso,
+        fecha_reembolso=pedido.fecha_reembolso,
+        id_externo_reembolso=pedido.id_externo_reembolso,
+        motivo_fallo_reembolso=pedido.motivo_fallo_reembolso,
         email_post_pago_enviado=pedido.email_post_pago_enviado,
         cliente=ClientePedidoDTO(
             email=pedido.cliente.email,

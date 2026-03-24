@@ -63,6 +63,34 @@ class PasarelaPagoStripe(PuertoPasarelaPago):
         moneda = str(respuesta.get("currency", "eur")).upper()
         return estado, importe, moneda
 
+    def ejecutar_reembolso_total(self, *, id_externo_pago: str, moneda: str, importe: Decimal, operation_id: str) -> dict[str, object]:
+        sesion = self._get(f"/checkout/sessions/{parse.quote(id_externo_pago)}")
+        payment_intent = str(sesion.get("payment_intent", "")).strip()
+        if not payment_intent:
+            raise ErrorDominio("Stripe no devolvió payment_intent para ejecutar el reembolso manual.")
+        payload = {
+            "payment_intent": payment_intent,
+            "metadata[operation]": "reembolso_manual_incidencia_stock",
+            "metadata[id_externo_pago]": id_externo_pago,
+        }
+        respuesta = self._post("/refunds", payload)
+        estado = str(respuesta.get("status", "")).strip()
+        id_externo_reembolso = str(respuesta.get("id", "")).strip()
+        if not id_externo_reembolso:
+            raise ErrorDominio("Stripe no devolvió referencia externa de reembolso.")
+        if estado in {"succeeded", "pending"}:
+            logger.info(
+                "pago_real_reembolso_manual_ok",
+                extra=_extra_reembolso(operation_id, id_externo_pago, id_externo_reembolso, moneda, importe, "ok"),
+            )
+            return {"resultado": "ejecutado", "id_externo_reembolso": id_externo_reembolso, "detalle": ""}
+        detalle = str(respuesta.get("failure_reason", "")).strip() or f"Estado de reembolso no exitoso: {estado or 'desconocido'}."
+        logger.warning(
+            "pago_real_reembolso_manual_rechazado",
+            extra=_extra_reembolso(operation_id, id_externo_pago, id_externo_reembolso, moneda, importe, "rechazado", detalle),
+        )
+        return {"resultado": "fallido", "id_externo_reembolso": id_externo_reembolso, "detalle": detalle}
+
     def _post(self, path: str, payload: dict[str, str]) -> dict[str, object]:
         data = parse.urlencode(payload).encode("utf-8")
         return self._request_json(path, data)
@@ -192,4 +220,27 @@ def _extra(operation_id: str, pedido: Pedido, id_externo_pago: str, resultado: s
         "estado_nuevo": pedido.estado,
         "tipo_evento": "create_checkout_session",
         "resultado": resultado,
+    }
+
+
+def _extra_reembolso(
+    operation_id: str,
+    id_externo_pago: str,
+    id_externo_reembolso: str,
+    moneda: str,
+    importe: Decimal,
+    resultado: str,
+    error: str = "",
+) -> dict[str, object]:
+    return {
+        "operation_id": operation_id,
+        "pedido_id": None,
+        "proveedor_pago": "stripe",
+        "id_externo_pago": id_externo_pago,
+        "id_externo_reembolso": id_externo_reembolso,
+        "moneda": moneda,
+        "importe": str(importe),
+        "tipo_evento": "manual_refund",
+        "resultado": resultado,
+        "error": error,
     }

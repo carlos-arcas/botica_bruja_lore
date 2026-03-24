@@ -21,3 +21,7 @@ class PuertoPasarelaPago(ABC):
     @abstractmethod
     def consultar_estado_externo(self, id_externo_pago: str) -> tuple[str, Decimal, str]:
         """Consulta un estado externo canónico si hiciera falta."""
+
+    @abstractmethod
+    def ejecutar_reembolso_total(self, *, id_externo_pago: str, moneda: str, importe: Decimal, operation_id: str) -> dict[str, object]:
+        """Ejecuta un reembolso total explícito y devuelve resultado normalizado."""

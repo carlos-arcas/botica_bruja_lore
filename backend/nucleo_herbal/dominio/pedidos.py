@@ -11,6 +11,7 @@ from .excepciones import ErrorDominio
 
 EstadoPedido = Literal["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado"]
 EstadoPago = Literal["pendiente", "requiere_accion", "pagado", "fallido", "cancelado"]
+EstadoReembolso = Literal["no_iniciado", "fallido", "ejecutado"]
 CanalCheckout = Literal["web_invitado", "web_autenticado", "backoffice"]
 ProveedorPago = Literal["stripe"]
 
@@ -23,6 +24,7 @@ ESTADOS_PEDIDO_VALIDOS: tuple[EstadoPedido, ...] = (
     "cancelado",
 )
 ESTADOS_PAGO_VALIDOS: tuple[EstadoPago, ...] = ("pendiente", "requiere_accion", "pagado", "fallido", "cancelado")
+ESTADOS_REEMBOLSO_VALIDOS: tuple[EstadoReembolso, ...] = ("no_iniciado", "fallido", "ejecutado")
 CANALES_CHECKOUT_VALIDOS: tuple[CanalCheckout, ...] = ("web_invitado", "web_autenticado", "backoffice")
 RUTA_API_PEDIDOS = "/api/v1/pedidos/"
 
@@ -134,6 +136,10 @@ class Pedido:
     cancelado_operativa_incidencia_stock: bool = False
     fecha_cancelacion_operativa: datetime | None = None
     motivo_cancelacion_operativa: str = ""
+    estado_reembolso: EstadoReembolso = "no_iniciado"
+    fecha_reembolso: datetime | None = None
+    id_externo_reembolso: str | None = None
+    motivo_fallo_reembolso: str = ""
 
     def __post_init__(self) -> None:
         if not self.id_pedido.strip():
@@ -142,6 +148,8 @@ class Pedido:
             raise ErrorDominio("El pedido requiere estado real válido.")
         if self.estado_pago not in ESTADOS_PAGO_VALIDOS:
             raise ErrorDominio("El pedido requiere estado de pago válido.")
+        if self.estado_reembolso not in ESTADOS_REEMBOLSO_VALIDOS:
+            raise ErrorDominio("El pedido requiere estado de reembolso válido.")
         if self.canal_checkout not in CANALES_CHECKOUT_VALIDOS:
             raise ErrorDominio("El pedido requiere canal de checkout válido.")
         if not self.lineas:
@@ -168,6 +176,16 @@ class Pedido:
             raise ErrorDominio("La fecha de cancelación operativa requiere cancelado_operativa_incidencia_stock=True.")
         if self.motivo_cancelacion_operativa.strip() and not self.cancelado_operativa_incidencia_stock:
             raise ErrorDominio("El motivo de cancelación operativa requiere cancelado_operativa_incidencia_stock=True.")
+        if self.estado_reembolso == "ejecutado" and self.fecha_reembolso is None:
+            raise ErrorDominio("El reembolso ejecutado requiere fecha_reembolso.")
+        if self.estado_reembolso == "ejecutado" and not _hay_texto(self.id_externo_reembolso):
+            raise ErrorDominio("El reembolso ejecutado requiere id_externo_reembolso.")
+        if self.estado_reembolso != "ejecutado" and self.id_externo_reembolso is not None:
+            raise ErrorDominio("El id externo de reembolso solo existe cuando el reembolso está ejecutado.")
+        if self.estado_reembolso != "ejecutado" and self.fecha_reembolso is not None:
+            raise ErrorDominio("La fecha de reembolso solo existe cuando el reembolso está ejecutado.")
+        if self.estado_reembolso != "fallido" and self.motivo_fallo_reembolso.strip():
+            raise ErrorDominio("El motivo de fallo de reembolso requiere estado_reembolso='fallido'.")
         self._validar_operacion_fisica()
 
     @property
@@ -281,6 +299,39 @@ class Pedido:
             cancelado_operativa_incidencia_stock=True,
             fecha_cancelacion_operativa=fecha_cancelacion,
             motivo_cancelacion_operativa=motivo,
+        )
+
+    def validar_reembolso_manual(self) -> None:
+        if self.estado_reembolso == "ejecutado":
+            raise ErrorDominio("El pedido ya tiene un reembolso ejecutado.")
+        if not self.cancelado_operativa_incidencia_stock or self.estado != "cancelado":
+            raise ErrorDominio("Solo un pedido cancelado operativamente por incidencia de stock puede reembolsarse.")
+        if self.estado_pago != "pagado":
+            raise ErrorDominio("Solo un pedido con pago confirmado puede reembolsarse.")
+        if not _hay_texto(self.id_externo_pago):
+            raise ErrorDominio("El pedido no tiene referencia externa de pago para ejecutar el reembolso.")
+
+    def registrar_reembolso_exitoso(self, *, fecha_reembolso: datetime, id_externo_reembolso: str) -> "Pedido":
+        self.validar_reembolso_manual()
+        if not _hay_texto(id_externo_reembolso):
+            raise ErrorDominio("El reembolso ejecutado requiere referencia externa válida.")
+        return replace(
+            self,
+            estado_reembolso="ejecutado",
+            fecha_reembolso=fecha_reembolso,
+            id_externo_reembolso=id_externo_reembolso.strip(),
+            motivo_fallo_reembolso="",
+        )
+
+    def registrar_fallo_reembolso(self, *, motivo_fallo: str) -> "Pedido":
+        self.validar_reembolso_manual()
+        motivo = motivo_fallo.strip() or "El PSP rechazó el reembolso manual."
+        return replace(
+            self,
+            estado_reembolso="fallido",
+            fecha_reembolso=None,
+            id_externo_reembolso=None,
+            motivo_fallo_reembolso=motivo,
         )
 
     def _validar_operacion_fisica(self) -> None:

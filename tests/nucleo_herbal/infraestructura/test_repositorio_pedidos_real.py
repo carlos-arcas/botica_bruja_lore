@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from dataclasses import replace
 from decimal import Decimal
 import unittest
 
@@ -58,6 +59,21 @@ class TestRepositorioPedidosReal(DjangoTestCase):
         self.assertFalse(revisado.requiere_revision_manual)
         self.assertIn("Caso revisado en admin", revisado.observaciones_operativas)
 
+    def test_persiste_reembolso_manual_exitoso_y_fallido(self) -> None:
+        repo = RepositorioPedidosORM()
+        pedido = _pedido_base(id_pedido="PED-20260319010101-test0004", estado="pagado", estado_pago="pagado")
+        pedido = repo.guardar(pedido.registrar_incidencia_stock_confirmacion("Incidencia detectada"))
+        pedido = repo.guardar(pedido.cancelar_operativamente_por_incidencia_stock(datetime.now(tz=UTC), "Cancelación operativa"))
+        pedido = repo.guardar(replace(pedido, id_externo_pago="cs_test_1"))
+
+        exitoso = repo.guardar(pedido.registrar_reembolso_exitoso(fecha_reembolso=datetime.now(tz=UTC), id_externo_reembolso="re_1"))
+        self.assertEqual(exitoso.estado_reembolso, "ejecutado")
+        self.assertEqual(exitoso.id_externo_reembolso, "re_1")
+        pedido_fallido = repo.guardar(replace(pedido, estado_reembolso="no_iniciado"))
+        fallido = repo.guardar(pedido_fallido.registrar_fallo_reembolso(motivo_fallo="error_manual"))
+        self.assertEqual(fallido.estado_reembolso, "fallido")
+        self.assertEqual(fallido.motivo_fallo_reembolso, "error_manual")
+
 
 def _pedido_base(id_pedido: str, estado: str = "pendiente_pago", estado_pago: str = "pendiente", canal_checkout: str = "web_invitado", id_cliente: str | None = None, es_invitado: bool = True) -> Pedido:
     return Pedido(
@@ -71,4 +87,3 @@ def _pedido_base(id_pedido: str, estado: str = "pendiente_pago", estado_pago: st
         notas_cliente="Sin prisa.",
         moneda="EUR",
     )
-

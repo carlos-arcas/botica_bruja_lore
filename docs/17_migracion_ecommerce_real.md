@@ -245,3 +245,18 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - Django Admin incorpora acción `Cancelar operativamente por incidencia de stock`;
   - la vista de listado/detalle muestra de forma explícita la nueva trazabilidad de cancelación;
   - se registran logs estructurados tanto en cancelaciones correctas como en intentos rechazados por estado inválido o falta de incidencia.
+
+## Actualización reembolso manual explícito v1.4
+- Estado técnico: **DONE** para reembolso manual de pedidos reales cancelados operativamente por incidencia de stock.
+- Condiciones activas del caso de uso:
+  1. pedido en `estado=cancelado` con `cancelado_operativa_incidencia_stock=True`;
+  2. `estado_pago=pagado`;
+  3. referencia de pago externa válida (`id_externo_pago`);
+  4. sin reembolso ejecutado previo (`estado_reembolso!=ejecutado`).
+- Persistencia activa de auditoría mínima:
+  - `estado_reembolso` (`no_iniciado` | `fallido` | `ejecutado`);
+  - `fecha_reembolso`;
+  - `id_externo_reembolso`;
+  - `motivo_fallo_reembolso`.
+- Backoffice activo: acción en Django Admin para ejecutar reembolso manual explícito y visualización del resultado real (éxito o fallo) sin maquillar estados.
+- Límites preservados en este bloque: sin reembolso automático al cancelar, sin devolución automática de inventario y sin emails automáticos al cliente.

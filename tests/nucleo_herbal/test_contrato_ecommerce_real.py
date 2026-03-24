@@ -7,6 +7,7 @@ from backend.nucleo_herbal.dominio.pedidos import (
     CANALES_CHECKOUT_VALIDOS,
     ESTRATEGIA_CONVIVENCIA_PEDIDOS,
     ESTADOS_PEDIDO_VALIDOS,
+    ESTADOS_REEMBOLSO_VALIDOS,
     RUTA_API_PEDIDOS,
     ClientePedido,
     DireccionEntrega,
@@ -28,6 +29,7 @@ class ContratoEcommerceRealTests(TestCase):
         self.assertEqual(CANALES_CHECKOUT_VALIDOS, ("web_invitado", "web_autenticado", "backoffice"))
         self.assertEqual(RUTA_API_PEDIDOS, "/api/v1/pedidos/")
         self.assertEqual(ESTADOS_PAGO_VALIDOS, ("pendiente", "requiere_accion", "pagado", "fallido", "cancelado"))
+        self.assertEqual(ESTADOS_REEMBOLSO_VALIDOS, ("no_iniciado", "fallido", "ejecutado"))
 
     def test_payload_y_pedido_real_requieren_direccion_y_contacto(self) -> None:
         cliente = ClientePedido(
