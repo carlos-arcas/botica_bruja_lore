@@ -281,8 +281,11 @@ class ApiCuentaClienteTests(DjangoTestCase):
 
         self.assertEqual(listado.status_code, 200)
         self.assertEqual(len(listado.json()["pedidos"]), 1)
+        self.assertEqual(listado.json()["pedidos"][0]["estado_cliente"]["estado_reembolso"], "no_iniciado")
+        self.assertFalse(listado.json()["pedidos"][0]["estado_cliente"]["cancelado_operativamente"])
         self.assertEqual(detalle.status_code, 200)
         self.assertEqual(detalle.json()["pedido"]["cliente"]["id_usuario"], cuenta["id_usuario"])
+        self.assertEqual(detalle.json()["pedido"]["estado_cliente"]["estado_reembolso"], "no_iniciado")
 
     def test_legado_demo_sigue_operativo(self) -> None:
         response = self.client.post(

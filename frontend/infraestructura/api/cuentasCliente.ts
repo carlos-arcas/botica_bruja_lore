@@ -45,6 +45,11 @@ export type PedidoCuentaCliente = {
   moneda: string;
   cliente: { email_contacto: string; es_invitado: boolean; id_usuario?: string };
   expedicion: { codigo_seguimiento?: string; transportista?: string };
+  estado_cliente?: {
+    cancelado_operativamente: boolean;
+    estado_reembolso: "no_iniciado" | "fallido" | "ejecutado";
+    fecha_reembolso: string | null;
+  };
 };
 
 export async function registrarCuentaCliente(payload: { email: string; nombre_visible: string; password: string }) {

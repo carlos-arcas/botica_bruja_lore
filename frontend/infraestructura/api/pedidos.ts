@@ -38,6 +38,11 @@ export type PedidoCreado = {
     observaciones: string;
   };
   resumen: { cantidad_total_items: number; subtotal: string };
+  estado_cliente?: {
+    cancelado_operativamente: boolean;
+    estado_reembolso: "no_iniciado" | "fallido" | "ejecutado";
+    fecha_reembolso: string | null;
+  };
   lineas: Array<{
     id_producto: string;
     slug_producto: string;

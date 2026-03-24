@@ -258,5 +258,16 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - `fecha_reembolso`;
   - `id_externo_reembolso`;
   - `motivo_fallo_reembolso`.
+
+## Actualización visibilidad cliente cancelación/reembolso v1.5
+- Estado técnico: **DONE** para visibilidad cliente de cancelación operativa y reembolso en `detalle de pedido` y `mi cuenta`.
+- Contrato backend consumido por frontend:
+  - se añade `estado_cliente.cancelado_operativamente`;
+  - se añade `estado_cliente.estado_reembolso` (`no_iniciado` | `fallido` | `ejecutado`);
+  - se añade `estado_cliente.fecha_reembolso` cuando exista.
+- Regla UX activa:
+  1. copy sobrio y honesto;
+  2. sin emails, soporte ni workflows extra;
+  3. sin exponer detalle operativo interno adicional en la UI cliente.
 - Backoffice activo: acción en Django Admin para ejecutar reembolso manual explícito y visualización del resultado real (éxito o fallo) sin maquillar estados.
 - Límites preservados en este bloque: sin reembolso automático al cancelar, sin devolución automática de inventario y sin emails automáticos al cliente.

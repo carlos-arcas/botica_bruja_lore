@@ -60,6 +60,11 @@ def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
             "cantidad_total_items": sum(linea.cantidad for linea in dto.lineas),
             "subtotal": str(dto.subtotal),
         },
+        "estado_cliente": {
+            "cancelado_operativamente": dto.cancelado_operativa_incidencia_stock,
+            "estado_reembolso": dto.estado_reembolso,
+            "fecha_reembolso": _serializar_fecha(dto.fecha_reembolso),
+        },
         "lineas": [
             {
                 "id_producto": linea.id_producto,

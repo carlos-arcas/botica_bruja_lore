@@ -258,6 +258,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 
 ## 17. Base transaccional demo de pedidos (Prompt 1 oficial Ciclo 3)
 - Capacidad: **Núcleo dominio/aplicación para `PedidoDemo` y `LineaPedido`**.
+
 - Estado: **EN_PROGRESO**.
 - Implementación activa:
   - agregado y reglas de dominio en `backend/nucleo_herbal/dominio/pedidos_demo.py`;
@@ -751,3 +752,16 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Prompt 12: **DONE** para cancelación operativa manual explícita de pedidos pagados con incidencia de stock, con acción de Django Admin restringida a estados coherentes y trazabilidad auditada (`cancelado_operativa_incidencia_stock`, `fecha_cancelacion_operativa`, `motivo_cancelacion_operativa`) sin automatizar reembolsos ni devolución de inventario.
 
 - Prompt 13: **DONE** para reembolso manual explícito de pedidos cancelados por incidencia de stock, con acción de Django Admin, trazabilidad auditable (`estado_reembolso`, `fecha_reembolso`, `id_externo_reembolso`, `motivo_fallo_reembolso`), idempotencia para evitar dobles ejecuciones y registro de fallo PSP sin corromper el estado del pedido ni activar devoluciones de inventario o emails automáticos.
+
+## 39. Visibilidad cliente de cancelación y reembolso (Prompt 14)
+- Capacidad: **Estado visible de cancelación operativa y reembolso en pedido y mi cuenta**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - backend expone `estado_cliente` en serialización de pedido real con `cancelado_operativamente`, `estado_reembolso` y `fecha_reembolso`;
+  - frontend usa mapper único `resolverEstadoVisiblePedidoCliente` para evitar condicionales duplicados;
+  - `/pedido/[id_pedido]` muestra copy sobrio de cancelación y reembolso (incluido fallback de revisión manual cuando el reembolso falla);
+  - `/mi-cuenta/pedidos` refleja el resumen visible del estado de cancelación/reembolso sin abrir workflows nuevos.
+- Fuera de alcance preservado:
+  1. sin emails automáticos nuevos;
+  2. sin formularios de soporte;
+  3. sin cambios de inventario ni nuevos flujos financieros.
