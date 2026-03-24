@@ -31,6 +31,8 @@ class TestRepositorioPedidosReal(DjangoTestCase):
         self.assertEqual(recuperado.cliente.id_cliente, "USR-1")
         self.assertEqual(recuperado.direccion_entrega.codigo_postal, "28001")
         self.assertEqual(recuperado.subtotal, Decimal("18.00"))
+        self.assertEqual(recuperado.lineas[0].cantidad_comercial, 2)
+        self.assertEqual(recuperado.lineas[0].unidad_comercial, "ud")
 
     def test_persiste_datos_de_expedicion_real(self) -> None:
         repo = RepositorioPedidosORM()
@@ -83,7 +85,7 @@ def _pedido_base(id_pedido: str, estado: str = "pendiente_pago", estado_pago: st
         canal_checkout=canal_checkout,
         cliente=ClientePedido(id_cliente=id_cliente, email="real@test.dev", nombre_contacto="Lore", telefono_contacto="600111222", es_invitado=es_invitado),
         direccion_entrega=DireccionEntrega(nombre_destinatario="Lore", linea_1="Calle Luna 1", codigo_postal="28001", ciudad="Madrid", provincia="Madrid"),
-        lineas=(LineaPedido(id_producto="prod-1", slug_producto="tarot-bosque-interior", nombre_producto="Tarot bosque interior", cantidad=2, precio_unitario=Decimal("9.00")),),
+        lineas=(LineaPedido(id_producto="prod-1", slug_producto="tarot-bosque-interior", nombre_producto="Tarot bosque interior", cantidad_comercial=2, unidad_comercial="ud", precio_unitario=Decimal("9.00")),),
         notas_cliente="Sin prisa.",
         moneda="EUR",
     )

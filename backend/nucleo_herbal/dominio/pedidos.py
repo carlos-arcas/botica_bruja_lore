@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Literal
 
 from .excepciones import ErrorDominio
+from .entidades import UNIDADES_COMERCIALES_VALIDAS
 
 EstadoPedido = Literal["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado"]
 EstadoPago = Literal["pendiente", "requiere_accion", "pagado", "fallido", "cancelado"]
@@ -85,7 +86,8 @@ class LineaPedido:
     id_producto: str
     slug_producto: str
     nombre_producto: str
-    cantidad: int
+    cantidad_comercial: int
+    unidad_comercial: str
     precio_unitario: Decimal
     moneda: str = "EUR"
 
@@ -93,14 +95,21 @@ class LineaPedido:
         for campo, valor in (("id de producto", self.id_producto), ("slug de producto", self.slug_producto), ("nombre de producto", self.nombre_producto), ("moneda", self.moneda)):
             if not valor.strip():
                 raise ErrorDominio(f"La línea requiere {campo}.")
-        if self.cantidad <= 0:
-            raise ErrorDominio("La línea requiere cantidad mayor que cero.")
+        if not isinstance(self.cantidad_comercial, int) or self.cantidad_comercial <= 0:
+            raise ErrorDominio("La línea requiere cantidad comercial entera mayor que cero.")
+        if self.unidad_comercial not in UNIDADES_COMERCIALES_VALIDAS:
+            raise ErrorDominio("La línea requiere una unidad comercial válida.")
         if self.precio_unitario < Decimal("0"):
             raise ErrorDominio("La línea requiere precio unitario no negativo.")
 
     @property
     def subtotal(self) -> Decimal:
-        return self.precio_unitario * self.cantidad
+        return self.precio_unitario * self.cantidad_comercial
+
+    @property
+    def cantidad(self) -> int:
+        """Compatibilidad transitoria con contratos previos R03."""
+        return self.cantidad_comercial
 
 
 @dataclass(frozen=True, slots=True)

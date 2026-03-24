@@ -54,6 +54,6 @@ def _mapear_linea(linea_demo) -> LineaPedido:
         id_producto=linea_demo.id_producto,
         slug_producto=linea_demo.slug_producto,
         nombre_producto=linea_demo.nombre_producto,
-        cantidad=linea_demo.cantidad,
-        precio_unitario=linea_demo.precio_unitario_demo,
+        cantidad_comercial=linea_demo.cantidad,
+        unidad_comercial="ud", precio_unitario=linea_demo.precio_unitario_demo,
     )

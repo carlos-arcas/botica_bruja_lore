@@ -135,7 +135,7 @@ def _payload_checkout_session(pedido: Pedido, config: ConfiguracionStripe) -> di
     }
     for indice, linea in enumerate(pedido.lineas):
         base = f"line_items[{indice}]"
-        payload[f"{base}[quantity]"] = str(linea.cantidad)
+        payload[f"{base}[quantity]"] = str(linea.cantidad_comercial)
         payload[f"{base}[price_data][currency]"] = linea.moneda.lower()
         payload[f"{base}[price_data][unit_amount]"] = str(int(linea.precio_unitario * 100))
         payload[f"{base}[price_data][product_data][name]"] = linea.nombre_producto

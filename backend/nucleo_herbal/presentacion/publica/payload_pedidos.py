@@ -62,11 +62,13 @@ def _construir_lineas(payload: dict, moneda: str) -> tuple[LineaPedido, ...]:
 def _construir_linea(payload: dict, moneda: str) -> LineaPedido:
     if not isinstance(payload, dict):
         raise ErrorDominio("Cada línea debe ser un objeto.")
+    cantidad_comercial = _entero_legacy(payload, "cantidad_comercial", alternativo="cantidad")
     return LineaPedido(
         id_producto=_texto(payload, "id_producto"),
         slug_producto=_texto(payload, "slug_producto"),
         nombre_producto=_texto(payload, "nombre_producto"),
-        cantidad=_entero(payload, "cantidad"),
+        cantidad_comercial=cantidad_comercial,
+        unidad_comercial=_texto_opcional(payload, "unidad_comercial") or "ud",
         precio_unitario=_decimal(payload, "precio_unitario"),
         moneda=_texto_opcional(payload, "moneda") or moneda,
     )
@@ -100,6 +102,12 @@ def _entero(payload: dict, campo: str) -> int:
     if not isinstance(valor, int):
         raise ErrorDominio(f"El campo '{campo}' debe ser entero.")
     return valor
+
+
+def _entero_legacy(payload: dict, campo: str, *, alternativo: str) -> int:
+    if campo in payload:
+        return _entero(payload, campo)
+    return _entero(payload, alternativo)
 
 
 def _decimal(payload: dict, campo: str) -> Decimal:

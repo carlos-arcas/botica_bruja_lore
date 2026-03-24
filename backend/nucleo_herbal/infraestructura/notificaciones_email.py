@@ -36,7 +36,10 @@ class NotificadorEmailPostPago(NotificadorPostPagoPedido):
 
 
 def _cuerpo_confirmacion_pago(pedido: Pedido) -> str:
-    lineas = "\n".join(f"- {linea.nombre_producto}: {linea.cantidad}u · {linea.subtotal} {linea.moneda}" for linea in pedido.lineas)
+    lineas = "\n".join(
+        f"- {linea.nombre_producto}: {linea.cantidad_comercial}{linea.unidad_comercial} · {linea.subtotal} {linea.moneda}"
+        for linea in pedido.lineas
+    )
     return (
         "Hemos recibido tu pago correctamente.\n"
         f"Pedido: {pedido.id_pedido}\n"

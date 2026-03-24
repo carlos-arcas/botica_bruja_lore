@@ -149,7 +149,8 @@ class PostPagoInventarioTests(TestCase):
                     id_producto=id_producto,
                     slug_producto=slug,
                     nombre_producto=nombre,
-                    cantidad=cantidad,
+                    cantidad_comercial=cantidad,
+                    unidad_comercial="ud",
                     precio_unitario=Decimal("10.00"),
                 )
                 for id_producto, slug, nombre, cantidad in lineas
@@ -192,4 +193,7 @@ class PasarelaPagoFalsa(PuertoPasarelaPago):
         )
 
     def consultar_estado_externo(self, id_externo_pago: str):
+        raise NotImplementedError
+
+    def ejecutar_reembolso_total(self, *, id_externo_pago: str, moneda: str, importe: Decimal, operation_id: str) -> dict[str, object]:
         raise NotImplementedError
