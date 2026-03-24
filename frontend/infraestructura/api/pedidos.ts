@@ -50,7 +50,8 @@ export type PedidoCreado = {
     id_producto: string;
     slug_producto: string;
     nombre_producto: string;
-    cantidad: number;
+    cantidad_comercial: number;
+    unidad_comercial: "ud" | "g" | "ml";
     precio_unitario: string;
     moneda: string;
     subtotal: string;

@@ -201,8 +201,49 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R04 — Checkout real compatible con granel
-- **Estado**: `PARTIAL`.
-- **Lectura actual**: checkout real en coexistencia ya implementado; pendiente endurecimiento específico de reglas granel extremo a extremo.
+- **Estado**: `DONE`.
+- **Lectura actual**: checkout real ya construye payload explícito por línea con `cantidad_comercial` + `unidad_comercial`, valida semántica comercial en frontend y backend (unidad, incremento y mínimo) y mantiene compatibilidad del flujo unitario sin abrir alcance adicional.
+
+**Cierre de R04 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. El frontend converge al shape de R03 (`cantidad_comercial`, `unidad_comercial`) y deja de depender del alias legacy `cantidad` en construcción de payload real.
+  2. La UX de checkout real mantiene sobriedad y añade semántica comercial visible por producto (unidad, incremento y mínimo) con validación local estricta de enteros (sin floats).
+  3. La validación final de negocio se endurece en aplicación backend con un puerto mínimo dedicado a semántica comercial de producto (`unidad_comercial`, `incremento_minimo_venta`, `cantidad_minima_compra`) para no acoplar checkout a mapeos de catálogo público.
+  4. Se mantiene coexistencia con flujo demo y compatibilidad transitoria de backend para payload legacy, pero el cliente real prioriza explícitamente el contrato nuevo.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/puertos/repositorios_productos_checkout.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_productos_checkout.py`
+  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
+  - `tests/nucleo_herbal/test_casos_de_uso_pedidos_real.py`
+  - `tests/nucleo_herbal/test_api_pedidos_real.py`
+  - `frontend/contenido/catalogo/checkoutReal.ts`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/contenido/catalogo/catalogo.ts`
+  - `frontend/infraestructura/api/herbal.ts`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - `frontend/tests/checkout-real.test.ts`
+  - `frontend/tests/checkout-real-ui.test.ts`
+- **Comandos ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.test_casos_de_uso_pedidos_real tests.nucleo_herbal.test_api_pedidos_real backend.nucleo_herbal.presentacion.tests.test_pedidos_checkout_real_direcciones`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_backend_readiness.py`
+  - `npm --prefix frontend run test:checkout-real`
+  - `npm --prefix frontend run lint`
+  - `npm --prefix frontend run build`
+- **Evidencia**:
+  - frontend valida cantidad comercial entera >0 y reglas de incremento/mínimo, mostrando mensajes explícitos;
+  - backend rechaza creación de pedido si la línea no respeta unidad, incremento o mínimo del producto;
+  - tests backend/frontend de checkout real actualizados y en verde con casos unitario y granel;
+  - `check`, `makemigrations --check --dry-run`, lint y build en verde.
+- **Deuda residual**:
+  1. Mantener y planificar retirada gradual del alias legacy `cantidad` cuando todos los consumidores migren al shape nuevo.
+  2. R05/R06 siguen pendientes para endurecimiento post-pago por unidad base definitiva y ledger mínimo de movimientos.
+  3. Queda fuera de alcance en este bloque la fiscalidad, promociones, métodos de envío múltiples y logística avanzada.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R05 — Descuento post-pago según unidad base
 - **Estado**: `PARTIAL`.
@@ -274,3 +315,5 @@
 - **2026-03-24 — R02 (cierre):** contrato comercial de producto (`unidad_comercial`, `incremento_minimo_venta`, `cantidad_minima_compra`) implementado con defaults compatibles, validaciones de integridad/coherencia con inventario y pruebas backend relevantes en verde.
 - **2026-03-24 — R03 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de tocar código transaccional de línea real.
 - **2026-03-24 — R03 (cierre):** línea de pedido real migrada a `cantidad_comercial` + `unidad_comercial`, persistencia/migración compatible con históricos, payload legacy preservado (`cantidad`) y pruebas backend críticas en verde.
+- **2026-03-24 — R04 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de tocar checkout real y validaciones comerciales.
+- **2026-03-24 — R04 (cierre):** checkout real actualizado al payload nuevo (`cantidad_comercial` + `unidad_comercial`), validación frontend+backend de incremento/mínimo/unidad cerrada y pruebas de checkout real backend/frontend en verde.

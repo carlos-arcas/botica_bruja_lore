@@ -8,6 +8,11 @@ from backend.nucleo_herbal.aplicacion.puertos.repositorios_cuentas_cliente impor
 from backend.nucleo_herbal.aplicacion.puertos.proveedor_envio import PuertoProveedorEnvio
 from backend.nucleo_herbal.aplicacion.puertos.repositorios_inventario import RepositorioInventario
 from backend.nucleo_herbal.aplicacion.puertos.repositorios_pedidos import RepositorioPedidos
+from backend.nucleo_herbal.aplicacion.puertos.repositorios_productos_checkout import (
+    RepositorioProductosCheckout,
+    SemanticaComercialProducto,
+)
+from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.dominio.inventario import InventarioProducto
 from backend.nucleo_herbal.dominio.pedidos import ClientePedido, DireccionEntrega, LineaPedido, PayloadPedido, Pedido
 
@@ -62,6 +67,16 @@ class RepositorioInventarioMemoria(RepositorioInventario):
 
     def obtener_para_actualizar_por_ids_producto(self, ids_producto: tuple[str, ...]) -> dict[str, InventarioProducto]:
         return {id_producto: self.inventarios[id_producto] for id_producto in ids_producto if id_producto in self.inventarios}
+
+
+class RepositorioProductosMemoria(RepositorioProductosCheckout):
+    def __init__(self, productos: dict[str, SemanticaComercialProducto] | None = None) -> None:
+        self.productos = productos or {}
+
+    def obtener_semantica_comercial_por_id(
+        self, id_producto: str
+    ) -> SemanticaComercialProducto | None:
+        return self.productos.get(id_producto)
 
 
 class RepositorioCuentasClienteStub(RepositorioCuentasCliente):
@@ -133,6 +148,7 @@ def test_registrar_pedido_real_con_stock_suficiente_persiste() -> None:
         repositorio_inventario=RepositorioInventarioMemoria(
             {"prod-1": InventarioProducto(id_producto="prod-1", cantidad_disponible=3)}
         ),
+        repositorio_productos_checkout=RepositorioProductosMemoria({"prod-1": _producto_base()}),
         proveedor_envio=ProveedorEnvioFijoStub(),
     )
 
@@ -150,6 +166,7 @@ def test_rechaza_producto_sin_inventario() -> None:
         repositorio_pedidos=repo_pedidos,
         repositorio_cuentas_cliente=RepositorioCuentasClienteStub(),
         repositorio_inventario=RepositorioInventarioMemoria(),
+        repositorio_productos_checkout=RepositorioProductosMemoria({"prod-1": _producto_base()}),
         proveedor_envio=ProveedorEnvioFijoStub(),
     )
 
@@ -169,6 +186,7 @@ def test_rechaza_producto_con_stock_insuficiente() -> None:
         repositorio_inventario=RepositorioInventarioMemoria(
             {"prod-1": InventarioProducto(id_producto="prod-1", cantidad_disponible=1)}
         ),
+        repositorio_productos_checkout=RepositorioProductosMemoria({"prod-1": _producto_base()}),
         proveedor_envio=ProveedorEnvioFijoStub(),
     )
 
@@ -191,6 +209,7 @@ def test_rechaza_pedido_completo_si_una_linea_falla() -> None:
                 "prod-2": InventarioProducto(id_producto="prod-2", cantidad_disponible=0),
             }
         ),
+        repositorio_productos_checkout=RepositorioProductosMemoria({"prod-1": _producto_base(), "prod-2": _producto_base(id_producto="prod-2")}),
         proveedor_envio=ProveedorEnvioFijoStub(),
     )
 
@@ -202,7 +221,46 @@ def test_rechaza_pedido_completo_si_una_linea_falla() -> None:
     assert repo_pedidos.guardados == []
 
 
-def _payload_base() -> PayloadPedido:
+def test_rechaza_unidad_linea_distinta_de_unidad_comercial_producto() -> None:
+    caso = RegistrarPedido(
+        repositorio_pedidos=RepositorioPedidosMemoria(),
+        repositorio_cuentas_cliente=RepositorioCuentasClienteStub(),
+        repositorio_inventario=RepositorioInventarioMemoria({"prod-1": InventarioProducto(id_producto="prod-1", cantidad_disponible=1000, unidad_base="g")}),
+        repositorio_productos_checkout=RepositorioProductosMemoria({"prod-1": _producto_base(unidad_comercial="g", incremento=50, minimo=100)}),
+        proveedor_envio=ProveedorEnvioFijoStub(),
+    )
+
+    with pytest.raises(ErrorDominio, match="unidad de línea no coincide"):
+        caso.ejecutar(_payload_base(unidad="ud", cantidad=100), operation_id="op-unidad-invalida")
+
+
+def test_rechaza_cantidad_no_multiple_incremento_minimo() -> None:
+    caso = RegistrarPedido(
+        repositorio_pedidos=RepositorioPedidosMemoria(),
+        repositorio_cuentas_cliente=RepositorioCuentasClienteStub(),
+        repositorio_inventario=RepositorioInventarioMemoria({"prod-1": InventarioProducto(id_producto="prod-1", cantidad_disponible=1000, unidad_base="g")}),
+        repositorio_productos_checkout=RepositorioProductosMemoria({"prod-1": _producto_base(unidad_comercial="g", incremento=50, minimo=100)}),
+        proveedor_envio=ProveedorEnvioFijoStub(),
+    )
+
+    with pytest.raises(ErrorDominio, match="incremento mínimo"):
+        caso.ejecutar(_payload_base(unidad="g", cantidad=125), operation_id="op-incremento-invalido")
+
+
+def test_rechaza_cantidad_menor_al_minimo_compra() -> None:
+    caso = RegistrarPedido(
+        repositorio_pedidos=RepositorioPedidosMemoria(),
+        repositorio_cuentas_cliente=RepositorioCuentasClienteStub(),
+        repositorio_inventario=RepositorioInventarioMemoria({"prod-1": InventarioProducto(id_producto="prod-1", cantidad_disponible=1000, unidad_base="g")}),
+        repositorio_productos_checkout=RepositorioProductosMemoria({"prod-1": _producto_base(unidad_comercial="g", incremento=50, minimo=100)}),
+        proveedor_envio=ProveedorEnvioFijoStub(),
+    )
+
+    with pytest.raises(ErrorDominio, match="cantidad mínima"):
+        caso.ejecutar(_payload_base(unidad="g", cantidad=50), operation_id="op-minimo-invalido")
+
+
+def _payload_base(*, unidad: str = "ud", cantidad: int = 2) -> PayloadPedido:
     return PayloadPedido(
         canal_checkout="web_invitado",
         cliente=ClientePedido(
@@ -226,8 +284,9 @@ def _payload_base() -> PayloadPedido:
                 id_producto="prod-1",
                 slug_producto="tarot-bosque-interior",
                 nombre_producto="Tarot bosque interior",
-                cantidad_comercial=2,
-                unidad_comercial="ud", precio_unitario=Decimal("9.00"),
+                cantidad_comercial=cantidad,
+                unidad_comercial=unidad,
+                precio_unitario=Decimal("9.00"),
                 moneda="EUR",
             ),
         ),
@@ -257,4 +316,13 @@ def _payload_dos_lineas() -> PayloadPedido:
         notas_cliente=base.notas_cliente,
         moneda=base.moneda,
         id_direccion_guardada=base.id_direccion_guardada,
+    )
+
+
+def _producto_base(*, id_producto: str = "prod-1", unidad_comercial: str = "ud", incremento: int = 1, minimo: int = 1) -> SemanticaComercialProducto:
+    return SemanticaComercialProducto(
+        id_producto=id_producto,
+        unidad_comercial=unidad_comercial,
+        incremento_minimo_venta=incremento,
+        cantidad_minima_compra=minimo,
     )

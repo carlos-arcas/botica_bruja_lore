@@ -80,6 +80,7 @@ from ...infraestructura.persistencia_django.repositorios import (
 from ...infraestructura.persistencia_django.repositorios_cuentas_cliente import RepositorioCuentasClienteORM
 from ...infraestructura.persistencia_django.repositorios_inventario import RepositorioInventarioORM
 from ...infraestructura.persistencia_django.repositorios_pedidos import RepositorioPedidosORM
+from ...infraestructura.persistencia_django.repositorios_productos_checkout import RepositorioProductosCheckoutORM
 from ...infraestructura.persistencia_django.transacciones import TransaccionesDjango
 
 
@@ -217,6 +218,7 @@ def construir_servicios_publicos_pedidos() -> ServiciosPublicosPedidos:
             repositorio_pedidos=repositorio,
             repositorio_cuentas_cliente=repositorio_cuentas,
             repositorio_inventario=RepositorioInventarioORM(),
+            repositorio_productos_checkout=RepositorioProductosCheckoutORM(),
             proveedor_envio=ProveedorEnvioEstandarFijo(),
         ),
         obtener_pedido=ObtenerPedidoPorId(repositorio_pedidos=repositorio),
