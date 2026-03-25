@@ -182,6 +182,14 @@ def _frontend_block() -> list[BlockResult]:
     return [lint, checkout_demo, cuenta_demo, calendario_ritual, build]
 
 
+def _operational_reconciliation_block() -> BlockResult:
+    return _run_block(
+        "H) Conciliación operativa (BLOCKER/WARNING/INFO, solo lectura)",
+        [PYTHON, "scripts/check_operational_reconciliation.py", "--fail-on", "blocker"],
+        blocking=True,
+    )
+
+
 def _print_summary(results: list[BlockResult]) -> int:
     _print_header("Resumen final del gate")
     blocking_failed = False
@@ -279,13 +287,7 @@ def main() -> int:
             blocking=True,
         )
     )
-    results.append(
-        _run_block(
-            "H) Conciliación operativa mínima (solo lectura)",
-            [PYTHON, "scripts/check_operational_reconciliation.py", "--fail-on", "none"],
-            blocking=False,
-        )
-    )
+    results.append(_operational_reconciliation_block())
     results.extend(_frontend_block())
 
     code = _print_summary(results)

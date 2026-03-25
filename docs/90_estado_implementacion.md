@@ -905,9 +905,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Capacidad: **Conciliación operativa auditable de pedido↔inventario↔reembolso↔expedición↔emails**.
 - Estado: **DONE**.
 - Evidencia implementada:
-  - script operativo de solo lectura `scripts/check_operational_reconciliation.py` con salida textual/JSON, severidades (`ERROR`, `WARNING`, `INFO`) y política configurable de exit code (`--fail-on`);
+  - script operativo de solo lectura `scripts/check_operational_reconciliation.py` con salida textual/JSON, matriz de severidad (`BLOCKER`, `WARNING`, `INFO`, `SKIP`) y política configurable de exit code (`--fail-on blocker|warning|none`, manteniendo alias legacy `error`);
   - reglas mínimas accionables para detectar desalineaciones reales: pago sin descuento ni incidencia, reembolso sin cancelación operativa, cancelación operativa sin reembolso iniciado, restitución de inventario sin ledger `restitucion_manual`, incoherencias logísticas y banderas de email contradictorias;
-  - integración mínima en gate canónico mediante bloque informativo no bloqueante (`check_release_gate.py`) para mantener visibilidad continua sin mutar estado.
+  - integración endurecida en gate canónico mediante bloque bloqueante por severidad crítica (`check_release_gate.py` ejecuta `--fail-on blocker`) para detener release solo ante incoherencias de bajo falso positivo.
 - Regla activa:
   1. la conciliación no modifica datos ni sustituye workflows de backoffice;
   2. la detección se centra en discrepancias operativas de alto valor (no reporting cosmético);
