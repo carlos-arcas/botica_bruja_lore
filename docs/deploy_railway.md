@@ -59,6 +59,9 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-ma
   - Si falta en Railway/producción, el backend falla por diseño con error de configuración temprano.
 - `ALLOWED_HOSTS` (CSV)
 - `CSRF_TRUSTED_ORIGINS` (CSV con URLs completas)
+- `PUBLIC_SITE_URL` (URL HTTPS pública canónica)
+- `DEFAULT_FROM_EMAIL` (dominio real, no `.local`)
+- `EMAIL_BACKEND` de producción (SMTP real, no `locmem/console/filebased`)
 - Variables opcionales para acceso admin provisional seguro:
   - `CREAR_ADMIN_PROVISIONAL=true` (ejecución explícita durante predeploy)
   - `ADMIN_USUARIO_PROVISIONAL=karkas`
@@ -67,6 +70,7 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-ma
 ### Frontend
 - `NEXT_PUBLIC_API_BASE_URL` con la URL pública del backend.
 
+Referencia operativa mínima de pre-release y backup/restore: `docs/release_readiness_minima.md`.
 
 
 

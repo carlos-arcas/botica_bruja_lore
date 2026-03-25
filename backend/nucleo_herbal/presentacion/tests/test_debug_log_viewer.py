@@ -53,6 +53,7 @@ class DebugLogViewerTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         item = respuesta.json()["items"][0]
         self.assertIn("[REDACTED]", item["sanitized"])
+        self.assertNotIn("raw", item)
         self.assertNotIn("abcd1234", item["sanitized"])
         self.assertNotIn("secreto", item["sanitized"])
 

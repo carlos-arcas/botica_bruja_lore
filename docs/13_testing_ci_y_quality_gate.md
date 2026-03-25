@@ -215,6 +215,7 @@ Este comando orquesta en un solo flujo:
 - **Snapshot de datos públicos en modo lectura:** reporte de conteos existentes de intenciones, plantas, productos y rituales (sin sembrar ni migrar).
 - **Integridad operativa/documental del repositorio:** `python scripts/check_repo_operational_integrity.py` (markdown crítico, coherencia Procfile/manage.py/wsgi.py/railway.toml, `.env.railway.example` y alineación CI↔documentación).
 - **Conciliación operativa mínima (solo lectura):** `python scripts/check_operational_reconciliation.py --fail-on none` para detectar discrepancias básicas pedido↔inventario↔reembolso↔expedición↔emails sin mutar datos.
+- **Release readiness mínimo (seguridad/privacidad/backups):** `python scripts/check_release_readiness.py` para validar checklist mínimo de pre-release y documentación de backup/restore.
 
 - Estos contratos validan forma mínima estable de JSON (claves obligatorias, estructura de listas/objetos y campos realmente consumidos por frontend) tanto para herbal/rituales como para pedidos demo, cuentas demo y calendario ritual, reduciendo regresiones silenciosas que no rompen build pero sí el runtime.
 - Además, endurecen explícitamente el contrato mínimo de error en APIs públicas consumidas por frontend: respuesta JSON con clave `detalle` (string), status HTTP coherente (400/401/404) y `Content-Type` JSON para evitar desvíos a HTML inesperado.

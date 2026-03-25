@@ -912,3 +912,16 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. la conciliación no modifica datos ni sustituye workflows de backoffice;
   2. la detección se centra en discrepancias operativas de alto valor (no reporting cosmético);
   3. el gate conserva carácter no mutante y reporta conciliación como señal operativa reutilizable.
+
+## 46. Seguridad, privacidad operativa y release readiness mínimo (R15)
+- Capacidad: **Hardening mínimo de configuración sensible + privacidad de logs + base de backup/restore y checklist de salida**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - validación de settings críticos en producción (`DEBUG=false`) con guardrails explícitos para `PUBLIC_SITE_URL`, URLs de pago HTTPS, `DEFAULT_FROM_EMAIL` y `EMAIL_BACKEND` real en `backend/configuracion_django/validaciones_entorno.py` integrado desde `settings.py`;
+  - visor técnico de logs endurecido para no exponer línea cruda, devolviendo únicamente contenido sanitizado (`backend/nucleo_herbal/presentacion/debug_logs/servicio_logs.py`);
+  - check operativo mínimo de release readiness (`scripts/check_release_readiness.py`) con cobertura en `tests/scripts/test_check_release_readiness.py`;
+  - documentación operativa mínima de salida y backup/restore PostgreSQL en `docs/release_readiness_minima.md`, alineada con `docs/deploy_railway.md` y `docs/13_testing_ci_y_quality_gate.md`.
+- Regla activa:
+  1. producción falla rápido ante configuración sensible incompleta o insegura;
+  2. debug logs internos no devuelven datos crudos potencialmente sensibles;
+  3. pre-release requiere checklist explícito y backup lógico verificable antes de desplegar.
