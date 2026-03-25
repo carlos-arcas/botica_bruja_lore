@@ -146,6 +146,8 @@ class Pedido:
     observaciones_operativas: str = ""
     email_envio_enviado: bool = False
     fecha_email_envio: datetime | None = None
+    email_cancelacion_enviado: bool = False
+    fecha_email_cancelacion: datetime | None = None
     cancelado_operativa_incidencia_stock: bool = False
     fecha_cancelacion_operativa: datetime | None = None
     motivo_cancelacion_operativa: str = ""
@@ -153,6 +155,8 @@ class Pedido:
     fecha_reembolso: datetime | None = None
     id_externo_reembolso: str | None = None
     motivo_fallo_reembolso: str = ""
+    email_reembolso_enviado: bool = False
+    fecha_email_reembolso: datetime | None = None
     inventario_restituido: bool = False
     fecha_restitucion_inventario: datetime | None = None
 
@@ -187,6 +191,8 @@ class Pedido:
             raise ErrorDominio("La fecha de email post-pago requiere email_post_pago_enviado=True.")
         if self.fecha_email_envio and not self.email_envio_enviado:
             raise ErrorDominio("La fecha de email de envío requiere email_envio_enviado=True.")
+        if self.fecha_email_cancelacion and not self.email_cancelacion_enviado:
+            raise ErrorDominio("La fecha de email de cancelación requiere email_cancelacion_enviado=True.")
         if self.cancelado_operativa_incidencia_stock and self.fecha_cancelacion_operativa is None:
             raise ErrorDominio("La cancelación operativa requiere fecha de cancelación.")
         if self.cancelado_operativa_incidencia_stock and not self.motivo_cancelacion_operativa.strip():
@@ -205,6 +211,8 @@ class Pedido:
             raise ErrorDominio("La fecha de reembolso solo existe cuando el reembolso está ejecutado.")
         if self.estado_reembolso != "fallido" and self.motivo_fallo_reembolso.strip():
             raise ErrorDominio("El motivo de fallo de reembolso requiere estado_reembolso='fallido'.")
+        if self.fecha_email_reembolso and not self.email_reembolso_enviado:
+            raise ErrorDominio("La fecha de email de reembolso requiere email_reembolso_enviado=True.")
         if self.fecha_restitucion_inventario and not self.inventario_restituido:
             raise ErrorDominio("La fecha de restitución requiere inventario_restituido=True.")
         self._validar_operacion_fisica()
@@ -283,6 +291,11 @@ class Pedido:
             return self
         return replace(self, email_envio_enviado=True, fecha_email_envio=fecha_envio)
 
+    def marcar_email_cancelacion_enviado(self, fecha_envio: datetime) -> "Pedido":
+        if self.email_cancelacion_enviado:
+            return self
+        return replace(self, email_cancelacion_enviado=True, fecha_email_cancelacion=fecha_envio)
+
     def marcar_preparando(self, fecha_preparacion: datetime) -> "Pedido":
         if self.estado != "pagado":
             raise ErrorDominio("Solo un pedido pagado puede pasar a preparando.")
@@ -347,6 +360,11 @@ class Pedido:
             id_externo_reembolso=id_externo_reembolso.strip(),
             motivo_fallo_reembolso="",
         )
+
+    def marcar_email_reembolso_enviado(self, fecha_envio: datetime) -> "Pedido":
+        if self.email_reembolso_enviado:
+            return self
+        return replace(self, email_reembolso_enviado=True, fecha_email_reembolso=fecha_envio)
 
     def registrar_fallo_reembolso(self, *, motivo_fallo: str) -> "Pedido":
         self.validar_reembolso_manual()

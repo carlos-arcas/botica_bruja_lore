@@ -15,6 +15,7 @@ from ...aplicacion.casos_de_uso_backoffice_pedidos import (
     RestituirInventarioManualPedidoCancelado,
 )
 from ...dominio.excepciones import ErrorDominio
+from ..notificaciones_email import NotificadorEmailPostPago
 from ..pagos_stripe import construir_pasarela_pago_stripe
 from .repositorios_inventario import RepositorioInventarioORM, RepositorioMovimientosInventarioORM
 from .models_pedidos import LineaPedidoRealModelo, PedidoRealModelo
@@ -79,7 +80,10 @@ def marcar_incidencia_stock_revisada(modeladmin, request: HttpRequest, queryset)
 
 @admin.action(description="Cancelar operativamente por incidencia de stock")
 def cancelar_operativa_incidencia_stock(modeladmin, request: HttpRequest, queryset):
-    caso = CancelarPedidoOperativoPorIncidenciaStock(repositorio_pedidos=RepositorioPedidosORM())
+    caso = CancelarPedidoOperativoPorIncidenciaStock(
+        repositorio_pedidos=RepositorioPedidosORM(),
+        notificador=NotificadorEmailPostPago(),
+    )
     actor = request.user.get_username() or "admin"
     cancelados = 0
     omitidos = 0
@@ -118,6 +122,7 @@ def ejecutar_reembolso_manual_incidencia_stock(modeladmin, request: HttpRequest,
         repositorio_pedidos=RepositorioPedidosORM(),
         pasarela_pago=construir_pasarela_pago_stripe(),
         transacciones=TransaccionesDjango(),
+        notificador=NotificadorEmailPostPago(),
     )
     actor = request.user.get_username() or "admin"
     reembolsados = 0

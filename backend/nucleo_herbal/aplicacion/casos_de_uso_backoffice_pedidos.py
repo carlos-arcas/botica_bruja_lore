@@ -114,6 +114,7 @@ class MarcarPedidoEntregado:
 @dataclass(slots=True)
 class CancelarPedidoOperativoPorIncidenciaStock:
     repositorio_pedidos: RepositorioPedidos
+    notificador: NotificadorPostPagoPedido
 
     def ejecutar(self, id_pedido: str, operation_id: str, actor: str, motivo_cancelacion: str) -> PedidoRealDTO:
         pedido = _obtener_pedido(self.repositorio_pedidos, id_pedido)
@@ -139,7 +140,20 @@ class CancelarPedidoOperativoPorIncidenciaStock:
             raise
         persistido = self.repositorio_pedidos.guardar(actualizado)
         _log_transition(operation_id, actor, pedido, persistido, "cancelacion_operativa_incidencia_stock", "ok")
-        return _a_dto(persistido)
+        return _a_dto(self._enviar_email_si_aplica(persistido, operation_id, actor))
+
+    def _enviar_email_si_aplica(self, pedido, operation_id: str, actor: str):
+        if pedido.email_cancelacion_enviado:
+            _log_transition(operation_id, actor, pedido, pedido, "email_cancelacion", "ya_enviado")
+            return pedido
+        try:
+            self.notificador.enviar_cancelacion_operativa_stock(pedido, operation_id)
+        except Exception as error:  # noqa: BLE001
+            logger.error("backoffice_pedido_email_cancelacion_error", extra=_extra_log(operation_id, actor, pedido, pedido, "email_cancelacion", "error", str(error)))
+            return pedido
+        actualizado = self.repositorio_pedidos.guardar(pedido.marcar_email_cancelacion_enviado(datetime.now(tz=UTC)))
+        _log_transition(operation_id, actor, pedido, actualizado, "email_cancelacion", "ok")
+        return actualizado
 
 
 @dataclass(slots=True)
@@ -147,6 +161,7 @@ class ReembolsarPedidoCanceladoPorIncidenciaStock:
     repositorio_pedidos: RepositorioPedidos
     pasarela_pago: PuertoPasarelaPago
     transacciones: PuertoTransacciones
+    notificador: NotificadorPostPagoPedido
 
     def ejecutar(self, id_pedido: str, operation_id: str, actor: str) -> PedidoRealDTO:
         with self.transacciones.atomic():
@@ -154,7 +169,7 @@ class ReembolsarPedidoCanceladoPorIncidenciaStock:
             logger.info("backoffice_pedido_reembolso_manual_intento", extra=_extra_log(operation_id, actor, pedido, pedido, "reembolso_manual", "intento"))
             if pedido.estado_reembolso == "ejecutado":
                 logger.info("backoffice_pedido_reembolso_manual_reintento_idempotente", extra=_extra_log(operation_id, actor, pedido, pedido, "reembolso_manual", "idempotente"))
-                return _a_dto(pedido)
+                return _a_dto(self._enviar_email_si_aplica(pedido, operation_id, actor))
             try:
                 pedido.validar_reembolso_manual()
             except ErrorDominio as error:
@@ -176,7 +191,7 @@ class ReembolsarPedidoCanceladoPorIncidenciaStock:
                 )
                 persistido = self.repositorio_pedidos.guardar(actualizado)
                 logger.info("backoffice_pedido_reembolso_manual_ok", extra=_extra_log(operation_id, actor, pedido, persistido, "reembolso_manual", "ok"))
-                return _a_dto(persistido)
+                return _a_dto(self._enviar_email_si_aplica(persistido, operation_id, actor))
             actualizado = pedido.registrar_fallo_reembolso(motivo_fallo=str(respuesta.get("detalle", "")))
             persistido = self.repositorio_pedidos.guardar(actualizado)
             logger.error(
@@ -192,6 +207,19 @@ class ReembolsarPedidoCanceladoPorIncidenciaStock:
                 ),
             )
             return _a_dto(persistido)
+
+    def _enviar_email_si_aplica(self, pedido, operation_id: str, actor: str):
+        if pedido.email_reembolso_enviado:
+            _log_transition(operation_id, actor, pedido, pedido, "email_reembolso", "ya_enviado")
+            return pedido
+        try:
+            self.notificador.enviar_reembolso_manual_ejecutado(pedido, operation_id)
+        except Exception as error:  # noqa: BLE001
+            logger.error("backoffice_pedido_email_reembolso_error", extra=_extra_log(operation_id, actor, pedido, pedido, "email_reembolso", "error", str(error)))
+            return pedido
+        actualizado = self.repositorio_pedidos.guardar(pedido.marcar_email_reembolso_enviado(datetime.now(tz=UTC)))
+        _log_transition(operation_id, actor, pedido, actualizado, "email_reembolso", "ok")
+        return actualizado
 
 
 @dataclass(slots=True)

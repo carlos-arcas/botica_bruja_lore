@@ -342,3 +342,21 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - backend sigue siendo fuente de verdad (dominio + persistencia + ledger);
   - Django Admin se mantiene como soporte/fallback;
   - sin cálculo de stock desde ledger, sin multi-almacén ni reporting avanzado en este incremento.
+
+## Actualización emails transaccionales reales mínimos (R10)
+- Estado técnico: **DONE** para capa mínima de correo transaccional real desacoplada de proveedor.
+- Eventos operativos activos cubiertos:
+  1. pedido pagado correctamente (`email_post_pago`);
+  2. pedido enviado (`email_envio`);
+  3. cancelación operativa por incidencia de stock (`email_cancelacion`);
+  4. reembolso manual ejecutado (`email_reembolso`).
+- Trazabilidad/idempotencia mínima activa:
+  - flags ya existentes preservados (`email_post_pago_enviado`, `email_envio_enviado`);
+  - flags nuevos mínimos añadidos para cierre R10 (`email_cancelacion_enviado`, `fecha_email_cancelacion`, `email_reembolso_enviado`, `fecha_email_reembolso`).
+- Regla operativa activa:
+  - el flujo demo legacy (`PedidoDemo`, `/api/v1/pedidos-demo/*`, `email-demo`) no se reutiliza ni se mezcla con la capa real;
+  - si un envío de email falla, la transición de pedido se conserva y se registra fallo operativo para revisión.
+- Fuera de alcance preservado:
+  - sin newsletters/campañas;
+  - sin CRM;
+  - sin plantillas de marketing ni canales alternativos (SMS/WhatsApp).
