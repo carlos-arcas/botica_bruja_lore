@@ -22,6 +22,7 @@ import {
   construirRutaRevisionSeleccionCheckoutReal,
 } from "@/contenido/catalogo/checkoutRealNavegacion";
 import { resolverContextoPreseleccionado } from "@/contenido/catalogo/encargoConsulta";
+import { calcularDesgloseFiscalVisible } from "@/contenido/catalogo/fiscalidadCheckout";
 import { resolverLineasSeleccionEncargo, resolverResumenEconomicoSeleccion } from "@/contenido/catalogo/seleccionEncargo";
 import { formatearMonedaEur, resolverImporteEnvioEstandarDesdeApi } from "@/contenido/catalogo/envioEstandar";
 import { AvisoDisponibilidadCheckoutReal } from "@/componentes/catalogo/checkout-real/AvisoDisponibilidadCheckoutReal";
@@ -65,9 +66,10 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
       ),
     [lineasVisualesCheckout.lineasConvertibles],
   );
-  const totalPedidoVisible = useMemo(() => subtotalPedidoVisible + importeEnvio, [subtotalPedidoVisible, importeEnvio]);
-  const importeImpuestosVisible = useMemo(() => Number(((subtotalPedidoVisible + importeEnvio) * 0.21).toFixed(2)), [subtotalPedidoVisible, importeEnvio]);
-  const totalFiscalVisible = useMemo(() => totalPedidoVisible + importeImpuestosVisible, [totalPedidoVisible, importeImpuestosVisible]);
+  const desgloseFiscalVisible = useMemo(
+    () => calcularDesgloseFiscalVisible(subtotalPedidoVisible, importeEnvio),
+    [subtotalPedidoVisible, importeEnvio],
+  );
   const resumenEconomicoBloqueado = useMemo(() => lineasVisualesCheckout.lineasBloqueadas.length > 0 ? resolverResumenEconomicoSeleccion(lineasVisualesCheckout.lineasBloqueadas.map(({ linea }) => linea), "fuera_pedido_real") : null, [lineasVisualesCheckout.lineasBloqueadas]);
   const resumenSeleccionVisible = useMemo(() => lineasVisualesCheckout.lineasBloqueadas.length > 0 ? resolverResumenEconomicoSeleccion(lineasSeleccion) : null, [lineasSeleccion, lineasVisualesCheckout.lineasBloqueadas.length]);
   const producto = useMemo(() => modoCheckout === "producto_unico" ? PRODUCTOS_CATALOGO.find((item) => item.slug === datos.producto_slug) ?? null : null, [datos.producto_slug, modoCheckout]);
@@ -204,7 +206,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
           <p className={estilos.estadoCuenta}>La disponibilidad visible en frontend es orientativa: no reserva unidades y el backend vuelve a validar stock al crear el pedido real.</p>
           <label>Intención y observaciones del pedido<textarea value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} /></label>
           {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
-          <p className={estilos.estadoCuenta}>Subtotal: <strong>{formatearMonedaEur(subtotalPedidoVisible)}</strong> · Envío estándar: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(importeEnvio)}</strong> · Impuestos (IVA 21%): <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(importeImpuestosVisible)}</strong> · Total: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(totalFiscalVisible)}</strong></p>
+          <p className={estilos.estadoCuenta}>Subtotal: <strong>{formatearMonedaEur(desgloseFiscalVisible.subtotal)}</strong> · Envío estándar: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.envio)}</strong> · Base imponible: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.baseImponible)}</strong> · Impuestos (IVA 21%): <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.impuestos)}</strong> · Total: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.total)}</strong></p>
         </fieldset>
         <fieldset>
           <legend>Dirección de entrega</legend>
