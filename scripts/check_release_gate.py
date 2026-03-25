@@ -279,6 +279,13 @@ def main() -> int:
             blocking=True,
         )
     )
+    results.append(
+        _run_block(
+            "H) Conciliación operativa mínima (solo lectura)",
+            [PYTHON, "scripts/check_operational_reconciliation.py", "--fail-on", "none"],
+            blocking=False,
+        )
+    )
     results.extend(_frontend_block())
 
     code = _print_summary(results)

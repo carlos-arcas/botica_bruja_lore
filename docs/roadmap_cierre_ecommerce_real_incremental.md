@@ -633,8 +633,39 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R14 — Observabilidad, conciliación y hardening operacional
-- **Estado**: `PARTIAL`.
-- **Lectura actual**: existen logging/checks y quality gate canónico, pero falta cierre integral de observabilidad/conciliación de operación real.
+- **Estado**: `DONE`.
+- **Lectura actual**: el repositorio ya dispone de una conciliación operativa mínima y accionable, reutilizable como script auditable e integrada de forma ligera en el gate canónico.
+
+**Cierre de R14 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Encajar la capacidad como **script operativo reutilizable** (`scripts/check_operational_reconciliation.py`) en vez de abrir UI/backoffice nuevo.
+  2. Mantener foco en reglas mínimas de alto valor operacional con severidades (`ERROR`, `WARNING`, `INFO`) y sin mutación de datos.
+  3. Integrar la conciliación en `check_release_gate.py` como bloque **informativo no bloqueante** (`--fail-on none`) para no degradar el gate técnico base en entornos sin tablas/datos.
+  4. Incluir manejo explícito de entornos vacíos/no inicializados (`SKIP`) para ejecución robusta en local/CI.
+- **Archivos tocados**:
+  - `scripts/check_operational_reconciliation.py`
+  - `scripts/check_release_gate.py`
+  - `tests/scripts/test_check_operational_reconciliation.py`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+- **Comandos ejecutados**:
+  - `python manage.py test tests.scripts.test_check_operational_reconciliation tests.scripts.test_check_release_gate_snapshot`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_operational_reconciliation.py --fail-on none`
+  - `python scripts/check_release_gate.py`
+- **Evidencia**:
+  - reglas implementadas para discrepancias reales: pago sin descuento ni incidencia, reembolso sin cancelación operativa, cancelación operativa sin reembolso iniciado, restitución sin ledger, expedición incoherente y emails contradictorios;
+  - salida auditable en texto/JSON con códigos estables por inconsistencia;
+  - pruebas dedicadas cubren detección de inconsistencias, ausencia de falsos positivos, severidad/salida y política de exit code;
+  - gate canónico ejecutado en verde con conciliación reportada como bloque informativo de solo lectura.
+- **Deuda residual**:
+  1. Falta incorporar una vista consolidada en backoffice (si se decide en incrementos posteriores) para explotación visual sin CLI.
+  2. La conciliación actual es intencionalmente mínima; no incluye analítica histórica, SLA ni correlación multi-evento avanzada.
+  3. El bloque del gate se ejecuta en modo informativo; el uso bloqueante (`--fail-on error`) queda para operación en entorno con datos reales.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R15 — Seguridad, privacidad, backups y release readiness
 - **Estado**: `PLANNED`.
@@ -689,3 +720,5 @@
 - **2026-03-25 — R12 (cierre):** recibo HTML descargable/imprimible implementado desde pedido real canónico, acceso visible en detalle y mi cuenta, tests backend/frontend en verde y gate canónico superado.
 - **2026-03-25 — R13 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` para auditar brecha real de tracking visible entre backoffice, detalle cliente, mi cuenta y documento descargable.
 - **2026-03-25 — R13 (cierre):** tracking visible endurecido como `DONE` con resolver frontend reutilizable, copy honesta para envío sin tracking público, documento descargable alineado con expedición y tests backend/frontend relevantes en verde.
+- **2026-03-25 — R14 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de implementar la capa mínima de conciliación operacional.
+- **2026-03-25 — R14 (cierre):** conciliación operativa mínima cerrada como `DONE` con script de solo lectura, severidades accionables, pruebas dedicadas e integración informativa en `check_release_gate.py`.
