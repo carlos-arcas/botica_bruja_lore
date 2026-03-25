@@ -258,6 +258,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 
 ## 17. Actualización incremental — R05 descuento post-pago según unidad base
 - Capacidad: **Descuento post-pago unit-aware (cantidad + unidad comercial contra unidad base de inventario)**.
+
 - Estado: **DONE**.
 - Evidencia implementada:
   - el caso de uso post-pago valida por línea la compatibilidad de unidad (`unidad_comercial` de la línea vs `unidad_base` de inventario) antes de cualquier descuento;
@@ -941,3 +942,16 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. no se admite hardcodear credenciales en scripts de operación;
   2. dump lógico no se genera en rutas versionables del repo;
   3. `dry-run` no sustituye drill real, pero deja base repetible y auditable en entornos limitados.
+
+## 48. Operación V2-R04: coordinación devolución aceptada con reembolso y restitución manual
+- Capacidad: **Coordinación operativa mínima postventa para devolución aceptada**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `DevolucionPedidoModelo` expone estado operativo derivado (`reembolso_operativo`, `restitucion_operativa`, `esta_resuelta_operativamente`) sin introducir duplicación de flags persistidos;
+  - Django Admin de devoluciones muestra resumen operativo y estados de reembolso/restitución para evitar ambigüedad operativa;
+  - acciones admin desde devolución para ejecutar reembolso manual o restitución manual sobre pedido asociado, con elegibilidad explícita y logging de ejecución/rechazo;
+  - pruebas de postventa cubren devolución aceptada pendiente/parcial/resuelta y rechazo de acción coordinada en devoluciones no elegibles.
+- Regla activa:
+  1. no hay automatización de reembolso al aceptar devolución;
+  2. no hay automatización de restitución al aceptar devolución;
+  3. la resolución operativa de devolución es explícita y auditable, pero su cierre administrativo sigue siendo manual.

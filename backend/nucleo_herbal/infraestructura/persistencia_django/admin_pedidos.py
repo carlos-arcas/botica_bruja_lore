@@ -266,6 +266,14 @@ def _aplicar_estado_devolucion(
         )
 
 
+def _devolucion_elegible_reembolso(devolucion: DevolucionPedidoModelo) -> bool:
+    return devolucion.estado == DevolucionPedidoModelo.ESTADO_ACEPTADA and devolucion.reembolso_operativo == "pendiente"
+
+
+def _devolucion_elegible_restitucion(devolucion: DevolucionPedidoModelo) -> bool:
+    return devolucion.estado == DevolucionPedidoModelo.ESTADO_ACEPTADA and devolucion.restitucion_operativa == "pendiente"
+
+
 @admin.action(description="Marcar devolución como recibida")
 def marcar_devolucion_recibida(modeladmin, request: HttpRequest, queryset):
     _aplicar_estado_devolucion(
@@ -304,6 +312,94 @@ def cerrar_devolucion(modeladmin, request: HttpRequest, queryset):
         queryset,
         estado_objetivo=DevolucionPedidoModelo.ESTADO_CERRADA,
     )
+
+
+@admin.action(description="Ejecutar reembolso manual (devolución aceptada)")
+def ejecutar_reembolso_manual_desde_devolucion(modeladmin, request: HttpRequest, queryset):
+    caso = None
+    actor = request.user.get_username() or "admin"
+    reembolsadas = 0
+    omitidas = 0
+    for devolucion in queryset.select_related("pedido"):
+        if not _devolucion_elegible_reembolso(devolucion):
+            omitidas += 1
+            continue
+        if caso is None:
+            try:
+                caso = ReembolsarPedidoCanceladoPorIncidenciaStock(
+                    repositorio_pedidos=RepositorioPedidosORM(),
+                    pasarela_pago=construir_pasarela_pago_stripe(),
+                    transacciones=TransaccionesDjango(),
+                    notificador=NotificadorEmailPostPago(),
+                )
+            except ErrorDominio:
+                omitidas += 1
+                logger.warning(
+                    "admin_devolucion_reembolso_no_configurado",
+                    extra={"devolucion_id": devolucion.pk, "pedido_id": devolucion.pedido_id, "actor": actor, "resultado": "rechazado"},
+                )
+                continue
+        try:
+            caso.ejecutar(
+                id_pedido=devolucion.pedido_id,
+                operation_id=f"admin-devol-refund-{uuid4().hex}",
+                actor=actor,
+            )
+        except (ErrorAplicacionLookup, ErrorDominio):
+            omitidas += 1
+            logger.warning(
+                "admin_devolucion_reembolso_rechazado",
+                extra={"devolucion_id": devolucion.pk, "pedido_id": devolucion.pedido_id, "actor": actor, "resultado": "rechazado"},
+            )
+            continue
+        reembolsadas += 1
+        logger.info(
+            "admin_devolucion_reembolso_ejecutado",
+            extra={"devolucion_id": devolucion.pk, "pedido_id": devolucion.pedido_id, "actor": actor, "resultado": "ok"},
+        )
+    if reembolsadas:
+        modeladmin.message_user(request, f"{reembolsadas} devolución(es) con reembolso manual ejecutado.", level=messages.SUCCESS)
+    if omitidas:
+        modeladmin.message_user(request, f"{omitidas} devolución(es) omitida(s): no elegibles o reembolso rechazado.", level=messages.WARNING)
+
+
+@admin.action(description="Restituir inventario manual (devolución aceptada)")
+def restituir_inventario_desde_devolucion(modeladmin, request: HttpRequest, queryset):
+    caso = RestituirInventarioManualPedidoCancelado(
+        repositorio_pedidos=RepositorioPedidosORM(),
+        repositorio_inventario=RepositorioInventarioORM(),
+        repositorio_movimientos=RepositorioMovimientosInventarioORM(),
+        transacciones=TransaccionesDjango(),
+    )
+    actor = request.user.get_username() or "admin"
+    restituidas = 0
+    omitidas = 0
+    for devolucion in queryset.select_related("pedido"):
+        if not _devolucion_elegible_restitucion(devolucion):
+            omitidas += 1
+            continue
+        try:
+            caso.ejecutar(
+                id_pedido=devolucion.pedido_id,
+                operation_id=f"admin-devol-stock-{uuid4().hex}",
+                actor=actor,
+            )
+        except (ErrorAplicacionLookup, ErrorDominio):
+            omitidas += 1
+            logger.warning(
+                "admin_devolucion_restitucion_rechazada",
+                extra={"devolucion_id": devolucion.pk, "pedido_id": devolucion.pedido_id, "actor": actor, "resultado": "rechazado"},
+            )
+            continue
+        restituidas += 1
+        logger.info(
+            "admin_devolucion_restitucion_ejecutada",
+            extra={"devolucion_id": devolucion.pk, "pedido_id": devolucion.pedido_id, "actor": actor, "resultado": "ok"},
+        )
+    if restituidas:
+        modeladmin.message_user(request, f"{restituidas} devolución(es) con restitución manual ejecutada.", level=messages.SUCCESS)
+    if omitidas:
+        modeladmin.message_user(request, f"{omitidas} devolución(es) omitida(s): no elegibles o restitución rechazada.", level=messages.WARNING)
 
 
 @admin.register(PedidoRealModelo)
@@ -435,12 +531,31 @@ class PedidoRealAdmin(admin.ModelAdmin):
 
 @admin.register(DevolucionPedidoModelo)
 class DevolucionPedidoAdmin(admin.ModelAdmin):
-    list_display = ("id", "pedido", "estado", "motivo", "abierta_por", "revisada_por", "fecha_apertura", "fecha_actualizacion")
+    list_display = (
+        "id",
+        "pedido",
+        "estado",
+        "resumen_operativo",
+        "reembolso_operativo_admin",
+        "restitucion_operativa_admin",
+        "motivo",
+        "abierta_por",
+        "revisada_por",
+        "fecha_apertura",
+        "fecha_actualizacion",
+    )
     list_filter = ("estado", "pedido__estado", "pedido__estado_pago")
     search_fields = ("pedido__id_pedido", "motivo", "abierta_por", "revisada_por")
     readonly_fields = ("fecha_apertura", "fecha_actualizacion")
     autocomplete_fields = ("pedido",)
-    actions = (marcar_devolucion_recibida, marcar_devolucion_aceptada, marcar_devolucion_rechazada, cerrar_devolucion)
+    actions = (
+        marcar_devolucion_recibida,
+        marcar_devolucion_aceptada,
+        marcar_devolucion_rechazada,
+        cerrar_devolucion,
+        ejecutar_reembolso_manual_desde_devolucion,
+        restituir_inventario_desde_devolucion,
+    )
 
     def save_model(self, request, obj, form, change):
         if not change and not obj.abierta_por:
@@ -450,3 +565,19 @@ class DevolucionPedidoAdmin(admin.ModelAdmin):
                 extra={"pedido_id": obj.pedido_id, "actor": obj.abierta_por, "estado": obj.estado, "resultado": "intento"},
             )
         super().save_model(request, obj, form, change)
+
+    @admin.display(description="Estado reembolso")
+    def reembolso_operativo_admin(self, obj: DevolucionPedidoModelo) -> str:
+        return obj.reembolso_operativo
+
+    @admin.display(description="Estado restitución")
+    def restitucion_operativa_admin(self, obj: DevolucionPedidoModelo) -> str:
+        return obj.restitucion_operativa
+
+    @admin.display(description="Resolución operativa")
+    def resumen_operativo(self, obj: DevolucionPedidoModelo) -> str:
+        if obj.esta_resuelta_operativamente:
+            return "resuelta"
+        if obj.estado == DevolucionPedidoModelo.ESTADO_ACEPTADA:
+            return "pendiente"
+        return "no_aplica"
