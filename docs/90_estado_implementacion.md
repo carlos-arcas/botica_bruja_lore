@@ -900,3 +900,15 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. política fiscal mínima de fase: IVA general único del 21% para pedido real;
   2. sin motor tributario avanzado en esta entrega (sin multi-país, OSS/IOSS, exenciones raras ni promociones fiscales);
   3. no se abre aún factura/recibo descargable formal (siguiente incremento R12).
+
+## 45. Observabilidad y conciliación operativa mínima (R14)
+- Capacidad: **Conciliación operativa auditable de pedido↔inventario↔reembolso↔expedición↔emails**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - script operativo de solo lectura `scripts/check_operational_reconciliation.py` con salida textual/JSON, severidades (`ERROR`, `WARNING`, `INFO`) y política configurable de exit code (`--fail-on`);
+  - reglas mínimas accionables para detectar desalineaciones reales: pago sin descuento ni incidencia, reembolso sin cancelación operativa, cancelación operativa sin reembolso iniciado, restitución de inventario sin ledger `restitucion_manual`, incoherencias logísticas y banderas de email contradictorias;
+  - integración mínima en gate canónico mediante bloque informativo no bloqueante (`check_release_gate.py`) para mantener visibilidad continua sin mutar estado.
+- Regla activa:
+  1. la conciliación no modifica datos ni sustituye workflows de backoffice;
+  2. la detección se centra en discrepancias operativas de alto valor (no reporting cosmético);
+  3. el gate conserva carácter no mutante y reporta conciliación como señal operativa reutilizable.
