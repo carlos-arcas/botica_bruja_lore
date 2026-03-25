@@ -13,6 +13,7 @@ export type ExpedicionPedido = {
 
 export type PedidoCreado = {
   id_pedido: string;
+  fecha_creacion?: string;
   estado: string;
   estado_pago: string;
   canal_checkout: string;
@@ -117,6 +118,11 @@ export async function obtenerPedidoPublico(idPedido: string): Promise<{ estado: 
   const idNormalizado = idPedido.trim();
   if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
   return enviarPedido(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}`, { method: "GET", cache: "no-store" });
+}
+
+export function construirUrlDocumentoPedido(idPedido: string): string {
+  const idNormalizado = idPedido.trim();
+  return `/api/pedidos/${encodeURIComponent(idNormalizado)}/documento`;
 }
 
 export async function iniciarPagoPedido(idPedido: string): Promise<{ estado: "ok"; pago: PagoPedido } | ErrorPedidoApi> {

@@ -6,13 +6,14 @@ import json
 import logging
 from uuid import uuid4
 
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
 from ...aplicacion.errores_pedidos import ErrorStockPedido
 from ...dominio.excepciones import ErrorDominio
 from ...infraestructura.proveedor_envio_estandar import ProveedorEnvioEstandarFijo
 from .dependencias import construir_servicios_publicos_pedidos
+from .documento_pedido_html import construir_documento_html_pedido
 from .payload_pedidos import construir_payload_pedido
 from .pedidos_serializadores import serializar_pedido
 from .respuestas_json import json_conflicto, json_no_encontrado, json_validacion
@@ -76,6 +77,21 @@ def detalle_pedido(_request: HttpRequest, id_pedido: str) -> JsonResponse:
     except ErrorAplicacionLookup as error_lookup:
         return json_no_encontrado(str(error_lookup))
     return JsonResponse({"pedido": serializar_pedido(pedido)})
+
+
+def documento_pedido_descargable(_request: HttpRequest, id_pedido: str) -> HttpResponse | JsonResponse:
+    try:
+        pedido = construir_servicios_publicos_pedidos().obtener_pedido.ejecutar(id_pedido)
+    except ErrorAplicacionLookup as error_lookup:
+        return json_no_encontrado(str(error_lookup))
+    logger.info(
+        "pedido_real_documento_descargable",
+        extra={"ruta": "/api/v1/pedidos/{id_pedido}/documento/", "id_pedido": pedido.id_pedido, "resultado": "ok"},
+    )
+    html = construir_documento_html_pedido(pedido)
+    respuesta = HttpResponse(html, content_type="text/html; charset=utf-8")
+    respuesta["Content-Disposition"] = f'attachment; filename="recibo-{pedido.id_pedido}.html"'
+    return respuesta
 
 
 def _leer_json(request: HttpRequest) -> tuple[dict, JsonResponse | None]:

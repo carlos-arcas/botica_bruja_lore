@@ -546,8 +546,50 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R12 — Factura o recibo descargable y trazable
-- **Estado**: `PLANNED`.
-- **Lectura actual**: existe recibo/pantalla de pedido real; falta cierre formal de documento descargable trazable con requisitos legales.
+- **Estado**: `DONE`.
+- **Lectura actual**: pedido real expone documento HTML descargable y trazable generado en runtime desde datos canónicos del pedido (sin binarios versionados en repo).
+
+**Cierre de R12 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Priorizar **HTML descargable/imprimible** frente a PDF dinámico para cumplir restricciones del repo (sin binarios), mantener simplicidad operativa y evitar dependencias frágiles de renderizado.
+  2. Reutilizar el **pedido real como única fuente de verdad** (DTO + serialización existente), sin abrir un segundo modelo documental ni recalcular importes por fuera del dominio/aplicación.
+  3. Añadir endpoint mínimo dedicado de documento (`/api/v1/pedidos/{id_pedido}/documento/`) con descarga `attachment` y trazabilidad operativa mínima por log estructurado.
+  4. Exponer acceso al documento desde superficies existentes y naturales: detalle de pedido real (`/pedido/[id_pedido]`) y listado de pedidos en cuenta (`/mi-cuenta/pedidos`).
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/presentacion/publica/documento_pedido_html.py`
+  - `backend/nucleo_herbal/presentacion/publica/views_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/dto_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/pedidos_serializadores.py`
+  - `tests/nucleo_herbal/test_api_pedidos_real.py`
+  - `frontend/app/api/pedidos/[id_pedido]/documento/route.ts`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `frontend/tests/pedido-real-operacion-ui.test.ts`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/90_estado_implementacion.md`
+- **Comandos ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.test_api_pedidos_real`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `npm --prefix frontend run test:checkout-real`
+  - `npm --prefix frontend run lint`
+  - `npm --prefix frontend run build`
+  - `python scripts/check_release_gate.py`
+- **Evidencia**:
+  - ruta de documento descargable operativa y visible en build de Next (`/api/pedidos/[id_pedido]/documento`);
+  - respuesta HTML con `Content-Disposition` attachment y contenido mínimo (líneas, subtotal, envío, impuestos, total, estado y estado cliente cancelación/reembolso);
+  - tests backend cubren contrato del documento, coherencia de importes, visibilidad de cancelación/reembolso y 404;
+  - tests frontend validan visibilidad del enlace de descarga en recibo real y en listado de pedidos de cuenta.
+- **Deuda residual**:
+  1. El documento es recibo mínimo operativo; no cubre facturación legal enterprise ni series fiscales complejas.
+  2. El endpoint mantiene el mismo esquema de acceso que el detalle público de pedido real; endurecimiento adicional de ACL queda para hardening posterior.
+  3. No se añade envío por email de adjunto ni firma electrónica (fuera de alcance).
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R13 — Endurecimiento de expedición y tracking visible
 - **Estado**: `PARTIAL`.
@@ -565,7 +607,7 @@
 1. **Deriva de alcance** por coexistencia de flujo demo y real sin tablero único estricto.
 2. **Semántica comercial de granel aún incompleta** (unidad/cantidad por línea de pedido), aunque la unidad base de inventario ya quedó cerrada en R01.
 3. **Riesgo de deriva del ledger** si operaciones futuras de inventario no registran movimiento en el catálogo cerrado.
-4. **Gap fiscal/legal** hasta cerrar R11-R12 (importe legal, documento fiscal trazable).
+4. **Gap fiscal/legal residual** limitado a facturación enterprise/multi-país; recibo trazable mínimo ya cerrado en R12.
 5. **Madurez operativa parcial** en tracking, conciliación e incident response.
 6. **Riesgo de sobredeclarar DONE** por apoyarse en documentación sin validar evidencia en código/tests.
 
@@ -574,7 +616,7 @@
 2. Extender R08 con caso de uso de `restitucion_manual` conectado al ledger ya introducido.
 3. Definir alcance exacto de page/backoffice inventario Next para no duplicar admin Django.
 4. Cerrar política operativa de restitución manual y su compatibilidad con cancelación/reembolso.
-5. Fijar estrategia fiscal mínima legal (impuestos/moneda/redondeo) antes de factura/recibo descargable.
+5. Definir si el endurecimiento de acceso al documento de pedido se tratará en R14 o R15.
 6. Fijar criterio de cierre R15 (checklist release readiness, backups, privacidad y seguridad aplicable).
 
 ## 6. Bitácora de ejecución
@@ -606,3 +648,5 @@
 - **2026-03-25 — R11 (cierre):** fiscalidad base mínima cerrada como `DONE` con política explícita de IVA 21%, desglose fiscal en pedido/checkout/recibo, pago alineado al total fiscal y pruebas backend/frontend relevantes en verde.
 - **2026-03-25 — R11 (reapertura técnica):** estado movido temporalmente de `DONE` a `IN_PROGRESS` para hardening de redondeo en pasarela Stripe y consolidación de desglose visible en checkout.
 - **2026-03-25 — R11 (cierre hardening):** R11 vuelve a `DONE` con conversión a céntimos/Decimal sin floats en pasarela, helper fiscal visible reutilizable en frontend y tests de regresión backend/frontend en verde.
+- **2026-03-25 — R12 (arranque):** estado movido de `PLANNED` a `IN_PROGRESS` antes de implementar documento descargable trazable.
+- **2026-03-25 — R12 (cierre):** recibo HTML descargable/imprimible implementado desde pedido real canónico, acceso visible en detalle y mi cuenta, tests backend/frontend en verde y gate canónico superado.

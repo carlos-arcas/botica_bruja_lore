@@ -151,4 +151,6 @@ test("recibo real muestra subtotal, base, impuestos, envío y total del pedido",
   assert.equal(archivoRecibo.includes("Base imponible:"), true);
   assert.equal(archivoRecibo.includes("Impuestos (tipo"), true);
   assert.equal(archivoRecibo.includes("Total:"), true);
+  assert.equal(archivoRecibo.includes("Descargar recibo HTML trazable"), true);
+  assert.equal(archivoRecibo.includes("construirUrlDocumentoPedido"), true);
 });
