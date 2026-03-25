@@ -134,6 +134,7 @@ test("checkout real deja claro que la disponibilidad frontend es informativa y n
 test("checkout real muestra subtotal, envío estándar, impuestos y total antes de pagar", () => {
   assert.equal(archivoFlujo.includes("Subtotal:"), true);
   assert.equal(archivoFlujo.includes("Envío estándar:"), true);
+  assert.equal(archivoFlujo.includes("Base imponible:"), true);
   assert.equal(archivoFlujo.includes("Impuestos (IVA 21%)"), true);
   assert.equal(archivoFlujo.includes("Total:"), true);
 });

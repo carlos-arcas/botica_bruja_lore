@@ -9,6 +9,7 @@ import {
   resolverModoCheckoutReal,
   validarCheckoutReal,
 } from "../contenido/catalogo/checkoutReal";
+import { calcularDesgloseFiscalVisible } from "../contenido/catalogo/fiscalidadCheckout";
 import {
   aplicarDireccionGuardadaADatosCheckoutReal,
   resolverDireccionPredeterminadaCheckoutReal,
@@ -65,6 +66,15 @@ test("checkout real usa un payload propio y separado del demo", () => {
   assert.equal("canal" in payload, false);
   assert.equal(payload.canal_checkout, "web_invitado");
   assert.equal(payload.direccion_entrega.ciudad, "Madrid");
+});
+
+test("checkout real calcula desglose fiscal visible con redondeo estable", () => {
+  const desglose = calcularDesgloseFiscalVisible(9.995, 4.9);
+  assert.equal(desglose.subtotal, 9.99);
+  assert.equal(desglose.envio, 4.9);
+  assert.equal(desglose.baseImponible, 14.89);
+  assert.equal(desglose.impuestos, 3.13);
+  assert.equal(desglose.total, 18.02);
 });
 
 test("checkout real valida dirección obligatoria y modo invitado por defecto", () => {

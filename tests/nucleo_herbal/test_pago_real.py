@@ -1,6 +1,6 @@
 from decimal import Decimal
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from backend.nucleo_herbal.aplicacion.casos_de_uso import ErrorAplicacionLookup
 from backend.nucleo_herbal.aplicacion.casos_de_uso_pago_pedidos import IniciarPagoPedido
@@ -56,6 +56,41 @@ class PagoRealTests(TestCase):
         self.assertTrue(resultado.email_post_pago_enviado)
         notificador.enviar_confirmacion_pago.assert_not_called()
 
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe._post")
+    def test_pasarela_stripe_redondea_a_centimos_con_half_up(self, post_stripe: Mock) -> None:
+        post_stripe.return_value = {"id": "cs_test_1", "url": "https://stripe.test/cs_test_1"}
+        pedido = Pedido(
+            id_pedido="PED-1",
+            estado="pendiente_pago",
+            estado_pago="pendiente",
+            canal_checkout="web_invitado",
+            cliente=ClientePedido(id_cliente=None, email="real@test.dev", nombre_contacto="Lore", telefono_contacto="600111222"),
+            direccion_entrega=DireccionEntrega(nombre_destinatario="Lore", linea_1="Calle Luna 1", codigo_postal="28001", ciudad="Madrid", provincia="Madrid"),
+            lineas=(LineaPedido(id_producto="PRO-1", slug_producto="bruma", nombre_producto="Bruma", cantidad_comercial=1, unidad_comercial="ud", precio_unitario=Decimal("9.995")),),
+            moneda="EUR",
+            importe_envio=Decimal("0"),
+            tipo_impositivo=Decimal("0.21"),
+        )
+        adaptador = _adaptador()
+
+        adaptador.crear_intencion_pago(pedido, "op-test")
+
+        payload = post_stripe.call_args.args[1]
+        self.assertEqual(payload["line_items[0][price_data][unit_amount]"], "1000")
+        self.assertEqual(payload["line_items[1][price_data][unit_amount]"], "0")
+        self.assertEqual(payload["line_items[2][price_data][unit_amount]"], "210")
+
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe._get")
+    def test_pasarela_stripe_consulta_estado_externo_sin_floats(self, get_stripe: Mock) -> None:
+        get_stripe.return_value = {"payment_status": "paid", "amount_total": 1683, "currency": "eur"}
+        adaptador = _adaptador()
+
+        estado, importe, moneda = adaptador.consultar_estado_externo("cs_test_123")
+
+        self.assertEqual(estado, "pagado")
+        self.assertEqual(importe, Decimal("16.83"))
+        self.assertEqual(moneda, "EUR")
+
 
 def _pedido_base(estado: str = "pendiente_pago", estado_pago: str = "pendiente") -> Pedido:
     return Pedido(
@@ -67,4 +102,16 @@ def _pedido_base(estado: str = "pendiente_pago", estado_pago: str = "pendiente")
         direccion_entrega=DireccionEntrega(nombre_destinatario="Lore", linea_1="Calle Luna 1", codigo_postal="28001", ciudad="Madrid", provincia="Madrid"),
         lineas=(LineaPedido(id_producto="PRO-1", slug_producto="bruma", nombre_producto="Bruma", cantidad_comercial=1, unidad_comercial="ud", precio_unitario=Decimal("9.90")),),
         moneda="EUR",
+    )
+
+
+def _adaptador() -> PasarelaPagoStripe:
+    return PasarelaPagoStripe(
+        ConfiguracionStripe(
+            api_key_secreta="sk_test_123",
+            webhook_secret="whsec_123",
+            public_key="pk_test_123",
+            success_url="https://example.com/pedido/{ID_PEDIDO}?retorno_pago=success&session_id={CHECKOUT_SESSION_ID}",
+            cancel_url="https://example.com/pedido/{ID_PEDIDO}?retorno_pago=cancel",
+        )
     )

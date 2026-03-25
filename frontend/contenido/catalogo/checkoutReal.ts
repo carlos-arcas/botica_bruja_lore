@@ -228,9 +228,14 @@ function construirLineaReal(slug: string | null, cantidad: number, productos: Pr
 }
 
 function convertirPrecioVisibleADecimal(precioVisible: string): string {
-  const limpio = precioVisible.replace(/[^0-9,]/g, "").replace(",", ".");
-  const numero = Number.parseFloat(limpio);
-  return Number.isFinite(numero) ? numero.toFixed(2) : "0.00";
+  const limpio = precioVisible.replace(/[^\d,.-]/g, "").replace(",", ".");
+  const match = limpio.match(/^-?\d+(?:\.\d+)?$/);
+  if (!match) return "0.00";
+  const [entera, decimal = ""] = match[0].split(".");
+  const euros = Number.parseInt(entera, 10);
+  if (!Number.isFinite(euros)) return "0.00";
+  const decimales = `${decimal}00`.slice(0, 2);
+  return `${euros}.${decimales}`;
 }
 
 function resolverCantidadCheckoutReal(cantidadTexto: string): number {

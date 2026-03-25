@@ -514,33 +514,21 @@
 **Cierre de R11 (resultado real de esta ejecución)**
 - **Estado final**: `DONE`.
 - **Decisiones clave**:
-  1. Política fiscal mínima explícita: IVA general fijo del 21% (`tipo_impositivo=0.2100`) para todo pedido real de esta fase, sin abrir motor multi-país ni casuística fiscal avanzada.
-  2. Frontera de cálculo única en dominio (`Pedido`): `base_imponible = subtotal + importe_envio`, `importe_impuestos = round(base * tipo)`, `total = base + impuestos`, con `Decimal` + redondeo `ROUND_HALF_UP` a 2 decimales.
-  3. Persistencia mínima legalmente trazable: `tipo_impositivo` queda almacenado por pedido en ORM/migración para evitar ambigüedad histórica si la política cambia en incrementos futuros.
-  4. Alineación extremo a extremo: serialización API, recibo/checkout frontend y cobro Stripe consumen el mismo desglose fiscal (Stripe añade línea de impuestos explícita).
+  1. Se mantiene la política fiscal mínima explícita ya activa en R11 (IVA general fijo 21%) y se evita abrir motor fiscal avanzado.
+  2. Se endurece la coherencia de cobro real: Stripe convierte importes a céntimos con helper único y redondeo `ROUND_HALF_UP` (sin división float en normalización/consulta de estado).
+  3. Se elimina cálculo fiscal ad-hoc en checkout real y se centraliza un helper de desglose visible (`subtotal`, `envío`, `base imponible`, `impuestos`, `total`) para reducir contradicciones de UI.
+  4. Se refuerza cobertura con tests backend/frontend de redondeo y visualización del desglose.
 - **Archivos tocados**:
-  - `backend/nucleo_herbal/dominio/pedidos.py`
-  - `backend/nucleo_herbal/aplicacion/dto_pedidos.py`
-  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos.py`
-  - `backend/nucleo_herbal/presentacion/publica/pedidos_serializadores.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_pedidos.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0034_pedidorealmodelo_tipo_impositivo.py`
   - `backend/nucleo_herbal/infraestructura/pagos_stripe.py`
-  - `tests/nucleo_herbal/test_api_pedidos_real.py`
-  - `tests/nucleo_herbal/test_api_pago_real.py`
-  - `tests/nucleo_herbal/test_casos_de_uso_pedidos_real.py`
-  - `tests/nucleo_herbal/test_contrato_ecommerce_real.py`
-  - `frontend/infraestructura/api/pedidos.ts`
+  - `tests/nucleo_herbal/test_pago_real.py`
   - `frontend/contenido/catalogo/checkoutReal.ts`
+  - `frontend/contenido/catalogo/fiscalidadCheckout.ts`
   - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
-  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/tests/checkout-real.test.ts`
   - `frontend/tests/checkout-real-ui.test.ts`
-  - `docs/90_estado_implementacion.md`
   - `docs/roadmap_cierre_ecommerce_real_incremental.md`
 - **Comandos ejecutados**:
-  - `python manage.py makemigrations persistencia_django`
-  - `python manage.py test tests.nucleo_herbal.test_casos_de_uso_pedidos_real tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real tests.nucleo_herbal.test_contrato_ecommerce_real tests.nucleo_herbal.infraestructura.test_repositorio_pedidos_real`
+  - `python manage.py test tests.nucleo_herbal.test_contrato_ecommerce_real tests.nucleo_herbal.test_casos_de_uso_pedidos_real tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real`
   - `python manage.py check`
   - `python manage.py makemigrations --check --dry-run`
   - `python scripts/check_backend_readiness.py`
@@ -548,14 +536,13 @@
   - `npm --prefix frontend run lint`
   - `npm --prefix frontend run build`
 - **Evidencia**:
-  - contratos de pedido (`pedido` + `resumen`) exponen `base_imponible`, `tipo_impositivo`, `importe_impuestos` y `total`;
-  - el pago real reporta/importa total fiscal (API inicia pago con `importe` final fiscal y Stripe incluye línea de impuestos);
-  - checkout/recibo frontend muestran subtotal, envío, impuestos y total sin contradicción con API;
-  - pruebas backend/frontend del bloque y validaciones de quality gate mínimo en verde.
+  - pasarela Stripe genera `unit_amount` y normaliza `amount_total` mediante helpers deterministas de céntimos/Decimal;
+  - checkout real muestra subtotal, envío, base imponible, impuestos y total con cálculo centralizado;
+  - suite backend/frontend del bloque en verde y sin migraciones pendientes.
 - **Deuda residual**:
-  1. Política fiscal única (IVA 21%) deliberadamente temporal; quedan fuera multi-país, OSS/IOSS y exenciones especiales.
-  2. No se implementa todavía factura/recibo legal descargable (R12).
-  3. No se introduce prorrateo fiscal por promociones/cupones (fuera de alcance).
+  1. Política fiscal única (IVA 21%) sigue deliberadamente limitada a esta fase.
+  2. Quedan fuera OSS/IOSS, multi-país, exenciones específicas y promoción fiscal.
+  3. R12 mantiene pendiente el documento fiscal descargable legalmente trazable.
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R12 — Factura o recibo descargable y trazable
@@ -617,3 +604,5 @@
 - **2026-03-25 — R10 (cierre):** emails transaccionales reales mínimos cerrados como `DONE` para pagado, enviado, cancelación operativa y reembolso manual ejecutado, con idempotencia mínima por flags persistentes y tests backend relevantes en verde.
 - **2026-03-25 — R11 (arranque):** estado movido de `PLANNED` a `IN_PROGRESS` antes de tocar aritmética real de pedido/pago/serialización.
 - **2026-03-25 — R11 (cierre):** fiscalidad base mínima cerrada como `DONE` con política explícita de IVA 21%, desglose fiscal en pedido/checkout/recibo, pago alineado al total fiscal y pruebas backend/frontend relevantes en verde.
+- **2026-03-25 — R11 (reapertura técnica):** estado movido temporalmente de `DONE` a `IN_PROGRESS` para hardening de redondeo en pasarela Stripe y consolidación de desglose visible en checkout.
+- **2026-03-25 — R11 (cierre hardening):** R11 vuelve a `DONE` con conversión a céntimos/Decimal sin floats en pasarela, helper fiscal visible reutilizable en frontend y tests de regresión backend/frontend en verde.

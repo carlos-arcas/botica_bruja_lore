@@ -8,7 +8,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from urllib import parse, request
 
 from django.conf import settings
@@ -21,6 +21,8 @@ from ..dominio.pedidos import Pedido
 logger = logging.getLogger(__name__)
 
 API_BASE = "https://api.stripe.com/v1"
+PRECISION_MONEDA = Decimal("0.01")
+CIEN = Decimal("100")
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,7 +61,7 @@ class PasarelaPagoStripe(PuertoPasarelaPago):
     def consultar_estado_externo(self, id_externo_pago: str) -> tuple[str, Decimal, str]:
         respuesta = self._get(f"/checkout/sessions/{parse.quote(id_externo_pago)}")
         estado = "pagado" if respuesta.get("payment_status") == "paid" else "pendiente"
-        importe = Decimal(str((respuesta.get("amount_total") or 0) / 100))
+        importe = _centimos_a_decimal(respuesta.get("amount_total"))
         moneda = str(respuesta.get("currency", "eur")).upper()
         return estado, importe, moneda
 
@@ -137,19 +139,19 @@ def _payload_checkout_session(pedido: Pedido, config: ConfiguracionStripe) -> di
         base = f"line_items[{indice}]"
         payload[f"{base}[quantity]"] = str(linea.cantidad_comercial)
         payload[f"{base}[price_data][currency]"] = linea.moneda.lower()
-        payload[f"{base}[price_data][unit_amount]"] = str(int(linea.precio_unitario * 100))
+        payload[f"{base}[price_data][unit_amount]"] = str(_decimal_a_centimos(linea.precio_unitario))
         payload[f"{base}[price_data][product_data][name]"] = linea.nombre_producto
     indice_envio = len(pedido.lineas)
     base_envio = f"line_items[{indice_envio}]"
     payload[f"{base_envio}[quantity]"] = "1"
     payload[f"{base_envio}[price_data][currency]"] = pedido.moneda.lower()
-    payload[f"{base_envio}[price_data][unit_amount]"] = str(int(pedido.importe_envio * 100))
+    payload[f"{base_envio}[price_data][unit_amount]"] = str(_decimal_a_centimos(pedido.importe_envio))
     payload[f"{base_envio}[price_data][product_data][name]"] = "Envío estándar"
     indice_impuestos = indice_envio + 1
     base_impuestos = f"line_items[{indice_impuestos}]"
     payload[f"{base_impuestos}[quantity]"] = "1"
     payload[f"{base_impuestos}[price_data][currency]"] = pedido.moneda.lower()
-    payload[f"{base_impuestos}[price_data][unit_amount]"] = str(int(pedido.importe_impuestos * 100))
+    payload[f"{base_impuestos}[price_data][unit_amount]"] = str(_decimal_a_centimos(pedido.importe_impuestos))
     payload[f"{base_impuestos}[price_data][product_data][name]"] = f"Impuestos ({int(pedido.tipo_impositivo * 100)}%)"
     return payload
 
@@ -189,7 +191,7 @@ def _normalizar_evento(evento: dict[str, object]) -> EventoPagoNormalizadoDTO:
         estado_pago = "fallido"
     if not id_pedido or not id_externo or not tipo_evento:
         raise ErrorDominio("El webhook de Stripe no trae los datos mínimos requeridos.")
-    importe = Decimal(str((objeto.get("amount_total") or 0) / 100))
+    importe = _centimos_a_decimal(objeto.get("amount_total"))
     moneda = str(objeto.get("currency", "eur")).upper()
     return EventoPagoNormalizadoDTO(
         id_evento=str(evento.get("id", "")).strip(),
@@ -211,6 +213,19 @@ def _respuesta_intencion(id_externo_pago: str, url_pago: str | None) -> dict[str
         "estado_pago": "requiere_accion",
         "url_pago": url_pago,
     }
+
+
+def _decimal_a_centimos(importe: Decimal) -> int:
+    normalizado = importe.quantize(PRECISION_MONEDA, rounding=ROUND_HALF_UP)
+    return int((normalizado * CIEN).to_integral_value(rounding=ROUND_HALF_UP))
+
+
+def _centimos_a_decimal(valor: object) -> Decimal:
+    try:
+        centimos = int(valor)
+    except (TypeError, ValueError):
+        centimos = 0
+    return (Decimal(centimos) / CIEN).quantize(PRECISION_MONEDA, rounding=ROUND_HALF_UP)
 
 
 def _obligatoria(nombre: str) -> str:
