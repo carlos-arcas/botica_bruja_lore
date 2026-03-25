@@ -969,3 +969,19 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. sin casuística multi-país/OSS/IOSS en este bloque;
   2. sin motor fiscal enterprise, solo catálogo fiscal acotado y mantenible;
   3. se mantiene compatibilidad de contratos existentes mientras se expone la nueva trazabilidad por línea.
+
+## 26. Actualización V2-R06 — documento fiscal v2 más formal
+- Capacidad: **Documento fiscal HTML v2 trazable y más formal sobre pedido real**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - render HTML de documento evoluciona de recibo mínimo a estructura fiscal formal con identificador documental derivado del pedido (`DOC-{id_pedido}-{fecha}`), bloques de emisor/cliente/estado y tabla de detalle por línea (base, tipo impositivo, cuota y total línea);
+  - se mantienen totales canónicos de pedido (`subtotal`, `base imponible`, `envío`, `impuestos`, `total`) sin recalcular en frontend ni introducir motor paralelo;
+  - cancelación/reembolso se muestra de forma explícita y sobria cuando aplica;
+  - acceso cliente se conserva en detalle de pedido y listado de pedidos en mi cuenta, actualizando copy a “documento fiscal”.
+- Decisiones:
+  1. Se mantiene generación runtime en HTML descargable/imprimible y no se versionan binarios.
+  2. No se abre serie fiscal enterprise, multi-país, firma ni automatización de envío por email.
+- Validación ejecutada en este bloque:
+  - tests backend de API/documento de pedido real;
+  - tests frontend de visibilidad de enlace;
+  - `python manage.py check`, `python manage.py makemigrations --check --dry-run`, lint/build frontend y gate.

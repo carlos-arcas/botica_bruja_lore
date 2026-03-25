@@ -90,7 +90,7 @@ def documento_pedido_descargable(_request: HttpRequest, id_pedido: str) -> HttpR
     )
     html = construir_documento_html_pedido(pedido)
     respuesta = HttpResponse(html, content_type="text/html; charset=utf-8")
-    respuesta["Content-Disposition"] = f'attachment; filename="recibo-{pedido.id_pedido}.html"'
+    respuesta["Content-Disposition"] = f'attachment; filename="documento-fiscal-{pedido.id_pedido}.html"'
     return respuesta
 
 

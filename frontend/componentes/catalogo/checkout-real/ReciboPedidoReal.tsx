@@ -72,7 +72,7 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
       )}
       {puedePagar && <button className="boton boton--principal" type="button" onClick={pagarAhora} disabled={procesandoPago}>{procesandoPago ? "Redirigiendo al pago..." : botonPago(pedido.estado_pago)}</button>}
       {pedido.pago.url_pago && pedido.estado !== "pagado" && <p><a href={pedido.pago.url_pago}>Continuar pago externo</a></p>}
-      <p><a href={construirUrlDocumentoPedido(pedido.id_pedido)}>Descargar recibo HTML trazable</a></p>
+      <p><a href={construirUrlDocumentoPedido(pedido.id_pedido)}>Descargar documento fiscal HTML</a></p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Link href="/la-botica" className="boton boton--secundario">Volver a tienda</Link>
         {pedido.estado !== "pendiente_pago" && <Link href={`#confirmacion-${pedido.id_pedido}`} className="boton boton--secundario">Ver seguimiento del pedido</Link>}

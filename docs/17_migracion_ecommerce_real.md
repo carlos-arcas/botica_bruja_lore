@@ -368,3 +368,15 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - pedido real deja de depender de hipótesis de impuesto único y persiste snapshot fiscal por línea (`tipo_impositivo`, `importe_impuestos`);
   - el cobro Stripe replica esa aritmética por línea + envío para mantener coherencia pedido↔pago↔documento;
   - checkout/recibo/documento mantienen desglose consistente con la misma base de cálculo.
+
+## 26. Actualización V2-R06 — documento fiscal v2 / factura más formal
+- Estado técnico: **DONE** para formalización documental fiscal mínima en fase actual (sin abrir facturación enterprise).
+- Resultado real:
+  - documento descargable de pedido real evoluciona a formato fiscal HTML v2 con identificador trazable derivado del pedido;
+  - incluye bloques de emisor y cliente con datos disponibles del sistema, detalle fiscal por línea (base, tipo, cuota, total línea) y totales consistentes (`subtotal`, `base imponible`, `envío`, `impuestos`, `total`);
+  - mantiene coherencia end-to-end con la aritmética persistida en pedido/Stripe (sin recalcular por libre);
+  - conserva acceso desde superficies existentes de cliente (detalle de pedido y mi cuenta), ajustando copy de enlace.
+- Fuera de alcance explícito que se mantiene:
+  1. series fiscales legales complejas;
+  2. multi-país y reglas tributarias avanzadas;
+  3. firma electrónica y envío automático por email.
