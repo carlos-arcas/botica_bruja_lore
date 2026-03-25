@@ -74,6 +74,7 @@ type ProductoConSemanticaComercial = {
   unidad_comercial?: "ud" | "g" | "ml";
   incremento_minimo_venta?: number;
   cantidad_minima_compra?: number;
+  [clave: string]: unknown;
 };
 
 export function resolverModoCheckoutReal(items: ItemEncargoPreseleccionado[]): ModoCheckoutReal {

@@ -145,6 +145,12 @@ def _payload_checkout_session(pedido: Pedido, config: ConfiguracionStripe) -> di
     payload[f"{base_envio}[price_data][currency]"] = pedido.moneda.lower()
     payload[f"{base_envio}[price_data][unit_amount]"] = str(int(pedido.importe_envio * 100))
     payload[f"{base_envio}[price_data][product_data][name]"] = "Envío estándar"
+    indice_impuestos = indice_envio + 1
+    base_impuestos = f"line_items[{indice_impuestos}]"
+    payload[f"{base_impuestos}[quantity]"] = "1"
+    payload[f"{base_impuestos}[price_data][currency]"] = pedido.moneda.lower()
+    payload[f"{base_impuestos}[price_data][unit_amount]"] = str(int(pedido.importe_impuestos * 100))
+    payload[f"{base_impuestos}[price_data][product_data][name]"] = f"Impuestos ({int(pedido.tipo_impositivo * 100)}%)"
     return payload
 
 

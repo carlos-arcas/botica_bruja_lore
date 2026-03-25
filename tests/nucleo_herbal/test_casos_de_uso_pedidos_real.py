@@ -156,7 +156,10 @@ def test_registrar_pedido_real_con_stock_suficiente_persiste() -> None:
 
     assert resultado.estado == "pendiente_pago"
     assert resultado.importe_envio == Decimal("4.90")
-    assert resultado.total == Decimal("22.90")
+    assert resultado.base_imponible == Decimal("22.90")
+    assert resultado.tipo_impositivo == Decimal("0.21")
+    assert resultado.importe_impuestos == Decimal("4.81")
+    assert resultado.total == Decimal("27.71")
     assert len(repo_pedidos.guardados) == 1
 
 

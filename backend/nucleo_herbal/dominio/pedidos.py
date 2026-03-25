@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Literal
 
 from .excepciones import ErrorDominio
@@ -30,6 +30,8 @@ ESTADOS_REEMBOLSO_VALIDOS: tuple[EstadoReembolso, ...] = ("no_iniciado", "fallid
 CANALES_CHECKOUT_VALIDOS: tuple[CanalCheckout, ...] = ("web_invitado", "web_autenticado", "backoffice")
 METODOS_ENVIO_VALIDOS: tuple[MetodoEnvio, ...] = ("envio_estandar",)
 RUTA_API_PEDIDOS = "/api/v1/pedidos/"
+TIPO_IMPOSITIVO_IVA_GENERAL = Decimal("0.21")
+PRECISION_MONEDA = Decimal("0.01")
 
 ESTRATEGIA_CONVIVENCIA_PEDIDOS = {
     "contrato_canonico": "Pedido",
@@ -125,6 +127,7 @@ class Pedido:
     moneda: str = "EUR"
     metodo_envio: MetodoEnvio = "envio_estandar"
     importe_envio: Decimal = Decimal("0")
+    tipo_impositivo: Decimal = TIPO_IMPOSITIVO_IVA_GENERAL
     estado_pago: EstadoPago = "pendiente"
     proveedor_pago: ProveedorPago | None = None
     id_externo_pago: str | None = None
@@ -179,6 +182,8 @@ class Pedido:
             raise ErrorDominio("El pedido requiere método de envío válido.")
         if self.importe_envio < Decimal("0"):
             raise ErrorDominio("El pedido no admite importe de envío negativo.")
+        if self.tipo_impositivo < Decimal("0"):
+            raise ErrorDominio("El pedido no admite tipo impositivo negativo.")
         if self.estado == "pagado" and self.estado_pago != "pagado":
             raise ErrorDominio("Un pedido pagado requiere estado_pago='pagado'.")
         if self.incidencia_stock_confirmacion and self.inventario_descontado:
@@ -219,11 +224,19 @@ class Pedido:
 
     @property
     def subtotal(self) -> Decimal:
-        return sum((linea.subtotal for linea in self.lineas), Decimal("0"))
+        return _redondear_moneda(sum((linea.subtotal for linea in self.lineas), Decimal("0")))
+
+    @property
+    def base_imponible(self) -> Decimal:
+        return self.subtotal + self.importe_envio
+
+    @property
+    def importe_impuestos(self) -> Decimal:
+        return _redondear_moneda(self.base_imponible * self.tipo_impositivo)
 
     @property
     def total(self) -> Decimal:
-        return self.subtotal + self.importe_envio
+        return _redondear_moneda(self.base_imponible + self.importe_impuestos)
 
     def puede_iniciar_pago(self) -> None:
         if self.estado == "pagado" or self.estado_pago == "pagado":
@@ -447,3 +460,7 @@ def _hay_texto(valor: str | None) -> bool:
 
 def _combinar_observaciones(actual: str, nueva: str | None) -> str:
     return nueva.strip() if nueva is not None else actual
+
+
+def _redondear_moneda(valor: Decimal) -> Decimal:
+    return valor.quantize(PRECISION_MONEDA, rounding=ROUND_HALF_UP)

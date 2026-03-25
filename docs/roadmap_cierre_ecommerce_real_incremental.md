@@ -508,8 +508,55 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R11 — Fiscalidad base e importe legalmente coherente
-- **Estado**: `PLANNED`.
-- **Lectura actual**: existe total real con envío estándar; falta fiscalidad base legal completa.
+- **Estado**: `DONE`.
+- **Lectura actual**: el pedido real ahora calcula y expone base imponible, tipo impositivo, importe de impuestos y total final con redondeo monetario canónico en dominio; checkout, detalle y pago usan el mismo total fiscal coherente.
+
+**Cierre de R11 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Política fiscal mínima explícita: IVA general fijo del 21% (`tipo_impositivo=0.2100`) para todo pedido real de esta fase, sin abrir motor multi-país ni casuística fiscal avanzada.
+  2. Frontera de cálculo única en dominio (`Pedido`): `base_imponible = subtotal + importe_envio`, `importe_impuestos = round(base * tipo)`, `total = base + impuestos`, con `Decimal` + redondeo `ROUND_HALF_UP` a 2 decimales.
+  3. Persistencia mínima legalmente trazable: `tipo_impositivo` queda almacenado por pedido en ORM/migración para evitar ambigüedad histórica si la política cambia en incrementos futuros.
+  4. Alineación extremo a extremo: serialización API, recibo/checkout frontend y cobro Stripe consumen el mismo desglose fiscal (Stripe añade línea de impuestos explícita).
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/dto_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/pedidos_serializadores.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0034_pedidorealmodelo_tipo_impositivo.py`
+  - `backend/nucleo_herbal/infraestructura/pagos_stripe.py`
+  - `tests/nucleo_herbal/test_api_pedidos_real.py`
+  - `tests/nucleo_herbal/test_api_pago_real.py`
+  - `tests/nucleo_herbal/test_casos_de_uso_pedidos_real.py`
+  - `tests/nucleo_herbal/test_contrato_ecommerce_real.py`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - `frontend/contenido/catalogo/checkoutReal.ts`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+- **Comandos ejecutados**:
+  - `python manage.py makemigrations persistencia_django`
+  - `python manage.py test tests.nucleo_herbal.test_casos_de_uso_pedidos_real tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real tests.nucleo_herbal.test_contrato_ecommerce_real tests.nucleo_herbal.infraestructura.test_repositorio_pedidos_real`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_backend_readiness.py`
+  - `npm --prefix frontend run test:checkout-real`
+  - `npm --prefix frontend run lint`
+  - `npm --prefix frontend run build`
+- **Evidencia**:
+  - contratos de pedido (`pedido` + `resumen`) exponen `base_imponible`, `tipo_impositivo`, `importe_impuestos` y `total`;
+  - el pago real reporta/importa total fiscal (API inicia pago con `importe` final fiscal y Stripe incluye línea de impuestos);
+  - checkout/recibo frontend muestran subtotal, envío, impuestos y total sin contradicción con API;
+  - pruebas backend/frontend del bloque y validaciones de quality gate mínimo en verde.
+- **Deuda residual**:
+  1. Política fiscal única (IVA 21%) deliberadamente temporal; quedan fuera multi-país, OSS/IOSS y exenciones especiales.
+  2. No se implementa todavía factura/recibo legal descargable (R12).
+  3. No se introduce prorrateo fiscal por promociones/cupones (fuera de alcance).
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R12 — Factura o recibo descargable y trazable
 - **Estado**: `PLANNED`.
@@ -568,3 +615,5 @@
 - **2026-03-25 — R09 (cierre):** disponibilidad pública cerrada como `DONE` con contrato consistente herbal/rituales (estado + unidad + incremento + mínimo), UI pública sobria en ficha/relaciones y tests backend/frontend relevantes en verde.
 - **2026-03-25 — R10 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de auditar e implementar capa mínima real de emails transaccionales.
 - **2026-03-25 — R10 (cierre):** emails transaccionales reales mínimos cerrados como `DONE` para pagado, enviado, cancelación operativa y reembolso manual ejecutado, con idempotencia mínima por flags persistentes y tests backend relevantes en verde.
+- **2026-03-25 — R11 (arranque):** estado movido de `PLANNED` a `IN_PROGRESS` antes de tocar aritmética real de pedido/pago/serialización.
+- **2026-03-25 — R11 (cierre):** fiscalidad base mínima cerrada como `DONE` con política explícita de IVA 21%, desglose fiscal en pedido/checkout/recibo, pago alineado al total fiscal y pruebas backend/frontend relevantes en verde.
