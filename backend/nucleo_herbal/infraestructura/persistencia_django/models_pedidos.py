@@ -20,6 +20,7 @@ class PedidoRealModelo(models.Model):
     metodo_envio = models.CharField(max_length=32, default="envio_estandar")
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     importe_envio = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tipo_impositivo = models.DecimalField(max_digits=5, decimal_places=4, default=0.21)
     notas_cliente = models.TextField(blank=True, default="")
     direccion_entrega = models.JSONField(default=dict)
     fecha_creacion = models.DateTimeField()

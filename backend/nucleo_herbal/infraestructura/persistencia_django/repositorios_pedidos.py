@@ -30,6 +30,7 @@ class RepositorioPedidosORM(RepositorioPedidos):
                 "metodo_envio": pedido.metodo_envio,
                 "subtotal": pedido.subtotal,
                 "importe_envio": pedido.importe_envio,
+                "tipo_impositivo": pedido.tipo_impositivo,
                 "notas_cliente": pedido.notas_cliente,
                 "direccion_entrega": _serializar_direccion(pedido.direccion_entrega),
                 "fecha_creacion": pedido.fecha_creacion,
@@ -173,6 +174,7 @@ class RepositorioPedidosORM(RepositorioPedidos):
             moneda=modelo.moneda,
             metodo_envio=modelo.metodo_envio,
             importe_envio=modelo.importe_envio,
+            tipo_impositivo=modelo.tipo_impositivo,
         )
 
 

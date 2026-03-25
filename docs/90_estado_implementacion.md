@@ -875,3 +875,17 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. no se mezcla el sistema demo legacy (`email-demo`) con los correos reales de operación;
   2. un fallo de envío no revierte la transición operativa ya persistida;
   3. la idempotencia de correo clave se resuelve con flags mínimos, sin abrir CRM/newsletter ni un mail-log enterprise.
+
+## 44. Fiscalidad base e importe legalmente coherente (R11)
+- Capacidad: **Base fiscal mínima explícita y coherente extremo a extremo en pedido real**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - dominio de pedido real centraliza aritmética fiscal con `Decimal`: `base_imponible`, `tipo_impositivo` (21% por defecto), `importe_impuestos` y `total` con redondeo monetario único (`ROUND_HALF_UP`);
+  - persistencia de pedido real incorpora `tipo_impositivo` en ORM + migración (`0034`) para trazabilidad histórica del tipo aplicado;
+  - serialización pública del pedido (`pedido` y `resumen`) ahora expone desglose fiscal completo (`subtotal`, `importe_envio`, `base_imponible`, `tipo_impositivo`, `importe_impuestos`, `total`);
+  - pago real mantiene coherencia de cobro: `importe` de iniciar pago usa total fiscal y la sesión Stripe incorpora línea explícita de impuestos;
+  - superficies frontend de checkout y detalle de pedido muestran subtotal, envío, impuestos y total sin contradicción con backend.
+- Regla activa:
+  1. política fiscal mínima de fase: IVA general único del 21% para pedido real;
+  2. sin motor tributario avanzado en esta entrega (sin multi-país, OSS/IOSS, exenciones raras ni promociones fiscales);
+  3. no se abre aún factura/recibo descargable formal (siguiente incremento R12).

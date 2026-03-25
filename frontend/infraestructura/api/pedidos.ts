@@ -20,6 +20,9 @@ export type PedidoCreado = {
   metodo_envio: string;
   subtotal: string;
   importe_envio: string;
+  base_imponible: string;
+  tipo_impositivo: string;
+  importe_impuestos: string;
   total: string;
   requiere_revision_manual: boolean;
   email_post_pago_enviado: boolean;
@@ -40,7 +43,15 @@ export type PedidoCreado = {
     pais_iso: string;
     observaciones: string;
   };
-  resumen: { cantidad_total_items: number; subtotal: string; importe_envio: string; total: string };
+  resumen: {
+    cantidad_total_items: number;
+    subtotal: string;
+    importe_envio: string;
+    base_imponible: string;
+    tipo_impositivo: string;
+    importe_impuestos: string;
+    total: string;
+  };
   estado_cliente?: {
     cancelado_operativamente: boolean;
     estado_reembolso: "no_iniciado" | "fallido" | "ejecutado";

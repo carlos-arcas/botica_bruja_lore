@@ -50,7 +50,8 @@ class ContratoEcommerceRealTests(TestCase):
             id_producto="PRO-1",
             slug_producto="bruma-lunar",
             nombre_producto="Bruma lunar",
-            cantidad=2,
+            cantidad_comercial=2,
+            unidad_comercial="ud",
             precio_unitario=Decimal("5.00"),
         )
 
@@ -73,7 +74,9 @@ class ContratoEcommerceRealTests(TestCase):
 
         self.assertEqual(payload.direccion_entrega.ciudad, "Madrid")
         self.assertEqual(pedido.subtotal, Decimal("10.00"))
-        self.assertEqual(pedido.total, Decimal("10.00"))
+        self.assertEqual(pedido.base_imponible, Decimal("10.00"))
+        self.assertEqual(pedido.importe_impuestos, Decimal("2.10"))
+        self.assertEqual(pedido.total, Decimal("12.10"))
         self.assertEqual(pedido.cliente.telefono_contacto, "600111222")
         self.assertEqual(pedido.estado_pago, "pendiente")
 
@@ -96,7 +99,8 @@ class ContratoEcommerceRealTests(TestCase):
             id_producto="PRO-1",
             slug_producto="bruma-lunar",
             nombre_producto="Bruma lunar",
-            cantidad=1,
+            cantidad_comercial=1,
+            unidad_comercial="ud",
             precio_unitario=Decimal("5.00"),
         )
 

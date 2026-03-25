@@ -62,6 +62,9 @@ class PedidoRealDTO:
     metodo_envio: str
     subtotal: Decimal
     importe_envio: Decimal
+    base_imponible: Decimal
+    tipo_impositivo: Decimal
+    importe_impuestos: Decimal
     total: Decimal
     proveedor_pago: str | None
     id_externo_pago: str | None
