@@ -956,6 +956,20 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   2. no hay automatización de restitución al aceptar devolución;
   3. la resolución operativa de devolución es explícita y auditable, pero su cierre administrativo sigue siendo manual.
 
+## 49. Operación V2-R07: observabilidad y alertas operativas v2
+- Capacidad: **Capa mínima de alertas operativas agregadas y accionables para ecommerce real**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - script agregador `scripts/check_operational_alerts_v2.py` con salida textual y JSON (`--json`) + política de salida (`--fail-on blocker|warning|none`);
+  - reutilización explícita de señales existentes: estados/flags de `PedidoRealModelo`, `DevolucionPedidoModelo`, `check_operational_reconciliation.py` (solo BLOCKER) y `check_release_readiness.py`;
+  - tipificación mínima por alerta: severidad, código, entidad, mensaje, acción sugerida y fuente;
+  - cobertura dedicada en `tests/scripts/test_check_operational_alerts_v2.py` (clasificación, no falsos positivos sintéticos, salida JSON y exit codes);
+  - documentación operativa actualizada en `docs/13_testing_ci_y_quality_gate.md`, `docs/release_readiness_minima.md` y roadmap V2.
+- Regla activa:
+  1. no se introducen dashboards/servicios externos enterprise en este incremento;
+  2. la capa agrega señales existentes, no duplica reglas de negocio transaccional;
+  3. puede ejecutarse manualmente o programarse por scheduler externo sin acoplamiento adicional.
+
 ## 48. Fiscalidad avanzada v2 por producto y cálculo por línea (V2-R05)
 - Capacidad: **fiscalidad explícita por producto con cálculo y trazabilidad por línea en pedido real**.
 - Estado: **DONE**.
