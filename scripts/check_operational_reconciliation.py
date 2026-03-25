@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Conciliación operativa mínima de pedidos reales (solo lectura)."""
+"""Conciliación operativa de pedidos reales (solo lectura)."""
 
 from __future__ import annotations
 
@@ -26,7 +26,8 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario
 )
 from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import PedidoRealModelo
 
-SEVERIDADES = ("ERROR", "WARNING", "INFO")
+SEVERIDADES = ("BLOCKER", "WARNING", "INFO")
+SEVERIDAD_BLOQUEANTE = "BLOCKER"
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,7 +63,7 @@ class PedidoSnapshot:
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Chequeo de conciliación operativa para pedidos reales.")
     parser.add_argument("--max-pedidos", type=int, default=300)
-    parser.add_argument("--fail-on", choices=("error", "warning", "none"), default="error")
+    parser.add_argument("--fail-on", choices=("blocker", "error", "warning", "none"), default="blocker")
     parser.add_argument("--json", action="store_true")
     return parser.parse_args()
 
@@ -110,25 +111,72 @@ def _evaluar_pedido(p: PedidoSnapshot, referencias_restitucion: set[str]) -> tup
         hallazgos.append(Inconsistencia(sev, code, p.id_pedido, det, accion))
 
     if p.estado == "pagado" and p.estado_pago == "pagado" and not p.inventario_descontado and not p.incidencia_stock_confirmacion:
-        add("ERROR", "pedido_pagado_sin_descuento_ni_incidencia_stock", "Pedido pagado sin descuento de inventario y sin incidencia de stock confirmada.", "Revisar post-pago y registrar incidencia o descuento real de inventario.")
-    if p.estado_reembolso in {"ejecutado", "fallido"} and not p.cancelado_operativa_incidencia_stock:
-        add("ERROR", "reembolso_sin_cancelacion_operativa", "Pedido con estado de reembolso avanzado sin cancelación operativa por incidencia de stock.", "Auditar flujo de cancelación/reembolso y corregir estado operativo.")
+        add(
+            "BLOCKER",
+            "pedido_pagado_sin_descuento_ni_incidencia_stock",
+            "Pedido pagado sin descuento de inventario y sin incidencia de stock confirmada.",
+            "Revisar post-pago y registrar incidencia o descuento real de inventario.",
+        )
+    if p.estado_reembolso == "ejecutado" and not p.cancelado_operativa_incidencia_stock:
+        add(
+            "BLOCKER",
+            "reembolso_ejecutado_sin_cancelacion_operativa",
+            "Pedido con reembolso ejecutado sin cancelación operativa por incidencia de stock.",
+            "Auditar flujo de cancelación/reembolso y corregir estado operativo.",
+        )
+    if p.estado_reembolso == "fallido" and not p.cancelado_operativa_incidencia_stock:
+        add(
+            "WARNING",
+            "reembolso_fallido_sin_cancelacion_operativa",
+            "Pedido con reembolso fallido sin cancelación operativa por incidencia de stock.",
+            "Revisar si el intento de reembolso corresponde a una incidencia de stock real.",
+        )
     if p.cancelado_operativa_incidencia_stock and p.estado_reembolso == "no_iniciado":
-        add("ERROR", "cancelacion_operativa_sin_reembolso_iniciado", "Pedido cancelado operativamente con reembolso no iniciado.", "Iniciar reembolso manual o documentar bloqueo operativo explícito.")
+        add(
+            "WARNING",
+            "cancelacion_operativa_sin_reembolso_iniciado",
+            "Pedido cancelado operativamente con reembolso no iniciado.",
+            "Iniciar reembolso manual o documentar bloqueo operativo explícito.",
+        )
     if p.cancelado_operativa_incidencia_stock and p.estado_reembolso == "fallido":
         add("WARNING", "cancelacion_operativa_con_reembolso_fallido", "Pedido cancelado operativamente con reembolso fallido.", "Reintentar reembolso manual o cerrar incidencia administrativa.")
     if p.inventario_restituido and p.id_pedido not in referencias_restitucion:
-        add("ERROR", "inventario_restituido_sin_ledger_restitucion", "Pedido marcado con inventario restituido sin movimiento ledger restitucion_manual asociado.", "Registrar movimiento de restitución manual o corregir flag inventario_restituido.")
+        add(
+            "BLOCKER",
+            "inventario_restituido_sin_ledger_restitucion",
+            "Pedido marcado con inventario restituido sin movimiento ledger restitucion_manual asociado.",
+            "Registrar movimiento de restitución manual o corregir flag inventario_restituido.",
+        )
+    if p.estado_reembolso == "ejecutado" and p.estado_pago != "reembolsado":
+        add(
+            "BLOCKER",
+            "reembolso_ejecutado_sin_estado_pago_reembolsado",
+            "Pedido con reembolso ejecutado y estado_pago distinto de reembolsado.",
+            "Corregir estado de pago para reflejar reembolso ejecutado.",
+        )
 
     if p.estado in {"enviado", "entregado"}:
         if not p.transportista.strip():
-            add("ERROR", "expedicion_sin_transportista", "Pedido enviado/entregado sin transportista.", "Completar datos de expedición en backoffice.")
+            add("BLOCKER", "expedicion_sin_transportista", "Pedido enviado/entregado sin transportista.", "Completar datos de expedición en backoffice.")
         if p.fecha_envio is None:
-            add("ERROR", "expedicion_sin_fecha_envio", "Pedido enviado/entregado sin fecha_envio.", "Corregir trazabilidad de expedición.")
+            add("BLOCKER", "expedicion_sin_fecha_envio", "Pedido enviado/entregado sin fecha_envio.", "Corregir trazabilidad de expedición.")
         if not p.envio_sin_seguimiento and not p.codigo_seguimiento.strip():
-            add("ERROR", "expedicion_sin_tracking_ni_flag_sin_tracking", "Pedido enviado/entregado sin código de seguimiento ni flag envio_sin_seguimiento.", "Informar tracking o marcar envío sin tracking público.")
+            add(
+                "BLOCKER",
+                "expedicion_sin_tracking_ni_flag_sin_tracking",
+                "Pedido enviado/entregado sin código de seguimiento ni flag envio_sin_seguimiento.",
+                "Informar tracking o marcar envío sin tracking público.",
+            )
     if p.estado == "entregado" and p.fecha_entrega is None:
-        add("ERROR", "entregado_sin_fecha_entrega", "Pedido en estado entregado sin fecha_entrega.", "Completar fecha de entrega real.")
+        add("BLOCKER", "entregado_sin_fecha_entrega", "Pedido en estado entregado sin fecha_entrega.", "Completar fecha de entrega real.")
+
+    if p.estado not in {"enviado", "entregado"} and (p.transportista.strip() or p.codigo_seguimiento.strip() or p.fecha_envio is not None):
+        add(
+            "WARNING",
+            "datos_expedicion_en_estado_no_expedido",
+            "Pedido con datos de expedición cargados en estado no enviado/entregado.",
+            "Verificar si se precargó información logística o si el estado del pedido quedó atrasado.",
+        )
 
     if p.estado == "pagado" and not p.incidencia_stock_confirmacion and not p.email_post_pago_enviado:
         add("WARNING", "email_post_pago_pendiente", "Pedido pagado sin incidencia de stock y email post-pago no enviado.", "Revisar envío de email post-pago o registrar incidencia operativa.")
@@ -139,7 +187,7 @@ def _evaluar_pedido(p: PedidoSnapshot, referencias_restitucion: set[str]) -> tup
     if p.estado_reembolso == "ejecutado" and not p.email_reembolso_enviado:
         add("WARNING", "email_reembolso_pendiente", "Reembolso ejecutado sin email de reembolso marcado.", "Enviar notificación de reembolso al cliente o registrar excepción operativa.")
     if p.email_reembolso_enviado and p.estado_reembolso != "ejecutado":
-        add("ERROR", "email_reembolso_incoherente", "Email de reembolso marcado como enviado sin reembolso ejecutado.", "Corregir flags de email/reembolso para evitar información contradictoria.")
+        add("BLOCKER", "email_reembolso_incoherente", "Email de reembolso marcado como enviado sin reembolso ejecutado.", "Corregir flags de email/reembolso para evitar información contradictoria.")
 
     return tuple(hallazgos)
 
@@ -149,11 +197,40 @@ def _evaluar(pedidos: tuple[PedidoSnapshot, ...], referencias_restitucion: set[s
 
 
 def _code_for_findings(hallazgos: tuple[Inconsistencia, ...], fail_on: str) -> int:
-    if fail_on == "none":
+    fail_on_normalizado = "blocker" if fail_on == "error" else fail_on
+    if fail_on_normalizado == "none":
         return 0
-    if fail_on == "warning":
+    if fail_on_normalizado == "warning":
         return 1 if hallazgos else 0
-    return 1 if any(h.severidad == "ERROR" for h in hallazgos) else 0
+    return 1 if any(h.severidad == SEVERIDAD_BLOQUEANTE for h in hallazgos) else 0
+
+
+def _rules_matrix() -> dict[str, tuple[str, ...]]:
+    return {
+        "blocker": (
+            "pedido_pagado_sin_descuento_ni_incidencia_stock",
+            "reembolso_ejecutado_sin_cancelacion_operativa",
+            "reembolso_ejecutado_sin_estado_pago_reembolsado",
+            "inventario_restituido_sin_ledger_restitucion",
+            "expedicion_sin_transportista",
+            "expedicion_sin_fecha_envio",
+            "expedicion_sin_tracking_ni_flag_sin_tracking",
+            "entregado_sin_fecha_entrega",
+            "email_reembolso_incoherente",
+        ),
+        "warning": (
+            "reembolso_fallido_sin_cancelacion_operativa",
+            "cancelacion_operativa_sin_reembolso_iniciado",
+            "cancelacion_operativa_con_reembolso_fallido",
+            "datos_expedicion_en_estado_no_expedido",
+            "email_post_pago_pendiente",
+            "email_envio_pendiente",
+            "email_cancelacion_pendiente",
+            "email_reembolso_pendiente",
+        ),
+        "info": (),
+        "skip": ("conciliacion_no_aplicable_entorno",),
+    }
 
 
 def _print_text(hallazgos: tuple[Inconsistencia, ...], pedidos_auditados: int) -> None:
@@ -175,6 +252,7 @@ def _print_text(hallazgos: tuple[Inconsistencia, ...], pedidos_auditados: int) -
 
 def main() -> int:
     args = _parse_args()
+    fail_on = "blocker" if args.fail_on == "error" else args.fail_on
     try:
         pedidos = _snapshot_pedidos(args.max_pedidos)
     except (OperationalError, ProgrammingError, ImproperlyConfigured) as error:
@@ -189,7 +267,8 @@ def main() -> int:
                     "pedidos_auditados": len(pedidos),
                     "hallazgos": [asdict(h) for h in hallazgos],
                     "resumen": {s: sum(1 for h in hallazgos if h.severidad == s) for s in SEVERIDADES},
-                    "exit_policy": args.fail_on,
+                    "exit_policy": fail_on,
+                    "matriz_severidad": _rules_matrix(),
                 },
                 ensure_ascii=False,
                 indent=2,
@@ -198,7 +277,7 @@ def main() -> int:
         )
     else:
         _print_text(hallazgos, len(pedidos))
-    return _code_for_findings(hallazgos, args.fail_on)
+    return _code_for_findings(hallazgos, fail_on)
 
 
 if __name__ == "__main__":

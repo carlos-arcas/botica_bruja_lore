@@ -214,7 +214,7 @@ Este comando orquesta en un solo flujo:
 - **Tests backend críticos:** healthcheck, seed demo, guardrails de deploy/configuración (`tests.nucleo_herbal.test_deploy_guards`) y contratos públicos backend↔frontend de herbal/rituales (`tests.nucleo_herbal.test_contratos_api_publica_frontend`) más contratos demo/comerciales consumidos por frontend (`tests.nucleo_herbal.test_contratos_api_publica_demo_frontend`).
 - **Snapshot de datos públicos en modo lectura:** reporte de conteos existentes de intenciones, plantas, productos y rituales (sin sembrar ni migrar).
 - **Integridad operativa/documental del repositorio:** `python scripts/check_repo_operational_integrity.py` (markdown crítico, coherencia Procfile/manage.py/wsgi.py/railway.toml, `.env.railway.example` y alineación CI↔documentación).
-- **Conciliación operativa mínima (solo lectura):** `python scripts/check_operational_reconciliation.py --fail-on none` para detectar discrepancias básicas pedido↔inventario↔reembolso↔expedición↔emails sin mutar datos.
+- **Conciliación operativa endurecida (solo lectura):** `python scripts/check_operational_reconciliation.py --fail-on blocker` con matriz explícita BLOCKER/WARNING/INFO para detectar discrepancias pedido↔inventario↔reembolso↔expedición↔emails sin mutar datos; solo los BLOCKER rompen gate.
 - **Release readiness mínimo (seguridad/privacidad/backups):** `python scripts/check_release_readiness.py` para validar checklist mínimo de pre-release y documentación de backup/restore.
 - **Backup/restore operable (plan seguro):** `python scripts/backup_restore_postgres.py backup --dry-run` y `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file <ruta_dump>` para verificar configuración/prerrequisitos sin ejecutar restore destructivo.
 
@@ -231,6 +231,7 @@ Criterio de severidad:
 
 - **Bloqueante (ERROR):** readiness backend, `manage.py check`, tests backend críticos e integridad operativa/documental del repo.
 - **Informativo (INFO):** snapshot de conteos en solo lectura.
+- **Conciliación operativa:** bloque `H` pasa a bloqueante solo para severidad `BLOCKER` (`--fail-on blocker`); `WARNING` e `INFO` no bloquean pero quedan visibles en salida del gate.
 - **Frontend presente y ejecutable:** lint/build cuentan como bloqueantes.
 - **Frontend no aplicable por entorno:** se informa como `SKIP` con motivo explícito (por ejemplo, sin `frontend/package.json` o sin Node/npm).
 
