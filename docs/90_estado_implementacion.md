@@ -752,6 +752,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. `transportista` es obligatorio al marcar `enviado`;
   2. `codigo_seguimiento` también lo es salvo `envio_sin_seguimiento=True`;
   3. no se permiten saltos directos a `enviado` o `entregado` fuera de la secuencia controlada.
+- Actualización R13 (tracking visible endurecido):
+  - detalle de pedido y "Mi cuenta" ya renderizan estado de tracking coherente (tracking disponible, envío sin tracking público o pendiente/no informado);
+  - el documento descargable incorpora resumen explícito de expedición para evitar contradicción entre superficie cliente y operación.
 - Pendiente para el siguiente bloque: incidencias operativas y postventa básica (cancelación operativa acotada, reintentos logísticos y trazabilidad de incidencias) sin abrir todavía devoluciones complejas ni logística enterprise.
 
 

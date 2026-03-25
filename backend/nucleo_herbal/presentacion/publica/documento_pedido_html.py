@@ -40,6 +40,7 @@ def construir_documento_html_pedido(dto: PedidoRealDTO) -> str:
     <p><strong>Estado pedido:</strong> {escape(dto.estado)}</p>
     <p><strong>Estado pago:</strong> {escape(dto.estado_pago)}</p>
     <p><strong>Estado cliente:</strong> {escape(_estado_cliente(dto))}</p>
+    <p><strong>Expedición:</strong> {escape(_estado_expedicion(dto))}</p>
   </div>
   <h2>Líneas del pedido</h2>
   <table>
@@ -81,6 +82,19 @@ def _estado_cliente(dto: PedidoRealDTO) -> str:
             return "cancelado operativamente · reembolso fallido"
         return "cancelado operativamente · reembolso no iniciado"
     return "sin cancelación operativa"
+
+
+def _estado_expedicion(dto: PedidoRealDTO) -> str:
+    if dto.estado not in {"enviado", "entregado"}:
+        return "pendiente de expedición"
+    if dto.expedicion.codigo_seguimiento.strip():
+        base = f"{dto.expedicion.transportista or 'transportista asignado'} · tracking {dto.expedicion.codigo_seguimiento}"
+        return base
+    if dto.expedicion.envio_sin_seguimiento:
+        if dto.expedicion.transportista.strip():
+            return f"{dto.expedicion.transportista} · envío sin tracking público"
+        return "envío sin tracking público"
+    return "enviado sin tracking informado"
 
 
 def _tipo_impositivo(dto: PedidoRealDTO) -> str:

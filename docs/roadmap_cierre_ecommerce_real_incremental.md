@@ -592,8 +592,45 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R13 — Endurecimiento de expedición y tracking visible
-- **Estado**: `PARTIAL`.
-- **Lectura actual**: hay bloques operativos de expedición/incidencias, pero tracking visible y endurecimiento completo siguen abiertos.
+- **Estado**: `DONE`.
+- **Lectura actual**: la expedición real mantiene secuencia operativa mínima estable y ahora cliente/backoffice/documento consumen un criterio de tracking visible coherente (con tracking, sin tracking público o pendiente real) sin abrir integraciones avanzadas.
+
+**Cierre de R13 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. No se rehace la base logística existente: se conserva el agregado `Pedido` con estados `preparando → enviado → entregado` y validación de `transportista` + (`codigo_seguimiento` o `envio_sin_seguimiento`).
+  2. El gap real cerrado fue de visibilidad/coherencia cliente: el detalle de pedido y “Mi cuenta” no daban un mensaje explícito cuando había envío sin tracking público o tracking aún no informado.
+  3. Se centraliza un resolver de tracking visible en frontend (`resolverTrackingVisibleCliente`) para reutilizar copy y evitar contradicciones entre superficies de cliente.
+  4. El documento descargable pasa a reflejar estado de expedición/tracking para alinear operación interna con lo que ve cliente.
+- **Archivos tocados**:
+  - `frontend/contenido/pedidos/trackingVisible.ts`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`
+  - `frontend/infraestructura/api/cuentasCliente.ts`
+  - `frontend/tests/pedido-real-operacion-ui.test.ts`
+  - `frontend/tests/tracking-visible.test.ts`
+  - `backend/nucleo_herbal/presentacion/publica/documento_pedido_html.py`
+  - `tests/nucleo_herbal/test_api_pedidos_real.py`
+- **Comandos ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_api_backoffice tests.nucleo_herbal.test_operacion_pedidos_real`
+  - `cd frontend && npm run test:checkout-real`
+  - `cd frontend && npm run test:cuenta-cliente`
+  - `cd frontend && npm run clean:tmp-tests && tsc --module commonjs --target es2020 --skipLibCheck --outDir .tmp-tests tests/tracking-visible.test.ts contenido/pedidos/trackingVisible.ts && node .tmp-tests/tests/tracking-visible.test.js`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `npm --prefix frontend run lint`
+  - `npm --prefix frontend run build`
+  - `python scripts/check_release_gate.py`
+- **Evidencia**:
+  - frontend cliente ya comunica tres estados de tracking visibles: disponible, envío sin tracking público y tracking no informado/pendiente según estado de pedido;
+  - documento HTML descargable incorpora bloque de expedición coherente con estado real del pedido;
+  - pruebas backend cubren serialización documental de tracking y envío sin tracking público;
+  - pruebas frontend cubren helper de tracking visible y no rompen checkout/cuenta existentes.
+- **Deuda residual**:
+  1. Sigue fuera de alcance integración automática con APIs de transportistas y actualización de hitos en tiempo real.
+  2. No se abre multi-envío por pedido ni SLA logístico enterprise.
+  3. El test textual de UI (`pedido-real-operacion-ui`) se mantiene como smoke test estructural; cobertura E2E visual queda para hardening posterior.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R14 — Observabilidad, conciliación y hardening operacional
 - **Estado**: `PARTIAL`.
@@ -650,3 +687,5 @@
 - **2026-03-25 — R11 (cierre hardening):** R11 vuelve a `DONE` con conversión a céntimos/Decimal sin floats en pasarela, helper fiscal visible reutilizable en frontend y tests de regresión backend/frontend en verde.
 - **2026-03-25 — R12 (arranque):** estado movido de `PLANNED` a `IN_PROGRESS` antes de implementar documento descargable trazable.
 - **2026-03-25 — R12 (cierre):** recibo HTML descargable/imprimible implementado desde pedido real canónico, acceso visible en detalle y mi cuenta, tests backend/frontend en verde y gate canónico superado.
+- **2026-03-25 — R13 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` para auditar brecha real de tracking visible entre backoffice, detalle cliente, mi cuenta y documento descargable.
+- **2026-03-25 — R13 (cierre):** tracking visible endurecido como `DONE` con resolver frontend reutilizable, copy honesta para envío sin tracking público, documento descargable alineado con expedición y tests backend/frontend relevantes en verde.

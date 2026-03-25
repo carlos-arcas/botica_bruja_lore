@@ -44,7 +44,7 @@ export type PedidoCuentaCliente = {
   subtotal: string;
   moneda: string;
   cliente: { email_contacto: string; es_invitado: boolean; id_usuario?: string };
-  expedicion: { codigo_seguimiento?: string; transportista?: string };
+  expedicion: { codigo_seguimiento?: string; transportista?: string; envio_sin_seguimiento?: boolean; fecha_envio?: string | null };
   estado_cliente?: {
     cancelado_operativamente: boolean;
     estado_reembolso: "no_iniciado" | "fallido" | "ejecutado";

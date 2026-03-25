@@ -93,6 +93,43 @@ class TestApiPedidosReal(DjangoTestCase):
         self.assertIn("Total: 27.71 EUR", contenido)
         self.assertIn("sin cancelación operativa", contenido)
 
+
+    def test_documento_descargable_refleja_tracking_disponible(self) -> None:
+        crear = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
+        id_pedido = crear.json()["pedido"]["id_pedido"]
+        PedidoRealModelo.objects.filter(id_pedido=id_pedido).update(
+            estado="enviado",
+            transportista="Correos",
+            codigo_seguimiento="TRK-445",
+            envio_sin_seguimiento=False,
+            fecha_preparacion=timezone.now(),
+            fecha_envio=timezone.now(),
+        )
+
+        documento = self.client.get(f"/api/v1/pedidos/{id_pedido}/documento/")
+
+        self.assertEqual(documento.status_code, 200)
+        contenido = documento.content.decode("utf-8")
+        self.assertIn("Expedición:</strong> Correos · tracking TRK-445", contenido)
+
+    def test_documento_descargable_refleja_envio_sin_tracking_publico(self) -> None:
+        crear = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
+        id_pedido = crear.json()["pedido"]["id_pedido"]
+        PedidoRealModelo.objects.filter(id_pedido=id_pedido).update(
+            estado="enviado",
+            transportista="Mensajería local",
+            codigo_seguimiento="",
+            envio_sin_seguimiento=True,
+            fecha_preparacion=timezone.now(),
+            fecha_envio=timezone.now(),
+        )
+
+        documento = self.client.get(f"/api/v1/pedidos/{id_pedido}/documento/")
+
+        self.assertEqual(documento.status_code, 200)
+        contenido = documento.content.decode("utf-8")
+        self.assertIn("Expedición:</strong> Mensajería local · envío sin tracking público", contenido)
+
     def test_documento_descargable_refleja_cancelacion_y_reembolso(self) -> None:
         crear = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
         id_pedido = crear.json()["pedido"]["id_pedido"]

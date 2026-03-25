@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { resolverTrackingVisibleCliente } from "@/contenido/pedidos/trackingVisible";
 import { resolverEstadoVisiblePedidoCliente } from "@/infraestructura/api/estadoPedidoCliente";
 import { construirUrlDocumentoPedido, iniciarPagoPedido, obtenerPedidoPublico, PedidoCreado, RetornoPago } from "@/infraestructura/api/pedidos";
 
@@ -33,6 +34,7 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
   const puedePagar = pedido.estado === "pendiente_pago" && pedido.estado_pago !== "pagado";
   const mensajeEstado = resolverMensajeEstado(pedido);
   const estadoVisible = resolverEstadoVisiblePedidoCliente(pedido);
+  const trackingVisible = resolverTrackingVisibleCliente(pedido.estado, pedido.expedicion);
 
   return (
     <section className="bloque-home" aria-labelledby="titulo-recibo-real">
@@ -62,8 +64,12 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
       <p>Confirmación email pago: {pedido.email_post_pago_enviado ? "enviada" : "pendiente"}.</p>
       <p>Confirmación email envío: {pedido.expedicion.email_envio_enviado ? "enviada" : "pendiente"}.</p>
       <p>Revisión operativa: {pedido.requiere_revision_manual ? "pendiente" : "resuelta o no requerida"}.</p>
-      {pedido.expedicion.transportista && <p>Transportista: <strong>{pedido.expedicion.transportista}</strong>.</p>}
-      {(pedido.expedicion.codigo_seguimiento || pedido.expedicion.envio_sin_seguimiento) && <p>Tracking: <strong>{pedido.expedicion.codigo_seguimiento || "Envío sin seguimiento público"}</strong>.</p>}
+      {trackingVisible.mostrarTracking && (
+        <>
+          <p><strong>{trackingVisible.titulo}.</strong></p>
+          <p>{trackingVisible.descripcion}</p>
+        </>
+      )}
       {puedePagar && <button className="boton boton--principal" type="button" onClick={pagarAhora} disabled={procesandoPago}>{procesandoPago ? "Redirigiendo al pago..." : botonPago(pedido.estado_pago)}</button>}
       {pedido.pago.url_pago && pedido.estado !== "pagado" && <p><a href={pedido.pago.url_pago}>Continuar pago externo</a></p>}
       <p><a href={construirUrlDocumentoPedido(pedido.id_pedido)}>Descargar recibo HTML trazable</a></p>
