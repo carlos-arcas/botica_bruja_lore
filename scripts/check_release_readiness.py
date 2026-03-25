@@ -40,6 +40,8 @@ def _check_release_doc() -> None:
     required_markers = (
         "pg_dump",
         "pg_restore",
+        "backup_restore_postgres.py",
+        "BOTICA_BACKUP_DIR",
         "CHECKLIST DE RELEASE",
         "PRIVACIDAD OPERATIVA",
     )

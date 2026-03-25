@@ -16,31 +16,48 @@
 
 ## 3) BACKUP / RESTORE (mínimo viable, PostgreSQL)
 
-### Backup lógico manual previo a release
+### Prerrequisitos operativos
+- Tener `pg_dump` y `pg_restore` disponibles en `PATH`.
+- Definir `DATABASE_URL` (origen) y una URL separada para restore drill (`BOTICA_RESTORE_DATABASE_URL`).
+- Definir `BOTICA_BACKUP_DIR` apuntando **fuera del repositorio** (por ejemplo `/tmp/botica_backups`).
+
+### Opción recomendada (script reutilizable V2)
 ```bash
-# Ejecutar en terminal segura (sin guardar el comando en historial compartido)
+# Backup real
 export DATABASE_URL='postgresql://USER:PASSWORD@HOST:PORT/DBNAME?sslmode=require'
-pg_dump --no-owner --no-privileges --format=custom --file="backup_pre_release.dump" "$DATABASE_URL"
+export BOTICA_BACKUP_DIR='/tmp/botica_backups'
+python scripts/backup_restore_postgres.py backup
+
+# Restore drill real sobre BBDD temporal (nunca producción)
+export BOTICA_RESTORE_DATABASE_URL='postgresql://USER:PASSWORD@HOST:PORT/DBNAME_RESTORE?sslmode=require'
+python scripts/backup_restore_postgres.py restore-drill --dump-file '/tmp/botica_backups/ARCHIVO.dump'
+
+# Modo verificable seguro (sin escritura): plan + parámetros no sensibles
+python scripts/backup_restore_postgres.py backup --dry-run
+python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file '/tmp/botica_backups/ARCHIVO.dump'
 ```
 
-### Restore de validación en base temporal
+### Opción fallback manual (si no se usa script)
 ```bash
-createdb botica_restore_check
-pg_restore --no-owner --no-privileges --clean --if-exists --dbname=botica_restore_check backup_pre_release.dump
+pg_dump --no-owner --no-privileges --format=custom --file="/tmp/botica_backups/backup_pre_release.dump" "$DATABASE_URL"
+pg_restore --no-owner --no-privileges --clean --if-exists --dbname="$BOTICA_RESTORE_DATABASE_URL" /tmp/botica_backups/backup_pre_release.dump
 ```
 
 ### Criterio mínimo de backup válido
-- El `pg_dump` termina con código `0`.
-- El `pg_restore` en base temporal termina con código `0`.
+- El backup termina con código `0` (`scripts/backup_restore_postgres.py backup` o `pg_dump`).
+- El restore drill en base temporal termina con código `0` (`scripts/backup_restore_postgres.py restore-drill` o `pg_restore`).
 - Se ejecuta `python manage.py check` contra la base restaurada.
+- Para runners sin DB/CLI de PostgreSQL: `--dry-run` cuenta solo como verificación de plan (no como drill real ejecutado).
 
 ## 4) CHECKLIST DE RELEASE (pre-flight)
 1. `python scripts/check_release_gate.py`
 2. `python scripts/check_release_readiness.py`
 3. `python scripts/check_operational_reconciliation.py --fail-on none`
-4. Backup lógico (`pg_dump`) antes del deploy.
-5. Deploy.
-6. Smoke post-deploy (`python scripts/check_deployed_stack.py` con URLs reales).
+4. `python scripts/backup_restore_postgres.py backup --dry-run` (validación segura de plan/comandos).
+5. Backup lógico real antes del deploy.
+6. Restore drill en base temporal cuando el entorno lo permita.
+7. Deploy.
+8. Smoke post-deploy (`python scripts/check_deployed_stack.py` con URLs reales).
 
 ## 5) Alcance explícitamente fuera de este checklist
 - No cubre SOC2/ISO, SIEM, MFA corporativo ni RBAC avanzado.

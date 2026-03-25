@@ -925,3 +925,17 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. producción falla rápido ante configuración sensible incompleta o insegura;
   2. debug logs internos no devuelven datos crudos potencialmente sensibles;
   3. pre-release requiere checklist explícito y backup lógico verificable antes de desplegar.
+
+## 47. Operación V2-R01: backups automatizables y restore drill mínimo
+- Capacidad: **base operativa reutilizable de backup/restore lógico PostgreSQL, con modo verificable seguro**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - nuevo script `scripts/backup_restore_postgres.py` con modos `backup` y `restore-drill`, lectura de entorno (`DATABASE_URL`, `BOTICA_BACKUP_DIR`, `BOTICA_RESTORE_DATABASE_URL`) y salida operacional explícita sin exponer secretos;
+  - protección para evitar dumps dentro del repositorio (ruta de backup obligatoriamente fuera de árbol versionado);
+  - estrategia honesta de restore drill: `--dry-run` verificable para runners sin DB temporal y ejecución real opcional cuando exista entorno seguro;
+  - cobertura dedicada en `tests/scripts/test_backup_restore_postgres.py`;
+  - endurecimiento del check de readiness (`scripts/check_release_readiness.py`) para exigir marcadores de script/variables de backup en documentación.
+- Regla activa:
+  1. no se admite hardcodear credenciales en scripts de operación;
+  2. dump lógico no se genera en rutas versionables del repo;
+  3. `dry-run` no sustituye drill real, pero deja base repetible y auditable en entornos limitados.
