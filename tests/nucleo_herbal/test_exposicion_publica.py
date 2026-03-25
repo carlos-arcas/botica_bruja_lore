@@ -456,3 +456,44 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         producto = response.json()["productos"][0]
         self.assertTrue(producto["disponible"])
         self.assertEqual(producto["estado_disponibilidad"], "bajo_stock")
+
+    def test_productos_por_ritual_no_inventa_disponibilidad_sin_inventario(self) -> None:
+        producto = ProductoModelo.objects.create(
+            id="pro-ritual-sin-inv",
+            sku="RIT-INV-000",
+            slug="mezcla-ritual-sin-inventario",
+            nombre="Mezcla ritual sin inventario",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="hierbas-a-granel",
+            planta=self.planta_melisa,
+            seccion_publica="botica-natural",
+            descripcion_corta="Mezcla curada",
+            publicado=True,
+            unidad_comercial="g",
+            incremento_minimo_venta=25,
+            cantidad_minima_compra=50,
+        )
+        self.ritual_publico.productos_relacionados.add(producto)
+
+        response = self.client.get("/api/v1/rituales/cierre-sereno/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        productos = {item["slug"]: item for item in response.json()["productos"]}
+        self.assertFalse(productos["mezcla-ritual-sin-inventario"]["disponible"])
+        self.assertEqual(productos["mezcla-ritual-sin-inventario"]["estado_disponibilidad"], "no_disponible")
+
+    def test_productos_por_ritual_serializa_unidad_e_incremento(self) -> None:
+        self.producto_herbal.unidad_comercial = "g"
+        self.producto_herbal.incremento_minimo_venta = 50
+        self.producto_herbal.cantidad_minima_compra = 100
+        self.producto_herbal.save(
+            update_fields=["unidad_comercial", "incremento_minimo_venta", "cantidad_minima_compra"]
+        )
+
+        response = self.client.get("/api/v1/rituales/cierre-sereno/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        producto = response.json()["productos"][0]
+        self.assertEqual(producto["unidad_comercial"], "g")
+        self.assertEqual(producto["incremento_minimo_venta"], 50)
+        self.assertEqual(producto["cantidad_minima_compra"], 100)

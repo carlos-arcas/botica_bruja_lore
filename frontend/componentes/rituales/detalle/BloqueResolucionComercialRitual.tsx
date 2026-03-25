@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EstadoDisponibilidadProducto } from "@/componentes/catalogo/disponibilidad/EstadoDisponibilidadProducto";
 import { ProductoRelacionadoRitual } from "@/infraestructura/api/rituales";
 
 type Props = {
@@ -28,6 +29,7 @@ export function BloqueResolucionComercialRitual({ productos }: Props): JSX.Eleme
               <p>
                 Tipo: {producto.tipo_producto} · Categoría: {producto.categoria_comercial}
               </p>
+              <EstadoDisponibilidadProducto producto={producto} compacta />
             </li>
           ))}
         </ul>

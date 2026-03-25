@@ -425,7 +425,45 @@
 
 ### R09 — Disponibilidad pública real para producto a granel
 - **Estado**: `DONE`.
-- **Lectura actual**: la disponibilidad pública mínima conectada a inventario real está documentada como implementada y visible en contratos públicos.
+- **Lectura actual**: la disponibilidad pública de producto/ritual ahora conserva una única fuente de verdad (inventario real + semántica comercial de `Producto`) y el frontend público muestra estado + unidad + incremento mínimo sin prometer reserva.
+
+**Cierre de R09 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Reutilizar la fuente existente `resolver_disponibilidad_publica` en backend (sin segunda capa paralela), reforzando solo contratos y cobertura de tests.
+  2. Mantener contrato público mínimo consistente en herbal y rituales: `disponible`, `estado_disponibilidad`, `unidad_comercial`, `incremento_minimo_venta`, `cantidad_minima_compra`.
+  3. Extender la normalización frontend de rituales para no perder semántica comercial al mapear productos relacionados.
+  4. Reforzar UI pública sin rediseño global: el bloque de disponibilidad ahora muestra unidad comercial (cuando no es `ud`) e incremento mínimo cuando aplica.
+  5. Mantener copy sobrio y explícito sobre no-reserva: el frontend informa; backend valida stock y reglas al crear pedido.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/presentacion/tests/test_publico_producto_detalle.py`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `frontend/infraestructura/api/rituales.ts`
+  - `frontend/componentes/catalogo/disponibilidad/EstadoDisponibilidadProducto.tsx`
+  - `frontend/componentes/rituales/detalle/BloqueResolucionComercialRitual.tsx`
+  - `frontend/tests/rituales-disponibilidad-contrato.test.ts`
+  - `frontend/tests/botica-natural.test.ts`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/90_estado_implementacion.md`
+- **Comandos ejecutados**:
+  - `python manage.py test backend.nucleo_herbal.presentacion.tests.test_publico_producto_detalle tests.nucleo_herbal.test_exposicion_publica`
+  - `npm --prefix frontend run test:botica-natural`
+  - `npm --prefix frontend run test:rituales-disponibilidad`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_backend_readiness.py`
+  - `npm --prefix frontend run lint`
+  - `npm --prefix frontend run build`
+- **Evidencia**:
+  - tests backend cubren casos explícitos de disponibilidad con inventario ausente y stock cero, además de serialización de unidad/incremento en detalle público y productos relacionados de ritual;
+  - frontend ritual ya consume y conserva `unidad_comercial`/`incremento_minimo_venta`/`cantidad_minima_compra` desde API real;
+  - superficies públicas de ficha y relaciones muestran estado de disponibilidad más semántica comercial útil para granel;
+  - `makemigrations --check --dry-run` confirma sin deuda de migraciones.
+- **Deuda residual**:
+  1. El frontend todavía no introduce selector público completo de gramos/ml (deliberadamente fuera de alcance de R09).
+  2. La garantía definitiva de stock sigue estando sólo en validación backend de checkout (diseño esperado).
+  3. No se abre stock duro público ni reserva temporal.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R10 — Emails transaccionales reales mínimos
 - **Estado**: `PARTIAL`.
@@ -488,3 +526,5 @@
 - **2026-03-24 — R07 (cierre):** page propia de inventario en backoffice Next cerrada con listado operativo, ajuste manual y ledger mínimo visible sobre API privada staff.
 - **2026-03-24 — R08 (arranque):** estado movido de `PLANNED` a `IN_PROGRESS` antes de implementar restitución manual de inventario.
 - **2026-03-24 — R08 (cierre):** restitución manual de inventario cerrada con elegibilidad explícita, acción operativa en Django Admin, ajuste de stock, ledger `restitucion_manual`, idempotencia y tests backend relevantes en verde.
+- **2026-03-25 — R09 (arranque):** estado movido de `DONE` a `IN_PROGRESS` para auditar brecha real de disponibilidad pública unitario/granel y ajustar contrato/UI sin duplicar fuentes.
+- **2026-03-25 — R09 (cierre):** disponibilidad pública cerrada como `DONE` con contrato consistente herbal/rituales (estado + unidad + incremento + mínimo), UI pública sobria en ficha/relaciones y tests backend/frontend relevantes en verde.
