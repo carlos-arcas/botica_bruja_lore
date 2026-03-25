@@ -80,6 +80,8 @@ class LineaPedidoRealModelo(models.Model):
     cantidad_comercial = models.PositiveIntegerField(default=1)
     unidad_comercial = models.CharField(max_length=8, default="ud")
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    tipo_impositivo = models.DecimalField(max_digits=5, decimal_places=4, default=0.21)
+    importe_impuestos = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     moneda = models.CharField(max_length=8, default="EUR")
 
     class Meta:

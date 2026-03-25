@@ -955,3 +955,17 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. no hay automatización de reembolso al aceptar devolución;
   2. no hay automatización de restitución al aceptar devolución;
   3. la resolución operativa de devolución es explícita y auditable, pero su cierre administrativo sigue siendo manual.
+
+## 48. Fiscalidad avanzada v2 por producto y cálculo por línea (V2-R05)
+- Capacidad: **fiscalidad explícita por producto con cálculo y trazabilidad por línea en pedido real**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `Producto` incorpora `tipo_fiscal` controlado (`iva_general`, `iva_reducido`) en dominio, persistencia, contrato público y operación backoffice;
+  - checkout real en backend enriquece cada línea con `tipo_impositivo` derivado de producto y calcula impuestos por línea (sin floats, con `Decimal` + `ROUND_HALF_UP`);
+  - pedido real persiste snapshot fiscal de línea (`tipo_impositivo`, `importe_impuestos`) y serializa esos campos en API/documento;
+  - Stripe alinea el cobro con la aritmética persistida (impuestos por línea + envío), evitando desajustes pedido↔PSP;
+  - frontend de checkout y recibo real mantiene desglose comprensible y coherente con la aritmética de backend.
+- Regla activa:
+  1. sin casuística multi-país/OSS/IOSS en este bloque;
+  2. sin motor fiscal enterprise, solo catálogo fiscal acotado y mantenible;
+  3. se mantiene compatibilidad de contratos existentes mientras se expone la nueva trazabilidad por línea.

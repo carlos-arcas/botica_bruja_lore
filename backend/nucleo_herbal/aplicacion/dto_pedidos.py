@@ -36,6 +36,8 @@ class LineaPedidoRealDTO:
     cantidad_comercial: int
     unidad_comercial: str
     precio_unitario: Decimal
+    tipo_impositivo: Decimal
+    importe_impuestos: Decimal
     moneda: str
     subtotal: Decimal
 

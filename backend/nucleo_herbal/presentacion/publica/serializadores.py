@@ -51,6 +51,7 @@ def serializar_producto_resumen(dto: ProductoResumenDTO) -> dict:
         "unidad_comercial": dto.unidad_comercial,
         "incremento_minimo_venta": dto.incremento_minimo_venta,
         "cantidad_minima_compra": dto.cantidad_minima_compra,
+        "tipo_fiscal": dto.tipo_fiscal,
         "disponible": dto.disponible,
         "estado_disponibilidad": dto.estado_disponibilidad,
     }

@@ -86,6 +86,8 @@ def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
                 "cantidad_comercial": linea.cantidad_comercial,
                 "unidad_comercial": linea.unidad_comercial,
                 "precio_unitario": str(linea.precio_unitario),
+                "tipo_impositivo": str(linea.tipo_impositivo),
+                "importe_impuestos": str(linea.importe_impuestos),
                 "moneda": linea.moneda,
                 "subtotal": str(linea.subtotal),
             }

@@ -188,6 +188,8 @@ def _a_modelo_linea(modelo: PedidoRealModelo, linea: LineaPedido) -> LineaPedido
         cantidad_comercial=linea.cantidad_comercial,
         unidad_comercial=linea.unidad_comercial,
         precio_unitario=linea.precio_unitario,
+        tipo_impositivo=linea.tipo_impositivo,
+        importe_impuestos=linea.importe_impuestos,
         moneda=linea.moneda,
     )
 
@@ -200,6 +202,7 @@ def _a_linea(modelo: LineaPedidoRealModelo) -> LineaPedido:
         cantidad_comercial=modelo.cantidad_comercial or modelo.cantidad,
         unidad_comercial=modelo.unidad_comercial or "ud",
         precio_unitario=modelo.precio_unitario,
+        tipo_impositivo=modelo.tipo_impositivo,
         moneda=modelo.moneda,
     )
 

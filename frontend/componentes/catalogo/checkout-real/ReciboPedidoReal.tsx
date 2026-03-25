@@ -79,7 +79,7 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
       </div>
       <div id={`confirmacion-${pedido.id_pedido}`}>
         <h2>Resumen del pedido</h2>
-        <ul>{pedido.lineas.map((linea) => <li key={`${linea.id_producto}-${linea.slug_producto}`}>{linea.nombre_producto} · {linea.cantidad_comercial}{linea.unidad_comercial} · {linea.subtotal} {linea.moneda}</li>)}</ul>
+        <ul>{pedido.lineas.map((linea) => <li key={`${linea.id_producto}-${linea.slug_producto}`}>{linea.nombre_producto} · {linea.cantidad_comercial}{linea.unidad_comercial} · Subtotal {linea.subtotal} {linea.moneda} · Impuestos {linea.importe_impuestos} {linea.moneda}</li>)}</ul>
       </div>
       {mensaje && <p>{mensaje}</p>}
     </section>

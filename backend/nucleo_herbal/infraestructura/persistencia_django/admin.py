@@ -96,11 +96,12 @@ class ProductoAdmin(admin.ModelAdmin):
         "unidad_comercial",
         "incremento_minimo_venta",
         "cantidad_minima_compra",
+        "tipo_fiscal",
         "orden_publicacion",
         "publicado",
     )
     search_fields = ("nombre", "sku", "slug", "categoria_comercial", "seccion_publica")
-    list_filter = ("publicado", "tipo_producto", "categoria_comercial", "seccion_publica", "beneficio_principal", "formato_comercial", "modo_uso")
+    list_filter = ("publicado", "tipo_producto", "categoria_comercial", "seccion_publica", "beneficio_principal", "formato_comercial", "modo_uso", "tipo_fiscal")
     ordering = ("orden_publicacion", "nombre")
     list_editable = ("incremento_minimo_venta", "cantidad_minima_compra", "orden_publicacion", "publicado")
     prepopulated_fields = {"slug": ("nombre",)}
@@ -125,6 +126,7 @@ class ProductoAdmin(admin.ModelAdmin):
                     "unidad_comercial",
                     "incremento_minimo_venta",
                     "cantidad_minima_compra",
+                    "tipo_fiscal",
                     "orden_publicacion",
                     "publicado",
                 )

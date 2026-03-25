@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 from .excepciones import ErrorDominio
 
@@ -16,6 +17,11 @@ TIPOS_PRODUCTO_VALIDOS = {
 }
 TIPO_PRODUCTO_HERBAL = "hierbas-a-granel"
 UNIDADES_COMERCIALES_VALIDAS = {"ud", "g", "ml"}
+TIPOS_FISCALES_PRODUCTO_VALIDOS = {"iva_general", "iva_reducido"}
+TIPOS_IMPOSITIVOS_POR_TIPO_FISCAL = {
+    "iva_general": Decimal("0.21"),
+    "iva_reducido": Decimal("0.10"),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +81,7 @@ class Producto:
     unidad_comercial: str = "ud"
     incremento_minimo_venta: int = 1
     cantidad_minima_compra: int = 1
+    tipo_fiscal: str = "iva_general"
 
     def __post_init__(self) -> None:
         if not self.sku.strip():
@@ -101,6 +108,8 @@ class Producto:
             raise ErrorDominio("La cantidad mínima de compra debe ser un entero mayor que cero.")
         if self.cantidad_minima_compra % self.incremento_minimo_venta != 0:
             raise ErrorDominio("La cantidad mínima de compra debe ser compatible con el incremento mínimo de venta.")
+        if self.tipo_fiscal not in TIPOS_FISCALES_PRODUCTO_VALIDOS:
+            raise ErrorDominio("El producto requiere un tipo fiscal válido.")
 
 
 

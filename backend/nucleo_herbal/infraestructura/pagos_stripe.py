@@ -141,18 +141,26 @@ def _payload_checkout_session(pedido: Pedido, config: ConfiguracionStripe) -> di
         payload[f"{base}[price_data][currency]"] = linea.moneda.lower()
         payload[f"{base}[price_data][unit_amount]"] = str(_decimal_a_centimos(linea.precio_unitario))
         payload[f"{base}[price_data][product_data][name]"] = linea.nombre_producto
-    indice_envio = len(pedido.lineas)
+    indice = len(pedido.lineas)
+    for offset, linea in enumerate(pedido.lineas):
+        base_impuestos_linea = f"line_items[{indice + offset}]"
+        payload[f"{base_impuestos_linea}[quantity]"] = "1"
+        payload[f"{base_impuestos_linea}[price_data][currency]"] = linea.moneda.lower()
+        payload[f"{base_impuestos_linea}[price_data][unit_amount]"] = str(_decimal_a_centimos(linea.importe_impuestos))
+        payload[f"{base_impuestos_linea}[price_data][product_data][name]"] = f"Impuestos · {linea.nombre_producto} ({int(linea.tipo_impositivo * 100)}%)"
+    indice_envio = indice + len(pedido.lineas)
     base_envio = f"line_items[{indice_envio}]"
     payload[f"{base_envio}[quantity]"] = "1"
     payload[f"{base_envio}[price_data][currency]"] = pedido.moneda.lower()
     payload[f"{base_envio}[price_data][unit_amount]"] = str(_decimal_a_centimos(pedido.importe_envio))
     payload[f"{base_envio}[price_data][product_data][name]"] = "Envío estándar"
-    indice_impuestos = indice_envio + 1
-    base_impuestos = f"line_items[{indice_impuestos}]"
-    payload[f"{base_impuestos}[quantity]"] = "1"
-    payload[f"{base_impuestos}[price_data][currency]"] = pedido.moneda.lower()
-    payload[f"{base_impuestos}[price_data][unit_amount]"] = str(_decimal_a_centimos(pedido.importe_impuestos))
-    payload[f"{base_impuestos}[price_data][product_data][name]"] = f"Impuestos ({int(pedido.tipo_impositivo * 100)}%)"
+    indice_impuestos_envio = indice_envio + 1
+    base_impuestos_envio = f"line_items[{indice_impuestos_envio}]"
+    payload[f"{base_impuestos_envio}[quantity]"] = "1"
+    payload[f"{base_impuestos_envio}[price_data][currency]"] = pedido.moneda.lower()
+    impuestos_envio = pedido.importe_impuestos - sum((linea.importe_impuestos for linea in pedido.lineas), Decimal("0"))
+    payload[f"{base_impuestos_envio}[price_data][unit_amount]"] = str(_decimal_a_centimos(impuestos_envio))
+    payload[f"{base_impuestos_envio}[price_data][product_data][name]"] = f"Impuestos envío ({int(pedido.tipo_impositivo * 100)}%)"
     return payload
 
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -32,13 +32,14 @@ class RegistrarPedido:
 
     def ejecutar(self, payload: PayloadPedido, operation_id: str) -> PedidoRealDTO:
         importe_envio = self.proveedor_envio.resolver_importe_envio_estandar(moneda=payload.moneda, operation_id=operation_id)
+        lineas = self._enriquecer_lineas_fiscales(payload.lineas)
         pedido = Pedido(
             id_pedido=_generar_id_pedido(),
             estado="pendiente_pago",
             estado_pago="pendiente",
             canal_checkout=payload.canal_checkout,
             cliente=payload.cliente,
-            lineas=payload.lineas,
+            lineas=lineas,
             direccion_entrega=self._resolver_direccion_entrega(payload, operation_id),
             notas_cliente=payload.notas_cliente,
             moneda=payload.moneda,
@@ -143,6 +144,15 @@ class RegistrarPedido:
             if linea.cantidad_comercial % producto.incremento_minimo_venta != 0:
                 raise ErrorDominio("La cantidad comercial no cumple el incremento mínimo de venta configurado para el producto.")
 
+    def _enriquecer_lineas_fiscales(self, lineas: tuple) -> tuple:
+        actualizadas = []
+        for linea in lineas:
+            producto = self.repositorio_productos_checkout.obtener_semantica_comercial_por_id(linea.id_producto)
+            if producto is None:
+                raise ErrorDominio("No pudimos validar la semántica comercial porque el producto no existe.")
+            actualizadas.append(replace(linea, tipo_impositivo=producto.tipo_impositivo))
+        return tuple(actualizadas)
+
 
 @dataclass(slots=True)
 class ObtenerPedidoPorId:
@@ -218,6 +228,8 @@ def _a_dto(pedido: Pedido) -> PedidoRealDTO:
                 cantidad_comercial=linea.cantidad_comercial,
                 unidad_comercial=linea.unidad_comercial,
                 precio_unitario=linea.precio_unitario,
+                tipo_impositivo=linea.tipo_impositivo,
+                importe_impuestos=linea.importe_impuestos,
                 moneda=linea.moneda,
                 subtotal=linea.subtotal,
             )

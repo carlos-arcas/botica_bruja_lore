@@ -19,6 +19,7 @@ export type ProductoCatalogo = {
   unidad_comercial: "ud" | "g" | "ml";
   incremento_minimo_venta: number;
   cantidad_minima_compra: number;
+  tipo_fiscal: "iva_general" | "iva_reducido";
 };
 
 export type OpcionFiltro = { valor: string; etiqueta: string };
@@ -125,7 +126,7 @@ export const PRODUCTOS_CATALOGO: ProductoCatalogo[] = [
 
 type ProductoBase = Omit<
   ProductoCatalogo,
-  "imagen_url" | "imagen_alt" | "unidad_comercial" | "incremento_minimo_venta" | "cantidad_minima_compra"
+  "imagen_url" | "imagen_alt" | "unidad_comercial" | "incremento_minimo_venta" | "cantidad_minima_compra" | "tipo_fiscal"
 >;
 
 function crearProductoCatalogo(producto: ProductoBase): ProductoCatalogo {
@@ -136,6 +137,7 @@ function crearProductoCatalogo(producto: ProductoBase): ProductoCatalogo {
     unidad_comercial: "ud",
     incremento_minimo_venta: 1,
     cantidad_minima_compra: 1,
+    tipo_fiscal: "iva_general",
   };
 }
 

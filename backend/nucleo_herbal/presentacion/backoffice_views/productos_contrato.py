@@ -57,6 +57,7 @@ CAMPOS_UI_CANONICOS_PRODUCTO = {
     "unidad_comercial",
     "incremento_minimo_venta",
     "cantidad_minima_compra",
+    "tipo_fiscal",
     "__forzar_error_respuesta__",
 }
 CAMPOS_LEGACY_TOLERADOS_PRODUCTO = {
@@ -86,10 +87,12 @@ CAMPOS_PERSISTIDOS_PRODUCTO = (
     "unidad_comercial",
     "incremento_minimo_venta",
     "cantidad_minima_compra",
+    "tipo_fiscal",
     "publicado",
     "orden_publicacion",
 )
 UNIDADES_COMERCIALES_VALIDAS = {"ud", "g", "ml"}
+TIPOS_FISCALES_VALIDOS = {"iva_general", "iva_reducido"}
 
 
 class ErrorValidacionProducto(ValueError):
@@ -266,6 +269,12 @@ def normalizar_payload_producto(data: dict[str, object]) -> ProductoNormalizado:
             "Cantidad mínima de compra incompatible con incremento mínimo.",
             errores={"cantidad_minima_compra": "Debe ser múltiplo del incremento mínimo de venta."},
         )
+    tipo_fiscal = _a_slug_catalogo(str(data.get("tipo_fiscal", "iva_general") or "iva_general"))
+    if tipo_fiscal not in TIPOS_FISCALES_VALIDOS:
+        raise ErrorValidacionProducto(
+            "Tipo fiscal inválido.",
+            errores={"tipo_fiscal": "Selecciona un tipo fiscal válido."},
+        )
     normalizado = {
         "nombre": nombre,
         "tipo_producto": tipo_producto,
@@ -284,6 +293,7 @@ def normalizar_payload_producto(data: dict[str, object]) -> ProductoNormalizado:
         "unidad_comercial": unidad_comercial,
         "incremento_minimo_venta": incremento_minimo_venta,
         "cantidad_minima_compra": cantidad_minima_compra,
+        "tipo_fiscal": tipo_fiscal,
         "publicado": publicado,
         "orden_publicacion": int(data.get("orden_publicacion", 100) or 100),
     }

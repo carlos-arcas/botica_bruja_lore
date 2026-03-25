@@ -29,6 +29,7 @@ export type LineaPedidoPayload = {
   unidad_comercial: "ud" | "g" | "ml";
   precio_unitario: string;
   moneda: string;
+  tipo_fiscal?: "iva_general" | "iva_reducido";
 };
 
 export type PayloadPedido = {
@@ -224,6 +225,7 @@ function construirLineaReal(slug: string | null, cantidad: number, productos: Pr
     unidad_comercial: producto.unidad_comercial ?? "ud",
     precio_unitario: convertirPrecioVisibleADecimal(producto.precioVisible),
     moneda: "EUR",
+    tipo_fiscal: producto.tipo_fiscal ?? "iva_general",
   };
 }
 

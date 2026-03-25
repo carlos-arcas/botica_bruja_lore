@@ -132,6 +132,7 @@ test("checkout real muestra error por incremento mínimo cuando la cantidad no c
       unidad_comercial: "g",
       incremento_minimo_venta: 50,
       cantidad_minima_compra: 100,
+      tipo_fiscal: "iva_general",
     },
   );
 
@@ -167,6 +168,7 @@ test("checkout real muestra error por cantidad mínima de compra", () => {
       unidad_comercial: "g",
       incremento_minimo_venta: 50,
       cantidad_minima_compra: 100,
+      tipo_fiscal: "iva_general",
     },
   );
 
