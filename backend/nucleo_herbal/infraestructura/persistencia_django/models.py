@@ -451,4 +451,4 @@ class ImportacionFilaModelo(models.Model):
 
 
 from .models_inventario import InventarioProductoModelo, MovimientoInventarioModelo
-from .models_pedidos import LineaPedidoRealModelo, PedidoRealModelo
+from .models_pedidos import DevolucionPedidoModelo, LineaPedidoRealModelo, PedidoRealModelo
