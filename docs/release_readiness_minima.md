@@ -52,7 +52,7 @@ pg_restore --no-owner --no-privileges --clean --if-exists --dbname="$BOTICA_REST
 ## 4) CHECKLIST DE RELEASE (pre-flight)
 1. `python scripts/check_release_gate.py`
 2. `python scripts/check_release_readiness.py`
-3. `python scripts/check_operational_reconciliation.py --fail-on none`
+3. `python scripts/check_operational_reconciliation.py --fail-on blocker`
 4. `python scripts/backup_restore_postgres.py backup --dry-run` (validación segura de plan/comandos).
 5. Backup lógico real antes del deploy.
 6. Restore drill en base temporal cuando el entorno lo permita.

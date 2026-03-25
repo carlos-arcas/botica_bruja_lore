@@ -47,18 +47,19 @@ class OperationalReconciliationTests(unittest.TestCase):
         base.update(overrides)
         return self.module.PedidoSnapshot(**base)
 
-    def test_detecta_error_stock_y_warning_email_post_pago(self) -> None:
+    def test_detecta_blocker_stock_y_warning_email_post_pago(self) -> None:
         pedido = self._pedido(inventario_descontado=False, email_post_pago_enviado=False)
 
         hallazgos = self.module._evaluar((pedido,), set())
 
-        codigos = {h.codigo for h in hallazgos}
-        self.assertIn("pedido_pagado_sin_descuento_ni_incidencia_stock", codigos)
-        self.assertIn("email_post_pago_pendiente", codigos)
+        por_codigo = {h.codigo: h for h in hallazgos}
+        self.assertEqual(por_codigo["pedido_pagado_sin_descuento_ni_incidencia_stock"].severidad, "BLOCKER")
+        self.assertEqual(por_codigo["email_post_pago_pendiente"].severidad, "WARNING")
 
     def test_no_falsos_positivos_en_pedido_cancelado_consistente(self) -> None:
         pedido = self._pedido(
             estado="cancelado",
+            estado_pago="reembolsado",
             inventario_descontado=True,
             incidencia_stock_confirmacion=True,
             cancelado_operativa_incidencia_stock=True,
@@ -72,9 +73,10 @@ class OperationalReconciliationTests(unittest.TestCase):
 
         self.assertEqual(hallazgos, ())
 
-    def test_detecta_inconsistencia_ledger_restitucion(self) -> None:
+    def test_detecta_inconsistencia_ledger_restitucion_como_blocker(self) -> None:
         pedido = self._pedido(
             estado="cancelado",
+            estado_pago="reembolsado",
             inventario_restituido=True,
             cancelado_operativa_incidencia_stock=True,
             estado_reembolso="ejecutado",
@@ -84,22 +86,31 @@ class OperationalReconciliationTests(unittest.TestCase):
 
         hallazgos = self.module._evaluar((pedido,), set())
 
-        codigos = {h.codigo for h in hallazgos}
-        self.assertIn("inventario_restituido_sin_ledger_restitucion", codigos)
+        por_codigo = {h.codigo: h for h in hallazgos}
+        self.assertEqual(por_codigo["inventario_restituido_sin_ledger_restitucion"].severidad, "BLOCKER")
+
+    def test_reembolso_fallido_sin_cancelacion_es_warning(self) -> None:
+        pedido = self._pedido(estado_reembolso="fallido")
+
+        hallazgos = self.module._evaluar((pedido,), set())
+
+        por_codigo = {h.codigo: h for h in hallazgos}
+        self.assertEqual(por_codigo["reembolso_fallido_sin_cancelacion_operativa"].severidad, "WARNING")
 
     def test_exit_code_respeta_fail_on(self) -> None:
         hallazgos = (
             self.module.Inconsistencia("WARNING", "w", "ped-1", "d", "a"),
-            self.module.Inconsistencia("ERROR", "e", "ped-1", "d", "a"),
+            self.module.Inconsistencia("BLOCKER", "b", "ped-1", "d", "a"),
         )
 
+        self.assertEqual(self.module._code_for_findings(hallazgos, "blocker"), 1)
         self.assertEqual(self.module._code_for_findings(hallazgos, "error"), 1)
         self.assertEqual(self.module._code_for_findings(hallazgos, "warning"), 1)
         self.assertEqual(self.module._code_for_findings(hallazgos, "none"), 0)
 
     def test_salida_texto_incluye_severidades_y_codigos(self) -> None:
         hallazgos = (
-            self.module.Inconsistencia("ERROR", "codigo_error", "ped-1", "detalle", "accion"),
+            self.module.Inconsistencia("BLOCKER", "codigo_blocker", "ped-1", "detalle", "accion"),
             self.module.Inconsistencia("WARNING", "codigo_warning", "ped-2", "detalle", "accion"),
         )
 
@@ -108,10 +119,16 @@ class OperationalReconciliationTests(unittest.TestCase):
             self.module._print_text(hallazgos, 2)
         salida = buffer.getvalue()
 
-        self.assertIn("[ERROR]", salida)
-        self.assertIn("codigo_error", salida)
+        self.assertIn("[BLOCKER]", salida)
+        self.assertIn("codigo_blocker", salida)
         self.assertIn("[WARNING]", salida)
         self.assertIn("codigo_warning", salida)
+
+    def test_json_incluye_matriz_severidad(self) -> None:
+        matriz = self.module._rules_matrix()
+
+        self.assertIn("blocker", matriz)
+        self.assertIn("reembolso_ejecutado_sin_cancelacion_operativa", matriz["blocker"])
 
 
 if __name__ == "__main__":
