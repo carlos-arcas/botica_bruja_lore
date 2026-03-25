@@ -53,11 +53,12 @@ pg_restore --no-owner --no-privileges --clean --if-exists --dbname="$BOTICA_REST
 1. `python scripts/check_release_gate.py`
 2. `python scripts/check_release_readiness.py`
 3. `python scripts/check_operational_reconciliation.py --fail-on blocker`
-4. `python scripts/backup_restore_postgres.py backup --dry-run` (validación segura de plan/comandos).
-5. Backup lógico real antes del deploy.
-6. Restore drill en base temporal cuando el entorno lo permita.
-7. Deploy.
-8. Smoke post-deploy (`python scripts/check_deployed_stack.py` con URLs reales).
+4. `python scripts/check_operational_alerts_v2.py --fail-on blocker` (resumen operativo accionable y serializable de alertas mínimas v2).
+5. `python scripts/backup_restore_postgres.py backup --dry-run` (validación segura de plan/comandos).
+6. Backup lógico real antes del deploy.
+7. Restore drill en base temporal cuando el entorno lo permita.
+8. Deploy.
+9. Smoke post-deploy (`python scripts/check_deployed_stack.py` con URLs reales).
 
 ## 5) Alcance explícitamente fuera de este checklist
 - No cubre SOC2/ISO, SIEM, MFA corporativo ni RBAC avanzado.

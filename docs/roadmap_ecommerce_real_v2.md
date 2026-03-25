@@ -105,8 +105,9 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Resultado real**: documento fiscal HTML v2 más formal, trazable por identificador documental derivado del pedido, con desglose fiscal por línea y acceso coherente desde detalle de pedido y mi cuenta.
 
 ### V2-R07 — Observabilidad y alertas operativas v2
-- **Estado**: `PLANNED`.
+- **Estado**: `DONE`.
 - **Dependencias**: señales y eventos relevantes estabilizados en bloques anteriores.
+- **Resultado real**: script agregador mínimo de alertas operativas reutilizando conciliación/readiness y estados reales de pedido/devolución, con salida texto/JSON y política de exit code accionable.
 
 ### V2-R08 — Automatización de tareas operativas reintentables
 - **Estado**: `PLANNED`.
@@ -374,4 +375,32 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Deuda residual**:
   1. Sigue fuera de alcance numeración fiscal legal avanzada (series, correlativos oficiales, multi-país).
   2. No se añade firma electrónica ni envío automático por email en este incremento.
+- **Commit/PR**: registrado al cierre de esta ejecución.
+
+### Entrada V2-R07
+- **Estado final**: `DONE`.
+- **Resumen de decisiones**:
+  1. Se implementa un agregador mínimo (`scripts/check_operational_alerts_v2.py`) en vez de plataforma externa, priorizando señal útil y baja fricción operativa.
+  2. Las alertas reutilizan señales existentes: conciliación (`check_operational_reconciliation.py`), readiness (`check_release_readiness.py`) y estados/flags persistidos de pedidos/devoluciones.
+  3. Se limita el catálogo a alertas accionables de bajo ruido: incidencia stock pendiente de revisión, reembolso fallido, devolución aceptada no resuelta y blockers de conciliación/readiness.
+  4. Se entrega salida dual (texto + JSON) con severidad, código, entidad, mensaje, acción sugerida y fuente para ejecución manual o scheduler externo.
+- **Archivos tocados**:
+  - `scripts/check_operational_alerts_v2.py`
+  - `tests/scripts/test_check_operational_alerts_v2.py`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+- **Comandos ejecutados**:
+  - `python manage.py test tests.scripts.test_check_operational_alerts_v2 tests.scripts.test_check_operational_reconciliation tests.scripts.test_check_release_gate_reconciliation`
+  - `python manage.py check`
+  - `python scripts/check_operational_alerts_v2.py --fail-on none --json`
+  - `python scripts/check_release_gate.py`
+- **Evidencia**:
+  - existe script de alertas operativas con clasificación y salida estructurada;
+  - tests del nuevo bloque y regresión mínima de conciliación en verde;
+  - gate canónico completo ejecutado en verde en este entorno.
+- **Deuda residual**:
+  1. Falta validar ejecución periódica real en entorno con base de datos operativa y tablas cargadas para obtener señales no `SKIP`.
+  2. Canal opcional de email operativo interno se deja fuera por ahora para evitar acoplamiento/noise prematuro.
 - **Commit/PR**: registrado al cierre de esta ejecución.

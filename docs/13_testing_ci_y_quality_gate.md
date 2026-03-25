@@ -215,6 +215,7 @@ Este comando orquesta en un solo flujo:
 - **Snapshot de datos públicos en modo lectura:** reporte de conteos existentes de intenciones, plantas, productos y rituales (sin sembrar ni migrar).
 - **Integridad operativa/documental del repositorio:** `python scripts/check_repo_operational_integrity.py` (markdown crítico, coherencia Procfile/manage.py/wsgi.py/railway.toml, `.env.railway.example` y alineación CI↔documentación).
 - **Conciliación operativa endurecida (solo lectura):** `python scripts/check_operational_reconciliation.py --fail-on blocker` con matriz explícita BLOCKER/WARNING/INFO para detectar discrepancias pedido↔inventario↔reembolso↔expedición↔emails sin mutar datos; solo los BLOCKER rompen gate.
+- **Alertas operativas agregadas v2 (solo lectura):** `python scripts/check_operational_alerts_v2.py --fail-on blocker` para consolidar señales accionables (stock pendiente de revisión, reembolsos fallidos, devoluciones aceptadas no resueltas, blockers de conciliación y fallo de readiness) con salida texto/JSON reutilizable en ejecución manual o scheduler externo.
 - **Release readiness mínimo (seguridad/privacidad/backups):** `python scripts/check_release_readiness.py` para validar checklist mínimo de pre-release y documentación de backup/restore.
 - **Backup/restore operable (plan seguro):** `python scripts/backup_restore_postgres.py backup --dry-run` y `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file <ruta_dump>` para verificar configuración/prerrequisitos sin ejecutar restore destructivo.
 
