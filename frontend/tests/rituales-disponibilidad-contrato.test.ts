@@ -55,6 +55,9 @@ test("obtenerFichaRitualConectada normaliza disponibilidad pública en productos
             descripcion_corta: "Descripción",
             precio_visible: "12,00 €",
             imagen_url: "/imagenes/rosa.webp",
+            unidad_comercial: "g",
+            incremento_minimo_venta: 25,
+            cantidad_minima_compra: 50,
             disponible: true,
             estado_disponibilidad: "inventario_desconocido",
           },
@@ -77,6 +80,9 @@ test("obtenerFichaRitualConectada normaliza disponibilidad pública en productos
     assert.equal(resultado.ficha.productos.length, 1);
     assert.equal(resultado.ficha.productos[0]?.disponible, true);
     assert.equal(resultado.ficha.productos[0]?.estado_disponibilidad, "no_disponible");
+    assert.equal(resultado.ficha.productos[0]?.unidad_comercial, "g");
+    assert.equal(resultado.ficha.productos[0]?.incremento_minimo_venta, 25);
+    assert.equal(resultado.ficha.productos[0]?.cantidad_minima_compra, 50);
   }
 
   global.fetch = originalFetch;

@@ -849,3 +849,16 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. Django Admin no se elimina y permanece como soporte/fallback;
   2. no se recalcula stock desde ledger;
   3. no se introduce multi-almacén, lotes/caducidad, reporting avanzado ni bulk actions complejas.
+
+## 42. Disponibilidad pública real para producto a granel (R09)
+- Capacidad: **Contrato público coherente de disponibilidad + semántica comercial (unitario/granel)**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - backend mantiene una única fuente de disponibilidad pública desde inventario real (`resolver_disponibilidad_publica`) y refuerza cobertura en `test_publico_producto_detalle.py` y `test_exposicion_publica.py` para inventario ausente/stock cero y serialización de unidad+incremento;
+  - frontend ritual preserva contrato comercial al mapear productos relacionados (`frontend/infraestructura/api/rituales.ts`);
+  - UI pública reutiliza `EstadoDisponibilidadProducto` para mostrar estado, unidad comercial (cuando aplica), incremento mínimo y mínimo de compra sin sobreprometer reserva;
+  - bloque comercial de ritual incorpora disponibilidad real de cada producto relacionado (`BloqueResolucionComercialRitual.tsx`).
+- Regla activa:
+  1. frontend informa disponibilidad y semántica comercial;
+  2. backend sigue siendo última línea de defensa en checkout/pedido;
+  3. no se expone stock duro exacto ni reserva temporal desde ficha pública.

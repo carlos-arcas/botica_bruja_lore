@@ -34,6 +34,9 @@ export type ProductoRelacionadoRitual = {
   descripcion_corta: string;
   precio_visible: string;
   imagen_url: string;
+  unidad_comercial: "ud" | "g" | "ml";
+  incremento_minimo_venta: number;
+  cantidad_minima_compra: number;
   disponible: boolean;
   estado_disponibilidad: EstadoDisponibilidadPublica;
 };
@@ -77,6 +80,9 @@ type ProductoApi = {
   descripcion_corta?: string;
   precio_visible?: string;
   imagen_url?: string;
+  unidad_comercial?: string;
+  incremento_minimo_venta?: number;
+  cantidad_minima_compra?: number;
   disponible?: boolean;
   estado_disponibilidad?: string;
 };
@@ -130,6 +136,8 @@ function normalizarProductoRelacionadoRitual(producto: ProductoApi): ProductoRel
     return null;
   }
 
+  const unidad = producto.unidad_comercial;
+  const unidad_comercial = unidad === "g" || unidad === "ml" ? unidad : "ud";
   return {
     sku: producto.sku,
     slug: producto.slug,
@@ -140,6 +148,17 @@ function normalizarProductoRelacionadoRitual(producto: ProductoApi): ProductoRel
     descripcion_corta: producto.descripcion_corta ?? "",
     precio_visible: producto.precio_visible ?? "",
     imagen_url: producto.imagen_url ?? "",
+    unidad_comercial,
+    incremento_minimo_venta:
+      Number.isInteger(producto.incremento_minimo_venta) &&
+      (producto.incremento_minimo_venta ?? 0) > 0
+        ? (producto.incremento_minimo_venta as number)
+        : 1,
+    cantidad_minima_compra:
+      Number.isInteger(producto.cantidad_minima_compra) &&
+      (producto.cantidad_minima_compra ?? 0) > 0
+        ? (producto.cantidad_minima_compra as number)
+        : 1,
     disponible: producto.disponible ?? false,
     estado_disponibilidad: normalizarEstadoDisponibilidadPublica(
       producto.estado_disponibilidad,

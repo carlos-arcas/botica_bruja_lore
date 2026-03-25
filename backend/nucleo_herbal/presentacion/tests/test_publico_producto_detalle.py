@@ -94,3 +94,28 @@ class PublicoProductoDetalleApiTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertTrue(respuesta.json()["producto"]["disponible"])
         self.assertEqual(respuesta.json()["producto"]["estado_disponibilidad"], "bajo_stock")
+
+    def test_detalle_producto_sin_inventario_publica_no_disponible(self):
+        self._crear_producto(slug="detalle-sin-inventario", publicado=True)
+
+        respuesta = self.client.get("/api/v1/herbal/productos/detalle-sin-inventario/")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(respuesta.json()["producto"]["disponible"])
+        self.assertEqual(respuesta.json()["producto"]["estado_disponibilidad"], "no_disponible")
+
+    def test_detalle_producto_serializa_unidad_e_incremento_comercial(self):
+        producto = self._crear_producto(slug="detalle-granel", publicado=True)
+        producto.unidad_comercial = "g"
+        producto.incremento_minimo_venta = 50
+        producto.cantidad_minima_compra = 100
+        producto.save(update_fields=["unidad_comercial", "incremento_minimo_venta", "cantidad_minima_compra"])
+        InventarioProductoModelo.objects.create(producto=producto, cantidad_disponible=1000, unidad_base="g", umbral_bajo_stock=100)
+
+        respuesta = self.client.get("/api/v1/herbal/productos/detalle-granel/")
+
+        self.assertEqual(respuesta.status_code, 200)
+        data = respuesta.json()["producto"]
+        self.assertEqual(data["unidad_comercial"], "g")
+        self.assertEqual(data["incremento_minimo_venta"], 50)
+        self.assertEqual(data["cantidad_minima_compra"], 100)
