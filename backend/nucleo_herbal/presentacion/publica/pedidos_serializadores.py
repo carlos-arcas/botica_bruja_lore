@@ -12,6 +12,7 @@ def _serializar_fecha(valor: object) -> str | None:
 def serializar_pedido(dto: PedidoRealDTO) -> dict[str, object]:
     return {
         "id_pedido": dto.id_pedido,
+        "fecha_creacion": dto.fecha_creacion.isoformat().replace('+00:00', 'Z'),
         "estado": dto.estado,
         "estado_pago": dto.estado_pago,
         "canal_checkout": dto.canal_checkout,

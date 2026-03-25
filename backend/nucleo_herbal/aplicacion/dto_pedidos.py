@@ -55,6 +55,7 @@ class ExpedicionPedidoDTO:
 @dataclass(frozen=True, slots=True)
 class PedidoRealDTO:
     id_pedido: str
+    fecha_creacion: datetime
     estado: str
     estado_pago: str
     canal_checkout: str

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { resolverEstadoVisiblePedidoCliente } from "@/infraestructura/api/estadoPedidoCliente";
-import { iniciarPagoPedido, obtenerPedidoPublico, PedidoCreado, RetornoPago } from "@/infraestructura/api/pedidos";
+import { construirUrlDocumentoPedido, iniciarPagoPedido, obtenerPedidoPublico, PedidoCreado, RetornoPago } from "@/infraestructura/api/pedidos";
 
 type Props = { idPedidoRuta?: string; retornoPago?: RetornoPago };
 
@@ -66,6 +66,7 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
       {(pedido.expedicion.codigo_seguimiento || pedido.expedicion.envio_sin_seguimiento) && <p>Tracking: <strong>{pedido.expedicion.codigo_seguimiento || "Envío sin seguimiento público"}</strong>.</p>}
       {puedePagar && <button className="boton boton--principal" type="button" onClick={pagarAhora} disabled={procesandoPago}>{procesandoPago ? "Redirigiendo al pago..." : botonPago(pedido.estado_pago)}</button>}
       {pedido.pago.url_pago && pedido.estado !== "pagado" && <p><a href={pedido.pago.url_pago}>Continuar pago externo</a></p>}
+      <p><a href={construirUrlDocumentoPedido(pedido.id_pedido)}>Descargar recibo HTML trazable</a></p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Link href="/la-botica" className="boton boton--secundario">Volver a tienda</Link>
         {pedido.estado !== "pendiente_pago" && <Link href={`#confirmacion-${pedido.id_pedido}`} className="boton boton--secundario">Ver seguimiento del pedido</Link>}

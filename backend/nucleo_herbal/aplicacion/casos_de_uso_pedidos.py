@@ -163,6 +163,7 @@ def _generar_id_pedido() -> str:
 def _a_dto(pedido: Pedido) -> PedidoRealDTO:
     return PedidoRealDTO(
         id_pedido=pedido.id_pedido,
+        fecha_creacion=pedido.fecha_creacion,
         estado=pedido.estado,
         estado_pago=pedido.estado_pago,
         canal_checkout=pedido.canal_checkout,

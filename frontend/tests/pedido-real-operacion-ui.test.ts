@@ -25,6 +25,8 @@ test("mi cuenta pedidos reutiliza resumen visible de cancelación y reembolso si
   assert.equal(archivo.includes("resolverEstadoVisiblePedidoCliente"), true);
   assert.equal(archivo.includes("cancelación operativa"), true);
   assert.equal(archivo.includes("estadoVisible.reembolso.titulo.toLowerCase()"), true);
+  assert.equal(archivo.includes("Descargar recibo"), true);
+  assert.equal(archivo.includes("construirUrlDocumentoPedido"), true);
 });
 
 test("el módulo admin de pedidos ofrece acciones de preparación, envío y entrega", () => {

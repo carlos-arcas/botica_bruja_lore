@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { resolverEstadoVisiblePedidoCliente } from "@/infraestructura/api/estadoPedidoCliente";
+import { construirUrlDocumentoPedido } from "@/infraestructura/api/pedidos";
 import {
   CuentaCliente,
   EstadoVerificacionEmail,
@@ -117,6 +118,8 @@ export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.El
           {pedidos.map((pedido) => (
             <li key={pedido.id_pedido}>
               <Link href={`/pedido/${pedido.id_pedido}`}>{pedido.id_pedido}</Link> · {renderResumenPedidoCuenta(pedido)}
+              {" · "}
+              <a href={construirUrlDocumentoPedido(pedido.id_pedido)}>Descargar recibo</a>
             </li>
           ))}
         </ul>

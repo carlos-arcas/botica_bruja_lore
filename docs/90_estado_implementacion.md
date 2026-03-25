@@ -318,10 +318,18 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   4. Subtotal demo calculable por línea y por pedido en núcleo desacoplado de framework.
 - Tests añadidos:
   - `tests/nucleo_herbal/test_entidades_pedidos_demo.py`;
-  - `tests/nucleo_herbal/test_casos_de_uso_pedidos_demo.py`.
-- Trazabilidad del roadmap:
-  - este cambio cubre el alcance del **Prompt 1** (base dominio/aplicación transaccional demo);
-  - queda pendiente Prompt 2 (persistencia/infraestructura), sin adelantar API/backoffice/checkout UI.
+
+## 17.1 Actualización incremental — R12 recibo descargable y trazable
+- Capacidad: **Documento descargable mínimo de pedido real**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - backend expone `/api/v1/pedidos/{id_pedido}/documento/` con respuesta HTML `attachment` construida desde `PedidoRealDTO` canónico;
+  - el documento muestra identificador, fecha de pedido, cliente, líneas, subtotal, envío, impuestos, total, moneda y estado cliente (incluyendo cancelación/reembolso cuando aplica);
+  - frontend añade acceso directo al recibo desde `/pedido/[id_pedido]` y desde `/mi-cuenta/pedidos` sin rediseñar el área privada;
+  - pruebas backend y frontend del bloque en verde con contrato de documento y visibilidad de acceso.
+- Regla activa:
+  1. Se evita versionar binarios (sin PDFs estáticos en repo).
+  2. La aritmética del documento no se recalcula en frontend ni en un modelo paralelo.
 
 ## 18. Persistencia e infraestructura de pedidos demo (Prompt 2 oficial Ciclo 3)
 - Capacidad: **Persistencia mínima de `PedidoDemo` y `LineaPedido` con repositorio ORM y mapeo dominio↔persistencia**.

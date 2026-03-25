@@ -3,6 +3,7 @@ import unittest
 
 try:
     from django.test import TestCase as DjangoTestCase
+    from django.utils import timezone
 
     from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
     from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
@@ -73,6 +74,44 @@ class TestApiPedidosReal(DjangoTestCase):
                 "fecha_reembolso": None,
             },
         )
+        self.assertIsNotNone(pedido["fecha_creacion"])
+
+    def test_documento_descargable_refleja_importes_reales_y_estado(self) -> None:
+        crear = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
+        id_pedido = crear.json()["pedido"]["id_pedido"]
+
+        documento = self.client.get(f"/api/v1/pedidos/{id_pedido}/documento/")
+
+        self.assertEqual(documento.status_code, 200)
+        self.assertIn("text/html", documento["Content-Type"])
+        self.assertIn(f"recibo-{id_pedido}.html", documento["Content-Disposition"])
+        contenido = documento.content.decode("utf-8")
+        self.assertIn(f"Recibo de pedido {id_pedido}", contenido)
+        self.assertIn("Subtotal: 18.00 EUR", contenido)
+        self.assertIn("Envío (envio_estandar): 4.90 EUR", contenido)
+        self.assertIn("Impuestos (21%): 4.81 EUR", contenido)
+        self.assertIn("Total: 27.71 EUR", contenido)
+        self.assertIn("sin cancelación operativa", contenido)
+
+    def test_documento_descargable_refleja_cancelacion_y_reembolso(self) -> None:
+        crear = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
+        id_pedido = crear.json()["pedido"]["id_pedido"]
+        PedidoRealModelo.objects.filter(id_pedido=id_pedido).update(
+            estado="cancelado",
+            cancelado_operativa_incidencia_stock=True,
+            fecha_cancelacion_operativa=timezone.now(),
+            motivo_cancelacion_operativa="Incidencia de stock",
+            estado_reembolso="ejecutado",
+            fecha_reembolso=timezone.now(),
+            id_externo_reembolso="re_123",
+        )
+
+        documento = self.client.get(f"/api/v1/pedidos/{id_pedido}/documento/")
+
+        self.assertEqual(documento.status_code, 200)
+        contenido = documento.content.decode("utf-8")
+        self.assertIn("Estado pedido:</strong> cancelado", contenido)
+        self.assertIn("cancelado operativamente · reembolso ejecutado", contenido)
 
     def test_direccion_entrega_es_obligatoria(self) -> None:
         payload = _payload_base()
@@ -264,6 +303,12 @@ class TestApiPedidosReal(DjangoTestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["pedido"]["estado"], "creado")
+
+    def test_documento_descargable_devuelve_404_si_no_existe_pedido(self) -> None:
+        response = self.client.get("/api/v1/pedidos/PED-NO-EXISTE/documento/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("no encontrado", response.json()["detalle"].lower())
 
 
 def _payload_base() -> dict:
