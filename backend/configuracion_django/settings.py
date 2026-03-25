@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from backend.configuracion_django.sqlite_paths import resolver_ruta_sqlite
+from backend.configuracion_django.validaciones_entorno import validar_configuracion_produccion
 from django.core.exceptions import ImproperlyConfigured
 
 
@@ -228,6 +229,15 @@ PAYMENT_SUCCESS_URL = os.getenv("PAYMENT_SUCCESS_URL", "").strip()
 PAYMENT_CANCEL_URL = os.getenv("PAYMENT_CANCEL_URL", "").strip()
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@botica-lore.local").strip()
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.locmem.EmailBackend").strip()
+
+validar_configuracion_produccion(
+    debug=DEBUG,
+    public_site_url=PUBLIC_SITE_URL,
+    payment_success_url=PAYMENT_SUCCESS_URL,
+    payment_cancel_url=PAYMENT_CANCEL_URL,
+    default_from_email=DEFAULT_FROM_EMAIL,
+    email_backend=EMAIL_BACKEND,
+)
 
 if not DEBUG:
     SESSION_COOKIE_SECURE = True

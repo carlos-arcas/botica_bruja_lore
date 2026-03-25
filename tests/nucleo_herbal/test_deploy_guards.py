@@ -12,6 +12,10 @@ EXPECTED_DB_ERROR = "DATABASE_URL es obligatoria en Railway/producción."
 EXPECTED_SECRET_ERROR = (
     "SECRET_KEY es obligatoria cuando DEBUG=false o en Railway/producción."
 )
+EXPECTED_PUBLIC_URL_ERROR = "PUBLIC_SITE_URL es obligatoria cuando DEBUG=false."
+EXPECTED_EMAIL_BACKEND_ERROR = (
+    "EMAIL_BACKEND de desarrollo no permitida cuando DEBUG=false. Configura backend SMTP real."
+)
 
 
 class TestDeployGuards(SimpleTestCase):
@@ -67,6 +71,7 @@ class TestDeployGuards(SimpleTestCase):
         env = self._base_env()
         env["DATABASE_URL"] = "sqlite:///bootstrap_demo_ci.sqlite3"
         env["SECRET_KEY"] = "ci-bootstrap-secret"
+        env["DEBUG"] = "true"
         for key in ("RAILWAY_PUBLIC_DOMAIN", "RAILWAY_ENVIRONMENT_ID", "RAILWAY_PROJECT_ID"):
             env.pop(key, None)
 
@@ -85,6 +90,7 @@ class TestDeployGuards(SimpleTestCase):
         ruta_relativa = "var/tests/sqlite_bootstrap/subdir/ci.sqlite3"
         env["DATABASE_URL"] = f"sqlite:///{ruta_relativa}"
         env["SECRET_KEY"] = "ci-bootstrap-secret"
+        env["DEBUG"] = "true"
         for key in ("RAILWAY_PUBLIC_DOMAIN", "RAILWAY_ENVIRONMENT_ID", "RAILWAY_PROJECT_ID"):
             env.pop(key, None)
 
@@ -145,6 +151,42 @@ class TestDeployGuards(SimpleTestCase):
         result = self._run([PYTHON, "-c", code], env)
 
         self._assert_failed_with(result, EXPECTED_SECRET_ERROR)
+
+    def test_produccion_requiere_public_site_url(self) -> None:
+        env = self._base_env()
+        env.update({
+            "DEBUG": "false",
+            "SECRET_KEY": "prod-secret",
+            "DATABASE_URL": "sqlite:///var/dev.sqlite3",
+            "PAYMENT_SUCCESS_URL": "https://frontend.example.com/pedido/{CHECKOUT_SESSION_ID}",
+            "PAYMENT_CANCEL_URL": "https://frontend.example.com/checkout?estado_pago=cancelado",
+            "DEFAULT_FROM_EMAIL": "ops@example.com",
+            "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        })
+        env.pop("PUBLIC_SITE_URL", None)
+
+        code = f"import {SETTINGS_MODULE}"
+        result = self._run([PYTHON, "-c", code], env)
+
+        self._assert_failed_with(result, EXPECTED_PUBLIC_URL_ERROR)
+
+    def test_produccion_rechaza_email_backend_de_desarrollo(self) -> None:
+        env = self._base_env()
+        env.update({
+            "DEBUG": "false",
+            "SECRET_KEY": "prod-secret",
+            "DATABASE_URL": "sqlite:///var/dev.sqlite3",
+            "PUBLIC_SITE_URL": "https://frontend.example.com",
+            "PAYMENT_SUCCESS_URL": "https://frontend.example.com/pedido/{CHECKOUT_SESSION_ID}",
+            "PAYMENT_CANCEL_URL": "https://frontend.example.com/checkout?estado_pago=cancelado",
+            "DEFAULT_FROM_EMAIL": "ops@example.com",
+            "EMAIL_BACKEND": "django.core.mail.backends.locmem.EmailBackend",
+        })
+
+        code = f"import {SETTINGS_MODULE}"
+        result = self._run([PYTHON, "-c", code], env)
+
+        self._assert_failed_with(result, EXPECTED_EMAIL_BACKEND_ERROR)
 
     def test_manage_py_fuerza_settings_canonico(self) -> None:
         env = self._base_env()

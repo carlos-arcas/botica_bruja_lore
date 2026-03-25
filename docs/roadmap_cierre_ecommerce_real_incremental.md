@@ -668,8 +668,45 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R15 — Seguridad, privacidad, backups y release readiness
-- **Estado**: `PLANNED`.
-- **Lectura actual**: hay base de calidad y controles, pendiente hardening final de seguridad/privacidad/backups para readiness de release real.
+- **Estado**: `DONE`.
+- **Lectura actual**: hardening mínimo aplicado en settings sensibles, privacidad operativa de logs y base explícita de backup/restore + checklist de salida.
+
+**Cierre de R15 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Endurecer configuración sensible en runtime (solo producción) sin abrir plataforma enterprise: URLs públicas/pago HTTPS obligatorias, `DEFAULT_FROM_EMAIL` no local y backend de email real.
+  2. Reducir exposición operativa de datos en visor de logs devolviendo solo contenido sanitizado (sin campo `raw`).
+  3. Añadir un chequeo explícito de release readiness mínimo (`scripts/check_release_readiness.py`) centrado en seguridad/configuración, privacidad y backup/restore documentado.
+  4. Formalizar checklist mínimo de salida + estrategia manual de backup/restore PostgreSQL en documento operativo único (`docs/release_readiness_minima.md`).
+- **Archivos tocados**:
+  - `backend/configuracion_django/settings.py`
+  - `backend/configuracion_django/validaciones_entorno.py`
+  - `backend/nucleo_herbal/presentacion/debug_logs/servicio_logs.py`
+  - `backend/nucleo_herbal/presentacion/tests/test_debug_log_viewer.py`
+  - `tests/nucleo_herbal/test_deploy_guards.py`
+  - `scripts/check_release_readiness.py`
+  - `tests/scripts/test_check_release_readiness.py`
+  - `.env.railway.example`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+- **Comandos ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.test_deploy_guards backend.nucleo_herbal.presentacion.tests.test_debug_log_viewer tests.scripts.test_check_release_readiness`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_release_readiness.py`
+  - `python scripts/check_release_gate.py`
+- **Evidencia**:
+  - producción falla temprano ante settings críticos inseguros/incompletos (tests de guardrails ampliados);
+  - endpoint interno de debug logs deja de exponer `raw` y conserva redacción sensible en respuesta;
+  - checklist operativo y comandos de backup/restore reproducibles documentados y validados por script dedicado.
+- **Deuda residual**:
+  1. No hay automatización programada de backups (solo procedimiento operativo manual validado).
+  2. No se implementa observabilidad enterprise ni retención avanzada de logs por compliance.
+  3. El script de readiness valida mínimos de repo/operación, no sustituye auditoría legal de privacidad ni pentesting.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ## 4. Riesgos transversales
 1. **Deriva de alcance** por coexistencia de flujo demo y real sin tablero único estricto.
@@ -722,3 +759,5 @@
 - **2026-03-25 — R13 (cierre):** tracking visible endurecido como `DONE` con resolver frontend reutilizable, copy honesta para envío sin tracking público, documento descargable alineado con expedición y tests backend/frontend relevantes en verde.
 - **2026-03-25 — R14 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de implementar la capa mínima de conciliación operacional.
 - **2026-03-25 — R14 (cierre):** conciliación operativa mínima cerrada como `DONE` con script de solo lectura, severidades accionables, pruebas dedicadas e integración informativa en `check_release_gate.py`.
+- **2026-03-25 — R15 (arranque):** estado movido de `PLANNED` a `IN_PROGRESS` para auditar huecos reales de seguridad/configuración, privacidad operativa y backup/restore mínimo.
+- **2026-03-25 — R15 (cierre):** R15 cerrado como `DONE` con hardening de settings críticos en producción, saneamiento del visor de logs y checklist explícito de release readiness + backup/restore mínimo.

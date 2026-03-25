@@ -49,7 +49,7 @@ def extraer_logs(source: str, texto: str = "", nivel: str = "", limite: int = 20
             continue
         if filtro_texto and filtro_texto not in linea.lower():
             continue
-        acumuladas.append({"raw": linea, "sanitized": sanitizar_linea(linea)})
+        acumuladas.append({"sanitized": sanitizar_linea(linea)})
 
     if limite > 0:
         acumuladas = acumuladas[-limite:]
