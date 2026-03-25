@@ -5,8 +5,8 @@ import * as path from "node:path";
 
 test("la pantalla de pedido real muestra tracking y mensajes de estado operativo", () => {
   const archivo = fs.readFileSync(path.join(process.cwd(), "componentes/catalogo/checkout-real/ReciboPedidoReal.tsx"), "utf8");
-  assert.equal(archivo.includes("Transportista:"), true);
-  assert.equal(archivo.includes("Tracking:"), true);
+  assert.equal(archivo.includes("resolverTrackingVisibleCliente"), true);
+  assert.equal(archivo.includes("trackingVisible.titulo"), true);
   assert.equal(archivo.includes("pedido.expedicion.email_envio_enviado"), true);
   assert.equal(archivo.includes('pedido.estado === "enviado"'), true);
 });
@@ -25,6 +25,7 @@ test("mi cuenta pedidos reutiliza resumen visible de cancelación y reembolso si
   assert.equal(archivo.includes("resolverEstadoVisiblePedidoCliente"), true);
   assert.equal(archivo.includes("cancelación operativa"), true);
   assert.equal(archivo.includes("estadoVisible.reembolso.titulo.toLowerCase()"), true);
+  assert.equal(archivo.includes("resolverTrackingVisibleCliente"), true);
   assert.equal(archivo.includes("Descargar recibo"), true);
   assert.equal(archivo.includes("construirUrlDocumentoPedido"), true);
 });

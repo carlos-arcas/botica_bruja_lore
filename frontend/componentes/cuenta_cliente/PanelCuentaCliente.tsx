@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { resolverTrackingVisibleCliente } from "@/contenido/pedidos/trackingVisible";
 import { resolverEstadoVisiblePedidoCliente } from "@/infraestructura/api/estadoPedidoCliente";
 import { construirUrlDocumentoPedido } from "@/infraestructura/api/pedidos";
 import {
@@ -133,6 +134,7 @@ function renderResumenPedidoCuenta(pedido: PedidoCuentaCliente): string {
   const partes = [pedido.estado, `${pedido.subtotal} ${pedido.moneda}`];
   if (estadoVisible.cancelacion.visible) partes.push("cancelación operativa");
   partes.push(estadoVisible.reembolso.titulo.toLowerCase());
-  if (pedido.expedicion?.codigo_seguimiento) partes.push(`tracking ${pedido.expedicion.codigo_seguimiento}`);
+  const trackingVisible = resolverTrackingVisibleCliente(pedido.estado, pedido.expedicion ?? {});
+  if (trackingVisible.mostrarTracking) partes.push(trackingVisible.titulo.toLowerCase());
   return partes.join(" · ");
 }
