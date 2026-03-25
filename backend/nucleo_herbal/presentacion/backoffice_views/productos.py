@@ -65,6 +65,7 @@ def producto_dict(obj: ProductoModelo) -> dict:
         "unidad_comercial": obj.unidad_comercial,
         "incremento_minimo_venta": obj.incremento_minimo_venta,
         "cantidad_minima_compra": obj.cantidad_minima_compra,
+        "tipo_fiscal": obj.tipo_fiscal,
         "planta_id": obj.planta_id or "",
         "publicado": obj.publicado,
         "orden_publicacion": obj.orden_publicacion,

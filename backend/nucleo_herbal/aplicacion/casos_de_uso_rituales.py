@@ -182,6 +182,7 @@ def _a_producto_resumen(producto: Producto, inventario: InventarioProducto | Non
         unidad_comercial=producto.unidad_comercial,
         incremento_minimo_venta=producto.incremento_minimo_venta,
         cantidad_minima_compra=producto.cantidad_minima_compra,
+        tipo_fiscal=producto.tipo_fiscal,
         disponible=disponibilidad.disponible,
         estado_disponibilidad=disponibilidad.estado_disponibilidad,
     )

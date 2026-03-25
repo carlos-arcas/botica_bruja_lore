@@ -360,3 +360,11 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
   - sin newsletters/campañas;
   - sin CRM;
   - sin plantillas de marketing ni canales alternativos (SMS/WhatsApp).
+
+## 25. Actualización V2-R05 — fiscalidad por producto y cálculo por línea
+- Estado técnico: **DONE** para fiscalidad avanzada base de fase (España) sin abrir multi-país.
+- Cambios relevantes sobre la migración real:
+  - producto real añade `tipo_fiscal` operable en backoffice (`iva_general`/`iva_reducido`);
+  - pedido real deja de depender de hipótesis de impuesto único y persiste snapshot fiscal por línea (`tipo_impositivo`, `importe_impuestos`);
+  - el cobro Stripe replica esa aritmética por línea + envío para mantener coherencia pedido↔pago↔documento;
+  - checkout/recibo/documento mantienen desglose consistente con la misma base de cálculo.

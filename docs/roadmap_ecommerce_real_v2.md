@@ -94,9 +94,10 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Dependencias**: V2-R03 y contratos claros de estados de pedido/pago/reembolso.
 - **Resultado real**: coordinación mínima explícita entre devolución aceptada, estado de reembolso manual, estado de restitución manual y resolución operativa, visible y accionable desde Django Admin sin automatismos por defecto.
 
-### V2-R05 — Fiscalidad avanzada v2
-- **Estado**: `PLANNED`.
+### V2-R05 — Fiscalidad avanzada v2 por producto y cálculo por línea
+- **Estado**: `DONE`.
 - **Dependencias**: postventa mínima estable + base operativa robusta.
+- **Resultado real**: tipología fiscal explícita en producto (`iva_general`/`iva_reducido`) y cálculo fiscal por línea persistido en pedido real con coherencia checkout↔pedido↔Stripe↔documento.
 
 ### V2-R06 — Documento fiscal v2 / factura más formal
 - **Estado**: `PLANNED`.
@@ -276,3 +277,65 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
   1. Los casos de uso de reembolso/restitución siguen acotados al contrato operativo actual de pedidos cancelados por incidencia; una evolución de política requerirá un bloque dedicado.
   2. No hay automatización de cierre de devolución al resolverse operativamente (se mantiene intencionalmente manual para V2).
 - **Commit/PR**: registrado al final de esta ejecución (hash y PR en el reporte de entrega).
+
+
+### Entrada V2-R05
+- **Estado final**: `DONE`.
+- **Resumen de decisiones**:
+  1. Se mantiene el alcance fiscal de fase España/base sin abrir multi-país: catálogo cerrado de tipo fiscal por producto (`iva_general`, `iva_reducido`) con mapping determinista a porcentaje en dominio.
+  2. El cálculo fiscal del pedido pasa a composición por línea (`importe_impuestos` por línea) + envío, preservando `Decimal` y `ROUND_HALF_UP` como estrategia única.
+  3. Se persiste snapshot fiscal de línea en pedido real (`tipo_impositivo`, `importe_impuestos`) para trazabilidad documental y postventa sin recomputar contra catálogo mutable.
+  4. Stripe deja de usar una única línea global de impuestos y pasa a impuestos por línea + envío, alineado con el total de pedido persistido.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/dominio/entidades.py`
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/puertos/repositorios_productos_checkout.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/dto.py`
+  - `backend/nucleo_herbal/aplicacion/dto_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_rituales.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/mapeadores.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_productos_checkout.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0036_lineapedidorealmodelo_importe_impuestos_and_more.py`
+  - `backend/nucleo_herbal/infraestructura/pagos_stripe.py`
+  - `backend/nucleo_herbal/presentacion/publica/pedidos_serializadores.py`
+  - `backend/nucleo_herbal/presentacion/publica/documento_pedido_html.py`
+  - `backend/nucleo_herbal/presentacion/publica/serializadores.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/productos.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/productos_contrato.py`
+  - `frontend/contenido/catalogo/catalogo.ts`
+  - `frontend/contenido/catalogo/checkoutReal.ts`
+  - `frontend/contenido/catalogo/fiscalidadCheckout.ts`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - `tests/nucleo_herbal/test_casos_de_uso_pedidos_real.py`
+  - `tests/nucleo_herbal/test_pago_real.py`
+  - `frontend/tests/checkout-real.test.ts`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/17_migracion_ecommerce_real.md`
+- **Comandos ejecutados**:
+  - `python manage.py makemigrations persistencia_django`
+  - `python manage.py test tests.nucleo_herbal.test_casos_de_uso_pedidos_real tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.infraestructura.test_repositorio_pedidos_real`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `npm --prefix frontend run lint`
+  - `npm --prefix frontend run test:checkout-real`
+  - `npm --prefix frontend run build`
+  - `python scripts/check_release_gate.py`
+- **Evidencia**:
+  - tipo fiscal operable por producto en dominio, persistencia y backoffice;
+  - línea de pedido real con snapshot de tipo y cuota fiscal;
+  - serialización/documento/recibo muestran fiscalidad por línea coherente;
+  - tests backend/frontend del bloque en verde + gate canónico en verde.
+- **Deuda residual**:
+  1. No se abre todavía multi-país ni OSS/IOSS (pendiente de incrementos futuros).
+  2. El campo `tipo_impositivo` de cabecera se conserva por compatibilidad y representa la referencia fiscal global mínima de envío/caso base.
+- **Commit/PR**: commit realizado en este branch; PR preparado con `make_pr` (sin identificador devuelto por la herramienta).

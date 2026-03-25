@@ -77,8 +77,9 @@ class PagoRealTests(TestCase):
 
         payload = post_stripe.call_args.args[1]
         self.assertEqual(payload["line_items[0][price_data][unit_amount]"], "1000")
-        self.assertEqual(payload["line_items[1][price_data][unit_amount]"], "0")
-        self.assertEqual(payload["line_items[2][price_data][unit_amount]"], "210")
+        self.assertEqual(payload["line_items[1][price_data][unit_amount]"], "210")
+        self.assertEqual(payload["line_items[2][price_data][unit_amount]"], "0")
+        self.assertEqual(payload["line_items[3][price_data][unit_amount]"], "0")
 
     @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe._get")
     def test_pasarela_stripe_consulta_estado_externo_sin_floats(self, get_stripe: Mock) -> None:

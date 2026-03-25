@@ -163,6 +163,41 @@ def test_registrar_pedido_real_con_stock_suficiente_persiste() -> None:
     assert len(repo_pedidos.guardados) == 1
 
 
+def test_registrar_pedido_real_calcula_impuestos_por_linea_con_tipos_fiscales_distintos() -> None:
+    repo_pedidos = RepositorioPedidosMemoria()
+    caso = RegistrarPedido(
+        repositorio_pedidos=repo_pedidos,
+        repositorio_cuentas_cliente=RepositorioCuentasClienteStub(),
+        repositorio_inventario=RepositorioInventarioMemoria(
+            {
+                "prod-1": InventarioProducto(id_producto="prod-1", cantidad_disponible=3),
+                "prod-2": InventarioProducto(id_producto="prod-2", cantidad_disponible=3),
+            }
+        ),
+        repositorio_productos_checkout=RepositorioProductosMemoria(
+            {
+                "prod-1": _producto_base(),
+                "prod-2": SemanticaComercialProducto(
+                    id_producto="prod-2",
+                    unidad_comercial="ud",
+                    incremento_minimo_venta=1,
+                    cantidad_minima_compra=1,
+                    tipo_fiscal="iva_reducido",
+                    tipo_impositivo=Decimal("0.10"),
+                ),
+            }
+        ),
+        proveedor_envio=ProveedorEnvioFijoStub(Decimal("0")),
+    )
+
+    resultado = caso.ejecutar(_payload_dos_lineas(), operation_id="op-fiscal-linea")
+
+    assert resultado.lineas[0].importe_impuestos == Decimal("3.78")
+    assert resultado.lineas[1].importe_impuestos == Decimal("1.20")
+    assert resultado.importe_impuestos == Decimal("4.98")
+    assert resultado.total == Decimal("34.98")
+
+
 def test_rechaza_producto_sin_inventario() -> None:
     repo_pedidos = RepositorioPedidosMemoria()
     caso = RegistrarPedido(
@@ -328,4 +363,6 @@ def _producto_base(*, id_producto: str = "prod-1", unidad_comercial: str = "ud",
         unidad_comercial=unidad_comercial,
         incremento_minimo_venta=incremento,
         cantidad_minima_compra=minimo,
+        tipo_fiscal="iva_general",
+        tipo_impositivo=Decimal("0.21"),
     )

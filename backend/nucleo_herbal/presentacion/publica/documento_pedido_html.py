@@ -49,6 +49,7 @@ def construir_documento_html_pedido(dto: PedidoRealDTO) -> str:
         <th>Producto</th>
         <th>Cantidad</th>
         <th>Precio unitario</th>
+        <th>Impuestos línea</th>
         <th>Subtotal</th>
       </tr>
     </thead>
@@ -70,6 +71,7 @@ def _fila_linea(linea: object) -> str:
         f"<tr><td>{escape(linea.nombre_producto)}</td>"
         f"<td>{linea.cantidad_comercial}{escape(linea.unidad_comercial)}</td>"
         f"<td>{linea.precio_unitario} {escape(linea.moneda)}</td>"
+        f"<td>{linea.importe_impuestos} {escape(linea.moneda)} ({_tipo_impositivo_linea(linea)})</td>"
         f"<td>{linea.subtotal} {escape(linea.moneda)}</td></tr>"
     )
 
@@ -99,6 +101,10 @@ def _estado_expedicion(dto: PedidoRealDTO) -> str:
 
 def _tipo_impositivo(dto: PedidoRealDTO) -> str:
     return f"{int(dto.tipo_impositivo * 100)}%"
+
+
+def _tipo_impositivo_linea(linea: object) -> str:
+    return f"{int(linea.tipo_impositivo * 100)}%"
 
 
 def _fecha(dto: PedidoRealDTO) -> str:

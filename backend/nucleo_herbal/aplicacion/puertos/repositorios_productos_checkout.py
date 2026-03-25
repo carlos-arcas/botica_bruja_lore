@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from decimal import Decimal
 
 
 @dataclass(frozen=True, slots=True)
@@ -12,6 +13,8 @@ class SemanticaComercialProducto:
     unidad_comercial: str
     incremento_minimo_venta: int
     cantidad_minima_compra: int
+    tipo_fiscal: str
+    tipo_impositivo: Decimal
 
 
 class RepositorioProductosCheckout(ABC):

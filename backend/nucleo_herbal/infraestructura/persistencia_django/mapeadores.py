@@ -70,6 +70,7 @@ def a_producto(modelo: ProductoModelo) -> Producto:
         unidad_comercial=modelo.unidad_comercial,
         incremento_minimo_venta=modelo.incremento_minimo_venta,
         cantidad_minima_compra=modelo.cantidad_minima_compra,
+        tipo_fiscal=modelo.tipo_fiscal,
     )
 
 

@@ -65,6 +65,8 @@ export type PedidoCreado = {
     cantidad_comercial: number;
     unidad_comercial: "ud" | "g" | "ml";
     precio_unitario: string;
+    tipo_impositivo: string;
+    importe_impuestos: string;
     moneda: string;
     subtotal: string;
   }>;

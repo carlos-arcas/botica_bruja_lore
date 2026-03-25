@@ -49,6 +49,10 @@ class ProductoModelo(models.Model):
         ("g", "gramo"),
         ("ml", "mililitro"),
     )
+    TIPOS_FISCALES_CHOICES = (
+        ("iva_general", "IVA general (21%)"),
+        ("iva_reducido", "IVA reducido (10%)"),
+    )
 
     id = models.CharField(primary_key=True, max_length=36)
     sku = models.CharField(unique=True, max_length=40)
@@ -69,6 +73,7 @@ class ProductoModelo(models.Model):
     unidad_comercial = models.CharField(max_length=2, choices=UNIDADES_COMERCIALES_CHOICES, default="ud")
     incremento_minimo_venta = models.PositiveIntegerField(default=1)
     cantidad_minima_compra = models.PositiveIntegerField(default=1)
+    tipo_fiscal = models.CharField(max_length=24, choices=TIPOS_FISCALES_CHOICES, default="iva_general")
     orden_publicacion = models.PositiveIntegerField(default=100)
     planta = models.ForeignKey(
         PlantaModelo,
@@ -100,6 +105,10 @@ class ProductoModelo(models.Model):
             models.CheckConstraint(
                 check=models.Q(cantidad_minima_compra__gt=0),
                 name="nucleo_producto_cantidad_minima_positiva",
+            ),
+            models.CheckConstraint(
+                check=models.Q(tipo_fiscal__in=("iva_general", "iva_reducido")),
+                name="nucleo_producto_tipo_fiscal_valido",
             ),
         ]
 

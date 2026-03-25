@@ -53,6 +53,7 @@ class ProductoResumenDTO:
     unidad_comercial: str
     incremento_minimo_venta: int
     cantidad_minima_compra: int
+    tipo_fiscal: str
     disponible: bool
     estado_disponibilidad: str
 

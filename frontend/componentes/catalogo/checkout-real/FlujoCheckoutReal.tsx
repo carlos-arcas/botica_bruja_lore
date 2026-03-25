@@ -67,8 +67,15 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
     [lineasVisualesCheckout.lineasConvertibles],
   );
   const desgloseFiscalVisible = useMemo(
-    () => calcularDesgloseFiscalVisible(subtotalPedidoVisible, importeEnvio),
-    [subtotalPedidoVisible, importeEnvio],
+    () => calcularDesgloseFiscalVisible(
+      subtotalPedidoVisible,
+      importeEnvio,
+      resultadoLineas.lineasConvertibles.map((linea) => ({
+        subtotal: Number.parseFloat(linea.precio_unitario) * linea.cantidad_comercial,
+        tipo_fiscal: linea.tipo_fiscal ?? "iva_general",
+      })),
+    ),
+    [subtotalPedidoVisible, importeEnvio, resultadoLineas],
   );
   const resumenEconomicoBloqueado = useMemo(() => lineasVisualesCheckout.lineasBloqueadas.length > 0 ? resolverResumenEconomicoSeleccion(lineasVisualesCheckout.lineasBloqueadas.map(({ linea }) => linea), "fuera_pedido_real") : null, [lineasVisualesCheckout.lineasBloqueadas]);
   const resumenSeleccionVisible = useMemo(() => lineasVisualesCheckout.lineasBloqueadas.length > 0 ? resolverResumenEconomicoSeleccion(lineasSeleccion) : null, [lineasSeleccion, lineasVisualesCheckout.lineasBloqueadas.length]);
@@ -206,7 +213,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
           <p className={estilos.estadoCuenta}>La disponibilidad visible en frontend es orientativa: no reserva unidades y el backend vuelve a validar stock al crear el pedido real.</p>
           <label>Intención y observaciones del pedido<textarea value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} /></label>
           {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
-          <p className={estilos.estadoCuenta}>Subtotal: <strong>{formatearMonedaEur(desgloseFiscalVisible.subtotal)}</strong> · Envío estándar: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.envio)}</strong> · Base imponible: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.baseImponible)}</strong> · Impuestos (IVA 21%): <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.impuestos)}</strong> · Total: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.total)}</strong></p>
+          <p className={estilos.estadoCuenta}>Subtotal: <strong>{formatearMonedaEur(desgloseFiscalVisible.subtotal)}</strong> · Envío estándar: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.envio)}</strong> · Base imponible: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.baseImponible)}</strong> · Impuestos por línea: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.impuestos)}</strong> · Total: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.total)}</strong></p>
         </fieldset>
         <fieldset>
           <legend>Dirección de entrega</legend>

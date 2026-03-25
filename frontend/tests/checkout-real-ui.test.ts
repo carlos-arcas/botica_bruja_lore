@@ -135,7 +135,7 @@ test("checkout real muestra subtotal, envío estándar, impuestos y total antes 
   assert.equal(archivoFlujo.includes("Subtotal:"), true);
   assert.equal(archivoFlujo.includes("Envío estándar:"), true);
   assert.equal(archivoFlujo.includes("Base imponible:"), true);
-  assert.equal(archivoFlujo.includes("Impuestos (IVA 21%)"), true);
+  assert.equal(archivoFlujo.includes("Impuestos por línea"), true);
   assert.equal(archivoFlujo.includes("Total:"), true);
 });
 

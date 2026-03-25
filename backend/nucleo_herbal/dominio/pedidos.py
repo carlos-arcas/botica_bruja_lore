@@ -8,7 +8,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Literal
 
 from .excepciones import ErrorDominio
-from .entidades import UNIDADES_COMERCIALES_VALIDAS
+from .entidades import TIPOS_IMPOSITIVOS_POR_TIPO_FISCAL, UNIDADES_COMERCIALES_VALIDAS
 
 EstadoPedido = Literal["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado"]
 EstadoPago = Literal["pendiente", "requiere_accion", "pagado", "fallido", "cancelado"]
@@ -91,6 +91,7 @@ class LineaPedido:
     cantidad_comercial: int
     unidad_comercial: str
     precio_unitario: Decimal
+    tipo_impositivo: Decimal = TIPOS_IMPOSITIVOS_POR_TIPO_FISCAL["iva_general"]
     moneda: str = "EUR"
 
     def __post_init__(self) -> None:
@@ -103,10 +104,16 @@ class LineaPedido:
             raise ErrorDominio("La línea requiere una unidad comercial válida.")
         if self.precio_unitario < Decimal("0"):
             raise ErrorDominio("La línea requiere precio unitario no negativo.")
+        if self.tipo_impositivo < Decimal("0"):
+            raise ErrorDominio("La línea requiere tipo impositivo no negativo.")
 
     @property
     def subtotal(self) -> Decimal:
-        return self.precio_unitario * self.cantidad_comercial
+        return _redondear_moneda(self.precio_unitario * self.cantidad_comercial)
+
+    @property
+    def importe_impuestos(self) -> Decimal:
+        return _redondear_moneda(self.subtotal * self.tipo_impositivo)
 
     @property
     def cantidad(self) -> int:
@@ -232,7 +239,9 @@ class Pedido:
 
     @property
     def importe_impuestos(self) -> Decimal:
-        return _redondear_moneda(self.base_imponible * self.tipo_impositivo)
+        impuestos_lineas = sum((linea.importe_impuestos for linea in self.lineas), Decimal("0"))
+        impuestos_envio = _redondear_moneda(self.importe_envio * self.tipo_impositivo)
+        return _redondear_moneda(impuestos_lineas + impuestos_envio)
 
     @property
     def total(self) -> Decimal:
