@@ -84,13 +84,16 @@ class TestApiPedidosReal(DjangoTestCase):
 
         self.assertEqual(documento.status_code, 200)
         self.assertIn("text/html", documento["Content-Type"])
-        self.assertIn(f"recibo-{id_pedido}.html", documento["Content-Disposition"])
+        self.assertIn(f"documento-fiscal-{id_pedido}.html", documento["Content-Disposition"])
         contenido = documento.content.decode("utf-8")
-        self.assertIn(f"Recibo de pedido {id_pedido}", contenido)
-        self.assertIn("Subtotal: 18.00 EUR", contenido)
+        self.assertIn(f"Documento:</strong> DOC-{id_pedido}-", contenido)
+        self.assertIn("Detalle fiscal por línea", contenido)
+        self.assertIn("Subtotal (base artículos): 18.00 EUR", contenido)
+        self.assertIn("Base imponible total: 22.90 EUR", contenido)
         self.assertIn("Envío (envio_estandar): 4.90 EUR", contenido)
-        self.assertIn("Impuestos (21%): 4.81 EUR", contenido)
+        self.assertIn("Impuestos totales (incluye envío al 21%): 4.81 EUR", contenido)
         self.assertIn("Total: 27.71 EUR", contenido)
+        self.assertIn("Tarot bosque interior</td><td>2 ud</td><td>18.00 EUR</td><td>21%</td><td>3.78 EUR</td><td>21.78 EUR", contenido)
         self.assertIn("sin cancelación operativa", contenido)
 
 
@@ -149,6 +152,7 @@ class TestApiPedidosReal(DjangoTestCase):
         contenido = documento.content.decode("utf-8")
         self.assertIn("Estado pedido:</strong> cancelado", contenido)
         self.assertIn("cancelado operativamente · reembolso ejecutado", contenido)
+        self.assertIn("Reembolso:</strong> ejecutado (", contenido)
 
     def test_direccion_entrega_es_obligatoria(self) -> None:
         payload = _payload_base()

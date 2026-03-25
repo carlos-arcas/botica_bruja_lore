@@ -16,5 +16,5 @@ export async function GET(request: NextRequest, context: { params: { id_pedido: 
     method: "GET",
     headers: cabeceras(request),
   });
-  return crearProxyResponse(respuesta, { "Content-Disposition": `attachment; filename=\"recibo-${context.params.id_pedido}.html\"` });
+  return crearProxyResponse(respuesta, { "Content-Disposition": `attachment; filename=\"documento-fiscal-${context.params.id_pedido}.html\"` });
 }

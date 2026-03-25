@@ -120,7 +120,7 @@ export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.El
             <li key={pedido.id_pedido}>
               <Link href={`/pedido/${pedido.id_pedido}`}>{pedido.id_pedido}</Link> · {renderResumenPedidoCuenta(pedido)}
               {" · "}
-              <a href={construirUrlDocumentoPedido(pedido.id_pedido)}>Descargar recibo</a>
+              <a href={construirUrlDocumentoPedido(pedido.id_pedido)}>Descargar documento fiscal</a>
             </li>
           ))}
         </ul>
