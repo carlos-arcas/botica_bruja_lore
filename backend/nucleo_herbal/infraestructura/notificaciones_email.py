@@ -34,6 +34,26 @@ class NotificadorEmailPostPago(NotificadorPostPagoPedido):
         )
         _log_email(operation_id, pedido, "email_envio", "dispatch_ok")
 
+    def enviar_cancelacion_operativa_stock(self, pedido: Pedido, operation_id: str) -> None:
+        send_mail(
+            subject=f"Pedido {pedido.id_pedido} cancelado por incidencia de stock",
+            message=_cuerpo_cancelacion_operativa(pedido),
+            from_email=_resolver_remitente(),
+            recipient_list=[pedido.cliente.email],
+            fail_silently=False,
+        )
+        _log_email(operation_id, pedido, "email_cancelacion", "dispatch_ok")
+
+    def enviar_reembolso_manual_ejecutado(self, pedido: Pedido, operation_id: str) -> None:
+        send_mail(
+            subject=f"Reembolso ejecutado para el pedido {pedido.id_pedido}",
+            message=_cuerpo_reembolso_ejecutado(pedido),
+            from_email=_resolver_remitente(),
+            recipient_list=[pedido.cliente.email],
+            fail_silently=False,
+        )
+        _log_email(operation_id, pedido, "email_reembolso", "dispatch_ok")
+
 
 def _cuerpo_confirmacion_pago(pedido: Pedido) -> str:
     lineas = "\n".join(
@@ -63,6 +83,28 @@ def _cuerpo_confirmacion_envio(pedido: Pedido) -> str:
         f"Código de seguimiento: {seguimiento}\n"
         f"Estado actual: {pedido.estado}\n"
         "Te avisaremos si se registra la entrega en el backoffice."
+    )
+
+
+def _cuerpo_cancelacion_operativa(pedido: Pedido) -> str:
+    return (
+        "Hemos cancelado tu pedido por una incidencia de stock detectada tras la confirmación de pago.\n"
+        f"Pedido: {pedido.id_pedido}\n"
+        f"Estado actual: {pedido.estado}\n"
+        f"Motivo operativo: {pedido.motivo_cancelacion_operativa}\n"
+        "Siguiente paso: tramitaremos o revisaremos el reembolso manual según el estado operativo del pedido.\n"
+        "Si ya ves un reembolso ejecutado en tu área de cuenta, este correo puede cruzarse con esa actualización."
+    )
+
+
+def _cuerpo_reembolso_ejecutado(pedido: Pedido) -> str:
+    referencia = pedido.id_externo_reembolso or "sin referencia externa disponible"
+    return (
+        "Hemos ejecutado el reembolso manual de tu pedido cancelado por incidencia de stock.\n"
+        f"Pedido: {pedido.id_pedido}\n"
+        f"Estado de reembolso: {pedido.estado_reembolso}\n"
+        f"Referencia de reembolso: {referencia}\n"
+        "El plazo de reflejo en tu método de pago depende de tu banco o proveedor."
     )
 
 

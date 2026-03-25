@@ -862,3 +862,16 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. frontend informa disponibilidad y semántica comercial;
   2. backend sigue siendo última línea de defensa en checkout/pedido;
   3. no se expone stock duro exacto ni reserva temporal desde ficha pública.
+
+## 43. Emails transaccionales reales mínimos (R10)
+- Capacidad: **Emails transaccionales mínimos para eventos operativos reales estabilizados**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - adaptador real único `NotificadorEmailPostPago` ampliado para: pedido pagado, pedido enviado, cancelación operativa por incidencia de stock y reembolso manual ejecutado;
+  - casos de uso operativos (`ProcesarPostPagoPedido`, `MarcarPedidoEnviado`, `CancelarPedidoOperativoPorIncidenciaStock`, `ReembolsarPedidoCanceladoPorIncidenciaStock`) desacoplados por puerto de notificación y con manejo explícito de error de envío sin corromper estado de pedido;
+  - trazabilidad mínima anti-duplicado para eventos reintentables con flags persistentes: `email_cancelacion_enviado`, `fecha_email_cancelacion`, `email_reembolso_enviado`, `fecha_email_reembolso`;
+  - pruebas backend relevantes en verde para composición/copy sobrio, idempotencia y coherencia de estado.
+- Regla activa:
+  1. no se mezcla el sistema demo legacy (`email-demo`) con los correos reales de operación;
+  2. un fallo de envío no revierte la transición operativa ya persistida;
+  3. la idempotencia de correo clave se resuelve con flags mínimos, sin abrir CRM/newsletter ni un mail-log enterprise.

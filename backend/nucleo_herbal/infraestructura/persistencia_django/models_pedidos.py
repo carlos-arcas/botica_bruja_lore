@@ -40,6 +40,8 @@ class PedidoRealModelo(models.Model):
     observaciones_operativas = models.TextField(blank=True, default="")
     email_envio_enviado = models.BooleanField(default=False)
     fecha_email_envio = models.DateTimeField(null=True, blank=True)
+    email_cancelacion_enviado = models.BooleanField(default=False)
+    fecha_email_cancelacion = models.DateTimeField(null=True, blank=True)
     cancelado_operativa_incidencia_stock = models.BooleanField(default=False)
     fecha_cancelacion_operativa = models.DateTimeField(null=True, blank=True)
     motivo_cancelacion_operativa = models.CharField(max_length=280, blank=True, default="")
@@ -47,6 +49,8 @@ class PedidoRealModelo(models.Model):
     fecha_reembolso = models.DateTimeField(null=True, blank=True)
     id_externo_reembolso = models.CharField(max_length=128, blank=True, default="")
     motivo_fallo_reembolso = models.CharField(max_length=280, blank=True, default="")
+    email_reembolso_enviado = models.BooleanField(default=False)
+    fecha_email_reembolso = models.DateTimeField(null=True, blank=True)
     inventario_restituido = models.BooleanField(default=False)
     fecha_restitucion_inventario = models.DateTimeField(null=True, blank=True)
 

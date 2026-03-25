@@ -466,8 +466,46 @@
 - **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R10 — Emails transaccionales reales mínimos
-- **Estado**: `PARTIAL`.
-- **Lectura actual**: hay piezas de notificación y estados de cuenta, pero la capa mínima de emails transaccionales reales de cierre ecommerce aún no está cerrada de forma integral.
+- **Estado**: `DONE`.
+- **Lectura actual**: la capa mínima de emails transaccionales reales queda cerrada para los cuatro eventos operativos estabilizados (pagado, enviado, cancelación operativa por incidencia de stock y reembolso manual ejecutado) sin mezclarla con el flujo demo legacy.
+
+**Cierre de R10 (resultado real de esta ejecución)**
+- **Estado final**: `DONE`.
+- **Decisiones clave**:
+  1. Reutilizar el puerto y adaptador de notificación existentes (`NotificadorPostPagoPedido` + `NotificadorEmailPostPago`) para evitar un segundo sistema de correo paralelo.
+  2. Mantener la composición de copy en infraestructura (`notificaciones_email.py`) y fuera de views, con contenido sobrio y orientado al estado real del pedido.
+  3. Extender trazabilidad mínima con banderas persistentes por evento sensible a duplicado/reintento (`email_cancelacion_enviado`, `email_reembolso_enviado` + fechas).
+  4. Acoplar envío de correo a casos de uso operativos reales (post-pago ya existente, `MarcarPedidoEnviado`, `CancelarPedidoOperativoPorIncidenciaStock`, `ReembolsarPedidoCanceladoPorIncidenciaStock`) con manejo explícito de error sin corromper el pedido.
+  5. Preservar separación demo vs real: no se toca `casos_de_uso_email_demo.py` ni rutas `/api/v1/pedidos-demo/*`.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/aplicacion/puertos/notificador_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_backoffice_pedidos.py`
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/notificaciones_email.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0033_pedidorealmodelo_email_cancelacion_enviado_and_more.py`
+  - `tests/nucleo_herbal/test_operacion_pedidos_real.py`
+  - `tests/nucleo_herbal/test_notificaciones_email_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/tests/test_post_pago_inventario.py`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+- **Comandos ejecutados**:
+  - `python manage.py makemigrations persistencia_django`
+  - `python manage.py test tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_operacion_pedidos_real tests.nucleo_herbal.test_api_pago_real tests.nucleo_herbal.test_notificaciones_email_pedidos backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_backend_readiness.py`
+- **Evidencia**:
+  - eventos reales cubiertos con envío en adaptador único y copy mínimo no marketing;
+  - idempotencia de envío reforzada en cancelación/reembolso con flags persistentes y validación de no duplicación en tests;
+  - errores de envío tratados como no bloqueantes para consistencia de estado de pedido;
+  - migración aplicada solo para flags mínimos nuevos (sin artefactos prohibidos).
+- **Deuda residual**:
+  1. No existe mail-log enterprise (deliberado fuera de alcance); se conserva trazabilidad mínima por bandera+fecha.
+  2. No se añade plantilla HTML ni branding avanzado de correo (fuera de alcance de R10).
+  3. No se abren campañas/newsletter/CRM ni nuevos canales de comunicación.
+- **Commit/PR**: registrado al final de esta ejecución (ver sección 6 y bitácora).
 
 ### R11 — Fiscalidad base e importe legalmente coherente
 - **Estado**: `PLANNED`.
@@ -528,3 +566,5 @@
 - **2026-03-24 — R08 (cierre):** restitución manual de inventario cerrada con elegibilidad explícita, acción operativa en Django Admin, ajuste de stock, ledger `restitucion_manual`, idempotencia y tests backend relevantes en verde.
 - **2026-03-25 — R09 (arranque):** estado movido de `DONE` a `IN_PROGRESS` para auditar brecha real de disponibilidad pública unitario/granel y ajustar contrato/UI sin duplicar fuentes.
 - **2026-03-25 — R09 (cierre):** disponibilidad pública cerrada como `DONE` con contrato consistente herbal/rituales (estado + unidad + incremento + mínimo), UI pública sobria en ficha/relaciones y tests backend/frontend relevantes en verde.
+- **2026-03-25 — R10 (arranque):** estado movido de `PARTIAL` a `IN_PROGRESS` antes de auditar e implementar capa mínima real de emails transaccionales.
+- **2026-03-25 — R10 (cierre):** emails transaccionales reales mínimos cerrados como `DONE` para pagado, enviado, cancelación operativa y reembolso manual ejecutado, con idempotencia mínima por flags persistentes y tests backend relevantes en verde.

@@ -239,6 +239,12 @@ class NotificadorFalso(NotificadorPostPagoPedido):
     def enviar_confirmacion_envio(self, pedido: Pedido, operation_id: str) -> None:
         return None
 
+    def enviar_cancelacion_operativa_stock(self, pedido: Pedido, operation_id: str) -> None:
+        return None
+
+    def enviar_reembolso_manual_ejecutado(self, pedido: Pedido, operation_id: str) -> None:
+        return None
+
 
 class PasarelaPagoFalsa(PuertoPasarelaPago):
     def crear_intencion_pago(self, pedido: Pedido, operation_id: str) -> dict[str, object]:
