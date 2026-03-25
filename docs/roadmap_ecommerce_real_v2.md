@@ -80,7 +80,7 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Fuera de alcance inmediato**: cambios funcionales de checkout/pagos/inventario.
 
 ### V2-R02 — Endurecimiento de conciliación: pasar checks críticos a bloqueantes donde proceda
-- **Estado**: `PLANNED`.
+- **Estado**: `DONE`.
 - **Dependencias**: resultados de V2-R01 + señales reales de incidencias.
 - **Nota**: endurecimiento por evidencia, no por endurecer “a ciegas”.
 
@@ -184,3 +184,35 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
   1. Falta ejecutar restore drill real programado en entorno con base temporal dedicada y credenciales operativas (fuera de este runner).
   2. Scheduler y retención/rotación de backups siguen fuera de alcance (se mantienen para incrementos futuros).
 - **Commit/PR**: registrado al cierre de esta ejecución.
+
+
+### Entrada V2-R02
+- **Estado final**: `DONE`.
+- **Resumen de decisiones**:
+  1. Se endurece la conciliación solo con reglas de bajo falso positivo: pago sin descuento/ incidencia, reembolso ejecutado incoherente, restitución sin ledger y contradicciones duras de expedición/reembolso-email.
+  2. Se separan explícitamente severidades operativas (`BLOCKER`, `WARNING`, `INFO`, `SKIP`) y se mantiene compatibilidad del flag legacy `--fail-on error` como alias de `blocker`.
+  3. El gate canónico deja de ejecutar conciliación informativa y pasa a bloquear únicamente por `BLOCKER` (`--fail-on blocker`), dejando warnings visibles sin romper release.
+- **Archivos tocados**:
+  - `scripts/check_operational_reconciliation.py`
+  - `scripts/check_release_gate.py`
+  - `tests/scripts/test_check_operational_reconciliation.py`
+  - `tests/scripts/test_check_release_gate_reconciliation.py`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+- **Comandos ejecutados**:
+  - `python manage.py test tests.scripts.test_check_operational_reconciliation tests.scripts.test_check_release_gate_reconciliation tests.scripts.test_check_release_gate_snapshot`
+  - `python manage.py test tests.scripts`
+  - `python manage.py check`
+  - `python scripts/check_operational_reconciliation.py --fail-on warning --json`
+  - `python scripts/check_release_gate.py`
+- **Evidencia**:
+  - la salida JSON de conciliación ahora publica matriz de severidad reusable para automatización (`matriz_severidad`);
+  - se añaden pruebas para reglas bloqueantes y warnings, además de integración del bloque H en gate;
+  - el gate refleja explícitamente que conciliación es bloqueante solo por críticos (`BLOCKER`).
+- **Deuda residual**:
+  1. Ajustar severidades con métricas reales de incidencia por al menos un ciclo operativo completo para validar tasa de falsos positivos.
+  2. Revisar en R03/R04 si nuevas transiciones de postventa requieren expandir la matriz sin degradar legibilidad.
+- **Commit/PR**: registrado al cierre de esta ejecución.
+
