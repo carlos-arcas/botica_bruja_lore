@@ -821,6 +821,8 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 
 - Prompt 13: **DONE** para reembolso manual explícito de pedidos cancelados por incidencia de stock, con acción de Django Admin, trazabilidad auditable (`estado_reembolso`, `fecha_reembolso`, `id_externo_reembolso`, `motivo_fallo_reembolso`), idempotencia para evitar dobles ejecuciones y registro de fallo PSP sin corromper el estado del pedido ni activar devoluciones de inventario o emails automáticos.
 
+- V2-R03: **DONE** para marco mínimo de devoluciones manuales/postventa con entidad dedicada (`DevolucionPedidoModelo`) vinculada a pedido real, elegibilidad mínima (`enviado|entregado` + `pagado`), estados operativos (`abierta`, `recibida`, `aceptada`, `rechazada`, `cerrada`), transiciones controladas y operación real desde Django Admin; sin automatizar reembolso, restitución de inventario ni email de devolución.
+
 ## 39. Visibilidad cliente de cancelación y reembolso (Prompt 14)
 - Capacidad: **Estado visible de cancelación operativa y reembolso en pedido y mi cuenta**.
 - Estado: **DONE**.

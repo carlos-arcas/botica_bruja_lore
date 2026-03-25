@@ -85,8 +85,9 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Nota**: endurecimiento por evidencia, no por endurecer “a ciegas”.
 
 ### V2-R03 — Devoluciones/postventa v2: marco mínimo de devolución manual
-- **Estado**: `PLANNED`.
+- **Estado**: `DONE`.
 - **Dependencias**: conciliación más fiable y criterios operativos base.
+- **Resultado real**: marco mínimo manual y auditable de devoluciones sobre pedido real, con elegibilidad base, transiciones controladas y operación en Django Admin sin automatizar reembolso ni restitución.
 
 ### V2-R04 — Restitución y reembolso coordinados: coherencia operativa
 - **Estado**: `PLANNED`.
@@ -216,3 +217,34 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
   2. Revisar en R03/R04 si nuevas transiciones de postventa requieren expandir la matriz sin degradar legibilidad.
 - **Commit/PR**: registrado al cierre de esta ejecución.
 
+### Entrada V2-R03
+- **Estado final**: `DONE`.
+- **Resumen de decisiones**:
+  1. Se implementa una entidad dedicada `DevolucionPedidoModelo` vinculada a `PedidoRealModelo` para no sobrecargar el agregado de pedido con un CRM paralelo.
+  2. La elegibilidad mínima de apertura se acota a pedidos reales `enviado|entregado` con `estado_pago=pagado` y sin cancelación operativa por incidencia de stock.
+  3. Las transiciones de estado se endurecen con matriz explícita (`abierta`, `recibida`, `aceptada`, `rechazada`, `cerrada`) y rechazo de saltos inválidos.
+  4. La superficie operativa elegida es Django Admin (coste mínimo/coherencia con operación actual) con listado, alta manual, acciones de transición y trazabilidad por actor.
+  5. Se deja explícito el límite del incremento: sin automatización de reembolsos, sin restitución automática de inventario y sin emails automáticos de devolución.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0035_devolucionpedidomodelo.py`
+  - `tests/nucleo_herbal/infraestructura/test_devoluciones_postventa.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+- **Comandos ejecutados**:
+  - `python manage.py makemigrations persistencia_django`
+  - `python manage.py test tests.nucleo_herbal.infraestructura.test_devoluciones_postventa tests.nucleo_herbal.infraestructura.test_admin_django`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `python scripts/check_release_gate.py`
+- **Evidencia**:
+  - la devolución manual persiste ligada a pedido real con fecha de apertura, motivo, estado y actor;
+  - la apertura rechaza pedidos no elegibles por estado/pago;
+  - las transiciones inválidas son bloqueadas por validación de modelo y las válidas quedan operables desde admin;
+  - logging operativo mínimo añadido para apertura/transición/rechazo en acciones de admin.
+- **Deuda residual**:
+  1. Coordinar en V2-R04 la política explícita de cuándo una devolución aceptada habilita reembolso manual y restitución manual sin automatizar por defecto.
+  2. Evaluar si conviene exponer esta operativa en backoffice Next cuando el volumen de operación supere el flujo mínimo de Django Admin.
+- **Commit/PR**: registrado al final de esta ejecución (hash y PR en el reporte de entrega).

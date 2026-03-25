@@ -1,5 +1,6 @@
-"""Modelos ORM del checkout real v1."""
+"""Modelos ORM del checkout real v1 y postventa manual."""
 
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -107,3 +108,72 @@ class EventoWebhookPagoModelo(models.Model):
 
     def __str__(self) -> str:
         return f"{self.proveedor_pago}:{self.id_evento}"
+
+
+class DevolucionPedidoModelo(models.Model):
+    ESTADO_ABIERTA = "abierta"
+    ESTADO_RECIBIDA = "recibida"
+    ESTADO_ACEPTADA = "aceptada"
+    ESTADO_RECHAZADA = "rechazada"
+    ESTADO_CERRADA = "cerrada"
+    ESTADOS = (
+        (ESTADO_ABIERTA, "Abierta"),
+        (ESTADO_RECIBIDA, "Recibida"),
+        (ESTADO_ACEPTADA, "Aceptada"),
+        (ESTADO_RECHAZADA, "Rechazada"),
+        (ESTADO_CERRADA, "Cerrada"),
+    )
+    ESTADOS_ELIGIBLES_PEDIDO = ("entregado", "enviado")
+    TRANSICIONES_VALIDAS = {
+        ESTADO_ABIERTA: {ESTADO_RECIBIDA, ESTADO_RECHAZADA, ESTADO_CERRADA},
+        ESTADO_RECIBIDA: {ESTADO_ACEPTADA, ESTADO_RECHAZADA, ESTADO_CERRADA},
+        ESTADO_ACEPTADA: {ESTADO_CERRADA},
+        ESTADO_RECHAZADA: {ESTADO_CERRADA},
+        ESTADO_CERRADA: set(),
+    }
+
+    pedido = models.ForeignKey(PedidoRealModelo, on_delete=models.PROTECT, related_name="devoluciones")
+    fecha_apertura = models.DateTimeField(auto_now_add=True)
+    motivo = models.CharField(max_length=280)
+    estado = models.CharField(max_length=24, choices=ESTADOS, default=ESTADO_ABIERTA)
+    abierta_por = models.CharField(max_length=150, blank=True, default="")
+    revisada_por = models.CharField(max_length=150, blank=True, default="")
+    fecha_revision = models.DateTimeField(null=True, blank=True)
+    observaciones = models.TextField(blank=True, default="")
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_devolucion_pedido"
+        ordering = ("-fecha_apertura",)
+        verbose_name = "devolución manual"
+        verbose_name_plural = "devoluciones manuales"
+        indexes = [
+            models.Index(fields=("estado", "fecha_apertura"), name="nuc_dev_estado_fecha_idx"),
+            models.Index(fields=("pedido", "fecha_apertura"), name="nuc_dev_pedido_fecha_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.pedido_id} · {self.estado}"
+
+    def clean(self) -> None:
+        self.motivo = self.motivo.strip()
+        if not self.motivo:
+            raise ValidationError("La devolución manual requiere motivo.")
+        if self._state.adding and not self.es_pedido_elegible_para_apertura(self.pedido):
+            raise ValidationError("Solo se permite abrir devoluciones para pedidos enviados o entregados ya pagados.")
+        if self.pk:
+            previo = DevolucionPedidoModelo.objects.filter(pk=self.pk).values_list("estado", flat=True).first()
+            if previo and previo != self.estado and self.estado not in self.TRANSICIONES_VALIDAS.get(previo, set()):
+                raise ValidationError(f"Transición de devolución no permitida: {previo} -> {self.estado}.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def es_pedido_elegible_para_apertura(cls, pedido: PedidoRealModelo) -> bool:
+        if pedido.estado not in cls.ESTADOS_ELIGIBLES_PEDIDO:
+            return False
+        if pedido.estado_pago != "pagado":
+            return False
+        return not pedido.cancelado_operativa_incidencia_stock

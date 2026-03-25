@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from uuid import uuid4
 
 from django.contrib import admin, messages
+from django.core.exceptions import ValidationError
 from django.http import HttpRequest
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
@@ -18,9 +20,12 @@ from ...dominio.excepciones import ErrorDominio
 from ..notificaciones_email import NotificadorEmailPostPago
 from ..pagos_stripe import construir_pasarela_pago_stripe
 from .repositorios_inventario import RepositorioInventarioORM, RepositorioMovimientosInventarioORM
-from .models_pedidos import LineaPedidoRealModelo, PedidoRealModelo
+from .models_pedidos import DevolucionPedidoModelo, LineaPedidoRealModelo, PedidoRealModelo
 from .repositorios_pedidos import RepositorioPedidosORM
 from .transacciones import TransaccionesDjango
+
+
+logger = logging.getLogger(__name__)
 
 
 class IncidenciaStockFilter(admin.SimpleListFilter):
@@ -202,6 +207,105 @@ def restituir_inventario_manual(modeladmin, request: HttpRequest, queryset):
         )
 
 
+def _aplicar_estado_devolucion(
+    modeladmin,
+    request: HttpRequest,
+    queryset,
+    *,
+    estado_objetivo: str,
+):
+    actor = request.user.get_username() or "admin"
+    actualizados = 0
+    omitidos = 0
+    for devolucion in queryset:
+        previo = devolucion.estado
+        if previo == estado_objetivo:
+            omitidos += 1
+            continue
+        devolucion.estado = estado_objetivo
+        devolucion.revisada_por = actor
+        try:
+            devolucion.save(update_fields=["estado", "revisada_por", "fecha_actualizacion"])
+        except ValidationError:
+            omitidos += 1
+            logger.warning(
+                "admin_devolucion_transicion_rechazada",
+                extra={
+                    "devolucion_id": devolucion.pk,
+                    "pedido_id": devolucion.pedido_id,
+                    "actor": actor,
+                    "estado_anterior": previo,
+                    "estado_nuevo": estado_objetivo,
+                    "resultado": "rechazado",
+                },
+            )
+            continue
+        logger.info(
+            "admin_devolucion_transicion",
+            extra={
+                "devolucion_id": devolucion.pk,
+                "pedido_id": devolucion.pedido_id,
+                "actor": actor,
+                "estado_anterior": previo,
+                "estado_nuevo": estado_objetivo,
+                "resultado": "ok",
+            },
+        )
+        actualizados += 1
+    if actualizados:
+        modeladmin.message_user(
+            request,
+            f"{actualizados} devolución(es) actualizada(s) a estado {estado_objetivo}.",
+            level=messages.SUCCESS,
+        )
+    if omitidos:
+        modeladmin.message_user(
+            request,
+            f"{omitidos} devolución(es) omitida(s): transición inválida o ya en estado objetivo.",
+            level=messages.WARNING,
+        )
+
+
+@admin.action(description="Marcar devolución como recibida")
+def marcar_devolucion_recibida(modeladmin, request: HttpRequest, queryset):
+    _aplicar_estado_devolucion(
+        modeladmin,
+        request,
+        queryset,
+        estado_objetivo=DevolucionPedidoModelo.ESTADO_RECIBIDA,
+    )
+
+
+@admin.action(description="Marcar devolución como aceptada")
+def marcar_devolucion_aceptada(modeladmin, request: HttpRequest, queryset):
+    _aplicar_estado_devolucion(
+        modeladmin,
+        request,
+        queryset,
+        estado_objetivo=DevolucionPedidoModelo.ESTADO_ACEPTADA,
+    )
+
+
+@admin.action(description="Marcar devolución como rechazada")
+def marcar_devolucion_rechazada(modeladmin, request: HttpRequest, queryset):
+    _aplicar_estado_devolucion(
+        modeladmin,
+        request,
+        queryset,
+        estado_objetivo=DevolucionPedidoModelo.ESTADO_RECHAZADA,
+    )
+
+
+@admin.action(description="Cerrar devolución")
+def cerrar_devolucion(modeladmin, request: HttpRequest, queryset):
+    _aplicar_estado_devolucion(
+        modeladmin,
+        request,
+        queryset,
+        estado_objetivo=DevolucionPedidoModelo.ESTADO_CERRADA,
+    )
+
+
 @admin.register(PedidoRealModelo)
 class PedidoRealAdmin(admin.ModelAdmin):
     list_display = (
@@ -327,3 +431,22 @@ class PedidoRealAdmin(admin.ModelAdmin):
     @admin.display(description="Fecha operativa", ordering="fecha_pago_confirmado")
     def fecha_operativa(self, obj: PedidoRealModelo):
         return obj.fecha_reembolso or obj.fecha_cancelacion_operativa or obj.fecha_revision_incidencia_stock or obj.fecha_pago_confirmado or obj.fecha_creacion
+
+
+@admin.register(DevolucionPedidoModelo)
+class DevolucionPedidoAdmin(admin.ModelAdmin):
+    list_display = ("id", "pedido", "estado", "motivo", "abierta_por", "revisada_por", "fecha_apertura", "fecha_actualizacion")
+    list_filter = ("estado", "pedido__estado", "pedido__estado_pago")
+    search_fields = ("pedido__id_pedido", "motivo", "abierta_por", "revisada_por")
+    readonly_fields = ("fecha_apertura", "fecha_actualizacion")
+    autocomplete_fields = ("pedido",)
+    actions = (marcar_devolucion_recibida, marcar_devolucion_aceptada, marcar_devolucion_rechazada, cerrar_devolucion)
+
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.abierta_por:
+            obj.abierta_por = request.user.get_username() or "admin"
+            logger.info(
+                "admin_devolucion_apertura",
+                extra={"pedido_id": obj.pedido_id, "actor": obj.abierta_por, "estado": obj.estado, "resultado": "intento"},
+            )
+        super().save_model(request, obj, form, change)
