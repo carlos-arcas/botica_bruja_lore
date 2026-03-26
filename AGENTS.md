@@ -128,6 +128,23 @@ Al finalizar cualquier ejecución, actualizar:
 
 Sin estas actualizaciones, la ejecución está incompleta.
 
+### 11.1 Checklist mínimo de cierre por ejecución (norma obligatoria)
+Toda ejecución debe cerrar usando una checklist mínima, objetiva y reutilizable. La versión operativa vigente vive en `docs/bitacora_codex.md` y su uso es obligatorio en cada entrada de cierre.
+
+Criterios normativos mínimos que la checklist debe forzar:
+1. confirmar la tarea seleccionada y que corresponde a la primera `TODO` no `BLOCKED`,
+2. confirmar que se ejecutó una sola tarea en la corrida,
+3. validar alcance y no sobrealcance respecto al objetivo aprobado,
+4. registrar evidencia verificable de `DONE` o `BLOCKED`,
+5. registrar checks/comandos ejecutados con resultado,
+6. confirmar actualización de roadmap,
+7. confirmar actualización de bitácora,
+8. confirmar diff dentro del perímetro permitido de la tarea,
+9. validar “definido vs implementado” con `docs/90_estado_implementacion.md` cuando aplique,
+10. dejar un único siguiente paso exacto y verificable.
+
+No se permite cierre con checklist decorativa o ambigua.
+
 ## 12) Reglas de trabajo por ciclos
 - Trabajar por ciclos con capacidades cerradas, navegables, coherentes y demostrables.
 - Estados válidos por ítem: `definido`, `planificado`, `en progreso`, `done`, `bloqueado`, `descartado` (o equivalentes operativos explícitos).
