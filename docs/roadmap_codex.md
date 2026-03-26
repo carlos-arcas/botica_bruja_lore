@@ -274,7 +274,7 @@ Uso prohibido:
 - **Condición exacta de bloqueo**: faltan `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y acceso a un entorno temporal seguro para restore drill fuera de este runner.
 
 ## Radar de cola actual
-- **Actualizacion radar UTC**: `2026-03-26T19:02:21Z`; variables revalidadas como vacias/no definidas en este runner.
+- **Actualizacion radar UTC**: `2026-03-26T20:02:09Z`; variables revalidadas como vacias/no definidas en este runner.
 - **Fecha de revisión**: `2026-03-26`
 - **Diagnóstico**: no existen tareas `TODO` no `BLOCKED` en `docs/roadmap_codex.md`.
 - **Verificación aplicada**: `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` siguen ausentes en este runner, por lo que el criterio de desbloqueo de `AUT-003` no se cumple.
