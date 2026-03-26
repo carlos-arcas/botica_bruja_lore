@@ -1,116 +1,151 @@
-# AGENTS.md — Contrato operativo para Codex en este repositorio
+# AGENTS.md — Sistema operativo de gobernanza Codex para `botica_bruja_lore`
 
-## 1. Propósito del archivo
-Definir el comportamiento por defecto de Codex en `botica_bruja_lore` para preservar coherencia de producto, arquitectura y calidad sin duplicar la documentación extensa en `docs/`.
+## 1) Propósito
+Este archivo define reglas **permanentes, duras y ejecutables** para trabajo autónomo con Codex/automations en este repositorio.
 
-## 2. Fase actual del proyecto
-Proyecto en fase de **demo sólida y creíble** (sin compra real activa), con enfoque de evolución por ciclos y cierre de capacidades demostrables.
+No sustituye `docs/`; operacionaliza su uso diario.
 
-## 3. Rol por defecto del agente
-Por defecto, Codex actúa como:
-- arquitecto documental,
-- generador de prompts,
-- detector de inconsistencias.
+## 2) Fase y rol por defecto del agente
+- Fase del proyecto: **demo sólida y creíble** (sin compra real activa como premisa estratégica de fase).
+- Rol por defecto del agente:
+  - arquitecto documental,
+  - generador de prompts,
+  - detector de inconsistencias.
+- Regla: no implementar ni modificar repositorio sin petición explícita.
 
-No debe implementar código ni modificar el repositorio salvo petición explícita del usuario.
+## 3) Fuente de verdad y precedencia documental (obligatoria)
+La fuente de verdad está en `docs/`, con precedencia operativa:
+1. `docs/90_estado_implementacion.md` (estado real implementado).
+2. `docs/08_decisiones_tecnicas_no_negociables.md` (norma técnica obligatoria).
+3. `docs/05_modelo_de_dominio_y_entidades.md` (verdad de dominio).
+4. `docs/07_arquitectura_tecnica.md` (verdad de arquitectura/stack).
+5. `docs/02_alcance_y_fases.md` (secuencia y estados por ciclo).
+6. `docs/00_vision_proyecto.md` (dirección estratégica/identidad).
+7. `AGENTS.md` (contrato operativo diario, subordinado a `docs/`).
 
-## 4. Qué debe hacer el agente
-- Preservar sin pérdida los acuerdos ya definidos.
-- Proponer trabajo en ciclos, con alcance controlado y valor real por entrega.
-- Señalar contradicciones, riesgos de deriva y huecos de definición.
-- Mantener trazabilidad entre decisiones nuevas y documentos fuente.
-- Usar lenguaje técnico claro, accionable y coherente con el dominio.
+Si hay conflicto, prevalece el documento de mayor precedencia para ese ámbito.
 
-## 5. Qué no debe hacer el agente
-- No improvisar features fuera de alcance.
-- No rebajar arquitectura, testing ni calidad por comodidad.
-- No mezclar cambios masivos sin solicitud explícita.
-- No asumir que “documentado” equivale a “implementado”.
-- No introducir decisiones que bloqueen i18n dinámica futura.
-
-## 6. Fuente de verdad del proyecto
-La fuente de verdad está en `docs/`. Este archivo es un contrato operativo resumido: en caso de duda, prevalecen los documentos base del proyecto.
-
-## 7. Orden mínimo de lectura obligatoria
-Antes de proponer cambios, prompts o planes, leer obligatoriamente en este orden:
+## 4) Lectura obligatoria antes de actuar
+Antes de proponer o ejecutar cualquier cambio, leer como mínimo:
 1. `docs/00_vision_proyecto.md`
 2. `docs/02_alcance_y_fases.md`
 3. `docs/05_modelo_de_dominio_y_entidades.md`
 4. `docs/07_arquitectura_tecnica.md`
 5. `docs/08_decisiones_tecnicas_no_negociables.md`
+6. `docs/90_estado_implementacion.md`
+7. `docs/99_fuente_de_verdad.md`
+8. este `AGENTS.md`
 
-Sin esta lectura, no se debe emitir propuesta de implementación.
+Sin esta lectura, la ejecución se considera fuera de norma.
 
-## 8. Reglas de ingeniería no negociables
+## 5) Sistema operativo obligatorio por roadmap Codex
+Toda ejecución autónoma debe gobernarse por `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+
+### 5.1 Regla de selección de trabajo
+1. Elegir **siempre** la primera tarea en estado `TODO` que **no** esté `BLOCKED` en `docs/roadmap_codex.md`.
+2. Ejecutar **una sola tarea por ejecución**.
+3. Prohibido cambiar el orden del roadmap sin registrar justificación explícita en `docs/bitacora_codex.md`.
+4. Prohibido marcar `DONE` sin evidencia verificable de cierre.
+
+### 5.2 Regla de alcance
+- No ampliar alcance respecto al objetivo de la tarea seleccionada.
+- Hacer cambios mínimos, atómicos y de alta confianza.
+- No mezclar refactors globales ni frentes no pedidos.
+
+### 5.3 Regla de bloqueo (sin improvisación)
+Si una tarea queda bloqueada:
+1. Marcarla como `BLOCKED` en roadmap.
+2. Registrar en bitácora:
+   - diagnóstico concreto,
+   - causa probable,
+   - evidencia,
+   - siguiente acción exacta para desbloquear.
+3. No improvisar soluciones fuera del alcance aprobado.
+
+## 6) Reglas de ingeniería no negociables
 - Clean Architecture estricta.
 - Separación real de capas: dominio, aplicación, infraestructura, presentación.
 - Dominio desacoplado de framework.
 - SRP, baja complejidad y sin duplicación.
 - Objetivos de tamaño: archivo <300 LOC, función <40 LOC, complejidad ciclomática <=10.
+- Validación de entradas obligatoria.
+- Manejo explícito de errores.
+- Logging estructurado cuando aplique.
+- Prohibido `print()` como mecanismo operativo.
 - Tests obligatorios en tareas de implementación.
 - Cobertura core objetivo >=85%.
-- Quality gate obligatorio (su activación puede graduarse por ciclo, no su carácter normativo).
-- Logging estructurado cuando aplique.
+- Quality gate obligatorio (activación graduable por ciclo; carácter normativo no negociable).
 - i18n preparada para cambio dinámico real.
 
-## 9. Arquitectura y stack del proyecto
+## 7) Stack y límites técnicos congelados
 - Backend: Django.
 - Frontend: Next.js.
 - Persistencia objetivo real: PostgreSQL.
-- SQLite solo como apoyo local.
-- Enfoque **PostgreSQL-first** desde el diseño.
+- SQLite solo apoyo local.
+- Enfoque PostgreSQL-first desde diseño.
 - Backoffice v1: Django Admin customizado.
 
-## 10. Identidad y alcance del producto
-**La Botica de la Bruja Lore** es un ecommerce editorial especializado en hierbas a granel, sabiduría herbal tradicional, rituales, sinergias, herramientas esotéricas y packs/regalos.
+## 8) Identidad de producto y alcance de negocio
+**La Botica de la Bruja Lore**: ecommerce editorial de hierbas a granel, sabiduría herbal tradicional, rituales, sinergias, herramientas esotéricas y packs/regalos.
 
-Directrices de identidad:
-- enfoque **portfolio-first, business-ready**,
-- experiencia con transición natural → místico,
+Directrices obligatorias:
+- enfoque portfolio-first, business-ready,
+- progresión natural → místico,
 - utilidad comercial + contexto editorial,
-- prohibidos medical claims, promesas milagrosas o afirmaciones sanitarias impropias.
+- prohibidos medical claims, promesas milagrosas y afirmaciones sanitarias impropias.
 
-## 11. Anclas de dominio que no deben romperse
-- `Planta` y `Producto` son entidades separadas (decisión congelada).
-- Plano editorial/conocimiento separado del plano comercial/compra.
+## 9) Anclas de dominio que no se rompen
+- `Planta` y `Producto` son entidades separadas.
+- Separación estricta plano editorial/conocimiento vs plano comercial/compra.
 - `ReglaCalendario` separada de `Ritual`.
-- Toda nueva capacidad debe declarar explícitamente fronteras de capa y de dominio.
+- Toda capacidad nueva declara explícitamente fronteras de capa y dominio.
 
-## 12. Reglas de trabajo por ciclos
-- Se trabaja por ciclos con capacidades cerradas, navegables, coherentes y demostrables.
-- Cada ítem debe ubicarse en estado: definido, planificado, en progreso, done, bloqueado o descartado.
+## 10) Criterio de DONE y checks obligatorios por tarea
+No se cierra en `DONE` sin evidencia verificable de:
+1. implementación real (si aplica),
+2. validación funcional,
+3. respeto de arquitectura y decisiones congeladas,
+4. tests/checks obligatorios ejecutados,
+5. quality gate aplicable aprobado.
+
+Como mínimo en cada ejecución:
+- verificar archivos tocados y rutas referenciadas,
+- validar que no se rompe precedencia documental,
+- validar consistencia de estados en roadmap/bitácora,
+- registrar comandos/checks ejecutados con resultado.
+
+## 11) Actualización documental obligatoria al cerrar ejecución
+Al finalizar cualquier ejecución, actualizar:
+1. `docs/roadmap_codex.md` (estado de la tarea y evidencia de cierre/bloqueo).
+2. `docs/bitacora_codex.md` (entrada trazable completa de ejecución).
+
+Sin estas actualizaciones, la ejecución está incompleta.
+
+## 12) Reglas de trabajo por ciclos
+- Trabajar por ciclos con capacidades cerradas, navegables, coherentes y demostrables.
+- Estados válidos por ítem: `definido`, `planificado`, `en progreso`, `done`, `bloqueado`, `descartado` (o equivalentes operativos explícitos).
+- No presentar lo planificado como implementado.
 - No mezclar demasiados objetivos en una sola entrega.
-- Lo planificado no se presenta como implementado.
 
-## 13. Reglas para generación de prompts
-Todo prompt generado por Codex debe:
-- preservar lo definido en `docs/`,
-- entregarse de uno en uno,
-- ser atómico pero con valor real,
-- incluir: contexto, objetivo, restricciones, implementación esperada, tests (cuando aplique), quality gate (cuando aplique), criterios de aceptación,
+## 13) Reglas para prompts generados por Codex
+Cada prompt debe:
+- preservar acuerdos de `docs/`,
+- ser atómico y entregado de uno en uno,
+- incluir: contexto, objetivo, restricciones, implementación esperada, tests (si aplica), quality gate (si aplica), criterios de aceptación,
 - evitar refactors masivos no pedidos,
-- evitar degradaciones de arquitectura o calidad por atajo.
+- evitar degradaciones de arquitectura/calidad por atajo.
 
-## 14. Expectativas de quality gate y criterio de DONE
-No se marca DONE sin evidencia verificable de:
-- implementación real,
-- validación funcional,
-- cumplimiento de arquitectura,
-- tests exigidos,
-- quality gate aplicable aprobado.
-
-“Diseñado” o “documentado” no equivale a DONE técnico.
-
-## 15. Prohibiciones explícitas
+## 14) Prohibiciones explícitas
 - Prohibido añadir/modificar binarios o artefactos compilados.
-- Prohibido tocar o versionar: `*.mo`, `*.pyc`, `*.sqlite3`, `*.db`, imágenes generadas, zips, pdfs binarios y equivalentes.
-- En i18n Django trabajar en `*.po`; si hace falta compilación, documentar `django-admin compilemessages` sin versionar resultados.
-- Prohibido usar RepoLock: está descartado para este proyecto.
+- Prohibido tocar/versionar: `*.mo`, `*.pyc`, `*.sqlite3`, `*.db`, imágenes generadas, zips, pdfs binarios y equivalentes.
+- En i18n Django trabajar en `*.po`; si hace falta compilación, documentar `django-admin compilemessages` sin versionar compilados.
+- Prohibido usar RepoLock.
+- Prohibido declarar DONE por documentación si no hay implementación/validación exigible para la tarea.
 
-## 16. Salidas esperadas del agente
-Las salidas de Codex deben ser:
-- compactas, estrictas y accionables,
-- alineadas a ciclo y estado real,
-- consistentes con la arquitectura y decisiones congeladas,
-- trazables a `docs/` como fuente larga de verdad,
-- orientadas a mantener calidad de staff engineer.
+## 15) Salida esperada del agente
+Respuestas compactas, accionables y trazables a fuente de verdad, incluyendo:
+- tarea ejecutada,
+- archivos tocados,
+- decisiones,
+- checks con resultado,
+- estado final (`DONE` o `BLOCKED`) y siguiente paso exacto.
