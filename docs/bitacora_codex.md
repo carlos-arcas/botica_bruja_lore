@@ -470,3 +470,63 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (aplica para no reabrir capacidades funcionales ya cerradas; solo se tocó wiring del gate).
   10. Siguiente paso exacto definido: **Sí**.
 - **Siguiente paso exacto**: ejecutar `AUT-002` para alinear la cobertura real de `scripts/check_release_gate.py` con `docs/13_testing_ci_y_quality_gate.md` y `docs/release_readiness_minima.md`.
+
+## Entrada 2026-03-26-AUT-002 (contrato del gate canónico)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `AUT-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: reconciliar el contenido real de `scripts/check_release_gate.py` con el contrato documental vigente, sin abrir producto ni reimplementar operativa fuera de alcance.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `.github/workflows/quality_gate.yml`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_operational_alerts_v2.py`
+  - `scripts/retry_operational_tasks_v2.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `scripts/check_release_gate.py`
+  - `tests/scripts/test_check_release_gate_contract.py`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Implementar en el gate únicamente los bloques read-only y de alta confianza ya prometidos por la documentación y ejecutables en CI sin mutación: `check_release_readiness.py`, `check_operational_alerts_v2.py --fail-on blocker` y `retry_operational_tasks_v2.py --dry-run --json`.
+  2. No meter `backup_restore_postgres.py` dentro del gate canónico: su `dry-run` depende de `DATABASE_URL`, `BOTICA_BACKUP_DIR` y, para restore, de un dump explícito; se deja como checklist pre-flight separado y así se corrige la promesa documental.
+  3. Endurecer la semántica del gate para que cualquier script que devuelva `SKIP:` con exit code `0` se refleje como `SKIP` no bloqueante, evitando falsos `OK` en bloques de solo lectura no aplicables por entorno.
+  4. Añadir un test contractual dedicado para fallar si `main()` deja fuera los bloques reconciliados o si el tratamiento de `SKIP:` se rompe.
+- **Checks ejecutados**:
+  - `python -m unittest tests.scripts.test_check_release_gate_snapshot tests.scripts.test_check_release_gate_frontend tests.scripts.test_check_release_gate_reconciliation tests.scripts.test_check_release_gate_contract` → `OK` (9 tests).
+  - `python -m unittest tests.scripts.test_check_release_readiness tests.scripts.test_check_operational_alerts_v2 tests.scripts.test_retry_operational_tasks_v2` → `FAILED` por `ModuleNotFoundError: No module named 'django'` en este runner sin bootstrap backend; se registra como limitación de entorno y no como regresión del cambio porque `AUT-002` no incluye instalar dependencias y CI sí prepara ese entorno antes del gate.
+  - `git diff --name-only` → diff restringido a `scripts/check_release_gate.py`, `tests/scripts/test_check_release_gate_contract.py`, `docs/13_testing_ci_y_quality_gate.md`, `docs/release_readiness_minima.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Resultado verificable**:
+  - el gate ejecuta ya los bloques documentados de readiness, alertas v2 y retry dry-run;
+  - la documentación deja de prometer backup/restore dentro del gate y lo reubica como pre-flight separado;
+  - existe prueba contractual que falla si desaparecen los bloques reconciliados o si un `SKIP:` vuelve a colarse como `OK`.
+- **Bloqueos (si aplica)**: ninguno para `AUT-002`; la única dependencia externa pendiente sigue encapsulada en `AUT-003`.
+- **Checklist de cierre aplicada (AUT-002)**:
+  1. Tarea correcta confirmada (`AUT-002` era la primera `TODO` no `BLOCKED`): **Sí**.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (aplica para no reabrir capacidades V1/V2 ya cerradas; el cambio se limita al gate y documentación operativa).
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: cola ejecutable vacía; desbloquear `AUT-003` aportando `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales para poder ejecutar smoke post-deploy y restore drill.

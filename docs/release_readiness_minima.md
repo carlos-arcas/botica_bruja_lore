@@ -52,16 +52,17 @@ pg_restore --no-owner --no-privileges --clean --if-exists --dbname="$BOTICA_REST
 - Para runners sin DB/CLI de PostgreSQL: `--dry-run` cuenta solo como verificación de plan (no como drill real ejecutado).
 
 ## 4) CHECKLIST DE RELEASE (pre-flight)
-1. `python scripts/check_release_gate.py`
-2. `python scripts/check_release_readiness.py`
-3. `python scripts/check_operational_reconciliation.py --fail-on blocker`
-4. `python scripts/check_operational_alerts_v2.py --fail-on blocker` (resumen operativo accionable y serializable de alertas mínimas v2).
-5. `python scripts/retry_operational_tasks_v2.py --dry-run --json` (previsualización de reintentos elegibles sin mutación antes de operar en modo real).
-6. `python scripts/backup_restore_postgres.py backup --dry-run` (validación segura de plan/comandos).
-7. Backup lógico real antes del deploy.
-8. Restore drill en base temporal cuando el entorno lo permita.
-9. Deploy.
-10. Smoke post-deploy (`python scripts/check_deployed_stack.py` con URLs reales).
+1. `python scripts/check_release_gate.py` (incluye `check_release_readiness.py`, `check_operational_reconciliation.py --fail-on blocker`, `check_operational_alerts_v2.py --fail-on blocker` y `retry_operational_tasks_v2.py --dry-run --json` además del resto del gate técnico canónico).
+2. `python scripts/backup_restore_postgres.py backup --dry-run` (validación segura de plan/comandos fuera del gate).
+3. Backup lógico real antes del deploy.
+4. Restore drill en base temporal cuando el entorno lo permita.
+5. Deploy.
+6. Smoke post-deploy (`python scripts/check_deployed_stack.py` con URLs reales).
+
+### Diagnóstico desglosado opcional
+- `python scripts/check_release_readiness.py`
+- `python scripts/check_operational_alerts_v2.py --fail-on blocker`
+- `python scripts/retry_operational_tasks_v2.py --dry-run --json`
 
 ## 5) Alcance explícitamente fuera de este checklist
 - No cubre SOC2/ISO, SIEM, MFA corporativo ni RBAC avanzado.

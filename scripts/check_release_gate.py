@@ -69,6 +69,15 @@ def _print_process_output(result: subprocess.CompletedProcess[str]) -> None:
         print(result.stderr.strip())
 
 
+def _extract_skip_detail(result: subprocess.CompletedProcess[str]) -> str | None:
+    for stream in (result.stdout, result.stderr):
+        for raw_line in stream.splitlines():
+            line = raw_line.strip()
+            if line.startswith("SKIP:"):
+                return line.removeprefix("SKIP:").strip()
+    return None
+
+
 def _run_block(name: str, cmd: list[str], *, blocking: bool = True, cwd: Path | None = None) -> BlockResult:
     _print_header(name)
     print("$", " ".join(cmd))
@@ -80,6 +89,10 @@ def _run_block(name: str, cmd: list[str], *, blocking: bool = True, cwd: Path | 
 
     _print_process_output(result)
     if result.returncode == 0:
+        skip_detail = _extract_skip_detail(result)
+        if skip_detail is not None:
+            print(f"[SKIP] {skip_detail}")
+            return BlockResult(name=name, status="SKIP", blocking=False, detail=skip_detail)
         print("[OK] bloque completado")
         return BlockResult(name=name, status="OK", blocking=blocking)
 
@@ -199,6 +212,30 @@ def _operational_reconciliation_block() -> BlockResult:
     )
 
 
+def _release_readiness_block() -> BlockResult:
+    return _run_block(
+        "I) Release readiness mínimo (seguridad/privacidad/backups)",
+        [PYTHON, "scripts/check_release_readiness.py"],
+        blocking=True,
+    )
+
+
+def _operational_alerts_block() -> BlockResult:
+    return _run_block(
+        "J) Alertas operativas V2 (solo lectura)",
+        [PYTHON, "scripts/check_operational_alerts_v2.py", "--fail-on", "blocker"],
+        blocking=True,
+    )
+
+
+def _retry_operational_tasks_dry_run_block() -> BlockResult:
+    return _run_block(
+        "K) Reintentos operativos V2 (dry-run, solo lectura)",
+        [PYTHON, "scripts/retry_operational_tasks_v2.py", "--dry-run", "--json"],
+        blocking=True,
+    )
+
+
 def _print_summary(results: list[BlockResult]) -> int:
     _print_header("Resumen final del gate")
     blocking_failed = False
@@ -296,8 +333,11 @@ def main() -> int:
             blocking=True,
         )
     )
-    results.append(_operational_reconciliation_block())
     results.extend(_frontend_block())
+    results.append(_operational_reconciliation_block())
+    results.append(_release_readiness_block())
+    results.append(_operational_alerts_block())
+    results.append(_retry_operational_tasks_dry_run_block())
 
     code = _print_summary(results)
     if code == 0:
