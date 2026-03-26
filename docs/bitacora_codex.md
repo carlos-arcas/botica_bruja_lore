@@ -352,3 +352,68 @@ PY`
   - el diff se mantiene en el perímetro documental permitido.
 - **Bloqueos (si aplica)**: ninguno.
 - **Siguiente paso exacto**: ejecutar `V2G-001` para auditar el cierre real de `V2-R10`, decidir si ya está cerrable o dejar la brecha exacta siguiente con evidencia.
+
+## Entrada 2026-03-26-V2G-001 (auditoria cierre go-live v2)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `V2G-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: auditar si `V2-R10` era cerrable con el repo/documentación actual o si había que desglosar brechas exactas y bloqueos externos verificables.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Qué se inspeccionó**:
+  1. Roadmaps vivos (`docs/roadmap_codex.md`, `docs/roadmap_ecommerce_real_v2.md`, `docs/roadmap_cierre_ecommerce_real_incremental.md`) para validar estado real y cola abierta.
+  2. Scripts canónicos de gate/readiness/smoke (`check_release_gate.py`, `check_release_readiness.py`, `check_deployed_stack.py`, `check_seo_contract.py`, `backup_restore_postgres.py`).
+  3. Workflow CI `.github/workflows/quality_gate.yml` y prerequisitos del runner (`requirements.txt`, `frontend/package-lock.json`, ausencia local de `.venv` y `frontend/node_modules`).
+- **Decisiones tomadas**:
+  1. Cerrar `V2G-001` en `DONE` porque la auditoría ya resolvió el resultado pedido: `V2-R10` no es cerrable todavía y la brecha queda desglosada en tres tareas concretas.
+  2. Priorizar `AUT-001` como primera `TODO` no `BLOCKED` porque hoy existe un wiring roto del gate en Windows: el bloque frontend puede quedarse en `SKIP` aunque `npm.cmd` sí esté disponible.
+  3. Abrir `AUT-002` para corregir la deriva doc↔script del gate canónico; la documentación promete bloques que el script no ejecuta.
+  4. Encapsular el cierre externo real de go-live en `AUT-003` como `BLOCKED`, en lugar de mezclarlo con fixes internos del repo.
+  5. Dejar fuera de cola el ruido de entorno local (sin Django ni `node_modules`) porque CI sí instala dependencias antes de ejecutar el gate; no es evidencia suficiente de bug de producto.
+- **Checks ejecutados**:
+  - `python scripts/check_release_readiness.py` → `OK`.
+  - `python scripts/check_release_gate.py` → `ERROR`; backend sin Django en este runner y bloque frontend `G` en `SKIP`.
+  - `python -c "import shutil; print(shutil.which('npm')); print(shutil.which('npm.cmd')); print(shutil.which('node'))"` → `npm`/`npm.cmd`/`node` existen en PATH.
+  - `python -c "import subprocess; subprocess.run(['npm','--version'], ...)"` → `FileNotFoundError`.
+  - `python -c "import subprocess; subprocess.run(['npm.cmd','--version'], ...)"` → `0`, versión `11.9.0`.
+  - `python -c "from pathlib import Path; text=Path('scripts/check_release_gate.py').read_text(...); ..."` → confirma ausencia de `check_release_readiness.py`, `check_operational_alerts_v2.py`, `retry_operational_tasks_v2.py`, `backup_restore_postgres.py` en el gate.
+  - `Get-Content -Raw .github/workflows/quality_gate.yml` → confirma instalación previa de backend/frontend en CI antes de `check_release_gate.py`.
+  - `Test-Path frontend/package-lock.json; Test-Path frontend/node_modules; Test-Path .venv` → `True / False / False`.
+- **Resultado verificable**:
+  - `V2G-001` queda cerrado con diagnóstico accionable, sin tocar código de producto.
+  - La cola operativa queda refrescada a tres tareas pequeñas: `AUT-001` (`TODO`, `P0`), `AUT-002` (`TODO`, `P1`) y `AUT-003` (`BLOCKED`, `P1`).
+  - La primera `TODO` no `BLOCKED` pasa a ser `AUT-001`, ejecutable y acotada a scripts/tests/documentación del gate.
+  - Quedó fuera de cola:
+    - instalar Django o `npm ci` localmente, porque el workflow CI ya cubre ese bootstrap;
+    - cerrar `V2-R10` directamente, porque faltan smoke post-deploy y restore drill reales;
+    - abrir features comerciales o reabrir checkout/pago/inventario/cuenta, porque `docs/90_estado_implementacion.md` no aporta evidencia de regresión en esas capacidades.
+- **Bloqueos (si aplica)**: no hay bloqueo para la auditoría; el único bloqueo real detectado se trasladó a `AUT-003` con condición exacta.
+- **Checklist de cierre aplicada (V2G-001)**:
+  1. Tarea correcta confirmada (`V2G-001` era la primera `TODO` no `BLOCKED`): **Sí**.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `AUT-001` para corregir la resolución de npm en Windows dentro de `scripts/check_release_gate.py` y recuperar la validación frontend bloqueante del gate canónico.

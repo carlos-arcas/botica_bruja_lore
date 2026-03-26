@@ -38,6 +38,9 @@ Uso prohibido:
 | `CRX-005` | Checklist de cierre | `AGENTS.md` | `docs/08_decisiones_tecnicas_no_negociables.md`, `docs/99_fuente_de_verdad.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md` | checklist de salida por ejecución (selección, evidencia, checks, estado final) | `AGENTS.md` fija checks mínimos por corrida y actualización obligatoria de roadmap/bitácora; `08` y `99` acotan calidad y precedencia. | Debe incluir verificación explícita de “definido vs implementado” usando `90`. |
 | `CRX-006` | Reencuadre V2-R10 | `docs/roadmap_ecommerce_real_v2.md` | `AGENTS.md`, `docs/90_estado_implementacion.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md` | reactivación del roadmap atómico y alineación con el siguiente incremento vivo | `docs/roadmap_codex.md` quedó sin tareas `TODO` mientras `V2-R10` sigue `PLANNED`; antes de implementar hace falta restaurar una fuente de ejecución atómica vigente. | Cierre válido solo si queda una primera `TODO` no `BLOCKED` con perímetro claro y trazado en bitácora. |
 | `V2G-001` | Auditoría cierre go-live v2 | `docs/roadmap_ecommerce_real_v2.md` | `docs/release_readiness_minima.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/deploy_railway.md`, `docs/90_estado_implementacion.md`, `scripts/check_release_gate.py`, `scripts/check_release_readiness.py`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`, `tests/scripts/` | auditoría de cierre y brecha real del incremento `V2-R10` | `V2-R10` está `PLANNED`, pero no desglosado a nivel atómico; primero hay que decidir con evidencia qué parte ya existe y qué falta realmente. | Si el cierre depende de entorno desplegado real, documentar `BLOCKED` con criterio de desbloqueo externo y sin improvisar cambios de producto. |
+| `AUT-001` | Gate frontend Windows | `docs/13_testing_ci_y_quality_gate.md` | `scripts/check_release_gate.py`, `scripts/check_seo_contract.py`, `.github/workflows/quality_gate.yml`, `tests/scripts/` | wiring del gate frontend en Windows | La auditoría detectó que el bloque frontend del gate canónico puede quedar en `SKIP` aunque `npm.cmd` exista y el runner Windows sí tenga Node. | Va primero porque hoy el gate puede omitir lint/build/tests frontend y dar una lectura falsa de readiness. |
+| `AUT-002` | Contrato del gate canónico | `docs/13_testing_ci_y_quality_gate.md` | `docs/release_readiness_minima.md`, `scripts/check_release_gate.py`, `tests/scripts/`, `docs/90_estado_implementacion.md` | deriva doc↔script en el gate de release | La documentación promete bloques operativos (readiness mínimo, alertas v2, retry dry-run, backup dry-run) que el script canónico no invoca. | Resolver por una sola fuente de verdad: o se implementa la cobertura prometida o se corrige la documentación. |
+| `AUT-003` | Smoke real V2-R10 | `docs/release_readiness_minima.md` | `docs/roadmap_ecommerce_real_v2.md`, `docs/deploy_railway.md`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py` | cierre externo de go-live sobre entorno desplegado real | El cierre de `V2-R10` sigue dependiendo de URLs reales desplegadas y de un restore drill fuera de este runner. | Mantener `BLOCKED` hasta contar con URLs/credenciales reales y entorno seguro para restore drill. |
 
 ## CRX-001 — Bootstrap de gobernanza Codex
 - **Estado**: `DONE`
@@ -182,7 +185,7 @@ Uso prohibido:
 - **Bloqueo conocido**: ninguno.
 
 ## V2G-001 — Auditoría de cierre de `V2-R10` (go-live checklist v2)
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: contrastar el alcance pendiente de `V2-R10` con scripts, tests y documentación reales para decidir con evidencia si puede cerrarse, qué brecha exacta queda o si existe bloqueo externo.
 - **Alcance permitido**: `AGENTS.md`, `docs/roadmap_ecommerce_real_v2.md`, `docs/release_readiness_minima.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/deploy_railway.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, con lectura de `scripts/` y `tests/scripts/`.
 - **Fuera de alcance**: tocar backend/frontend funcional, ejecutar deploy real, backups reales, restores reales o cambios de negocio.
@@ -193,4 +196,71 @@ Uso prohibido:
   - contrastar `V2-R10` con `docs/90_estado_implementacion.md` para no reabrir cierres ya implementados,
   - dejar un único resultado explícito: `DONE`, nueva tarea atómica siguiente o `BLOCKED` con causa externa verificable.
 - **Criterio de cierre**: evidencia documental suficiente para decidir el siguiente paso exacto de `V2-R10` sin implementar a ciegas.
-- **Bloqueo conocido**: posible dependencia de URLs/entorno desplegado real para smoke post-deploy y drill operativo final.
+- **Evidencia de cierre V2G-001**:
+  - `python scripts/check_release_readiness.py` devuelve `OK`, así que el checklist documental mínimo existe y no era la brecha principal.
+  - `python scripts/check_release_gate.py` falla en este runner por dos causas distintas: entorno local sin Django/node_modules y, además, bloque frontend `G` en `SKIP` aunque `npm.cmd` está disponible.
+  - Reproducción directa en Windows: `subprocess.run(['npm','--version'])` lanza `FileNotFoundError`, mientras `subprocess.run(['npm.cmd','--version'])` devuelve `0`; `scripts/check_seo_contract.py` ya resuelve `npm.cmd`, `scripts/check_release_gate.py` no.
+  - Inspección de fuente: `scripts/check_release_gate.py` no invoca `check_release_readiness.py`, `check_operational_alerts_v2.py`, `retry_operational_tasks_v2.py` ni `backup_restore_postgres.py`, aunque `docs/13_testing_ci_y_quality_gate.md` y `docs/release_readiness_minima.md` los describen como parte del flujo canónico/pre-flight.
+  - `.github/workflows/quality_gate.yml` instala dependencias backend/frontend antes del gate; por tanto, la ausencia de `.venv` y `frontend/node_modules` en este runner no se abre como bug de producto, pero sí justifica separar prerrequisito de entorno frente a wiring roto del repo.
+  - El cierre final de `V2-R10` sigue dependiendo de smoke post-deploy y restore drill real con URLs/credenciales externas; eso se deriva a una tarea `BLOCKED` explícita.
+- **Resultado de la auditoría**:
+  1. `AUT-001` como siguiente `TODO` no `BLOCKED` para corregir el wiring frontend del gate en Windows.
+  2. `AUT-002` como segundo `TODO` para reconciliar la cobertura real del gate con la documentación vigente.
+  3. `AUT-003` como tarea `BLOCKED` hasta disponer de entorno desplegado y credenciales operativas reales.
+- **Bloqueo conocido**: ninguno para la auditoría; el bloqueo externo queda encapsulado en `AUT-003`.
+
+## AUT-001 — Resolver ejecución frontend del gate canónico en Windows
+- **Tipo**: `FIX`
+- **Prioridad**: `P0`
+- **Estado**: `TODO`
+- **Objetivo**: hacer que `scripts/check_release_gate.py` ejecute de forma fiable lint, tests frontend y build en runners Windows cuando `npm.cmd` exista.
+- **Evidencia o síntoma**:
+  - `python scripts/check_release_gate.py` deja el bloque `G) Frontend` en `SKIP` con “comando no disponible”.
+  - `python -c "import subprocess; subprocess.run(['npm','--version'])"` reproduce `FileNotFoundError` en este entorno.
+  - `python -c "import subprocess; subprocess.run(['npm.cmd','--version'])"` devuelve `0`.
+  - `scripts/check_seo_contract.py` ya implementa un resolvedor compatible con `npm.cmd`; el gate canónico no.
+- **Alcance permitido**: `scripts/check_release_gate.py`, `tests/scripts/test_check_release_gate_snapshot.py`, nuevos tests unitarios en `tests/scripts/`, y ajustes documentales mínimos si el contrato operativo visible cambia.
+- **Fuera de alcance**: cambios en frontend de producto, cambios de negocio, instalación de dependencias en el runner o reescritura del gate SEO.
+- **Zonas probables**: `scripts/check_release_gate.py`, `scripts/check_seo_contract.py`, `tests/scripts/test_check_release_gate_snapshot.py`, nuevo test dedicado al resolvedor frontend del gate.
+- **Checks obligatorios**:
+  - añadir prueba unitaria que cubra resolución `npm.cmd` en Windows para el gate;
+  - ejecutar `python -m unittest tests.scripts.test_check_release_gate_snapshot tests.scripts.test_check_seo_contract <nuevo_test_gate_frontend>`;
+  - verificar que el bloque frontend deja de marcar `SKIP` por resolución de ejecutable cuando `npm.cmd` está presente.
+- **Criterio de cierre**: el gate canónico usa resolución de npm compatible con Windows y deja trazabilidad automática para lint/tests/build frontend en el mismo runner que hoy los omite.
+
+## AUT-002 — Alinear cobertura real del gate con su contrato documental
+- **Tipo**: `HARDEN`
+- **Prioridad**: `P1`
+- **Estado**: `TODO`
+- **Objetivo**: reconciliar `scripts/check_release_gate.py` con lo que `docs/13_testing_ci_y_quality_gate.md` y `docs/release_readiness_minima.md` declaran como flujo canónico/pre-flight.
+- **Evidencia o síntoma**:
+  - `docs/13_testing_ci_y_quality_gate.md` lista `check_release_readiness.py`, `check_operational_alerts_v2.py`, `retry_operational_tasks_v2.py --dry-run` y `backup_restore_postgres.py --dry-run` dentro del flujo canónico.
+  - `docs/release_readiness_minima.md` los exige en el checklist pre-flight.
+  - `scripts/check_release_gate.py` no contiene ninguna de esas invocaciones, por lo que la cobertura real del gate es menor que la documentada.
+- **Alcance permitido**: `scripts/check_release_gate.py`, tests unitarios/contractuales en `tests/scripts/`, y la documentación estrictamente necesaria para dejar una sola verdad operativa (`docs/13_testing_ci_y_quality_gate.md`, `docs/release_readiness_minima.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
+- **Fuera de alcance**: tocar backend/frontend funcional, reabrir `V2-R01`..`V2-R09`, o introducir nuevas features de negocio.
+- **Zonas probables**: `scripts/check_release_gate.py`, `tests/scripts/test_check_release_gate_snapshot.py`, `tests/scripts/test_check_release_gate_reconciliation.py`, posible nuevo test de contrato del gate, `docs/13_testing_ci_y_quality_gate.md`, `docs/release_readiness_minima.md`.
+- **Checks obligatorios**:
+  - prueba automatizada que falle si el gate deja fuera bloques declarados como canónicos;
+  - ejecutar `python -m unittest tests.scripts.test_check_release_gate_snapshot tests.scripts.test_check_release_gate_reconciliation <nuevo_test_contrato_gate>`;
+  - verificar que la documentación final describe exactamente lo que el script ejecuta, sin pasos fantasmas.
+- **Criterio de cierre**: script y documentación quedan alineados; el gate o bien ejecuta esos bloques o la documentación deja de prometerlos.
+
+## AUT-003 — Smoke post-deploy y restore drill real para cierre de `V2-R10`
+- **Tipo**: `HARDEN`
+- **Prioridad**: `P1`
+- **Estado**: `BLOCKED`
+- **Objetivo**: ejecutar la validación final externa de `V2-R10` sobre entorno desplegado real antes de considerar go-live cerrable.
+- **Evidencia o síntoma**:
+  - `docs/release_readiness_minima.md` exige backup real, restore drill real, deploy y smoke post-deploy.
+  - `scripts/check_deployed_stack.py` requiere `BACKEND_BASE_URL` y `FRONTEND_BASE_URL`.
+  - el runner actual no dispone de URLs desplegadas reales ni de una `BOTICA_RESTORE_DATABASE_URL` operativa para el drill.
+- **Alcance permitido**: `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, `docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`.
+- **Fuera de alcance**: cambios de producto, despliegues improvisados, uso de producción como base de restore drill, o cierre ficticio de `V2-R10` sin entorno real.
+- **Zonas probables**: `docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`.
+- **Checks obligatorios**:
+  - exportar `BACKEND_BASE_URL` y `FRONTEND_BASE_URL` reales y ejecutar `python scripts/check_deployed_stack.py`;
+  - ejecutar backup real + restore drill real en base temporal segura con `python scripts/backup_restore_postgres.py`;
+  - registrar resultado verificable de smoke y drill en bitácora antes de decidir cierre de `V2-R10`.
+- **Criterio de cierre**: smoke post-deploy y restore drill real ejecutados con resultado verificable y sin incidencias bloqueantes.
+- **Condición exacta de bloqueo**: faltan `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y acceso a un entorno temporal seguro para restore drill fuera de este runner.
