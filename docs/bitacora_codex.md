@@ -535,6 +535,8 @@ PY`
 - **Fecha (UTC)**: 2026-03-26
 - **ID de tarea**: `RADAR-COLA`
 - **Estado final**: `DONE`
+- **Revalidacion UTC de esta misma cola**: 2026-03-26T17:03:05Z
+- **Resultado de la revalidacion**: siguen sin existir tareas `TODO` no `BLOCKED` y `AUT-003` conserva el mismo bloqueo externo.
 - **Objetivo de la ejecución**: verificar si tras `AUT-002` existía una nueva tarea `TODO` no `BLOCKED` o si la cola había quedado vacía por dependencia externa.
 - **Fuentes de verdad consultadas**:
   - `AGENTS.md`
@@ -583,4 +585,111 @@ PY`
   8. Diff dentro del perímetro permitido: **Sí**.
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (aplica para no reabrir capacidades ya `DONE` ni forzar un cierre ficticio de `V2-R10`).
   10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales en un entorno temporal seguro y, con ellas, ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+
+## Entrada 2026-03-26-RADAR-COLA-02 (revalidacion de cola ejecutable vacia)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `RADAR-COLA`
+- **Estado final**: `DONE`
+- **Revalidacion UTC de esta misma cola**: `2026-03-26T18:02:54Z`
+- **Resultado de la revalidacion**: siguen sin existir tareas `TODO` no `BLOCKED` y `AUT-003` conserva el mismo bloqueo externo.
+- **Objetivo de la ejecucion**: revalidar la cola operativa tras la ultima corrida automatica y dejar trazabilidad actualizada sin tocar codigo de producto.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No abrir implementacion ni reordenar el roadmap porque no existe primera tarea `TODO` no `BLOCKED`.
+  2. Revalidar de nuevo el criterio de desbloqueo de `AUT-003` antes de cerrar la corrida, tal como exige el protocolo `BLOCKED`.
+  3. Mantener el resultado como radar documental de cola vacia mientras sigan ausentes `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
+- **Checks ejecutados**:
+  - `git -c safe.directory=C:/Users/arcas/.codex/worktrees/d70a/botica_bruja_lore status --short --branch` -> branch `codex/inspecciona-cola-del-roadmapff`, worktree limpio, `ahead 1` antes de esta corrida.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `$content = Get-Content -Raw "docs/roadmap_codex.md"; if ($content -match '(?m)^- \*\*Estado\*\*: `TODO`') { 'HAS_TODO' } else { 'NO_TODO_STATUS' }` -> `NO_TODO_STATUS`.
+- **Resultado verificable**:
+  - la cola ejecutable sigue vacia;
+  - `AUT-003` continua `BLOCKED` por dependencias externas no satisfechas;
+  - no se toca codigo de producto, solo trazabilidad documental del estado real.
+- **Bloqueos (si aplica)**: la cola depende del desbloqueo externo de `AUT-003`.
+- **Checklist de cierre aplicada (RADAR-COLA-02)**:
+  1. Tarea correcta confirmada: **No aplica** (no hay ninguna `TODO` no `BLOCKED`; esta corrida se limita al radar exigido cuando la cola queda vacia).
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si** (aplica para no reabrir capacidades ya `DONE` ni forzar un cierre ficticio de `V2-R10`).
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales en un entorno temporal seguro y, con ellas, ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+
+## Entrada 2026-03-26-RADAR-COLA-03 (revalidacion de cola ejecutable vacia)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `RADAR-COLA`
+- **Estado final**: `DONE`
+- **Revalidacion UTC de esta misma cola**: `2026-03-26T19:02:21Z`
+- **Resultado de la revalidacion**: siguen sin existir tareas `TODO` no `BLOCKED` y `AUT-003` conserva el mismo bloqueo externo.
+- **Objetivo de la ejecucion**: revalidar la cola operativa en esta corrida automatica y dejar trazabilidad actualizada sin tocar codigo de producto.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No abrir implementacion ni reordenar el roadmap porque no existe primera tarea `TODO` no `BLOCKED`.
+  2. Revalidar otra vez el criterio de desbloqueo de `AUT-003` antes de cerrar la corrida, segun el protocolo `BLOCKED`.
+  3. Mantener el resultado como radar documental de cola vacia mientras sigan ausentes `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
+- **Checks ejecutados**:
+  - `git -c safe.directory=C:/Users/arcas/.codex/worktrees/d70a/botica_bruja_lore status --short --branch` -> branch `codex/inspecciona-cola-del-roadmapff`, worktree limpio, `ahead 2` antes de esta corrida.
+  - `$content = Get-Content -Raw -Encoding utf8 docs/roadmap_codex.md; if ($content -match '(?m)^- \*\*Estado\*\*: `TODO`') { 'HAS_TODO' } else { 'NO_TODO_STATUS' }` -> `NO_TODO_STATUS`.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) { "${name}=MISSING" } else { "${name}=SET" } }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `Select-String -Path docs/roadmap_codex.md -Pattern 'AUT-003','Radar de cola actual','Actualizacion radar UTC'` -> confirma `AUT-003` en `BLOCKED` y radar actualizado.
+- **Resultado verificable**:
+  - la cola ejecutable sigue vacia;
+  - `AUT-003` continua `BLOCKED` por dependencias externas no satisfechas;
+  - no se toca codigo de producto, solo trazabilidad documental del estado real.
+- **Bloqueos (si aplica)**: la cola depende del desbloqueo externo de `AUT-003`.
+- **Checklist de cierre aplicada (RADAR-COLA-03)**:
+  1. Tarea correcta confirmada: **No aplica** (no hay ninguna `TODO` no `BLOCKED`; esta corrida se limita al radar exigido cuando la cola queda vacia).
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si** (aplica para no reabrir capacidades ya `DONE` ni forzar un cierre ficticio de `V2-R10`).
+  10. Siguiente paso exacto definido: **Si**.
 - **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales en un entorno temporal seguro y, con ellas, ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
