@@ -970,6 +970,20 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   2. la capa agrega señales existentes, no duplica reglas de negocio transaccional;
   3. puede ejecutarse manualmente o programarse por scheduler externo sin acoplamiento adicional.
 
+## 50. Operación V2-R08: automatización mínima de reintentos operativos seguros
+- Capacidad: **Reintento automatizable (dry-run + ejecución real) de tareas operativas idempotentes sobre flags existentes**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - nuevo script `scripts/retry_operational_tasks_v2.py` con modo `--dry-run`, selección por `--task` y salida texto/JSON;
+  - cobertura de tareas reintentables de bajo riesgo en pedido real: `email_post_pago`, `email_envio`, `email_cancelacion`, `email_reembolso`;
+  - elegibilidad explícita por estado+flag y segunda validación en ejecución para evitar duplicados en reintentos concurrentes;
+  - marcado persistente por bandera de email tras envío exitoso (`RepositorioPedidosORM`) y omisión segura cuando la tarea ya no es elegible;
+  - pruebas dedicadas en `tests/scripts/test_retry_operational_tasks_v2.py` para dry-run sin mutación, ejecución solo elegibles, idempotencia de reejecución, omisión de no elegibles y salida verificable.
+- Regla activa:
+  1. no se automatiza reembolso, restitución de inventario, cancelación ni decisiones sensibles de negocio;
+  2. se automatiza solo superficie ya cerrada semánticamente con flags anti-duplicado existentes;
+  3. el script queda listo para scheduler externo, sin introducir plataforma de colas enterprise en este incremento.
+
 ## 48. Fiscalidad avanzada v2 por producto y cálculo por línea (V2-R05)
 - Capacidad: **fiscalidad explícita por producto con cálculo y trazabilidad por línea en pedido real**.
 - Estado: **DONE**.
