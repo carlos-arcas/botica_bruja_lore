@@ -28,20 +28,28 @@ function construirCabeceras(request: NextRequest): Headers {
 }
 
 async function reenviar(request: NextRequest, context: { params: { ruta: string[] } }): Promise<Response> {
+  const headers = construirCabeceras(request);
+  if (!headers.has("Authorization")) {
+    return NextResponse.json(
+      { detalle: "Sesión de backoffice requerida para acceder al proxy privado." },
+      { status: 401, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const url = construirUrlBackend(request, context.params.ruta);
   const init: RequestInit = {
     method: request.method,
-    headers: construirCabeceras(request),
+    headers,
     body: METODOS_SIN_CUERPO.has(request.method) ? undefined : await request.arrayBuffer(),
     cache: "no-store",
   };
 
   const respuesta = await fetch(url, init);
   const contentType = respuesta.headers.get("content-type") || "application/octet-stream";
-  const headers = new Headers({ "Content-Type": contentType, "Cache-Control": "no-store" });
+  const headersRespuesta = new Headers({ "Content-Type": contentType, "Cache-Control": "no-store" });
   const disposition = respuesta.headers.get("content-disposition");
-  if (disposition) headers.set("Content-Disposition", disposition);
-  return new NextResponse(await respuesta.arrayBuffer(), { status: respuesta.status, headers });
+  if (disposition) headersRespuesta.set("Content-Disposition", disposition);
+  return new NextResponse(await respuesta.arrayBuffer(), { status: respuesta.status, headers: headersRespuesta });
 }
 
 export async function GET(request: NextRequest, context: { params: { ruta: string[] } }): Promise<Response> {

@@ -2,6 +2,7 @@ import json
 import unittest
 
 try:
+    from django.contrib.auth import get_user_model
     from django.test import TestCase as DjangoTestCase
     from django.utils import timezone
 
@@ -75,6 +76,26 @@ class TestApiPedidosReal(DjangoTestCase):
             },
         )
         self.assertIsNotNone(pedido["fecha_creacion"])
+
+    def test_detalle_pedido_real_de_cuenta_requiere_autenticacion(self) -> None:
+        duena = _crear_usuario("duena-detalle")
+        id_pedido = _crear_pedido_de_cuenta(self.client, str(duena.id))
+
+        detalle = self.client.get(f"/api/v1/pedidos/{id_pedido}/")
+
+        self.assertEqual(detalle.status_code, 401)
+        self.assertIn("iniciar sesión", detalle.json()["detalle"].lower())
+
+    def test_detalle_pedido_real_de_cuenta_deniega_usuario_distinto(self) -> None:
+        duena = _crear_usuario("duena-denegada")
+        intruso = _crear_usuario("intruso-detalle")
+        id_pedido = _crear_pedido_de_cuenta(self.client, str(duena.id))
+        self.client.force_login(intruso)
+
+        detalle = self.client.get(f"/api/v1/pedidos/{id_pedido}/")
+
+        self.assertEqual(detalle.status_code, 403)
+        self.assertEqual(detalle.json()["codigo"], "pedido_no_permitido")
 
     def test_documento_descargable_refleja_importes_reales_y_estado(self) -> None:
         crear = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
@@ -153,6 +174,17 @@ class TestApiPedidosReal(DjangoTestCase):
         self.assertIn("Estado pedido:</strong> cancelado", contenido)
         self.assertIn("cancelado operativamente · reembolso ejecutado", contenido)
         self.assertIn("Reembolso:</strong> ejecutado (", contenido)
+
+    def test_documento_pedido_real_de_cuenta_deniega_usuario_distinto(self) -> None:
+        duena = _crear_usuario("duena-documento")
+        intruso = _crear_usuario("intruso-documento")
+        id_pedido = _crear_pedido_de_cuenta(self.client, str(duena.id))
+        self.client.force_login(intruso)
+
+        documento = self.client.get(f"/api/v1/pedidos/{id_pedido}/documento/")
+
+        self.assertEqual(documento.status_code, 403)
+        self.assertEqual(documento.json()["codigo"], "pedido_no_permitido")
 
     def test_direccion_entrega_es_obligatoria(self) -> None:
         payload = _payload_base()
@@ -392,3 +424,20 @@ def _crear_producto_con_inventario() -> None:
         categoria_comercial="oraculos",
     )
     InventarioProductoModelo.objects.create(producto_id="prod-1", cantidad_disponible=5)
+
+
+def _crear_usuario(username: str):
+    return get_user_model().objects.create_user(
+        username=username,
+        email=f"{username}@test.dev",
+        password="clave-segura",
+        is_active=True,
+    )
+
+
+def _crear_pedido_de_cuenta(cliente, id_usuario: str) -> str:
+    payload = _payload_base()
+    payload["canal_checkout"] = "web_autenticado"
+    payload["id_usuario"] = id_usuario
+    response = cliente.post("/api/v1/pedidos/", data=json.dumps(payload), content_type="application/json")
+    return response.json()["pedido"]["id_pedido"]

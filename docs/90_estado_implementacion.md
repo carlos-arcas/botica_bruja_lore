@@ -259,6 +259,19 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 ## 17. Actualización incremental — R05 descuento post-pago según unidad base
 - Capacidad: **Descuento post-pago unit-aware (cantidad + unidad comercial contra unidad base de inventario)**.
 
+## 18. Actualización incremental — V2-R09 seguridad y ACL mínima
+- Capacidad: **Seguridad de acceso y ACL mínima en superficies privadas críticas**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - autorización backend owner-only para pedidos de cuenta real en detalle (`GET /api/v1/pedidos/{id}/`), documento (`GET /api/v1/pedidos/{id}/documento/`) e inicio de pago (`POST /api/v1/pedidos/{id}/iniciar-pago/`);
+  - denegación explícita (`401` no autenticado, `403` usuario distinto) con contrato JSON estable para accesos cruzados;
+  - proxy privado de backoffice Next (`/api/backoffice/proxy/*`) exige sesión/token antes de reenviar;
+  - tests de autorización añadidos para no acceso cruzado y no regresión de acceso válido.
+- Regla activa:
+  1. pedidos asociados a cuenta real (`id_usuario`/`id_cliente`) sólo son accesibles por su propietario autenticado o staff activo;
+  2. pedidos invitados legacy mantienen compatibilidad de acceso público por alcance de coexistencia;
+  3. el proxy de backoffice no actúa como única barrera: backend sigue validando staff en cada endpoint privado.
+
 - Estado: **DONE**.
 - Evidencia implementada:
   - el caso de uso post-pago valida por línea la compatibilidad de unidad (`unidad_comercial` de la línea vs `unidad_base` de inventario) antes de cualquier descuento;
