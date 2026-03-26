@@ -417,3 +417,56 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**.
   10. Siguiente paso exacto definido: **Sí**.
 - **Siguiente paso exacto**: ejecutar `AUT-001` para corregir la resolución de npm en Windows dentro de `scripts/check_release_gate.py` y recuperar la validación frontend bloqueante del gate canónico.
+
+## Entrada 2026-03-26-AUT-001 (gate frontend Windows)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `AUT-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: corregir el wiring del bloque frontend del gate canónico para que en Windows use `npm.cmd` cuando exista, sin tocar frontend de producto ni ampliar a `AUT-002`.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_seo_contract.py`
+- **Archivos tocados**:
+  - `scripts/check_release_gate.py`
+  - `tests/scripts/test_check_release_gate_frontend.py`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Limitar el fix a la resolución del ejecutable `npm` por plataforma, reutilizando el patrón ya vigente en `scripts/check_seo_contract.py`, sin abrir la reconciliación doc↔script de `AUT-002`.
+  2. Mantener intacto el contrato visible del bloque frontend (`lint`, `test:checkout-demo`, `test:cuenta-demo`, `test:calendario-ritual`, `build`); solo cambia el ejecutable invocado.
+  3. Añadir un test unitario dedicado para cubrir tanto el resolvedor Windows como la invocación real del bloque frontend con `npm.cmd`.
+- **Checks ejecutados**:
+  - `python -m unittest tests.scripts.test_check_release_gate_snapshot tests.scripts.test_check_seo_contract tests.scripts.test_check_release_gate_frontend`
+  - `git diff -- scripts/check_release_gate.py tests/scripts/test_check_release_gate_frontend.py`
+  - `git status --short`
+- **Resultado verificable**:
+  - `scripts/check_release_gate.py` ya no fuerza `npm`; resuelve `npm.cmd` en Windows y usa ese ejecutable en lint, tests frontend y build.
+  - `tests/scripts/test_check_release_gate_frontend.py` cubre el resolvedor y asegura que las cinco invocaciones frontend usan `npm.cmd` cuando corresponde.
+  - La batería unitaria exigida por la tarea termina en `OK` con 5 tests.
+- **Bloqueos (si aplica)**: ninguno.
+- **Checklist de cierre aplicada (AUT-001)**:
+  1. Tarea correcta confirmada (`AUT-001` era la primera `TODO` no `BLOCKED`): **Sí**.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (aplica para no reabrir capacidades funcionales ya cerradas; solo se tocó wiring del gate).
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `AUT-002` para alinear la cobertura real de `scripts/check_release_gate.py` con `docs/13_testing_ci_y_quality_gate.md` y `docs/release_readiness_minima.md`.

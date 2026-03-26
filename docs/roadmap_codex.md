@@ -212,7 +212,7 @@ Uso prohibido:
 ## AUT-001 — Resolver ejecución frontend del gate canónico en Windows
 - **Tipo**: `FIX`
 - **Prioridad**: `P0`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: hacer que `scripts/check_release_gate.py` ejecute de forma fiable lint, tests frontend y build en runners Windows cuando `npm.cmd` exista.
 - **Evidencia o síntoma**:
   - `python scripts/check_release_gate.py` deja el bloque `G) Frontend` en `SKIP` con “comando no disponible”.
@@ -227,6 +227,10 @@ Uso prohibido:
   - ejecutar `python -m unittest tests.scripts.test_check_release_gate_snapshot tests.scripts.test_check_seo_contract <nuevo_test_gate_frontend>`;
   - verificar que el bloque frontend deja de marcar `SKIP` por resolución de ejecutable cuando `npm.cmd` está presente.
 - **Criterio de cierre**: el gate canónico usa resolución de npm compatible con Windows y deja trazabilidad automática para lint/tests/build frontend en el mismo runner que hoy los omite.
+- **Evidencia de cierre AUT-001**:
+  1. `scripts/check_release_gate.py` resuelve `npm.cmd` en Windows y reutiliza el ejecutable resuelto en lint, tests frontend y build.
+  2. `tests/scripts/test_check_release_gate_frontend.py` cubre el resolvedor Windows y verifica que el bloque frontend invoca `npm.cmd` en las cinco llamadas esperadas.
+  3. `python -m unittest tests.scripts.test_check_release_gate_snapshot tests.scripts.test_check_seo_contract tests.scripts.test_check_release_gate_frontend` termina en `OK`.
 
 ## AUT-002 — Alinear cobertura real del gate con su contrato documental
 - **Tipo**: `HARDEN`

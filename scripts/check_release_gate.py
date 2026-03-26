@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -87,6 +88,14 @@ def _run_block(name: str, cmd: list[str], *, blocking: bool = True, cwd: Path | 
     return BlockResult(name=name, status="ERROR", blocking=blocking, detail=f"exit={result.returncode}")
 
 
+def _resolve_npm_executable() -> str | None:
+    candidates = ("npm.cmd", "npm") if platform.system() == "Windows" else ("npm", "npm.cmd")
+    for candidate in candidates:
+        if shutil.which(candidate):
+            return candidate
+    return None
+
+
 def _data_snapshot_block() -> BlockResult:
     name = "D) Snapshot de datos públicos existentes (solo lectura)"
     _print_header(name)
@@ -145,9 +154,9 @@ def _frontend_block() -> list[BlockResult]:
             )
         ]
 
-    npm_path = shutil.which("npm")
+    npm_cmd = _resolve_npm_executable()
     node_path = shutil.which("node")
-    if not npm_path or not node_path:
+    if not npm_cmd or not node_path:
         _print_header(base_name)
         print("[SKIP] Node/npm no disponibles en el entorno")
         return [
@@ -159,26 +168,26 @@ def _frontend_block() -> list[BlockResult]:
             )
         ]
 
-    lint = _run_block(f"{base_name} - lint", ["npm", "run", "lint"], blocking=True, cwd=frontend_dir)
+    lint = _run_block(f"{base_name} - lint", [npm_cmd, "run", "lint"], blocking=True, cwd=frontend_dir)
     checkout_demo = _run_block(
         f"{base_name} - test checkout demo",
-        ["npm", "run", "test:checkout-demo"],
+        [npm_cmd, "run", "test:checkout-demo"],
         blocking=True,
         cwd=frontend_dir,
     )
     cuenta_demo = _run_block(
         f"{base_name} - test cuenta demo",
-        ["npm", "run", "test:cuenta-demo"],
+        [npm_cmd, "run", "test:cuenta-demo"],
         blocking=True,
         cwd=frontend_dir,
     )
     calendario_ritual = _run_block(
         f"{base_name} - test calendario ritual",
-        ["npm", "run", "test:calendario-ritual"],
+        [npm_cmd, "run", "test:calendario-ritual"],
         blocking=True,
         cwd=frontend_dir,
     )
-    build = _run_block(f"{base_name} - build", ["npm", "run", "build"], blocking=True, cwd=frontend_dir)
+    build = _run_block(f"{base_name} - build", [npm_cmd, "run", "build"], blocking=True, cwd=frontend_dir)
     return [lint, checkout_demo, cuenta_demo, calendario_ritual, build]
 
 
