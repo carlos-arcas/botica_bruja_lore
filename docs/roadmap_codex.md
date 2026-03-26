@@ -12,6 +12,19 @@
 - `DONE`: cerrada con evidencia.
 - `BLOCKED`: detenida por dependencia o contradicción documentada.
 
+### Contrato operativo del estado `BLOCKED`
+Una tarea puede pasar a `BLOCKED` solo cuando no puede cerrarse con seguridad sin salir del alcance aprobado.
+
+Condiciones mínimas obligatorias para marcar `BLOCKED`:
+1. Existe impedimento verificable (dependencia, contradicción documental o restricción externa concreta).
+2. La entrada correspondiente en `docs/bitacora_codex.md` queda registrada con plantilla `BLOCKED` completa.
+3. Se define una única siguiente acción exacta y verificable (no genérica).
+4. Se fija criterio explícito de desbloqueo y fecha/punto de revisión.
+
+Uso prohibido:
+- Marcar `BLOCKED` por incertidumbre vaga o falta de análisis.
+- Marcar `BLOCKED` sin evidencia verificable y sin dependencia identificada.
+
 ---
 
 ## Matriz de trazabilidad documental por tarea
@@ -54,7 +67,7 @@
 - **Bloqueo conocido**: ninguno.
 
 ## CRX-003 — Política de bloqueo y desbloqueo operativo
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: endurecer el protocolo `BLOCKED` en roadmap + bitácora (campos mínimos, SLA de revisión, acción exacta siguiente).
 - **Alcance permitido**: `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, `AGENTS.md`.
 - **Fuera de alcance**: crear tooling nuevo, modificar gates de código.
