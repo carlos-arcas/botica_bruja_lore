@@ -140,7 +140,7 @@ Uso prohibido:
 
 
 ## CRX-005 — Checklist mínimo de cierre por ejecución Codex
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: estandarizar checklist final reutilizable para ejecuciones (selección de tarea, evidencia, checks, actualización de bitácora/roadmap).
 - **Alcance permitido**: `AGENTS.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
 - **Fuera de alcance**: cambios de CI o scripts.
@@ -150,4 +150,12 @@ Uso prohibido:
   - checklist sin ambigüedades,
   - alineado con criterios DONE del repo.
 - **Criterio de cierre**: checklist operativo añadido y usado en una entrada real de bitácora.
+- **Contrato operativo aplicado**:
+  1. `AGENTS.md` define la norma obligatoria de cierre por checklist mínima;
+  2. `docs/bitacora_codex.md` contiene la plantilla operativa reutilizable y su uso real en esta ejecución;
+  3. la validación `definido vs implementado` se contrasta con `docs/90_estado_implementacion.md` cuando aplica.
+- **Evidencia de cierre CRX-005**:
+  - sección `Checklist mínimo de cierre por ejecución (uso obligatorio)` en `docs/bitacora_codex.md`;
+  - entrada `2026-03-26-CRX-005` cerrada en `DONE` usando la checklist completa;
+  - diff restringido al perímetro permitido (`AGENTS.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
 - **Bloqueo conocido**: ninguno.
