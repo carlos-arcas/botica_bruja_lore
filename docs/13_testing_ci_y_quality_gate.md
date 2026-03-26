@@ -292,6 +292,7 @@ python scripts/check_release_gate.py
 
 - **Job `bootstrap_demo_validation` (mutante aislado)**
   - ejecuta `python scripts/bootstrap_demo_release.py` en una base SQLite temporal aislada (`${{ runner.temp }}`),
+  - fija explícitamente un entorno mínimo compatible con `DEBUG=false` para respetar validaciones de producción endurecidas (`PUBLIC_SITE_URL`, `PAYMENT_SUCCESS_URL`, `PAYMENT_CANCEL_URL`, `DEFAULT_FROM_EMAIL`, `EMAIL_BACKEND` SMTP real),
   - valida después los conteos públicos esperados (`2/2/2/1`) para intenciones, plantas, productos y rituales,
   - mantiene separación conceptual: es una validación técnica de bootstrap, no el gate canónico de release.
 
