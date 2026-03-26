@@ -4,6 +4,7 @@ import json
 import time
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import TestCase, override_settings
 
@@ -109,9 +110,37 @@ class TestApiPagoReal(TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe._post")
+    def test_iniciar_pago_pedido_de_cuenta_requiere_autenticacion(self, post_stripe) -> None:
+        post_stripe.return_value = {"id": "cs_test_acl_1", "url": "https://checkout.stripe.test/cs_test_acl_1"}
+        duena = _crear_usuario("duena-pago")
+        id_pedido = _crear_pedido(self.client, id_usuario=str(duena.id))
 
-def _crear_pedido(cliente) -> str:
-    response = cliente.post("/api/v1/pedidos/", data=json.dumps(_payload_pedido()), content_type="application/json")
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/iniciar-pago/")
+
+        self.assertEqual(response.status_code, 401)
+        self.assertIn("iniciar sesión", response.json()["detalle"].lower())
+
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe._post")
+    def test_iniciar_pago_pedido_de_cuenta_deniega_usuario_distinto(self, post_stripe) -> None:
+        post_stripe.return_value = {"id": "cs_test_acl_2", "url": "https://checkout.stripe.test/cs_test_acl_2"}
+        duena = _crear_usuario("duena-pago-2")
+        intruso = _crear_usuario("intruso-pago")
+        id_pedido = _crear_pedido(self.client, id_usuario=str(duena.id))
+        self.client.force_login(intruso)
+
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/iniciar-pago/")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json()["codigo"], "pedido_no_permitido")
+
+
+def _crear_pedido(cliente, id_usuario: str | None = None) -> str:
+    payload = _payload_pedido()
+    if id_usuario is not None:
+        payload["canal_checkout"] = "web_autenticado"
+        payload["id_usuario"] = id_usuario
+    response = cliente.post("/api/v1/pedidos/", data=json.dumps(payload), content_type="application/json")
     return response.json()["pedido"]["id_pedido"]
 
 
@@ -166,3 +195,12 @@ def _firmar(payload: bytes, secreto: str = "whsec_123") -> str:
     firmado = f"{timestamp}.".encode("utf-8") + payload
     digest = hmac.new(secreto.encode("utf-8"), firmado, hashlib.sha256).hexdigest()
     return f"t={timestamp},v1={digest}"
+
+
+def _crear_usuario(username: str):
+    return get_user_model().objects.create_user(
+        username=username,
+        email=f"{username}@test.dev",
+        password="clave-segura",
+        is_active=True,
+    )

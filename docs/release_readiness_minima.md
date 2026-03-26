@@ -13,6 +13,8 @@
 - No exponer secretos en logs.
 - El visor técnico de logs solo devuelve contenido sanitizado.
 - No habilitar debug log viewer en producción salvo incidente controlado y clave temporal robusta.
+- Validar ACL de cuenta real: pedidos/documentos/pago de pedidos autenticados solo para propietario o staff.
+- Validar ACL de backoffice: proxy privado Next y backend rechazan acceso sin sesión staff.
 
 ## 3) BACKUP / RESTORE (mínimo viable, PostgreSQL)
 

@@ -12,6 +12,7 @@ from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
 from ...aplicacion.errores_pedidos import ErrorStockPedido
 from ...dominio.excepciones import ErrorDominio
 from ...infraestructura.proveedor_envio_estandar import ProveedorEnvioEstandarFijo
+from .autorizacion_pedidos import validar_acceso_pedido
 from .dependencias import construir_servicios_publicos_pedidos
 from .documento_pedido_html import construir_documento_html_pedido
 from .payload_pedidos import construir_payload_pedido
@@ -76,6 +77,9 @@ def detalle_pedido(_request: HttpRequest, id_pedido: str) -> JsonResponse:
         pedido = construir_servicios_publicos_pedidos().obtener_pedido.ejecutar(id_pedido)
     except ErrorAplicacionLookup as error_lookup:
         return json_no_encontrado(str(error_lookup))
+    acceso_denegado = validar_acceso_pedido(_request, pedido, recurso="detalle")
+    if acceso_denegado is not None:
+        return acceso_denegado
     return JsonResponse({"pedido": serializar_pedido(pedido)})
 
 
@@ -84,6 +88,9 @@ def documento_pedido_descargable(_request: HttpRequest, id_pedido: str) -> HttpR
         pedido = construir_servicios_publicos_pedidos().obtener_pedido.ejecutar(id_pedido)
     except ErrorAplicacionLookup as error_lookup:
         return json_no_encontrado(str(error_lookup))
+    acceso_denegado = validar_acceso_pedido(_request, pedido, recurso="documento")
+    if acceso_denegado is not None:
+        return acceso_denegado
     logger.info(
         "pedido_real_documento_descargable",
         extra={"ruta": "/api/v1/pedidos/{id_pedido}/documento/", "id_pedido": pedido.id_pedido, "resultado": "ok"},

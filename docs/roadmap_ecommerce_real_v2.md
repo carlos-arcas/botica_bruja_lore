@@ -115,8 +115,9 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Resultado real**: script operativo reintentable con `--dry-run` + ejecución real segura para emails operativos idempotentes por flags de pedido, sin automatizar decisiones sensibles (reembolso/restitución/cancelación).
 
 ### V2-R09 — Seguridad y ACL v2
-- **Estado**: `PLANNED`.
+- **Estado**: `DONE`.
 - **Dependencias**: mapa de operaciones v2 y roles reales.
+- **Resultado real**: ACL mínima endurecida en backend para pedidos/documentos/pago de cuenta real (owner-only), proxy privado de backoffice Next con sesión obligatoria y cobertura de tests de acceso denegado/permitido.
 
 ### V2-R10 — Go-live checklist v2
 - **Estado**: `PLANNED`.
@@ -434,4 +435,40 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Deuda residual**:
   1. Pendiente validación en entorno con tablas operativas cargadas fuera de tests (en este runner, ejecución directa cae en `SKIP` por ausencia de tablas inicializadas).
   2. Queda fuera intencionalmente cualquier automatismo de compensación financiera/logística.
+- **Commit/PR**: registrado al cierre de esta ejecución.
+
+### Entrada V2-R09
+- **Estado final**: `DONE`.
+- **Resumen de decisiones**:
+  1. Mantener seguridad de frontend como capa UX, pero trasladar la autorización efectiva de pedidos/documentos/pago al backend con regla explícita owner-only para pedidos de cuenta real.
+  2. Preservar compatibilidad del checkout invitado: los pedidos sin `id_cliente` siguen accesibles por flujo legado, mientras los pedidos de cuenta requieren sesión propietaria o staff.
+  3. Endurecer el proxy privado de backoffice Next para rechazar peticiones sin token/cookie de backoffice antes del reenvío al backend.
+  4. Añadir logging mínimo de intentos denegados en recursos sensibles sin exponer datos personales innecesarios.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/presentacion/publica/autorizacion_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/views_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/views_pago_pedidos.py`
+  - `tests/nucleo_herbal/test_api_pedidos_real.py`
+  - `tests/nucleo_herbal/test_api_pago_real.py`
+  - `frontend/app/api/backoffice/proxy/[...ruta]/route.ts`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/release_readiness_minima.md`
+- **Comandos ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_api_pago_real`
+  - `python manage.py test backend.nucleo_herbal.presentacion.tests.test_backoffice_auth backend.nucleo_herbal.presentacion.tests.test_backoffice_contenido`
+  - `python manage.py check`
+  - `python manage.py makemigrations --check --dry-run`
+  - `npm --prefix frontend run test:backoffice-flujos`
+  - `npm --prefix frontend run lint`
+  - `npm --prefix frontend run build`
+  - `python scripts/check_release_gate.py`
+- **Evidencia**:
+  - accesos cruzados de pedidos/documentos/pago para cuenta real devuelven `401/403` con contrato JSON estable;
+  - dueño autenticado mantiene acceso válido y no se rompe el flujo invitado existente;
+  - proxy `/api/backoffice/proxy/*` devuelve `401` si no hay sesión/token de backoffice;
+  - suite backend/frontend relevante y gate canónico en verde.
+- **Deuda residual**:
+  1. Los pedidos legacy invitados siguen siendo accesibles por identificador (compatibilidad V1); elevar esto a token de acceso one-time queda para un bloque posterior si negocio lo exige.
+  2. No se introduce RBAC enterprise ni IAM externo por decisión explícita de alcance.
 - **Commit/PR**: registrado al cierre de esta ejecución.

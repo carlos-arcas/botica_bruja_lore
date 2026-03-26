@@ -10,6 +10,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
 from ...dominio.excepciones import ErrorDominio
+from .autorizacion_pedidos import validar_acceso_pedido
+from .dependencias import construir_servicios_publicos_pedidos
 from .dependencias import construir_servicios_publicos_pago_pedidos
 from .respuestas_json import json_no_encontrado, json_validacion
 
@@ -20,6 +22,13 @@ def iniciar_pago_pedido(request: HttpRequest, id_pedido: str) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"detalle": "Método no permitido."}, status=405)
     operation_id = request.headers.get("X-Operation-Id", "").strip() or str(uuid4())
+    try:
+        pedido = construir_servicios_publicos_pedidos().obtener_pedido.ejecutar(id_pedido)
+    except ErrorAplicacionLookup as error_lookup:
+        return json_no_encontrado(str(error_lookup))
+    acceso_denegado = validar_acceso_pedido(request, pedido, recurso="iniciar_pago")
+    if acceso_denegado is not None:
+        return acceso_denegado
     try:
         dto = construir_servicios_publicos_pago_pedidos().iniciar_pago.ejecutar(id_pedido, operation_id)
     except ErrorAplicacionLookup as error_lookup:
