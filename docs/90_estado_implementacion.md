@@ -29,16 +29,17 @@ Los estados oficiales de proyecto y capacidad son:
 
 ## 4. Estado global actual del proyecto
 - Estado de definición estratégica/documental: **alto y consistente**.
-- Estado de implementación funcional de producto: **Ciclos 1, 2, 3, 4 y 5 implementados en alcance comprometido**.
-- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado hasta capacidades de cuenta demo con historial de pedidos (Ciclo 4)**.
-- Frontend (home + herbal + rituales + flujo ecommerce demo + cuenta demo): **implementado y navegable hasta cierre de Ciclo 4**.
-- Backoffice/admin mínimo: **implementado para operación base herbal/ritual + pedidos demo + cuenta demo**.
-- Checkout demo y confirmación/recibo: **implementados (Ciclo 3)**.
-- Cuenta demo con valor (registro/auth demo, perfil, historial): **implementada (Ciclo 4)**.
+- Estado de implementación funcional de producto: **Ciclos demo 1, 2, 3, 4 y 5 implementados en alcance comprometido; evolución ecommerce real/V2 cerrada hasta `V2-R09`; `V2-R10` pendiente de validación externa**.
+- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado para recorrido demo completo, checkout/pedido real, cuenta real y endurecimientos operativos V2 ya cerrados**.
+- Frontend (home + herbal + rituales + calendario + flujo ecommerce demo legado + checkout real + área privada cliente): **implementado y navegable**.
+- Backoffice/admin mínimo: **implementado para operación demo y real mínima, incluyendo inventario, incidencias/postventa básica y ACL v2 dentro del alcance ya cerrado**.
+- Checkout demo + confirmación/recibo/email demo: **DONE (Ciclo 3)**.
+- Cuenta demo con valor (registro/auth demo, perfil, historial): **DONE como legado controlado (Ciclo 4)**.
+- Checkout/pago real + operación mínima post-pago: **DONE en coexistencia controlada con el legado demo**.
 - Calendario ritual: **Prompts 1–3 implementados (dominio/aplicación + persistencia/API + frontend editorial mínimo con gate)**.
 - Quality gate y CI canónica: **activos** con workflow `Quality Gate` en GitHub Actions (`push` + `pull_request`).
 
-Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta checkout/pago reales, operación física mínima y ahora cuenta real v1 con área privada y pedidos asociados, manteniendo `CuentaDemo` como legado explícito y compatible.
+Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta checkout demo legado y checkout/pago real en coexistencia controlada, con cuenta real v1/v1.1 y bloques `V2-R01`–`V2-R09` cerrados; el único frente externo pendiente es el cierre de go-live `V2-R10`.
 
 ## 5. Estado por capacidades
 | Capacidad | Estado actual | Ciclo asociado | Evidencia / referencia | Notas operativas |
@@ -60,9 +61,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 | Ficha ritual conectada | DONE | Ciclo 2 | `frontend/app/rituales/[slug]/page.tsx`, `frontend/componentes/rituales/detalle/` | Ficha con bloques editoriales y resolución comercial mínima enlazando a herbal/producto. |
 | Integración bidireccional herbal ↔ ritual | DONE | Ciclo 2 | `frontend/componentes/herbal/detalle/BloqueRitualesRelacionados.tsx`, `frontend/componentes/rituales/detalle/BloquePlantasRelacionadas.tsx`, `tests/nucleo_herbal/test_exposicion_publica.py` | Recorridos de ida y vuelta implementados sin romper prioridad herbal en navegación. |
 | Quality gate mínimo operativo de ciclo | DONE | Ciclo 2 (cierre) | `python manage.py check`, `python manage.py test`, `pytest -q tests/nucleo_herbal/test_entidades.py tests/nucleo_herbal/test_casos_de_uso.py tests/nucleo_herbal/test_entidades_rituales.py tests/nucleo_herbal/test_casos_de_uso_rituales.py`, `npm run lint`, `npm run build` | Gate mínimo de cierre ejecutado en entorno local con resultados favorables. |
-| Checkout demo | PLANIFICADO | Ciclo 3 | `docs/02_alcance_y_fases.md` | Sin cambios, fuera de alcance. |
-| Login / invitado | PLANIFICADO | Ciclo 3–4 | `docs/02_alcance_y_fases.md` | Sin cambios, fuera de alcance. |
-| Historial de pedidos demo | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
+| Checkout demo | DONE | Ciclo 3 | `frontend/app/pedido-demo/[id_pedido]/page.tsx`, `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`, `tests/nucleo_herbal/test_api_pedidos_demo.py`, `frontend/tests/checkout-demo.test.ts` | Flujo demo completo (`/encargo` → `PedidoDemo` → recibo/email demo) cerrado con gate en Prompt 8. |
+| Login / invitado | DONE | Ciclo 3–4 | `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `backend/nucleo_herbal/aplicacion/casos_de_uso_cuentas_demo.py`, `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx` | Checkout demo soporta canal invitado; la cuenta demo añade autenticación mínima sin sesión real. |
+| Historial de pedidos demo | DONE | Ciclo 4 | `backend/nucleo_herbal/aplicacion/puertos/proveedores_historial_pedidos_demo.py`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_demo.py`, `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx` | Historial demo asociado por `id_usuario` y/o `email_contacto`, visible en API y frontend de cuenta demo. |
 | Favoritos | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Recordatorios | PLANIFICADO | Ciclo 4–5 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Cuenta real v1 (`CuentaCliente`) | DONE | Evolución ecommerce real | `backend/nucleo_herbal/dominio/cuentas_cliente.py`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`, `frontend/app/mi-cuenta/page.tsx`, `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`, `tests/nucleo_herbal/test_api_cuentas_cliente.py` | Registro/login/logout reales con sesión backend, pedidos asociados y coexistencia explícita con `CuentaDemo` legacy. |
@@ -70,27 +71,22 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 | Recuperación de contraseña cuenta real v1.1 | DONE | Evolución ecommerce real | `backend/nucleo_herbal/aplicacion/casos_de_uso_cuentas_cliente.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_cuentas_cliente.py`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`, `frontend/app/recuperar-password/page.tsx`, `frontend/componentes/cuenta_cliente/FormularioRecuperacionPassword.tsx`, `frontend/infraestructura/api/cuentasCliente.ts`, `tests/nucleo_herbal/test_casos_de_uso_recuperacion_password_cuenta_cliente.py`, `tests/nucleo_herbal/test_api_cuentas_cliente.py`, `frontend/tests/cuenta-cliente-recuperacion.test.ts` | Flujo real por email con respuesta genérica, token seguro con expiración, invalidación tras uso y UI mínima para solicitud y reset sin reabrir alcance ajeno. |
 | Calendario ritual | DONE | Ciclo 5 | `backend/nucleo_herbal/dominio/calendario_ritual.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_calendario_ritual.py`, `backend/nucleo_herbal/presentacion/publica/views.py`, `frontend/app/calendario-ritual/page.tsx`, `frontend/infraestructura/api/calendarioRitual.ts`, `frontend/tests/calendario-ritual.test.ts`, `docs/ciclos/ciclo_05_calendario_editorial.md` | Prompts 1–3 oficiales cubiertos (dominio/aplicación + persistencia/API + frontend/gate mínimo). |
 
-## 6. Último ciclo cerrado
-- **Ciclo cerrado formalmente**: Ciclo 2 (rituales conectados).
-- **Estado de Ciclo 2**: **DONE técnico** para su contrato de alcance.
-- **Evidencia de cierre de Ciclo 2**:
-  - recorrido directo validado: home → rituales → ficha ritual conectada → plantas/productos,
-  - recorrido inverso validado: home → hierbas → ficha herbal → rituales relacionados,
-  - separación editorial/comercial mantenida en backend y frontend,
-  - backoffice mínimo ritual y exposición pública mínima ritual operativos,
-  - quality gate mínimo ejecutado con checks backend/frontend en verde.
+## 6. Último hito operativo cerrado
+- **Frente demo documental/funcional**: ciclos 1–5 implementados en el alcance comprometido.
+- **Último hito incremental cerrado con evidencia verificable**: `V2-R09` (seguridad y ACL v2).
+- **Evidencia de cierre vigente**: `docs/roadmap_ecommerce_real_v2.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/roadmap_codex.md`.
 
-## 7. Ciclo actual
-- **Ciclo operativo vigente**: Ciclo 5 (Prompts 1–3 ejecutados).
-- **Estado**: **EN_PROGRESO**.
+## 7. Ruta operativa vigente
+- **Ruta vigente**: cierre externo de `V2-R10` (go-live checklist v2).
+- **Estado**: **BLOCKED** por dependencia externa verificable, trazada como `AUT-003` en `docs/roadmap_codex.md`.
 - **Condición de continuidad aplicada**:
-  1. Prompts 1–3 de Ciclo 5 implementados con separación limpia de capas;
-  2. Ciclos 3 y 4 permanecen cerrados sin reapertura de alcance;
-  3. ciclo técnicamente cerrable sin adelantar capacidades de ciclo siguiente.
+  1. la coexistencia demo ↔ real sigue activa sin reabrir capacidades ya cerradas;
+  2. la cola autónoma correcta permanece sin `TODO` no `BLOCKED` mientras no se cumpla el desbloqueo externo;
+  3. el siguiente paso exacto es disponer de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales para smoke post-deploy y restore drill.
 
 ## 8. Deuda y bloqueos conocidos
-1. No se detectan bloqueos técnicos/documentales para declarar Ciclo 5 cerrable tras Prompt 3.
-2. La activación de nuevas capacidades debe entrar exclusivamente por roadmap oficial siguiente, evitando frentes paralelos.
+1. El cierre externo de `V2-R10` sigue bloqueado por ausencia de URLs/credenciales reales y entorno temporal seguro de restore drill en el runner actual.
+2. Mientras ese criterio no se cumpla, no corresponde inventar cola paralela ni reabrir capacidades ya cerradas; el estado honesto es backlog operativo totalmente bloqueado.
 
 ## 8.1 Transición formal demo → real
 - Capacidad: **Base arquitectónica de migración ecommerce real**.
@@ -150,9 +146,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 ---
 
 **Regla de lectura rápida del estado actual:**
-- Ciclo 2 está técnicamente cerrado con evidencia de recorrido y quality gate mínimo operativo.
-- No se detectan bloqueos externos que impidan declarar DONE dentro del contrato de este ciclo.
-- El siguiente paso correcto es abrir Ciclo 3 respetando el alcance ya definido.
+- Para decisión factual vigente mandan el apartado 4, la tabla del apartado 5 y la ruta operativa del apartado 7.
+- Las secciones incrementales posteriores conservan trazabilidad histórica de cada entrega; no constituyen por sí mismas la cola operativa actual.
+- El siguiente paso ejecutable del repositorio se decide en `docs/roadmap_codex.md`, no por búsqueda aislada de estados históricos dentro de este archivo.
 
 ## 11. Actualización incremental de home (Ciclo 3 en progreso)
 - Capacidad: **Home comercial + narrativa + UX ligera**.

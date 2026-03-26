@@ -6,6 +6,7 @@
 3. Se ejecuta **una sola tarea por corrida**.
 4. Está prohibido cambiar el orden sin justificarlo en `docs/bitacora_codex.md`.
 5. No se marca `DONE` sin evidencia verificable y checks registrados.
+6. Si no existe ninguna `TODO` no `BLOCKED`, el estado canónico es `cola vacía` o `backlog totalmente bloqueado`; queda prohibido abrir una cola paralela.
 
 ## Estados permitidos
 - `TODO`: pendiente y ejecutable.
@@ -25,6 +26,12 @@ Uso prohibido:
 - Marcar `BLOCKED` por incertidumbre vaga o falta de análisis.
 - Marcar `BLOCKED` sin evidencia verificable y sin dependencia identificada.
 
+### Contrato operativo de cola vacía o backlog totalmente bloqueado
+1. **Cola ejecutable vacía**: no existe ninguna tarea `TODO` no `BLOCKED` en este archivo.
+2. **Backlog totalmente bloqueado**: existe trabajo restante, pero toda tarea activa está en `BLOCKED` con criterio de desbloqueo aún incumplido.
+3. En ambos casos, el roadmap debe dejar un radar con diagnóstico, verificación del desbloqueo y siguiente acción exacta.
+4. Cualquier tarea extraordinaria pedida explícitamente por el mantenedor se registra en este mismo roadmap y en la misma bitácora; no se crea un sistema paralelo.
+
 ---
 
 ## Matriz de trazabilidad documental por tarea
@@ -37,6 +44,7 @@ Uso prohibido:
 | `CRX-004` | Tensiones documentales | `docs/99_fuente_de_verdad.md` | `docs/90_estado_implementacion.md`, `docs/14_roadmap.md`, `docs/roadmap_cierre_ecommerce_real_incremental.md`, `docs/roadmap_ecommerce_real_v2.md`, `docs/ciclos/ciclo_03_reencauce_control.md` | identificación/priorización de contradicciones, decisión por precedencia, preparación de resolución | El mandato de `99` exige resolver por ámbito y especificidad; en conflicto planificado vs implementado prevalece `90`. | Tensión preparada: `docs/14_roadmap.md` fija secuencia macro C1→C6, mientras `docs/90_estado_implementacion.md` declara ciclos/evoluciones posteriores ya implementadas; tratar en `CRX-004`. |
 | `CRX-005` | Checklist de cierre | `AGENTS.md` | `docs/08_decisiones_tecnicas_no_negociables.md`, `docs/99_fuente_de_verdad.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md` | checklist de salida por ejecución (selección, evidencia, checks, estado final) | `AGENTS.md` fija checks mínimos por corrida y actualización obligatoria de roadmap/bitácora; `08` y `99` acotan calidad y precedencia. | Debe incluir verificación explícita de “definido vs implementado” usando `90`. |
 | `CRX-006` | Reencuadre V2-R10 | `docs/roadmap_ecommerce_real_v2.md` | `AGENTS.md`, `docs/90_estado_implementacion.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md` | reactivación del roadmap atómico y alineación con el siguiente incremento vivo | `docs/roadmap_codex.md` quedó sin tareas `TODO` mientras `V2-R10` sigue `PLANNED`; antes de implementar hace falta restaurar una fuente de ejecución atómica vigente. | Cierre válido solo si queda una primera `TODO` no `BLOCKED` con perímetro claro y trazado en bitácora. |
+| `CRX-007` | Bootstrap contrato 1 | `docs/99_fuente_de_verdad.md` | `docs/90_estado_implementacion.md`, `AGENTS.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, `docs/release_readiness_minima.md`, `scripts/check_release_gate.py`, `scripts/check_release_readiness.py`, `scripts/check_repo_operational_integrity.py` | saneamiento contractual para automations seguras, cola vacía honesta y trazabilidad de readiness | La fuente factual superior (`docs/90`) y la gobernanza operativa deben quedar autoconsistentes antes de seguir automatizando sobre una cola hoy vacía/bloqueada. | Cierre válido solo si no se crean sistemas paralelos, la bitácora queda explícitamente append-only y el bloqueo externo vigente sigue trazado con checks reales. |
 | `V2G-001` | Auditoría cierre go-live v2 | `docs/roadmap_ecommerce_real_v2.md` | `docs/release_readiness_minima.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/deploy_railway.md`, `docs/90_estado_implementacion.md`, `scripts/check_release_gate.py`, `scripts/check_release_readiness.py`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`, `tests/scripts/` | auditoría de cierre y brecha real del incremento `V2-R10` | `V2-R10` está `PLANNED`, pero no desglosado a nivel atómico; primero hay que decidir con evidencia qué parte ya existe y qué falta realmente. | Si el cierre depende de entorno desplegado real, documentar `BLOCKED` con criterio de desbloqueo externo y sin improvisar cambios de producto. |
 | `AUT-001` | Gate frontend Windows | `docs/13_testing_ci_y_quality_gate.md` | `scripts/check_release_gate.py`, `scripts/check_seo_contract.py`, `.github/workflows/quality_gate.yml`, `tests/scripts/` | wiring del gate frontend en Windows | La auditoría detectó que el bloque frontend del gate canónico puede quedar en `SKIP` aunque `npm.cmd` exista y el runner Windows sí tenga Node. | Va primero porque hoy el gate puede omitir lint/build/tests frontend y dar una lectura falsa de readiness. |
 | `AUT-002` | Contrato del gate canónico | `docs/13_testing_ci_y_quality_gate.md` | `docs/release_readiness_minima.md`, `scripts/check_release_gate.py`, `tests/scripts/`, `docs/90_estado_implementacion.md` | deriva doc↔script en el gate de release | La documentación promete bloques operativos (readiness mínimo, alertas v2, retry dry-run, backup dry-run) que el script canónico no invoca. | Resolver por una sola fuente de verdad: o se implementa la cobertura prometida o se corrige la documentación. |
@@ -273,8 +281,30 @@ Uso prohibido:
 - **Criterio de cierre**: smoke post-deploy y restore drill real ejecutados con resultado verificable y sin incidencias bloqueantes.
 - **Condición exacta de bloqueo**: faltan `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y acceso a un entorno temporal seguro para restore drill fuera de este runner.
 
+## CRX-007 — Bootstrap contrato 1
+- **Tipo**: `DOC`
+- **Prioridad**: `P0`
+- **Estado**: `DONE`
+- **Objetivo**: revalidar y sanear el contrato documental mínimo para automations seguras sin crear sistemas paralelos, dejando explícitos append-only, cola vacía honesta y trazabilidad factual/readiness.
+- **Alcance permitido**: `AGENTS.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md` y documentación funcional/contractual mínima estrictamente necesaria.
+- **Fuera de alcance**: código de producto, CI/dependencias, refactors globales, reapertura ficticia de cierres y cualquier roadmap/bitácora paralelos.
+- **Checks obligatorios**:
+  - contrastar `AGENTS.md` con `docs/99_fuente_de_verdad.md` y `docs/90_estado_implementacion.md`,
+  - verificar que `docs/roadmap_codex.md` mantenga una sola cola operativa o declare honestamente cola vacía/backlog bloqueado,
+  - ejecutar `python scripts/check_release_gate.py`,
+  - ejecutar `python scripts/check_release_readiness.py`,
+  - ejecutar `python scripts/check_repo_operational_integrity.py`.
+- **Criterio de cierre**: contrato documental listo para automations seguras, sin contradicción factual principal en `docs/90`, sin sistema paralelo y con resultado verificable de validaciones o bloqueo operativo exacto.
+- **Evidencia de cierre CRX-007**:
+  1. `AGENTS.md` queda alineado explícitamente con `docs/99_fuente_de_verdad.md` y añade regla única para cola vacía/backlog totalmente bloqueado sin abrir sistemas paralelos.
+  2. `docs/bitacora_codex.md` declara ya carácter `append-only` explícito.
+  3. `docs/90_estado_implementacion.md` sanea su estado factual superior: resumen global, tabla principal, ruta operativa vigente y regla de lectura rápida ya no contradicen la coexistencia demo ↔ real ni el bloqueo externo actual de `V2-R10`.
+  4. `python scripts/check_release_readiness.py` termina en `OK` y `python scripts/check_repo_operational_integrity.py` termina en `OK`.
+  5. `python scripts/check_release_gate.py` termina en `ERROR` en este runner por entorno incompleto verificable: `ModuleNotFoundError: No module named 'django'` en bloques Django y ausencia de toolchain frontend instalada (`next` / `tsc` no disponibles); se registra como resultado exacto, no como PASS ficticio.
+- **Bloqueo conocido**: ninguno para el saneamiento documental; el bloqueo externo vigente sigue encapsulado en `AUT-003`.
+
 ## Radar de cola actual
-- **Actualizacion radar UTC**: `2026-03-26T20:02:09Z`; variables revalidadas como vacias/no definidas en este runner.
+- **Actualizacion radar UTC**: `2026-03-26T21:02:45.9885365Z`; revalidacion ejecutada: no hay `TODO`, las variables externas siguen vacias/no definidas, `check_release_readiness.py` sigue en `OK` y `check_release_gate.py` sigue en `ERROR` por entorno incompleto (`django`, `next`, `tsc`).
 - **Fecha de revisión**: `2026-03-26`
 - **Diagnóstico**: no existen tareas `TODO` no `BLOCKED` en `docs/roadmap_codex.md`.
 - **Verificación aplicada**: `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` siguen ausentes en este runner, por lo que el criterio de desbloqueo de `AUT-003` no se cumple.
