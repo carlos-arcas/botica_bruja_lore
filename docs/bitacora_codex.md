@@ -16,6 +16,28 @@ Registro trazable de cada ejecución autónoma: tarea, archivos tocados, decisio
 - **Bloqueos (si aplica)**:
 - **Siguiente paso exacto**:
 
+## Plantilla obligatoria adicional para entradas `BLOCKED`
+> Usar esta plantilla cuando el **Estado final** sea `BLOCKED`. No sustituye la plantilla general; la complementa.
+
+- **Diagnóstico concreto**:
+- **Causa probable**:
+- **Evidencia verificable**:
+- **Impacto sobre la tarea**:
+- **Dependencia que bloquea**:
+- **Siguiente acción exacta**:
+- **Criterio de desbloqueo**:
+- **Fecha/punto de revisión**:
+
+### Mini-ejemplo sintético de formato `BLOCKED` (no corresponde a incidencia real)
+- **Diagnóstico concreto**: la tarea requiere una decisión documental explícita que no está publicada.
+- **Causa probable**: dependencia de definición pendiente por parte de mantenedor.
+- **Evidencia verificable**: ausencia del documento requerido en ruta acordada + referencia en roadmap a “pendiente decisión humana”.
+- **Impacto sobre la tarea**: no se puede cerrar `DONE` sin riesgo de contradicción documental.
+- **Dependencia que bloquea**: confirmación humana de criterio rector.
+- **Siguiente acción exacta**: solicitar decisión en el canal acordado y registrar respuesta textual en bitácora.
+- **Criterio de desbloqueo**: decisión publicada y citada en documento rector correspondiente.
+- **Fecha/punto de revisión**: próxima ejecución operativa o en 48h UTC, lo que ocurra primero.
+
 ---
 
 ## Entrada 2026-03-26-CRX-001 (bootstrap)
@@ -114,3 +136,48 @@ PY`
   - diff restringido a `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
 - **Bloqueos (si aplica)**: ninguno.
 - **Siguiente paso exacto**: ejecutar `CRX-003` para formalizar protocolo de `BLOCKED`/desbloqueo con campos mínimos y consistencia AGENTS↔roadmap↔bitácora.
+
+## Entrada 2026-03-26-CRX-003 (protocolo BLOCKED)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `CRX-003`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: endurecer y unificar el protocolo operativo `BLOCKED`/desbloqueo entre `AGENTS.md`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md` sin ampliar alcance.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Archivos tocados**:
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Centralizar norma de comportamiento ante bloqueo en `AGENTS.md` (cuándo bloquear, campos mínimos obligatorios, revisión de desbloqueo y prohibición de vaguedad).
+  2. Operativizar `BLOCKED` en `docs/roadmap_codex.md` como contrato de estado con condiciones mínimas y usos prohibidos.
+  3. Añadir plantilla reutilizable específica para entradas `BLOCKED` en bitácora y un mini-ejemplo sintético marcado explícitamente como formato no real.
+  4. Cerrar `CRX-003` en `DONE` y mantener `CRX-004` como primera tarea `TODO` no bloqueada.
+- **Checks ejecutados**:
+  - `test -f AGENTS.md && test -f docs/roadmap_codex.md && test -f docs/bitacora_codex.md`
+  - `rg -n "CRX-003|CRX-004|BLOCKED|Diagnóstico concreto|Causa probable|Evidencia verificable|Siguiente acción exacta|Criterio de desbloqueo" AGENTS.md docs/roadmap_codex.md docs/bitacora_codex.md`
+  - `python - <<'PY'
+from pathlib import Path
+txt = Path('docs/roadmap_codex.md').read_text(encoding='utf-8').splitlines()
+first_todo = None
+for i, line in enumerate(txt):
+    if line.startswith('## CRX-'):
+        estado = next((txt[j] for j in range(i+1, min(i+12, len(txt))) if '**Estado**:' in txt[j]), '')
+        if '`TODO`' in estado and '`BLOCKED`' not in estado:
+            first_todo = line.strip()
+            break
+print(first_todo or 'NONE')
+PY`
+  - `git diff --name-only`
+- **Resultado verificable**:
+  - protocolo `BLOCKED` reforzado y consistente entre norma (`AGENTS.md`), contrato de estado (`docs/roadmap_codex.md`) y plantilla operativa (`docs/bitacora_codex.md`);
+  - `CRX-003` marcado `DONE`;
+  - primera `TODO` no bloqueada confirmada: `CRX-004`;
+  - diff limitado a los tres archivos permitidos.
+- **Bloqueos (si aplica)**: ninguno.
+- **Siguiente paso exacto**: ejecutar `CRX-004` para tratar tensiones documentales priorizadas por precedencia (`docs/99` sobre conflicto planificado vs estado real en `docs/90`).

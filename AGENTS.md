@@ -53,14 +53,21 @@ Toda ejecución autónoma debe gobernarse por `docs/roadmap_codex.md` y `docs/bi
 - No mezclar refactors globales ni frentes no pedidos.
 
 ### 5.3 Regla de bloqueo (sin improvisación)
-Si una tarea queda bloqueada:
-1. Marcarla como `BLOCKED` en roadmap.
-2. Registrar en bitácora:
+Una tarea solo puede marcarse `BLOCKED` si **no puede cerrarse con seguridad** dentro del alcance aprobado por una dependencia, contradicción documental o restricción externa verificable.
+
+Protocolo obligatorio:
+1. Marcarla como `BLOCKED` en roadmap con referencia breve al bloqueo.
+2. Registrar en bitácora una entrada `BLOCKED` usando plantilla específica, incluyendo como mínimo:
    - diagnóstico concreto,
    - causa probable,
-   - evidencia,
-   - siguiente acción exacta para desbloquear.
-3. No improvisar soluciones fuera del alcance aprobado.
+   - evidencia verificable,
+   - impacto sobre la tarea,
+   - dependencia que bloquea,
+   - siguiente acción exacta,
+   - criterio de desbloqueo,
+   - fecha/punto de revisión.
+3. No improvisar soluciones fuera del alcance aprobado ni usar `BLOCKED` como justificación vaga.
+4. En la siguiente ejecución aplicable, revisar primero si el criterio de desbloqueo ya se cumple antes de retomar implementación.
 
 ## 6) Reglas de ingeniería no negociables
 - Clean Architecture estricta.
