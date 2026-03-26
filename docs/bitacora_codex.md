@@ -530,3 +530,57 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (aplica para no reabrir capacidades V1/V2 ya cerradas; el cambio se limita al gate y documentación operativa).
   10. Siguiente paso exacto definido: **Sí**.
 - **Siguiente paso exacto**: cola ejecutable vacía; desbloquear `AUT-003` aportando `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales para poder ejecutar smoke post-deploy y restore drill.
+
+## Entrada 2026-03-26-RADAR-COLA (cola ejecutable vacía)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `RADAR-COLA`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: verificar si tras `AUT-002` existía una nueva tarea `TODO` no `BLOCKED` o si la cola había quedado vacía por dependencia externa.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No abrir implementación ni reordenar el roadmap porque no queda ninguna tarea `TODO` no `BLOCKED`.
+  2. Revisar explícitamente el criterio de desbloqueo de `AUT-003` antes de declarar cola vacía, tal como exige el protocolo `BLOCKED`.
+  3. Mantener `AUT-003` en `BLOCKED` porque faltan las tres variables externas (`BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL`) y sigue sin existir un entorno temporal seguro para el restore drill.
+- **Checks ejecutados**:
+  - `Select-String -Path docs/roadmap_codex.md -Pattern 'TODO','BLOCKED','Estado' | ForEach-Object { "{0}:{1}" -f $_.LineNumber, $_.Line.Trim() }` → sin tareas en estado `TODO`.
+  - `Get-Content docs/release_readiness_minima.md -Raw`
+  - `Get-Content docs/deploy_railway.md -Raw`
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` → `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `Select-String -Path docs/release_readiness_minima.md,docs/deploy_railway.md,scripts/check_deployed_stack.py,scripts/backup_restore_postgres.py -Pattern 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','restore-drill','check_deployed_stack','smoke' -Context 2,2`
+  - `git -c safe.directory=C:/Users/arcas/.codex/worktrees/d70a/botica_bruja_lore status --short --branch`
+- **Resultado verificable**:
+  - no existe primera tarea `TODO` no `BLOCKED`; la cola ejecutable queda vacía;
+  - `AUT-003` sigue bloqueada con criterio de desbloqueo no cumplido (`BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` ausentes);
+  - no se tocó código de producto; solo gobernanza documental para dejar trazabilidad del estado real.
+- **Bloqueos (si aplica)**: la cola depende del desbloqueo externo de `AUT-003`.
+- **Checklist de cierre aplicada (RADAR-COLA)**:
+  1. Tarea correcta confirmada: **No aplica** (no hay ninguna `TODO` no `BLOCKED`; esta corrida se limita al radar exigido cuando la cola queda vacía).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (aplica para no reabrir capacidades ya `DONE` ni forzar un cierre ficticio de `V2-R10`).
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales en un entorno temporal seguro y, con ellas, ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.

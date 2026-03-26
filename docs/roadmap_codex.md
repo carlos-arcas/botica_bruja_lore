@@ -272,3 +272,10 @@ Uso prohibido:
   - registrar resultado verificable de smoke y drill en bitácora antes de decidir cierre de `V2-R10`.
 - **Criterio de cierre**: smoke post-deploy y restore drill real ejecutados con resultado verificable y sin incidencias bloqueantes.
 - **Condición exacta de bloqueo**: faltan `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y acceso a un entorno temporal seguro para restore drill fuera de este runner.
+
+## Radar de cola actual
+- **Fecha de revisión**: `2026-03-26`
+- **Diagnóstico**: no existen tareas `TODO` no `BLOCKED` en `docs/roadmap_codex.md`.
+- **Verificación aplicada**: `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` siguen ausentes en este runner, por lo que el criterio de desbloqueo de `AUT-003` no se cumple.
+- **Estado de cola**: cola ejecutable vacía; requiere radar/desbloqueo externo de `AUT-003`.
+- **Siguiente acción exacta**: aportar esas variables reales y ejecutar `python scripts/check_deployed_stack.py` más `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>` en una base temporal segura fuera de producción.
