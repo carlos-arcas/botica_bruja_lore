@@ -80,7 +80,7 @@ Uso prohibido:
 - **Bloqueo conocido**: ninguno.
 
 ## CRX-004 — Resolución de tensiones documentales prioritarias
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: identificar y documentar contradicciones de alto impacto entre estado real (`docs/90`) y planes (`docs/14`, `docs/roadmap_*`) sin declarar cierres no implementados.
 - **Alcance permitido**: `docs/roadmap_codex.md`, `docs/bitacora_codex.md` y, solo si es imprescindible, nota puntual en un doc de roadmap existente.
 - **Fuera de alcance**: reescritura masiva de documentos históricos.
@@ -90,7 +90,54 @@ Uso prohibido:
   - cada tensión con evidencia textual concreta,
   - decisión trazada a regla de precedencia de `docs/99_fuente_de_verdad.md`.
 - **Criterio de cierre**: lista priorizada de tensiones y acción exacta para cada una.
+- **Evidencia de cierre CRX-004**: sección `Tensiones documentales prioritarias y decisión aplicada` con fichas TDX-01 a TDX-03 y precedencia explícita aplicada.
 - **Bloqueo conocido**: posible necesidad de decisión humana en conflictos de producto no resolubles por precedencia automática.
+
+
+## Tensiones documentales prioritarias y decisión aplicada
+
+> Criterio aplicado: resolver por precedencia de `docs/99_fuente_de_verdad.md`; en conflicto planificado vs implementado, manda `docs/90_estado_implementacion.md`; en conflicto normativo/técnico, manda `docs/08_decisiones_tecnicas_no_negociables.md`.
+
+### TDX-01 — Secuencia macro histórica C1→C6 vs estado real implementado posterior
+- **Prioridad**: `P0` (crítica).
+- **Documentos en conflicto**: `docs/14_roadmap.md` vs `docs/90_estado_implementacion.md`.
+- **Evidencia concreta**:
+  - `docs/14_roadmap.md` fija la secuencia fuerte C1→C6 y sitúa C3/C4/C5 como pasos futuros de esa progresión.
+  - `docs/90_estado_implementacion.md` declara capacidades/evoluciones posteriores ya implementadas (por ejemplo cuenta real, pago real, incrementos V2) y no solo planificación.
+- **Ámbito del conflicto**: interpretación del estado real y selección correcta de trabajo.
+- **Documento que prevalece**: `docs/90_estado_implementacion.md` (estado real implementado).
+- **Decisión operativa aplicada**: para decidir qué está hecho y qué falta, Codex debe tratar `docs/14_roadmap.md` como marco histórico de secuencia y usar `docs/90_estado_implementacion.md` como verdad factual vigente.
+- **Impacto práctico para futuros agentes**: queda prohibido rebajar capacidades reales a “planificadas” por seguir literalidad histórica de C1→C6.
+- **Acción siguiente exacta**: al iniciar cada tarea, validar el estado de la capacidad en `docs/90_estado_implementacion.md` antes de interpretar cualquier roadmap histórico.
+- **¿Requiere decisión humana adicional?**: `No`.
+
+### TDX-02 — Criterio de DONE entre roadmaps históricos (PLANNED/IN_PROGRESS/DONE) y tablero operativo Codex
+- **Prioridad**: `P1` (alta).
+- **Documentos en conflicto**: `docs/roadmap_cierre_ecommerce_real_incremental.md`, `docs/roadmap_ecommerce_real_v2.md` vs `docs/90_estado_implementacion.md` y `AGENTS.md`.
+- **Evidencia concreta**:
+  - Los roadmaps históricos documentan cierres por incremento (`Rxx`, `V2-Rxx`) con narrativa propia.
+  - `docs/90_estado_implementacion.md` define el tablero factual de capacidades y estados oficiales del proyecto.
+  - `AGENTS.md` prohíbe declarar `DONE` sin evidencia verificable.
+- **Ámbito del conflicto**: criterio de DONE y coherencia entre documentación de ejecución histórica y estado operativo vigente.
+- **Documento que prevalece**: `docs/90_estado_implementacion.md` para estado de implementación; `AGENTS.md` + `docs/08_decisiones_tecnicas_no_negociables.md` para regla de cierre verificable.
+- **Decisión operativa aplicada**: un `DONE` en roadmap histórico se acepta solo como antecedente; la lectura operativa final del estado vigente se toma de `docs/90_estado_implementacion.md`.
+- **Impacto práctico para futuros agentes**: evita declarar cierre ficticio por arrastre de narrativa histórica sin confirmar estado factual vigente.
+- **Acción siguiente exacta**: cuando un histórico indique `DONE`, contrastarlo con la capacidad equivalente en `docs/90_estado_implementacion.md` antes de usarlo como base de ejecución.
+- **¿Requiere decisión humana adicional?**: `No`.
+
+### TDX-03 — Deriva de alcance del Ciclo 3 vs reglas de continuidad actuales
+- **Prioridad**: `P1` (alta).
+- **Documentos en conflicto**: `docs/ciclos/ciclo_03_reencauce_control.md` vs trazas de avance acumulado en `docs/90_estado_implementacion.md`.
+- **Evidencia concreta**:
+  - `docs/ciclos/ciclo_03_reencauce_control.md` fija que no se abre nueva feature fuera del roadmap oficial de Ciclo 3.
+  - `docs/90_estado_implementacion.md` registra múltiples evoluciones posteriores (ecommerce real/V2) ya ejecutadas.
+- **Ámbito del conflicto**: coherencia de selección de trabajo por ciclo frente a evolución real posterior.
+- **Documento que prevalece**: `docs/90_estado_implementacion.md` para estado implementado; `docs/ciclos/ciclo_03_reencauce_control.md` se interpreta como control histórico puntual de reencauce.
+- **Decisión operativa aplicada**: la regla “no abrir nueva feature” se aplica al contexto de su microciclo de reencauce, no como bloqueo perpetuo de todas las evoluciones posteriores ya implementadas y registradas en `docs/90`.
+- **Impacto práctico para futuros agentes**: elimina bloqueo falso por lectura descontextualizada del reencauce de Ciclo 3.
+- **Acción siguiente exacta**: usar `docs/roadmap_codex.md` para selección de tarea actual y `docs/90` para validar que no se contradice estado real.
+- **¿Requiere decisión humana adicional?**: `Sí`, solo para definir si se desea una nota aclaratoria en el propio documento de reencauce (fuera del alcance de CRX-004).
+
 
 ## CRX-005 — Checklist mínimo de cierre por ejecución Codex
 - **Estado**: `TODO`

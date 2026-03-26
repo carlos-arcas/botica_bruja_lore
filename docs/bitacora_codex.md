@@ -181,3 +181,61 @@ PY`
   - diff limitado a los tres archivos permitidos.
 - **Bloqueos (si aplica)**: ninguno.
 - **Siguiente paso exacto**: ejecutar `CRX-004` para tratar tensiones documentales priorizadas por precedencia (`docs/99` sobre conflicto planificado vs estado real en `docs/90`).
+
+## Entrada 2026-03-26-CRX-004 (tensiones documentales prioritarias)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `CRX-004`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: resolver documentalmente tensiones prioritarias entre estado real implementado, roadmaps históricos y precedencia oficial, sin maquillaje ni sobrealcance.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/14_roadmap.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/ciclos/ciclo_03_reencauce_control.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Tensiones detectadas**:
+  1. Secuencia macro histórica C1→C6 (`docs/14`) vs estado real posterior ya implementado (`docs/90`).
+  2. Criterio de `DONE` en roadmaps históricos (Rxx/V2-Rxx) vs estado factual vigente y regla de cierre verificable.
+  3. Lectura descontextualizada del reencauce de Ciclo 3 como bloqueo permanente frente a evoluciones posteriores ya registradas.
+- **Decisiones aplicadas**:
+  1. Prevalece `docs/90_estado_implementacion.md` para estado real implementado; `docs/14_roadmap.md` queda como secuencia histórica de referencia.
+  2. Un `DONE` en roadmaps históricos se toma como antecedente, pero el estado operativo vigente se valida en `docs/90` y bajo regla de evidencia de `AGENTS.md`/`docs/08`.
+  3. La regla de no abrir features del reencauce de Ciclo 3 se interpreta en su microciclo; no bloquea retroactivamente evoluciones posteriores ya implementadas y documentadas.
+- **Checks ejecutados**:
+  - `for f in AGENTS.md docs/99_fuente_de_verdad.md docs/90_estado_implementacion.md docs/08_decisiones_tecnicas_no_negociables.md docs/14_roadmap.md docs/roadmap_cierre_ecommerce_real_incremental.md docs/roadmap_ecommerce_real_v2.md docs/ciclos/ciclo_03_reencauce_control.md docs/roadmap_codex.md docs/bitacora_codex.md; do test -f "$f" || exit 1; done`
+  - `python - <<'PY'
+from pathlib import Path
+txt = Path('docs/roadmap_codex.md').read_text(encoding='utf-8')
+for tid in ('TDX-01','TDX-02','TDX-03'):
+    assert tid in txt, f'falta {tid}'
+assert txt.count('**Documento que prevalece**') >= 3, 'faltan documentos prevalentes'
+print('ok_tensiones_prevalencia')
+PY`
+  - `rg -n "## CRX-004|\*\*Estado\*\*: `DONE`|## CRX-005|\*\*Estado\*\*: `TODO`" docs/roadmap_codex.md`
+  - `python - <<'PY'
+from pathlib import Path
+lines = Path('docs/roadmap_codex.md').read_text(encoding='utf-8').splitlines()
+first = None
+for i,l in enumerate(lines):
+    if l.startswith('## CRX-'):
+        state = next((lines[j] for j in range(i+1, min(i+10, len(lines))) if '**Estado**:' in lines[j]), '')
+        if '`TODO`' in state and '`BLOCKED`' not in state:
+            first = l.strip(); break
+print(first or 'NONE')
+PY`
+  - `git diff --name-only`
+- **Resultado verificable**:
+  - `docs/roadmap_codex.md` incluye sección priorizada de tensiones abiertas (TDX-01..03), con evidencia concreta, documento prevalente y decisión operativa aplicada.
+  - `CRX-004` quedó en `DONE` con evidencia explícita de cierre.
+  - `CRX-005` quedó como primera tarea `TODO` no bloqueada.
+  - diff limitado al perímetro permitido (`docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
+- **Bloqueos (si aplica)**: no hay bloqueos para CRX-004. Queda dependencia humana opcional (no bloqueante) para decidir si agregar nota aclaratoria mínima en documento histórico de reencauce.
+- **Siguiente paso exacto**: ejecutar `CRX-005` para estandarizar checklist mínimo de cierre por ejecución Codex y validar su uso en bitácora.
