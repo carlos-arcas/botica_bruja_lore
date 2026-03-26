@@ -215,25 +215,29 @@ Este comando orquesta en un solo flujo:
 - **Snapshot de datos públicos en modo lectura:** reporte de conteos existentes de intenciones, plantas, productos y rituales (sin sembrar ni migrar).
 - **Integridad operativa/documental del repositorio:** `python scripts/check_repo_operational_integrity.py` (markdown crítico, coherencia Procfile/manage.py/wsgi.py/railway.toml, `.env.railway.example` y alineación CI↔documentación).
 - **Conciliación operativa endurecida (solo lectura):** `python scripts/check_operational_reconciliation.py --fail-on blocker` con matriz explícita BLOCKER/WARNING/INFO para detectar discrepancias pedido↔inventario↔reembolso↔expedición↔emails sin mutar datos; solo los BLOCKER rompen gate.
-- **Alertas operativas agregadas v2 (solo lectura):** `python scripts/check_operational_alerts_v2.py --fail-on blocker` para consolidar señales accionables (stock pendiente de revisión, reembolsos fallidos, devoluciones aceptadas no resueltas, blockers de conciliación y fallo de readiness) con salida texto/JSON reutilizable en ejecución manual o scheduler externo.
-- **Reintentos operativos seguros v2 (dry-run + ejecución):** `python scripts/retry_operational_tasks_v2.py --dry-run --json` para listar candidatos sin mutación y `python scripts/retry_operational_tasks_v2.py --task all --json` para ejecutar reintentos idempotentes de emails operativos (`post_pago`, `envio`, `cancelacion`, `reembolso`) únicamente cuando los flags/estados sean elegibles.
 - **Release readiness mínimo (seguridad/privacidad/backups):** `python scripts/check_release_readiness.py` para validar checklist mínimo de pre-release y documentación de backup/restore.
-- **Backup/restore operable (plan seguro):** `python scripts/backup_restore_postgres.py backup --dry-run` y `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file <ruta_dump>` para verificar configuración/prerrequisitos sin ejecutar restore destructivo.
+- **Alertas operativas agregadas v2 (solo lectura):** `python scripts/check_operational_alerts_v2.py --fail-on blocker` para consolidar señales accionables (stock pendiente de revisión, reembolsos fallidos, devoluciones aceptadas no resueltas, blockers de conciliación y fallo de readiness) con salida texto/JSON reutilizable en ejecución manual o scheduler externo.
+- **Reintentos operativos seguros v2 (solo dry-run):** `python scripts/retry_operational_tasks_v2.py --dry-run --json` para listar candidatos sin mutación y validar que el wiring de reintentos idempotentes (`post_pago`, `envio`, `cancelacion`, `reembolso`) sigue operativo sin ejecutar envíos reales.
 
 - Estos contratos validan forma mínima estable de JSON (claves obligatorias, estructura de listas/objetos y campos realmente consumidos por frontend) tanto para herbal/rituales como para pedidos demo, cuentas demo y calendario ritual, reduciendo regresiones silenciosas que no rompen build pero sí el runtime.
 - Además, endurecen explícitamente el contrato mínimo de error en APIs públicas consumidas por frontend: respuesta JSON con clave `detalle` (string), status HTTP coherente (400/401/404) y `Content-Type` JSON para evitar desvíos a HTML inesperado.
 - **Validación frontend básica (si aplica):** `npm run lint`, `npm run test:checkout-demo`, `npm run test:cuenta-demo`, `npm run test:calendario-ritual` y `npm run build`.
+- **Backup/restore operable (plan seguro):** `python scripts/backup_restore_postgres.py backup --dry-run`, backup real y restore drill real siguen formando parte del checklist pre-flight separado; no se ejecutan dentro del gate canónico porque dependen de `DATABASE_URL`, `BOTICA_BACKUP_DIR`, `BOTICA_RESTORE_DATABASE_URL` y, para `restore-drill`, de un dump explícito.
 
 Regla de auditoría:
 
 - El gate canónico **no debe ejecutar** `migrate` ni `seed_demo_publico` por defecto.
 - Su objetivo es validar y auditar el estado existente, no modificarlo.
+- El gate canónico **no ejecuta** reintentos operativos en modo real ni backup/restore; esos pasos quedan fuera como operativa pre-flight/post-deploy.
 
 Criterio de severidad:
 
 - **Bloqueante (ERROR):** readiness backend, `manage.py check`, tests backend críticos e integridad operativa/documental del repo.
 - **Informativo (INFO):** snapshot de conteos en solo lectura.
 - **Conciliación operativa:** bloque `H` pasa a bloqueante solo para severidad `BLOCKER` (`--fail-on blocker`); `WARNING` e `INFO` no bloquean pero quedan visibles en salida del gate.
+- **Release readiness mínimo:** bloqueante si falla `check_release_readiness.py`.
+- **Alertas operativas v2:** bloqueantes solo cuando `check_operational_alerts_v2.py --fail-on blocker` detecta severidad `BLOCKER`; si el entorno no aplica, el bloque puede reportar `SKIP`.
+- **Retry operativo v2 (dry-run):** bloqueante solo si el script falla; la ejecución sigue siendo de solo lectura y puede reportar `SKIP` si el entorno no aplica.
 - **Frontend presente y ejecutable:** lint/build cuentan como bloqueantes.
 - **Frontend no aplicable por entorno:** se informa como `SKIP` con motivo explícito (por ejemplo, sin `frontend/package.json` o sin Node/npm).
 
@@ -288,7 +292,7 @@ Alcance automatizado del workflow:
 python scripts/check_release_gate.py
 ```
 
-  - con ello, CI valida en un único paso auditable: readiness backend, `manage.py check`, tests críticos backend, tests de scripts operativos (`tests.scripts`), integridad operativa/documental del repo y lint/tests de checkout+cuenta+calendario/build frontend.
+  - con ello, CI valida en un único paso auditable: readiness backend, `manage.py check`, tests críticos backend, tests de scripts operativos (`tests.scripts`), integridad operativa/documental del repo, conciliación, `check_release_readiness.py`, alertas operativas v2, retry operativo en `dry-run` y lint/tests de checkout+cuenta+calendario/build frontend.
 
 - **Job `bootstrap_demo_validation` (mutante aislado)**
   - ejecuta `python scripts/bootstrap_demo_release.py` en una base SQLite temporal aislada (`${{ runner.temp }}`),

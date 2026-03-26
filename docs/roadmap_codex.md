@@ -235,7 +235,7 @@ Uso prohibido:
 ## AUT-002 — Alinear cobertura real del gate con su contrato documental
 - **Tipo**: `HARDEN`
 - **Prioridad**: `P1`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: reconciliar `scripts/check_release_gate.py` con lo que `docs/13_testing_ci_y_quality_gate.md` y `docs/release_readiness_minima.md` declaran como flujo canónico/pre-flight.
 - **Evidencia o síntoma**:
   - `docs/13_testing_ci_y_quality_gate.md` lista `check_release_readiness.py`, `check_operational_alerts_v2.py`, `retry_operational_tasks_v2.py --dry-run` y `backup_restore_postgres.py --dry-run` dentro del flujo canónico.
@@ -249,6 +249,10 @@ Uso prohibido:
   - ejecutar `python -m unittest tests.scripts.test_check_release_gate_snapshot tests.scripts.test_check_release_gate_reconciliation <nuevo_test_contrato_gate>`;
   - verificar que la documentación final describe exactamente lo que el script ejecuta, sin pasos fantasmas.
 - **Criterio de cierre**: script y documentación quedan alineados; el gate o bien ejecuta esos bloques o la documentación deja de prometerlos.
+- **Evidencia de cierre AUT-002**:
+  1. `scripts/check_release_gate.py` ahora ejecuta `check_release_readiness.py`, `check_operational_alerts_v2.py --fail-on blocker` y `retry_operational_tasks_v2.py --dry-run --json`, y clasifica `SKIP:` explícitos como bloques no aplicables en vez de `OK` falsos.
+  2. `tests/scripts/test_check_release_gate_contract.py` blinda el contrato reconciliado (bloques nuevos, `SKIP` semántico y presencia en `main`), y `python -m unittest tests.scripts.test_check_release_gate_snapshot tests.scripts.test_check_release_gate_frontend tests.scripts.test_check_release_gate_reconciliation tests.scripts.test_check_release_gate_contract` termina en `OK`.
+  3. `docs/13_testing_ci_y_quality_gate.md` y `docs/release_readiness_minima.md` dejan una única verdad operativa: el gate cubre readiness/alertas/retry dry-run y el plan de backup/restore queda explícitamente fuera como checklist pre-flight separado.
 
 ## AUT-003 — Smoke post-deploy y restore drill real para cierre de `V2-R10`
 - **Tipo**: `HARDEN`
