@@ -535,6 +535,8 @@ PY`
 - **Fecha (UTC)**: 2026-03-26
 - **ID de tarea**: `RADAR-COLA`
 - **Estado final**: `DONE`
+- **Revalidacion UTC de esta misma cola**: 2026-03-26T17:03:05Z
+- **Resultado de la revalidacion**: siguen sin existir tareas `TODO` no `BLOCKED` y `AUT-003` conserva el mismo bloqueo externo.
 - **Objetivo de la ejecución**: verificar si tras `AUT-002` existía una nueva tarea `TODO` no `BLOCKED` o si la cola había quedado vacía por dependencia externa.
 - **Fuentes de verdad consultadas**:
   - `AGENTS.md`
