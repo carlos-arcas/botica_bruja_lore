@@ -66,3 +66,51 @@ PY`
   - bitácora creada con plantilla y rastro bootstrap.
 - **Bloqueos (si aplica)**: ninguno.
 - **Siguiente paso exacto**: ejecutar `CRX-002` (primera `TODO` no `BLOCKED`) añadiendo matriz de trazabilidad documental por tarea en `docs/roadmap_codex.md` y registrando evidencia en esta bitácora.
+
+## Entrada 2026-03-26-CRX-002 (matriz trazabilidad)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `CRX-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: incorporar matriz de trazabilidad documental por tarea CRX (001–005) para gobernar precedencia, soporte y ámbito de decisión en ejecuciones futuras.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/14_roadmap.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/ciclos/ciclo_03_reencauce_control.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Definir una matriz única y compacta en `docs/roadmap_codex.md` con asignación explícita por tarea: rector principal, soportes, ámbito, motivo y nota operativa.
+  2. Marcar `CRX-002` como `DONE` al quedar la matriz creada y alineada con precedencia de `docs/99_fuente_de_verdad.md`.
+  3. Preparar (sin resolver) una tensión documental para `CRX-004`: diferencia entre secuencia macro histórica y estado real implementado/evolutivo.
+  4. Mantener alcance atómico: sin abrir tareas nuevas, sin reordenar roadmap y sin tocar código de producto.
+- **Checks ejecutados**:
+  - `for f in docs/99_fuente_de_verdad.md docs/08_decisiones_tecnicas_no_negociables.md docs/90_estado_implementacion.md docs/14_roadmap.md docs/roadmap_cierre_ecommerce_real_incremental.md docs/roadmap_ecommerce_real_v2.md docs/ciclos/ciclo_03_reencauce_control.md; do test -f "$f" || exit 1; done`
+  - `rg -n "\*\*Estado\*\*: `DONE`" docs/roadmap_codex.md | head -n 5`
+  - `python - <<'PY'
+from pathlib import Path
+texto = Path('docs/roadmap_codex.md').read_text(encoding='utf-8').splitlines()
+first = None
+for i, line in enumerate(texto):
+    if line.startswith('## CRX-'):
+        estado = next((texto[j] for j in range(i+1, min(i+8, len(texto))) if '**Estado**:' in texto[j]), '')
+        if '`TODO`' in estado:
+            first = line.strip()
+            break
+print(first or 'NONE')
+PY`
+  - `git diff --name-only`
+- **Resultado verificable**:
+  - existe sección `Matriz de trazabilidad documental por tarea` en `docs/roadmap_codex.md` con filas completas para `CRX-001` a `CRX-005`;
+  - `CRX-002` queda en `DONE`;
+  - `CRX-003` queda como primera tarea `TODO` no bloqueada;
+  - diff restringido a `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+- **Bloqueos (si aplica)**: ninguno.
+- **Siguiente paso exacto**: ejecutar `CRX-003` para formalizar protocolo de `BLOCKED`/desbloqueo con campos mínimos y consistencia AGENTS↔roadmap↔bitácora.
