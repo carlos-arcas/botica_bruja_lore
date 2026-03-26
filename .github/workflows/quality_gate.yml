@@ -68,6 +68,12 @@ jobs:
         env:
           DATABASE_URL: sqlite:///bootstrap_demo_ci.sqlite3
           SECRET_KEY: ci-bootstrap-secret
+          DEBUG: "false"
+          PUBLIC_SITE_URL: https://ci-bootstrap.botica.invalid
+          PAYMENT_SUCCESS_URL: https://ci-bootstrap.botica.invalid/pedido/ci-ok
+          PAYMENT_CANCEL_URL: https://ci-bootstrap.botica.invalid/checkout?estado_pago=cancelado
+          DEFAULT_FROM_EMAIL: operaciones@botica.invalid
+          EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
         run: |
           & "$env:VENV_PYTHON" scripts/bootstrap_demo_release.py
 
@@ -75,5 +81,11 @@ jobs:
         env:
           DATABASE_URL: sqlite:///bootstrap_demo_ci.sqlite3
           SECRET_KEY: ci-bootstrap-secret
+          DEBUG: "false"
+          PUBLIC_SITE_URL: https://ci-bootstrap.botica.invalid
+          PAYMENT_SUCCESS_URL: https://ci-bootstrap.botica.invalid/pedido/ci-ok
+          PAYMENT_CANCEL_URL: https://ci-bootstrap.botica.invalid/checkout?estado_pago=cancelado
+          DEFAULT_FROM_EMAIL: operaciones@botica.invalid
+          EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
         run: |
           & "$env:VENV_PYTHON" scripts/check_bootstrap_demo_expected_counts.py
