@@ -211,7 +211,7 @@ Este comando orquesta en un solo flujo:
 
 - **Readiness backend:** `python scripts/check_backend_readiness.py`.
 - **Check estructural Django:** `python manage.py check`.
-- **Tests backend críticos:** healthcheck, seed demo, guardrails de deploy/configuración (`tests.nucleo_herbal.test_deploy_guards`) y contratos públicos backend↔frontend de herbal/rituales (`tests.nucleo_herbal.test_contratos_api_publica_frontend`) más contratos demo/comerciales consumidos por frontend (`tests.nucleo_herbal.test_contratos_api_publica_demo_frontend`).
+- **Tests backend críticos:** healthcheck, seed demo, guardrails de deploy/configuración (`tests.nucleo_herbal.test_deploy_guards`) y contratos públicos backend↔frontend de herbal/rituales (`tests.nucleo_herbal.test_contratos_api_publica_frontend`) más contratos demo/comerciales consumidos por frontend (`tests.nucleo_herbal.test_contratos_api_publica_demo_frontend`) para `PedidoDemo`, `email-demo` y el checkout demo legado (`/encargo`).
 - **Snapshot de datos públicos en modo lectura:** reporte de conteos existentes de intenciones, plantas, productos y rituales (sin sembrar ni migrar).
 - **Integridad operativa/documental del repositorio:** `python scripts/check_repo_operational_integrity.py` (markdown crítico, coherencia Procfile/manage.py/wsgi.py/railway.toml, `.env.railway.example` y alineación CI↔documentación).
 - **Conciliación operativa endurecida (solo lectura):** `python scripts/check_operational_reconciliation.py --fail-on blocker` con matriz explícita BLOCKER/WARNING/INFO para detectar discrepancias pedido↔inventario↔reembolso↔expedición↔emails sin mutar datos; solo los BLOCKER rompen gate.
@@ -221,8 +221,23 @@ Este comando orquesta en un solo flujo:
 
 - Estos contratos validan forma mínima estable de JSON (claves obligatorias, estructura de listas/objetos y campos realmente consumidos por frontend) tanto para herbal/rituales como para pedidos demo, cuentas demo y calendario ritual, reduciendo regresiones silenciosas que no rompen build pero sí el runtime.
 - Además, endurecen explícitamente el contrato mínimo de error en APIs públicas consumidas por frontend: respuesta JSON con clave `detalle` (string), status HTTP coherente (400/401/404) y `Content-Type` JSON para evitar desvíos a HTML inesperado.
+- En el gate, el naming canónico del circuito demo es **checkout demo legado (`/encargo`)** para el recorrido `/encargo` → `POST /api/v1/pedidos-demo/` → `/pedido-demo/[id_pedido]` → `email-demo`.
 - **Validación frontend básica (si aplica):** `npm run lint`, `npm run test:checkout-demo`, `npm run test:cuenta-demo`, `npm run test:calendario-ritual` y `npm run build`.
 - **Backup/restore operable (plan seguro):** `python scripts/backup_restore_postgres.py backup --dry-run`, backup real y restore drill real siguen formando parte del checklist pre-flight separado; no se ejecutan dentro del gate canónico porque dependen de `DATABASE_URL`, `BOTICA_BACKUP_DIR`, `BOTICA_RESTORE_DATABASE_URL` y, para `restore-drill`, de un dump explícito.
+
+### 12.1 Matriz compacta de recorridos críticos
+
+Esta matriz viva resume el cableado mínimo **ruta frontend ↔ endpoint/backend ↔ cobertura principal** usado en auditoría rápida y mantenimiento defensivo. No sustituye el detalle de cada suite ni el estado factual de `docs/90_estado_implementacion.md`.
+
+| Recorrido crítico | Ruta frontend principal | Endpoint/backend principal | Cobertura principal |
+|---|---|---|---|
+| Secciones públicas comerciales | `/`, `/botica-natural`, `/velas-e-incienso`, `/minerales-y-energia`, `/herramientas-esotericas` | `GET /api/v1/herbal/secciones/<seccion>/productos/` | `frontend/tests/home-raiz-secciones.test.ts`, `frontend/tests/comercial-multiseccion-regresion.test.ts`, `tests/nucleo_herbal/test_exposicion_publica.py` |
+| Hierbas y rituales públicos | `/hierbas`, `/hierbas/[slug]`, `/rituales`, `/rituales/[slug]` | `GET /api/v1/herbal/plantas/`, `GET /api/v1/herbal/plantas/<slug>/`, `GET /api/v1/rituales/`, `GET /api/v1/rituales/<slug>/` | `tests/nucleo_herbal/test_exposicion_publica.py`, `tests/nucleo_herbal/test_contratos_api_publica_frontend.py` |
+| Checkout demo legado | `/encargo` | `POST /api/v1/pedidos-demo/` | `frontend/tests/checkout-demo.test.ts`, `frontend/tests/checkout-demo-ui.test.ts`, `tests/nucleo_herbal/test_api_pedidos_demo.py`, `tests/nucleo_herbal/test_contratos_api_publica_demo_frontend.py` |
+| Recibo + email demo | `/pedido-demo/[id_pedido]` | `GET /api/v1/pedidos-demo/<id_pedido>/`, `GET /api/v1/pedidos-demo/<id_pedido>/email-demo/` | `frontend/tests/checkout-demo.test.ts`, `tests/nucleo_herbal/test_api_pedidos_demo.py`, `tests/nucleo_herbal/test_contratos_api_publica_demo_frontend.py` |
+| Cuenta demo | `/cuenta-demo` | `POST /api/v1/cuentas-demo/registro/`, `POST /api/v1/cuentas-demo/autenticacion/`, `GET /api/v1/cuentas-demo/<id_usuario>/perfil/`, `GET /api/v1/cuentas-demo/<id_usuario>/historial-pedidos/` | `frontend/tests/cuenta-demo.test.ts`, `tests/nucleo_herbal/test_api_cuentas_demo.py`, `tests/nucleo_herbal/test_contratos_api_publica_demo_frontend.py` |
+| Calendario ritual | `/calendario-ritual` | `GET /api/v1/calendario-ritual/?fecha=YYYY-MM-DD` | `frontend/tests/calendario-ritual.test.ts`, `tests/nucleo_herbal/test_exposicion_publica.py`, `tests/nucleo_herbal/test_contratos_api_publica_demo_frontend.py` |
+| Backoffice mínimo staff | `/admin`, `/admin/login`, `/admin/(panel)/productos`, `/admin/(panel)/pedidos` | `GET /api/v1/backoffice/estado/`, `GET /api/v1/backoffice/productos/`, `GET /api/v1/backoffice/pedidos/` | `frontend/tests/backoffice-admin.test.ts`, `frontend/tests/backoffice-flujos.test.ts`, `tests/nucleo_herbal/test_api_backoffice.py` |
 
 Regla de auditoría:
 
@@ -241,7 +256,7 @@ Criterio de severidad:
 - **Frontend presente y ejecutable:** lint/build cuentan como bloqueantes.
 - **Frontend no aplicable por entorno:** se informa como `SKIP` con motivo explícito (por ejemplo, sin `frontend/package.json` o sin Node/npm).
 
-### 12.1 Operación separada de bootstrap demo (mutante)
+### 12.2 Operación separada de bootstrap demo (mutante)
 
 Para preparar un entorno demo/local/staging de forma explícita, existe una operación aparte:
 

@@ -355,6 +355,13 @@ def main() -> int:
             blocking=True,
         )
     )
+    results.append(
+        _run_block(
+            "C7) Test crítico recorrido pedido demo integrado",
+            [PYTHON, "manage.py", "test", "tests.nucleo_herbal.test_api_pedidos_demo"],
+            blocking=True,
+        )
+    )
     results.append(_data_snapshot_block())
     results.append(
         _run_block(

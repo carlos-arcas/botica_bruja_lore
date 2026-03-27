@@ -118,6 +118,14 @@ test("desktop renderiza rail de filtros fuera del contenedor principal del lista
   assert.equal(contrato.includes("export type ConfiguracionSeccionPublica"), true);
 });
 
+test("panel de filtros admite ruta configurable para reutilizarse en otras secciones comerciales", () => {
+  const panel = leer("componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx");
+
+  assert.equal(panel.includes('rutaSeccion = "/botica-natural"'), true);
+  assert.equal(panel.includes("action={rutaSeccion}"), true);
+  assert.equal(panel.includes("return queryString ? `${rutaSeccion}?${queryString}` : rutaSeccion;"), true);
+});
+
 test("listado no incluye estructuralmente el rail de filtros y expone contrato reusable minimo", () => {
   const listado = leer("componentes/botica-natural/ListadoProductosBoticaNatural.tsx");
 

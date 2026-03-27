@@ -50,15 +50,18 @@ test("obtenerProductosPublicosPorSeccion mantiene visibles los 6 productos publi
   }
 });
 
-test("minerales usa el contrato reusable de seccion publica para cargar el listado real", () => {
+test("minerales usa el contrato reusable de seccion publica para cargar el listado real con el rail de filtros", () => {
   const pagina = leer("app/minerales-y-energia/page.tsx");
   const contrato = leer("componentes/botica-natural/contratoSeccionPublica.ts");
 
   assert.equal(pagina.includes("MINERALES_Y_ENERGIA_PUBLICA"), true);
+  assert.equal(pagina.includes("resolverFiltrosBoticaDesdeSearchParams"), true);
   assert.equal(
-    pagina.includes("obtenerProductosPublicosPorSeccion(MINERALES_Y_ENERGIA_PUBLICA.slug)"),
+    pagina.includes("obtenerProductosPublicosPorSeccion(MINERALES_Y_ENERGIA_PUBLICA.slug, filtros)"),
     true,
   );
+  assert.equal(pagina.includes("PanelFiltrosBoticaNatural"), true);
+  assert.equal(pagina.includes("botica-natural__rail-filtros"), true);
   assert.equal(pagina.includes("configuracionSeccion={MINERALES_Y_ENERGIA_PUBLICA}"), true);
   assert.equal(contrato.includes('nombre: "Minerales y Energia"'), true);
 });

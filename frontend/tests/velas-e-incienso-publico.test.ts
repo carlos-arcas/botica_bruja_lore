@@ -7,15 +7,18 @@ import { obtenerProductosPublicosPorSeccion } from "../infraestructura/api/herba
 
 const leer = (ruta: string): string => readFileSync(join(process.cwd(), ruta), "utf8");
 
-test("velas usa el contrato reusable de seccion publica para cargar el listado real", () => {
+test("velas usa el contrato reusable de seccion publica para cargar el listado real con el rail de filtros", () => {
   const pagina = leer("app/velas-e-incienso/page.tsx");
   const contrato = leer("componentes/botica-natural/contratoSeccionPublica.ts");
 
   assert.equal(pagina.includes("VELAS_E_INCIENSO_PUBLICA"), true);
+  assert.equal(pagina.includes("resolverFiltrosBoticaDesdeSearchParams"), true);
   assert.equal(
-    pagina.includes("obtenerProductosPublicosPorSeccion(VELAS_E_INCIENSO_PUBLICA.slug)"),
+    pagina.includes("obtenerProductosPublicosPorSeccion(VELAS_E_INCIENSO_PUBLICA.slug, filtros)"),
     true,
   );
+  assert.equal(pagina.includes("PanelFiltrosBoticaNatural"), true);
+  assert.equal(pagina.includes("botica-natural__rail-filtros"), true);
   assert.equal(pagina.includes("configuracionSeccion={VELAS_E_INCIENSO_PUBLICA}"), true);
   assert.equal(contrato.includes('nombre: "Velas e Incienso"'), true);
 });

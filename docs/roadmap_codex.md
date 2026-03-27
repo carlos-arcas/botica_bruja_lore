@@ -899,7 +899,7 @@ Uso prohibido:
 ## LOCAL-LAUNCH-003 - Smoke contractual de doble clic en `run_app.bat`
 - **Tipo**: `OPS`
 - **Prioridad**: `P0`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: blindar y verificar contractualmente el arranque local con doble clic sobre `run_app.bat`, incluyendo prerequisitos minimos reales, listeners en puertos canonicos y apertura automatica del home.
 - **Mapeo backlog residual**: hardening residual del launcher local ya `DONE`, sin reabrir `LOCAL-LAUNCH-001` ni `LOCAL-LAUNCH-002`.
 - **Evidencia o sintoma**:
@@ -914,13 +914,20 @@ Uso prohibido:
   - comprobar `GET /` del frontend y `GET /healthz` del backend;
   - registrar contrato de apertura automatica del home y salidas operativas del script.
 - **Criterio de cierre**: existe evidencia verificable de que `run_app.bat` cumple el contrato de doble clic sobre el artefacto final canonico, sin reabrir ni reescribir los cierres historicos previos.
+- **Evidencia de cierre LOCAL-LAUNCH-003**:
+  1. Prerrequisitos minimos verificados en este runner: `python --version` -> `Python 3.13.12`, `npm --version` -> `11.9.0`, `.venv\Scripts\python.exe` ya existe y `frontend\.env.local` ya existe con `frontend\.env.example` presente.
+  2. `cmd /c run_app.bat` con `BOTICA_NO_BROWSER=1` termino con `exit code 0`; `setup_entorno.bat` completo `pip`, `npm install` y el backend quedo sin migraciones pendientes (`No migrations to apply.`).
+  3. Tras el arranque, `Get-NetTCPConnection` mostro listeners reales en `127.0.0.1:3000` y `127.0.0.1:8000`.
+  4. `GET http://127.0.0.1:3000/` devolvio `200` con HTML del home y `GET http://127.0.0.1:8000/healthz` devolvio `200 {"status": "ok", "database": "available"}`.
+  5. `run_app.bat` mantiene la rama de apertura automatica del home (`BOTICA_NO_BROWSER` como escape de verificacion y `Start-Process` sobre `%FRONTEND_URL%` / `%BACKEND_URL%`), por lo que el smoke contractual se completo sin introducir un launcher alternativo.
+  6. Los procesos lanzados para la verificacion se limpiaron al final y no quedaron listeners residuales en `3000`/`8000`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia logica**: `C6-DOC-001`.
 
 ## C6-DOC-001 - Alinear contrato real de checkout demo y naming canonico
 - **Tipo**: `DOC`
 - **Prioridad**: `P1`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: alinear el contrato real del checkout demo legado y fijar un naming canonico unico para el flujo `/encargo` sin prometer mas de lo implementado.
 - **Mapeo backlog residual**: `B06-C1` + `B06-C2`.
 - **Evidencia o sintoma**:
@@ -934,13 +941,46 @@ Uso prohibido:
   - verificar que la nomenclatura canonica queda consistente en docs de flujo, estado y gate;
   - registrar delta exacto entre contrato implementado y contrato documentado previo.
 - **Criterio de cierre**: el flujo demo legado queda documentado con naming canonico unico y contrato honesto, sin sobredeclarar capacidad ni reabrir ciclos ya cerrados.
+- **Evidencia de cierre C6-DOC-001**:
+  1. `docs/10_checkout_y_flujos_ecommerce.md` fija el naming canonico **checkout demo legado (`/encargo`)** y reduce el contrato vigente a `lineas` + `email` + `canal` (+ `id_usuario` en autenticado), dejando fuera datos de entrega, envio demo y pago demo no implementados.
+  2. `docs/13_testing_ci_y_quality_gate.md` alinea el gate con ese naming y explicita el recorrido contractual `/encargo` -> `POST /api/v1/pedidos-demo/` -> `/pedido-demo/[id_pedido]` -> `email-demo`.
+  3. `docs/90_estado_implementacion.md` refleja el mismo naming factual y el contrato minimo real del flujo demo legado.
+  4. `python scripts/check_release_readiness.py` -> `OK`; `Select-String` sobre docs de flujo/estado/gate devuelve `canon_hits=10` y `stale_hits=0`.
+  5. `python scripts/check_release_gate.py` se ejecuto y fallo en `F) Integridad operativa del repo` por una contradiccion ajena a `C6-DOC-001`: `.env.railway.example` usa `DATABASE_URL=${{Postgres.DATABASE_URL}}`, mientras `scripts/check_repo_operational_integrity.py` exige `DATABASE_URL=${{SERVICE_NAME.DATABASE_URL}}` y prohibe `Postgres.DATABASE_URL`; la incidencia se replanifica como `OPS-RWY-005`.
+- **Bloqueo conocido**: ninguno para `C6-DOC-001`; el gate rojo descubierto en validacion queda trazado como trabajo nuevo y prioritario en `OPS-RWY-005`.
+- **Siguiente dependencia logica**: `OPS-RWY-005`.
+
+## OPS-RWY-005 - Contrato canonico DATABASE_URL en Railway example
+- **Tipo**: `OPS`
+- **Prioridad**: `P0`
+- **Estado**: `DONE`
+- **Objetivo**: restaurar un contrato unico y verificable para `DATABASE_URL` entre `.env.railway.example` y `scripts/check_repo_operational_integrity.py`, de modo que el gate canónico vuelva a pasar sin reabrir despliegue real ni tocar producto.
+- **Mapeo backlog residual**: incidencia nueva detectada durante la validacion obligatoria de `C6-DOC-001`.
+- **Evidencia o sintoma**:
+  - `python scripts/check_release_gate.py` falla en `F) Integridad operativa del repo` con: `.env.railway.example debe contener 'DATABASE_URL=${{SERVICE_NAME.DATABASE_URL}}'.`
+  - `.env.railway.example` hoy declara `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
+  - `scripts/check_repo_operational_integrity.py` exige `DATABASE_URL=${{SERVICE_NAME.DATABASE_URL}}` y rechaza `Postgres.DATABASE_URL`.
+- **Alcance permitido**: `.env.railway.example`, `scripts/check_repo_operational_integrity.py`, `tests/scripts/test_check_repo_operational_integrity.py`, `docs/deploy_railway.md`, `docs/release_readiness_minima.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: tocar codigo de producto, desplegar en Railway, cambiar secretos reales, relajar el gate o mezclar restore drill/smoke post-deploy.
+- **Checks obligatorios**:
+  - `python scripts/check_repo_operational_integrity.py`
+  - `python scripts/check_release_readiness.py`
+  - `python scripts/check_release_gate.py`
+- **Criterio de cierre**: existe un solo contrato versionado para `DATABASE_URL`, la integridad operativa deja de fallar en `F)` y el gate canónico deja de romperse por esta contradiccion local.
+- **Evidencia de cierre OPS-RWY-005**:
+  1. `scripts/check_repo_operational_integrity.py` ahora exige `DATABASE_URL=${{Postgres.DATABASE_URL}}` y rechaza el placeholder residual `SERVICE_NAME.DATABASE_URL`, alineandose con `.env.railway.example` y `docs/deploy_railway.md`.
+  2. `tests/scripts/test_check_repo_operational_integrity.py` cubre el contrato actualizado de `.env.railway.example`.
+  3. `python -m unittest tests.scripts.test_check_repo_operational_integrity` -> `OK`.
+  4. `python scripts/check_repo_operational_integrity.py` -> `OK`.
+  5. `python scripts/check_release_readiness.py` -> `OK`.
+  6. `python scripts/check_release_gate.py` -> `OK`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia logica**: `C6-INT-001`.
 
 ## C6-INT-001 - Integracion minima cuenta-demo ↔ checkout demo
 - **Tipo**: `HARDEN`
 - **Prioridad**: `P2`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: cerrar la brecha minima de continuidad entre cuenta demo y checkout demo legado, sin convertir el flujo en auth real ni reabrir la cuenta demo desde cero.
 - **Mapeo backlog residual**: `B06-I1`.
 - **Evidencia o sintoma**:
@@ -954,13 +994,18 @@ Uso prohibido:
   - validar que no se rompe el modo invitado ni el contrato existente de `PedidoDemo`;
   - ejecutar pruebas de no regresion del flujo afectado.
 - **Criterio de cierre**: la cuenta demo aporta continuidad minima verificable al flujo demo legado sin alterar el alcance historico ya cerrado de cuenta/checkouts.
+- **Evidencia de cierre C6-INT-001**:
+  1. `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx` deja preparado el retorno desde `cuenta-demo` guardando el borrador de `/encargo` con `continuarComoInvitado=false` cuando el usuario decide entrar o crear cuenta demo, de modo que la vuelta al checkout reutiliza la sesion demo en modo autenticado sin paso manual extra.
+  2. `frontend/tests/checkout-demo-ui.test.ts` protege el cableado minimo de continuidad comprobando que el desvio a `cuenta-demo` mantiene retorno seguro y persiste el borrador listo para volver autenticado.
+  3. `npm run lint -- --file componentes/catalogo/encargo/FlujoEncargoConsulta.tsx` devuelve `OK`.
+  4. `npm run test:checkout-demo` devuelve `OK`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia logica**: `C6-QA-001`.
 
 ## C6-QA-001 - Cobertura integrada cesta -> encargo -> recibo -> email
 - **Tipo**: `QA`
 - **Prioridad**: `P2`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: reforzar la cobertura integrada del recorrido critico demo desde cesta/encargo hasta recibo y email demo, para blindar regresiones transversales que hoy no quedan cubiertas de forma unificada.
 - **Mapeo backlog residual**: `B06-I2`.
 - **Evidencia o sintoma**:
@@ -973,13 +1018,22 @@ Uso prohibido:
   - dejar el gate alineado con la nueva cobertura contractual;
   - demostrar no regresion del circuito demo legado.
 - **Criterio de cierre**: el recorrido critico demo queda protegido por al menos una cobertura integrada verificable y el gate refleja esa proteccion sin reabrir el Ciclo 3.
+- **Evidencia de cierre C6-QA-001**:
+  1. `frontend/tests/checkout-demo.test.ts` añade una regresion integrada que parte de la seleccion de cesta, construye el payload de `/encargo`, crea el pedido demo, resuelve la ruta de recibo y valida el email demo final sin saltarse contratos intermedios.
+  2. `scripts/check_release_gate.py` incorpora el bloque bloqueante `C7) Test crítico recorrido pedido demo integrado`, ejecutando `python manage.py test tests.nucleo_herbal.test_api_pedidos_demo` dentro del gate canónico.
+  3. `tests/nucleo_herbal/test_api_pedidos_demo.py` ya cubre el recorrido integral backend `pedido -> detalle -> email demo` y ahora queda exigido por el gate.
+  4. `npm run test:checkout-demo` -> `OK`.
+  5. `python manage.py test tests.nucleo_herbal.test_api_pedidos_demo` -> `OK`.
+  6. `python -m unittest tests.scripts.test_check_release_gate_contract tests.scripts.test_check_release_gate_frontend` -> `OK`.
+  7. `python scripts/check_release_readiness.py` -> `OK`.
+  8. `python scripts/check_release_gate.py` -> `OK`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia logica**: `C6-TRACE-001`.
 
 ## C6-TRACE-001 - Normalizar historico y matriz de recorridos criticos
 - **Tipo**: `DOC`
 - **Prioridad**: `P2`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: normalizar marcadores historicos ambiguos en `docs/90_estado_implementacion.md` y dejar una matriz compacta de recorridos criticos que una ruta frontend, endpoint/backend y prueba de cobertura.
 - **Mapeo backlog residual**: `B06-I3` + `B06-O2`.
 - **Evidencia o sintoma**:
@@ -992,13 +1046,20 @@ Uso prohibido:
   - construir una matriz viva recorrido -> frontend -> backend -> test de cobertura;
   - registrar que no se modifican cierres factuales sin evidencia nueva.
 - **Criterio de cierre**: la traza historica queda menos ambigua y existe una matriz compacta y mantenible de recorridos criticos, sin tocar el estado real implementado mas alla de la aclaracion documental.
+- **Evidencia de cierre C6-TRACE-001**:
+  1. `docs/90_estado_implementacion.md` reemplaza los encabezados ambiguos con `Histórico Ciclo 3 ...` y normaliza como `DONE (histórico normalizado)` los incrementos ya absorbidos por cierres oficiales; el unico `EN_PROGRESO` factual que permanece en el documento es `8.1 Transición formal demo -> real`.
+  2. `docs/90_estado_implementacion.md` aclara en la regla de lectura rapida que la cola viva se decide en `docs/roadmap_codex.md` y delega la matriz de recorridos criticos a `docs/13_testing_ci_y_quality_gate.md`.
+  3. `docs/13_testing_ci_y_quality_gate.md` incorpora la seccion `12.1 Matriz compacta de recorridos críticos`, enlazando secciones publicas, herbal/ritual, checkout demo legado, recibo/email demo, cuenta demo, calendario ritual y backoffice con su ruta frontend, endpoint/backend y cobertura principal.
+  4. Barrido estatico final: `ciclo3_en_progreso_hits=0`, `matriz_hits=6`, `estado_en_progreso_lineas=109`.
+  5. `python scripts/check_release_readiness.py` -> `OK`.
+  6. `python scripts/check_release_gate.py` -> `OK`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia logica**: `C6-UX-001`.
 
 ## C6-UX-001 - Homogeneizar microcopy comercial demo
 - **Tipo**: `UX`
 - **Prioridad**: `P3`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: homogeneizar el microcopy comercial del flujo demo legado para que naming, tono y continuidad entre `/encargo` y el recibo/email demo sean coherentes con el contrato documental canonico.
 - **Mapeo backlog residual**: `B06-O1`.
 - **Evidencia o sintoma**:
@@ -1011,18 +1072,74 @@ Uso prohibido:
   - validar que no se degrada navegabilidad ni claridad del flujo demo legado;
   - registrar evidencia visual o textual minima de la homogeneizacion.
 - **Criterio de cierre**: el microcopy comercial demo queda coherente con el naming canonico y sin contradicciones visibles entre inicio y cierre del recorrido.
+- **Evidencia de cierre C6-UX-001**:
+  1. `frontend/app/encargo/page.tsx` renombra metadata y ayudas contextuales a `checkout demo` / `pedido demo`, manteniendo la ruta `/encargo` y explicitando `sin cobro real`.
+  2. `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx` alinea eyebrow, `h1`, CTA principal, resumen de seleccion y mensaje de copia con el canon `checkout demo legado (/encargo)` -> `pedido demo`.
+  3. `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx` alinea confirmacion, estados, CTA de repeticion y bloque de email demo con el mismo vocabulario y sin insinuar compra real.
+  4. `Select-String -Path frontend/app/encargo/page.tsx, frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx, frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx -Pattern 'Checkout demo|pedido demo|sin cobro real'` devuelve `microcopy_hits=32`.
+  5. `npm run lint -- --file app/encargo/page.tsx --file componentes/catalogo/encargo/FlujoEncargoConsulta.tsx --file componentes/catalogo/encargo/ReciboPedidoDemo.tsx` -> `OK`.
+  6. `npm run test:checkout-demo` -> `OK`.
+  7. `python scripts/check_release_readiness.py` -> `OK`.
 - **Bloqueo conocido**: ninguno.
-- **Siguiente dependencia logica**: `AUT-003` y `OPS-RWY-003` permanecen aparte como bloqueos externos de go-live.
+- **Siguiente dependencia logica**: cola ejecutable vacia; revalidar `AUT-003` y `OPS-RWY-003` como bloqueos externos de go-live.
+
+## CAT-FILT-001 - Paridad de filtros publicos multiseccion
+- **Tipo**: `UX`
+- **Prioridad**: `P1`
+- **Estado**: `DONE`
+- **Origen**: peticion explicita del mantenedor fuera de la cola autonoma; se registra en esta misma cola sin sustituir `OPS-RWY-005`.
+- **Objetivo**: extender a `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` el mismo sistema visible de filtrado que ya usa `botica-natural`, reutilizando el contrato publico de filtros ya soportado por backend.
+- **Mapeo backlog residual**: peticion explicita del mantenedor; no reabre backlog historico ni modifica la prioridad del residual de Ciclo 6.
+- **Evidencia o sintoma**:
+  - `frontend/app/botica-natural/page.tsx` ya parsea `searchParams`, llama `obtenerProductosPublicosPorSeccion(..., filtros)` y renderiza `PanelFiltrosBoticaNatural`.
+  - `frontend/app/velas-e-incienso/page.tsx`, `frontend/app/minerales-y-energia/page.tsx` y `frontend/app/herramientas-esotericas/page.tsx` consumian el mismo helper de catalogo, pero sin rail de filtros ni propagacion de query params.
+  - `backend/nucleo_herbal/presentacion/publica/views.py` y `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py` ya aceptan `beneficio`, `formato`, `modo_uso`, `precio_min` y `precio_max` para cualquier `seccion_publica`.
+- **Alcance permitido**: `frontend/app/velas-e-incienso/page.tsx`, `frontend/app/minerales-y-energia/page.tsx`, `frontend/app/herramientas-esotericas/page.tsx`, `frontend/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx`, `frontend/tests/botica-natural.test.ts`, `frontend/tests/velas-e-incienso-publico.test.ts`, `frontend/tests/minerales-y-energia-publico.test.ts`, `frontend/tests/herramientas-esotericas-publico.test.ts`, `frontend/tests/comercial-multiseccion-regresion.test.ts`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: tocar dominio/backend de filtros, inventar taxonomias nuevas, poblar `beneficio_principal`/`formato_comercial`/`modo_uso`/`precio_numerico` en seed o importacion, mezclar esta peticion con `OPS-RWY-005`.
+- **Checks obligatorios**:
+  - `npm run lint -- --file app/velas-e-incienso/page.tsx --file app/minerales-y-energia/page.tsx --file app/herramientas-esotericas/page.tsx --file componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx`
+  - `npm run test:botica-natural`
+  - `npm run clean:tmp-tests`
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/types/fetch-next.d.ts tests/velas-e-incienso-publico.test.ts tests/minerales-y-energia-publico.test.ts tests/herramientas-esotericas-publico.test.ts tests/comercial-multiseccion-regresion.test.ts infraestructura/api/herbal.ts contenido/home/seccionesPrincipales.ts componentes/admin/sincronizacionProductosAdmin.ts`
+  - `node .tmp-tests/tests/velas-e-incienso-publico.test.js`
+  - `node .tmp-tests/tests/minerales-y-energia-publico.test.js`
+  - `node .tmp-tests/tests/herramientas-esotericas-publico.test.js`
+  - `node .tmp-tests/tests/comercial-multiseccion-regresion.test.js`
+- **Criterio de cierre**: las tres secciones publicas restantes aceptan `searchParams`, renderizan rail de filtros reutilizable, propagan filtros al helper publico y dejan regresion estatica que protege la paridad con `botica-natural`.
+- **Evidencia de cierre CAT-FILT-001**:
+  1. `frontend/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx` deja de estar anclado a `/botica-natural` y acepta `rutaSeccion` + `textoAyuda`, manteniendo `botica-natural` como default.
+  2. `frontend/app/velas-e-incienso/page.tsx`, `frontend/app/minerales-y-energia/page.tsx` y `frontend/app/herramientas-esotericas/page.tsx` parsean `searchParams`, llaman `obtenerProductosPublicosPorSeccion(<slug>, filtros)` y renderizan `botica-natural__layout-catalogo` con `PanelFiltrosBoticaNatural`.
+  3. Los contratos estaticos de `frontend/tests/botica-natural.test.ts`, `frontend/tests/velas-e-incienso-publico.test.ts`, `frontend/tests/minerales-y-energia-publico.test.ts`, `frontend/tests/herramientas-esotericas-publico.test.ts` y `frontend/tests/comercial-multiseccion-regresion.test.ts` quedan actualizados y en verde.
+  4. La inspeccion local de datos (`.venv\\Scripts\\python.exe manage.py shell -c ...`) confirma que el seed actual no rellena `beneficio_principal`, `formato_comercial`, `modo_uso` ni `precio_numerico`; la paridad del sistema de filtrado queda cerrada, pero la utilidad comercial plena depende de curar esos metadatos en datos reales.
+- **Bloqueo conocido**: ninguno para la paridad UI/URL; queda limitacion de datos locales por seed incompleto de metadatos de filtro.
+- **Siguiente dependencia logica**: `OPS-RWY-005`.
 
 ## Radar de cola actual
-- **Nota launcher local**: `LOCAL-LAUNCH-001` y `LOCAL-LAUNCH-002` siguen `DONE`; `run_app.bat` permanece como unico launcher canonico y el backlog nuevo abre solo `LOCAL-LAUNCH-003` como smoke contractual residual del artefacto final.
-- **Actualizacion radar UTC**: `2026-03-27T15:47:07Z`; se replanifica la cola por peticion explicita del mantenedor con backlog residual defendible de Ciclo 6 y del launcher local, mientras `AUT-003` y `OPS-RWY-003` siguen `BLOCKED` por evidencia externa verificable.
+- **Actualizacion adicional 2026-03-27T17:15:00Z**: por peticion explicita del mantenedor se ejecuta y cierra `CAT-FILT-001` para igualar el rail de filtros publico en `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas`; terminada esa peticion extraordinaria, la primera `TODO` no `BLOCKED` vuelve a ser `OPS-RWY-005`.
+- **Verificacion adicional de filtros multiseccion**:
+  1. `npm run lint -- --file app/velas-e-incienso/page.tsx --file app/minerales-y-energia/page.tsx --file app/herramientas-esotericas/page.tsx --file componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx` devuelve `OK`.
+  2. `npm run test:botica-natural` devuelve `OK`.
+  3. El bloque estatico `velas/minerales/herramientas/comercial-multiseccion` compilado con `tests/types/fetch-next.d.ts` devuelve `OK`.
+  4. La inspeccion local de `ProductoModelo` confirma limitacion de datos: los productos demo publicados de las cuatro secciones siguen con `beneficio_principal=''`, `formato_comercial=''`, `modo_uso=''` y `precio_numerico=None`.
+- **Nota launcher local**: `LOCAL-LAUNCH-001`, `LOCAL-LAUNCH-002` y `LOCAL-LAUNCH-003` quedan en `DONE`; `run_app.bat` permanece como unico launcher canonico y la cola ejecutable vuelve al residual oficial de Ciclo 6.
+- **Actualizacion radar UTC**: `2026-03-27T20:19:42Z`; `C6-TRACE-001` queda en `DONE` tras normalizar el historico ambiguo de `docs/90_estado_implementacion.md` y añadir la matriz compacta de recorridos criticos en `docs/13_testing_ci_y_quality_gate.md`.
 - **Fecha de revision**: `2026-03-27`
-- **Diagnostico**: ya existe una cola ejecutable nueva sin falsificar el estado real del repo. El producto/go-live sigue bloqueado externamente segun `docs/90_estado_implementacion.md`, pero el mantenedor ha pedido reabrir la cola solo con backlog residual defendible: primero `LOCAL-LAUNCH-003` y despues el residual oficial de Ciclo 6 (`C6-DOC-001`, `C6-INT-001`, `C6-QA-001`, `C6-TRACE-001`, `C6-UX-001`).
+- **Diagnostico**: el producto/go-live sigue bloqueado externamente segun `docs/90_estado_implementacion.md`, pero el residual local de Ciclo 6 sigue cerrando brechas sin deuda nueva. Tras cerrar `C6-TRACE-001`, la primera `TODO` no `BLOCKED` pasa a ser `C6-UX-001`.
 - **Verificacion aplicada**:
-  1. `LOCAL-LAUNCH-001` y `LOCAL-LAUNCH-002` siguen en `DONE`; `run_app.bat` existe y ya cubre `setup_entorno.bat`, migraciones, seed local, arranque backend/frontend y apertura automatica del navegador.
-  2. `docs/90_estado_implementacion.md` declara `Checkout demo` `DONE (Ciclo 3)` y `Cuenta demo` `DONE como legado controlado (Ciclo 4)`, por lo que no procede reinyectar los roadmaps brutos de Ciclo 3/Ciclo 4 como backlog pendiente desde cero.
-  3. `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` fija como backlog residual defendible solo `B06-C1`, `B06-C2`, `B06-I1`, `B06-I2`, `B06-I3`, `B06-O1` y `B06-O2`.
-  4. `AUT-003` y `OPS-RWY-003` siguen `BLOCKED`: el smoke real mantiene `404` del backend desplegado y el restore drill sigue sin `BOTICA_RESTORE_DATABASE_URL` ni entorno temporal seguro.
-- **Estado de cola**: la primera `TODO` no `BLOCKED` pasa a ser `LOCAL-LAUNCH-003`; detras queda el bloque residual de Ciclo 6 ordenado y ejecutable sin reabrir `DONE` historicos ni abrir un backlog paralelo.
-- **Siguiente accion exacta**: ejecutar `LOCAL-LAUNCH-003` con foco exclusivo en smoke contractual de `run_app.bat`.
+  1. `Select-String` final sobre `docs/90_estado_implementacion.md` devuelve `ciclo3_en_progreso_hits=0` y deja `estado_en_progreso_lineas=109`, reservando `EN_PROGRESO` solo para `8.1 Transición formal demo -> real`.
+  2. `Select-String` sobre `docs/13_testing_ci_y_quality_gate.md` devuelve `matriz_hits=6`, confirmando la presencia de la matriz compacta y de sus filas clave.
+  3. `python scripts/check_release_readiness.py` devuelve `OK`.
+  4. `python scripts/check_release_gate.py` devuelve `OK`.
+  5. `AUT-003` y `OPS-RWY-003` siguen `BLOCKED`: el smoke real mantiene `404` del backend desplegado y el restore drill sigue sin `BOTICA_RESTORE_DATABASE_URL` ni entorno temporal seguro.
+- **Estado de cola**: la primera `TODO` no `BLOCKED` pasa a ser `C6-UX-001`; detras siguen `AUT-003` y `OPS-RWY-003` como bloqueos externos separados.
+- **Siguiente accion exacta**: ejecutar `C6-UX-001` para homogeneizar el microcopy comercial demo entre `/encargo` y el recibo/email demo contra el canon ya fijado.
+- **Actualizacion radar UTC**: `2026-03-27T20:39:04Z`; `C6-UX-001` queda en `DONE` tras homogeneizar el microcopy comercial demo entre `/encargo` y el recibo/email demo sin tocar contratos ni logica.
+- **Diagnostico actual**: el producto/go-live sigue bloqueado externamente segun `docs/90_estado_implementacion.md` y, tras cerrar `C6-UX-001`, ya no quedan tareas `TODO` no `BLOCKED` en esta cola. El estado correcto pasa a ser cola ejecutable vacia / backlog totalmente bloqueado por dependencias externas.
+- **Verificacion aplicada adicional**:
+  1. `Select-String -Path frontend/app/encargo/page.tsx, frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx, frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx -Pattern 'Checkout demo|pedido demo|sin cobro real'` devuelve `microcopy_hits=32`.
+  2. `npm run lint -- --file app/encargo/page.tsx --file componentes/catalogo/encargo/FlujoEncargoConsulta.tsx --file componentes/catalogo/encargo/ReciboPedidoDemo.tsx` devuelve `OK`.
+  3. `npm run test:checkout-demo` devuelve `OK`.
+  4. `python scripts/check_release_readiness.py` devuelve `OK`.
+  5. `AUT-003` y `OPS-RWY-003` siguen `BLOCKED`: el smoke real mantiene `404` del backend desplegado y el restore drill sigue sin `BOTICA_RESTORE_DATABASE_URL` ni entorno temporal seguro.
+- **Estado de cola actual**: cola ejecutable vacia / backlog totalmente bloqueado; ya no existe ninguna `TODO` no `BLOCKED` tras cerrar `C6-UX-001`.
+- **Siguiente accion exacta actual**: revalidar `AUT-003` comprobando si ya existen `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro para restore drill; si siguen ausentes, mantener el bloqueo exacto sin tocar codigo de producto.
