@@ -95,12 +95,12 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. la coexistencia demo ↔ real sigue activa sin reabrir capacidades ya cerradas;
   2. la cola autónoma correcta se ejecuta una tarea atómica por corrida desde `docs/roadmap_codex.md`;
   3. `AUT-003` y `OPS-RWY-003` siguen exigiendo `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro de restore drill para el cierre externo;
-  4. el siguiente paso local exacto es `AUT-004`.
+  4. el siguiente paso local exacto es `AUT-005`.
 
 ## 8. Deuda y bloqueos conocidos
 1. El cierre externo de `V2-R10` sigue bloqueado por ausencia de URLs/credenciales reales y entorno temporal seguro de restore drill en el runner actual.
 2. La cola autónoma local sigue activa, pero no corresponde inventar trabajo fuera de `docs/roadmap_codex.md` ni mezclarla con el desbloqueo externo de `V2-R10`.
-3. El gate canónico local volvió a quedar en rojo por una deriva interna entre `seed_demo_publico.py` (8 productos publicados vigentes) y `tests/scripts/test_check_bootstrap_demo_expected_counts.py` (todavía espera 6); el siguiente paso local exacto pasa a ser `AUT-004`.
+3. `AUT-004` ya cerró la deriva interna entre `seed_demo_publico.py` y `tests/scripts/test_check_bootstrap_demo_expected_counts.py`, dejando `C4)` en verde; el gate canónico local sigue en rojo porque `scripts/check_release_gate.py` aborta en `G) Frontend - build` al capturar salida Unicode de `npm run build` en Windows, por lo que el siguiente paso local exacto pasa a ser `AUT-005`.
 
 ## 8.1 Transición formal demo → real
 - Capacidad: **Base arquitectónica de migración ecommerce real**.

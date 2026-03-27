@@ -1678,3 +1678,130 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; no se presenta como implementada una sección que sigue sin seed mínima.
   10. Siguiente paso exacto definido: **Sí**.
 - **Siguiente paso exacto**: ejecutar `AUT-004` para alinear los conteos esperados del bootstrap demo con el seed público vigente y recuperar el gate canónico antes de seguir con `CAT-DATA-003`.
+
+## Entrada 2026-03-27-RADAR-GATE-DOBLE-DERIVA (saneamiento mínimo de cola)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `RADAR-GATE-DOBLE-DERIVA`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: revalidar la cola operativa, confirmar si seguía existiendo una primera `TODO` no `BLOCKED` real y sanear `docs/roadmap_codex.md`/`docs/bitacora_codex.md` al detectar una segunda deriva local del gate no trazada todavía.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+  - `tests/scripts/test_check_release_gate_contract.py`
+  - `tests/scripts/test_check_release_gate_frontend.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-004` como primera `TODO` no `BLOCKED` para no desalinear la cola operativa con el siguiente paso factual ya vigente en `docs/90_estado_implementacion.md`, pero reducir su promesa al cierre real de `C4)` en lugar de atribuirle por sí sola la recuperación completa del gate.
+  2. Materializar `AUT-005` como nueva tarea `TODO` inmediatamente posterior a `AUT-004`, porque el gate canónico ya muestra un segundo fallo local verificable en Windows: el wrapper de `scripts/check_release_gate.py` aborta al capturar la salida Unicode de `npm run build` aunque el build real termine bien.
+  3. Mantener sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003`; siguen faltando `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y acceso externo verificable a Railway/restore drill.
+  4. Limitar el saneamiento al perímetro permitido por la automation: solo roadmap y bitácora canónicos, sin tocar producto, tests ni scripts en esta corrida.
+- **Checks ejecutados**:
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `ERROR`; primero falla en `C4) Test scripts operativos críticos` por `8 != 6` y después aborta en `G) Frontend - build` con `UnicodeDecodeError`/`AttributeError` al capturar la salida de `npm run build`.
+  - `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts` -> `FAIL`; `productos_publicados` sigue esperando `6` mientras el seed canónico ya publica `8`.
+  - `npm.cmd run build` (en `frontend/`) -> `OK`; Next.js compila y genera páginas correctamente, acotando el segundo fallo al wrapper del gate.
+  - `$content = Get-Content scripts/check_release_gate.py; foreach ($i in 40..95 + 180..210) { ... }` -> `OK`; confirma uso de `subprocess.run(..., text=True, capture_output=True)` y consumo directo de `result.stdout.strip()` / `result.stderr.strip()` en el bloque que aborta.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`.
+  - `git diff --name-only -- docs/roadmap_codex.md docs/bitacora_codex.md` -> `OK`; el diff queda limitado a los dos documentos canónicos permitidos.
+- **Resultado verificable**:
+  - la cola sigue activa y sí existe una primera `TODO` no `BLOCKED` real: `AUT-004`;
+  - queda trazada una segunda tarea local real (`AUT-005`) antes de volver a producto, evitando que futuras automations asuman falsamente que `AUT-004` basta para dejar el gate recuperado;
+  - los bloqueos externos de go-live/Railway siguen siendo reales y no se rebajaron sin evidencia;
+  - no se detectó motivo para declarar cola vacía ni para abrir roadmap paralelo.
+- **Bloqueos (si aplica)**:
+  - ninguno para este saneamiento documental;
+  - continúan los bloqueos externos ya conocidos de `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (RADAR-GATE-DOBLE-DERIVA)**:
+  1. Tarea correcta confirmada: **Sí**; la primera `TODO` detectada (`AUT-004`) seguía siendo real, pero la cola no era honesta porque omitía un segundo fallo local del gate ya verificable; la corrida se limitó al saneamiento mínimo permitido.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; el siguiente paso local exacto sigue siendo `AUT-004`, aunque ahora queda explicitado el endurecimiento inmediato posterior `AUT-005`.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `AUT-004` para alinear los conteos esperados del bootstrap demo con el seed público vigente; a continuación, ejecutar `AUT-005` para endurecer `scripts/check_release_gate.py` en Windows antes de seguir con `CAT-DATA-003`.
+
+## Entrada 2026-03-27-AUT-004 (conteos bootstrap demo alineados)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `AUT-004`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: cerrar la deriva contractual de `C4)` alineando los conteos esperados del bootstrap demo con el seed público canónico vigente, sin mezclar el hardening posterior del wrapper frontend (`AUT-005`).
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `scripts/check_bootstrap_demo_expected_counts.py`
+  - `scripts/bootstrap_demo_release.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+- **Archivos tocados**:
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener el alcance estrictamente en `AUT-004`: no se tocó `scripts/check_release_gate.py` ni tests de frontend porque el crash Unicode ya está materializado como tarea separada (`AUT-005`).
+  2. No modificar `scripts/check_bootstrap_demo_expected_counts.py` ni `scripts/bootstrap_demo_release.py` porque el contrato productivo ya derivaba `8` productos públicos desde el seed canónico; la deriva estaba únicamente en el test contractual.
+  3. Actualizar `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` para que la fuente factual/operativa deje de señalar `AUT-004` como pendiente y pase a `AUT-005` como siguiente paso local exacto.
+- **Checks ejecutados**:
+  - `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts` -> `FAIL` antes del cambio; `test_calcular_conteos_esperados_desde_seed_canonico` fallaba con `AssertionError: 8 != 6`.
+  - `python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`; el seed sigue garantizando 8 productos públicos (`5` en `botica-natural` + `3` en `velas-e-incienso`).
+  - `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `FAIL` en el primer rerun tras editar; un `IndentationError` en el test editado se corrigió dentro del mismo ciclo.
+  - `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`; el contrato de bootstrap y el seed canónico quedan reconciliados en una misma ejecución.
+  - `python scripts/check_release_gate.py` -> `ERROR`; `C4) Test scripts operativos críticos` ya pasa y el siguiente bloqueo local real aparece en `G) Frontend - build` por `UnicodeDecodeError`/`AttributeError` al capturar la salida de `npm run build`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `git diff --name-only -- tests/scripts/test_check_bootstrap_demo_expected_counts.py docs/90_estado_implementacion.md docs/roadmap_codex.md docs/bitacora_codex.md` -> `OK`; el diff queda acotado a 4 rutas dentro del perímetro permitido.
+- **Resultado verificable**:
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py` ya refleja el total canónico de `8` productos públicos.
+  - `C4)` deja de fallar por deriva de conteos y el siguiente bloqueo local real del gate queda aislado en `AUT-005`.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` quedan alineados con la nueva prioridad local exacta sin abrir trabajo paralelo.
+- **Bloqueos (si aplica)**:
+  - ninguno para `AUT-004`;
+  - bloqueo local siguiente ya materializado: `AUT-005` por crash Unicode del wrapper frontend en Windows;
+  - continúan sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (AUT-004)**:
+  1. Tarea correcta confirmada: **Sí**; `AUT-004` seguía siendo la primera `TODO` no `BLOCKED` del roadmap vigente.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo test contractual + trazabilidad factual/operativa asociada.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (`tests/scripts/test_check_bootstrap_demo_expected_counts.py`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; la fuente factual ya no deja `AUT-004` como siguiente paso pendiente.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `AUT-005` para endurecer `scripts/check_release_gate.py` en Windows antes de seguir con `CAT-DATA-003`.
