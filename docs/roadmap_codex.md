@@ -553,10 +553,11 @@ Uso prohibido:
 ## AUT-004 — Alinear conteos esperados del bootstrap demo con el seed público vigente
 - **Tipo**: `HARDEN`
 - **Prioridad**: `P0`
-- **Estado**: `TODO`
-- **Objetivo**: recuperar la ejecutabilidad real del gate canónico alineando el contrato de conteos esperados del bootstrap demo con el seed público hoy vigente.
+- **Estado**: `DONE`
+- **Objetivo**: eliminar la deriva contractual de `C4)` alineando los conteos esperados del bootstrap demo con el seed público hoy vigente.
 - **Evidencia o síntoma**:
-  - `python scripts/check_release_gate.py` falla en `C4) Test scripts operativos críticos`.
+  - `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts` falla con `8 != 6` en `productos_publicados`.
+  - `python scripts/check_release_gate.py` falla en `C4) Test scripts operativos críticos` por la misma deriva de conteos.
   - `tests/scripts/test_check_bootstrap_demo_expected_counts.py` sigue esperando `productos_publicados = 6`.
   - `seed_demo_publico.py` y `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py` sostienen ya **8 productos publicados** (`5` en `botica-natural` + `3` en `velas-e-incienso`).
 - **Alcance permitido**: `tests/scripts/test_check_bootstrap_demo_expected_counts.py`, `scripts/check_bootstrap_demo_expected_counts.py`, `scripts/bootstrap_demo_release.py`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, y documentación mínima estrictamente necesaria si el contrato operativo visible cambia.
@@ -564,8 +565,32 @@ Uso prohibido:
 - **Checks obligatorios**:
   - reproducir el fallo con `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts`;
   - validar el conteo esperado contra `seed_demo_publico.py` y `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`;
-  - rerun de `python scripts/check_release_gate.py` dejando `C4)` en verde.
-- **Criterio de cierre**: el contrato de bootstrap vuelve a coincidir con el seed canónico y el gate deja de fallar por esa deriva.
+  - rerun de `python scripts/check_release_gate.py` dejando `C4)` en verde y registrando el siguiente bloqueo local real si aparece.
+- **Criterio de cierre**: el contrato de bootstrap vuelve a coincidir con el seed canónico y `C4)` deja de fallar por esta deriva.
+- **Evidencia de cierre AUT-004**:
+  1. `tests/scripts/test_check_bootstrap_demo_expected_counts.py` alinea `productos_publicados` a `8`, que es el total canónico ya sostenido por `seed_demo_publico.py` y por `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`.
+  2. `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` termina en `OK`, confirmando que el contrato del bootstrap vuelve a coincidir con el seed vigente.
+  3. `python scripts/check_release_gate.py` deja `C4) Test scripts operativos críticos` en verde y expone como siguiente bloqueo local real `G) Frontend - build`, por el crash Unicode ya trazado en `AUT-005`.
+- **Bloqueo conocido**: ninguno.
+- **Siguiente dependencia lógica**: `AUT-005`.
+
+## AUT-005 — Endurecer `check_release_gate.py` ante salida Unicode de `next build` en Windows
+- **Tipo**: `HARDEN`
+- **Prioridad**: `P0`
+- **Estado**: `TODO`
+- **Objetivo**: recuperar la observabilidad real del gate en Windows evitando que el bloque `G) Frontend - build` aborte por problemas de decodificación al capturar la salida de `npm run build`.
+- **Evidencia o síntoma**:
+  - `python scripts/check_release_gate.py` aborta en `G) Frontend - build` con `UnicodeDecodeError` dentro de `subprocess.py` y termina después en `AttributeError` al asumir `result.stdout`/`result.stderr` siempre disponibles.
+  - `npm.cmd run build` ejecutado directamente en `frontend/` termina `OK`, por lo que el fallo actual está en el wrapper del gate y no en el build real de Next.js.
+  - `scripts/check_release_gate.py` usa `subprocess.run(..., text=True, capture_output=True)` y luego consume `result.stdout.strip()` / `result.stderr.strip()` sin blindaje ante salida Unicode fuera de `cp1252`.
+- **Alcance permitido**: `scripts/check_release_gate.py`, `tests/scripts/test_check_release_gate_frontend.py`, `tests/scripts/test_check_release_gate_contract.py`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: tocar runtime de producto, modificar componentes/frontend de catálogo o mezclar este hardening con cambios de negocio.
+- **Checks obligatorios**:
+  - reproducir el crash actual con `python scripts/check_release_gate.py`;
+  - validar `npm.cmd run build` directo en `frontend/`;
+  - ampliar o ajustar la cobertura de `tests/scripts/test_check_release_gate_frontend.py` / `tests/scripts/test_check_release_gate_contract.py`;
+  - rerun de `python scripts/check_release_gate.py` confirmando que `G) Frontend - build` reporta `OK` o `ERROR` sin abortar el gate completo.
+- **Criterio de cierre**: el gate deja de caerse por codificación en Windows y reporta el resultado real del build de forma determinista.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `CAT-DATA-003`.
 
@@ -735,14 +760,18 @@ Uso prohibido:
 - **Siguiente dependencia lógica**: ninguna; desbloqueo externo.
 
 ## Radar de cola actual
-- **Actualizacion radar UTC**: `2026-03-27T09:03:33.6404435+01:00`; se revalida la cola multisección y aparece una prioridad más alta que el catálogo pendiente: el gate canónico quedó rojo por deriva entre el seed público real y los conteos esperados del bootstrap.
+- **Actualizacion radar UTC**: `2026-03-27T10:05:00.7695601+01:00`; se revalida la cola multisección y `AUT-004` queda cerrado, por lo que el único frente local inmediato sobre el gate canónico pasa a ser el crash del wrapper frontend en Windows al capturar `next build`.
 - **Fecha de revisión**: `2026-03-27`
-- **Diagnóstico**: la cola sigue activa, pero el siguiente incremento real pasa a ser `AUT-004`; después de recuperar el gate, la siguiente tarea de producto vuelve a ser `CAT-DATA-003`. El track Railway local sigue endurecido antes del boot sin tocar runtime productivo, y los únicos bloqueos externos vigentes siguen siendo `AUT-003` y `OPS-RWY-003`.
+- **Diagnóstico**: la cola sigue activa y la primera `TODO` no `BLOCKED` pasa a ser `AUT-005`; `AUT-004` ya reconcilió el contrato de conteos del bootstrap con el seed canónico y dejó `C4)` en verde, pero el gate aún aborta más adelante en `G) Frontend - build` por la captura Unicode de `npm run build` en Windows. El track Railway local sigue endurecido antes del boot sin tocar runtime productivo, y los únicos bloqueos externos vigentes siguen siendo `AUT-003` y `OPS-RWY-003`.
 - **Verificación aplicada**:
   1. `Select-String -Path docs/02_alcance_y_fases.md,docs/90_estado_implementacion.md -Pattern 'mínimo 3 productos publicados propios|minerales-y-energia' -Encoding UTF8` -> confirma el umbral de **3 productos propios** antes de abrir la sección pública de minerales.
   2. `Select-String -Path backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py -Pattern 'minerales-y-energia|velas-e-incienso|botica-natural' -Encoding UTF8` -> confirma que el seed actual solo cubre `botica-natural` y `velas-e-incienso`, sin masa mínima para minerales.
   3. `python scripts/check_release_readiness.py` -> `OK`.
-  4. `python scripts/check_release_gate.py` -> `ERROR`; falla en `C4) Test scripts operativos críticos` porque `tests/scripts/test_check_bootstrap_demo_expected_counts.py` espera `productos_publicados = 6` mientras el seed canónico actual publica 8.
-  5. `docs/90_estado_implementacion.md` queda alineado con la corrección de prioridad y deja `AUT-004` como siguiente paso local exacto.
-- **Estado de cola**: activa; primera `TODO` no `BLOCKED` = `AUT-004`.
-- **Siguiente acción exacta**: ejecutar `AUT-004` para alinear los conteos esperados del bootstrap demo con el seed público vigente y recuperar el gate canónico antes de seguir con `CAT-DATA-003`.
+  4. `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts` -> `FAIL`; se reproduce la deriva original con `AssertionError: 8 != 6` en `productos_publicados`.
+  5. `python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`; el seed sigue garantizando 8 productos públicos (`5` en `botica-natural` + `3` en `velas-e-incienso`).
+  6. `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`; contrato bootstrap y seed canónico quedan reconciliados tras el ajuste del test.
+  7. `python scripts/check_release_gate.py` -> `ERROR`; `C4) Test scripts operativos críticos` ya pasa y el siguiente bloqueo local real queda en `G) Frontend - build`, donde el wrapper aborta por `UnicodeDecodeError`/`AttributeError` al capturar la salida de `npm run build`.
+  8. `npm.cmd run build` (en `frontend/`) -> `OK`; el build real de Next.js termina bien y acota el fallo pendiente al wrapper `scripts/check_release_gate.py`.
+  9. `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`; los bloqueos externos de `AUT-003` y `OPS-RWY-003` siguen vigentes.
+- **Estado de cola**: activa; primera `TODO` no `BLOCKED` = `AUT-005`.
+- **Siguiente acción exacta**: ejecutar `AUT-005` para endurecer `scripts/check_release_gate.py` en Windows antes de seguir con `CAT-DATA-003`.
