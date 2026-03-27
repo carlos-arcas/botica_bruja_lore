@@ -3188,3 +3188,522 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara ninguna implementacion de producto nueva ni se reabren cierres historicos sin brecha residual verificable.
   10. Siguiente paso exacto definido: **Si**.
 - **Siguiente paso exacto**: ejecutar `LOCAL-LAUNCH-003` con foco exclusivo en smoke contractual de `run_app.bat`.
+
+## Entrada 2026-03-27-LOCAL-LAUNCH-003 (smoke contractual del launcher canonico)
+- **Fecha (UTC)**: `2026-03-27T16:03:41Z`
+- **ID de tarea**: `LOCAL-LAUNCH-003`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: blindar contractualmente el launcher canonico `run_app.bat` verificando prerequisitos reales, listeners locales, respuestas HTTP minimas y el contrato de apertura automatica del home sin reabrir los cierres historicos previos.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `run_app.bat`
+  - `setup_entorno.bat`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Confirmar `LOCAL-LAUNCH-003` como primera `TODO` no `BLOCKED` y limitar la corrida al smoke contractual del launcher, sin tocar producto ni reabrir `LOCAL-LAUNCH-001` / `LOCAL-LAUNCH-002`.
+  2. No modificar `run_app.bat` ni `setup_entorno.bat`: el launcher ya cumple el contrato exigido y la brecha residual era de verificacion trazable, no de implementacion.
+  3. Ejecutar el launcher en modo verificable con `BOTICA_NO_BROWSER=1` para evitar efectos laterales de UI, conservando a la vez el contrato de apertura automatica documentado por inspeccion estatica del script.
+  4. Limpiar los procesos arrancados durante la verificacion para no dejar listeners residuales en `3000` / `8000`.
+- **Checks ejecutados**:
+  - `Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 3000,8000 }` -> sin listeners previos.
+  - `python --version` -> `Python 3.13.12`.
+  - `npm --version` -> `11.9.0`.
+  - `Test-Path '.venv\\Scripts\\python.exe'` -> `True`.
+  - `Test-Path 'frontend\\.env.local'` -> `True`.
+  - `Test-Path 'frontend\\.env.example'` -> `True`.
+  - `$env:BOTICA_NO_BROWSER='1'; cmd /c run_app.bat` -> `exit code 0`; `setup_entorno.bat` completa `pip`, `npm install`, `manage.py migrate --noinput`, arranque backend/frontend y salida `[OK] Procesos de arranque lanzados en ventanas separadas.`.
+  - `Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 3000,8000 }` -> listeners en `3000` y `8000` tras el arranque.
+  - `Invoke-WebRequest http://127.0.0.1:3000/ -UseBasicParsing` -> `200` con HTML del home.
+  - `Invoke-WebRequest http://127.0.0.1:8000/healthz -UseBasicParsing` -> `200 {"status": "ok", "database": "available"}`.
+  - `Select-String -Path 'run_app.bat' -Pattern 'BOTICA_NO_BROWSER','Start-Process ''%FRONTEND_URL%''','Start-Process ''%BACKEND_URL%'''` -> confirma rama de apertura automatica del home/backend sobre el launcher canonico.
+  - `taskkill /PID <cmd-backend> /T /F` y `taskkill /PID <cmd-frontend> /T /F` -> limpieza de procesos arrancados para la verificacion.
+  - `Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 3000,8000 }` -> sin listeners residuales.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `git diff --name-only -- docs/roadmap_codex.md docs/bitacora_codex.md` -> `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Resultado verificable**:
+  - `run_app.bat` cumple el contrato canonico de doble clic sin ajustes adicionales: prepara entorno, migra, arranca backend/frontend y deja ambas superficies respondiendo en `127.0.0.1:8000` y `127.0.0.1:3000`.
+  - El launcher conserva la apertura automatica del home como comportamiento por defecto y dispone de `BOTICA_NO_BROWSER=1` como escape seguro para verificacion automatizada.
+  - La tarea se cierra sin tocar codigo de producto, sin crear un launcher alternativo y sin dejar procesos locales residuales.
+- **Bloqueos (si aplica)**: ninguno.
+- **Checklist de cierre aplicada (LOCAL-LAUNCH-003 smoke contractual)**:
+  1. Tarea correcta confirmada: **Si**; `LOCAL-LAUNCH-003` era la primera `TODO` no `BLOCKED` en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo smoke contractual del launcher y trazabilidad documental.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; la corrida propia solo modifica `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; se confirma un launcher ya existente sin declarar capacidad nueva de producto.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `C6-DOC-001` con foco exclusivo en alinear el contrato real del checkout demo legado y su naming canonico.
+
+## Entrada 2026-03-27-C6-DOC-001 (contrato real de checkout demo legado)
+- **Fecha (UTC)**: `2026-03-27T16:38:47Z`
+- **ID de tarea**: `C6-DOC-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: alinear el contrato real del checkout demo legado con el repo implementado y fijar un naming canonico unico para `/encargo`, sin prometer datos, snapshots ni pasos no implementados.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`
+  - `docs/10_checkout_y_flujos_ecommerce.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `frontend/app/encargo/page.tsx`
+  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
+  - `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`
+  - `frontend/contenido/catalogo/encargoConsulta.ts`
+  - `frontend/contenido/catalogo/checkoutDemo.ts`
+  - `backend/nucleo_herbal/dominio/pedidos_demo.py`
+  - `backend/nucleo_herbal/presentacion/publica/views_pedidos_demo.py`
+  - `backend/nucleo_herbal/presentacion/publica/email_demo_serializadores.py`
+  - `tests/nucleo_herbal/test_api_pedidos_demo.py`
+  - `frontend/tests/checkout-demo.test.ts`
+- **Archivos tocados**:
+  - `docs/10_checkout_y_flujos_ecommerce.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Fijar como naming canonico **checkout demo legado (`/encargo`)** para evitar ambiguedad entre "checkout demo" y "encargo/consulta".
+  2. Reducir `docs/10_checkout_y_flujos_ecommerce.md` al contrato realmente implementado: `PedidoDemo` solo persiste `lineas`, `email`, `canal` e `id_usuario` cuando el canal es `autenticado`, sin direccion, envio demo ni pago demo estructurados.
+  3. Dejar explicito que el formulario de `/encargo` sigue capturando contexto comercial (`nombre`, `telefono`, `mensaje`, `consentimiento`) para borrador/fallback manual, pero que el `POST /api/v1/pedidos-demo/` exige `email`.
+  4. Alinear `docs/13_testing_ci_y_quality_gate.md` y `docs/90_estado_implementacion.md` con el mismo naming y el mismo alcance factual.
+  5. Repriorizar la cola al detectar, durante la validacion obligatoria, una contradiccion local del gate entre `.env.railway.example` y `scripts/check_repo_operational_integrity.py`; se registra como nueva `TODO` `OPS-RWY-005` sin mezclar su correccion en esta corrida.
+- **Checks ejecutados**:
+  - `Select-String -Path 'docs/90_estado_implementacion.md','docs/10_checkout_y_flujos_ecommerce.md','docs/13_testing_ci_y_quality_gate.md','frontend/app/encargo/page.tsx','frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx','frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx','tests/nucleo_herbal/test_api_pedidos_demo.py' -Pattern 'checkout demo','/encargo','encargo','FlujoEncargoConsulta','pedido demo'` -> contraste inicial entre naming documental y flujo real.
+  - `Select-String -Path 'frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx','frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx','backend/nucleo_herbal/presentacion/publica/views_pedidos_demo.py','tests/nucleo_herbal/test_api_pedidos_demo.py','frontend/tests/checkout-demo.test.ts' -Pattern 'email','telefono','direccion','envio','pago','id_usuario','canal','lineas','consentimiento','/encargo','cuenta demo'` -> confirma que el contrato real del pedido demo no persiste direccion/envio/pago y que el flujo depende de `lineas` + `email` + `canal`.
+  - `Select-String -Path 'backend/nucleo_herbal/dominio/pedidos_demo.py','backend/nucleo_herbal/infraestructura/persistencia_django/models.py','backend/nucleo_herbal/presentacion/publica/pedidos_demo_serializadores.py' -Pattern 'estado','creado','confirmado','cancelado_demo','email_contacto','canal_compra','id_usuario'` -> confirma estados validos vigentes y campos persistidos.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `Select-String` de consistencia final sobre `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md` y `docs/90_estado_implementacion.md` -> `canon_hits=10`, `stale_hits=0`.
+  - `python scripts/check_release_gate.py` -> `ERROR` en `F) Integridad operativa del repo`; detalle: `.env.railway.example` usa `DATABASE_URL=${{Postgres.DATABASE_URL}}`, mientras `scripts/check_repo_operational_integrity.py` exige `DATABASE_URL=${{SERVICE_NAME.DATABASE_URL}}` y prohibe `Postgres.DATABASE_URL`.
+  - `git diff --name-only` -> `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Resultado verificable**:
+  - `docs/10_checkout_y_flujos_ecommerce.md` deja de sobredimensionar el checkout demo: ya no promete datos de entrega, selector de envio/pago demo, snapshots ampliados ni estados aspiracionales no soportados por dominio.
+  - `docs/13_testing_ci_y_quality_gate.md` y `docs/90_estado_implementacion.md` usan el mismo naming canonico del flujo demo legado y el mismo recorrido contractual.
+  - La validacion minima obligatoria (`check_release_readiness.py`) queda en verde y la verificacion estatica de naming/contrato no detecta residuos de la especificacion anterior.
+  - El gate canónico se ejecuto y revelo una incidencia local ajena a esta tarea, que ahora queda priorizada y trazada como `OPS-RWY-005`.
+- **Bloqueos (si aplica)**:
+  - ninguno para `C6-DOC-001`;
+  - riesgo detectado para la cola siguiente: contradiccion local entre `.env.railway.example` y `scripts/check_repo_operational_integrity.py`, registrada como `OPS-RWY-005`.
+- **Checklist de cierre aplicada (C6-DOC-001 contrato checkout demo legado)**:
+  1. Tarea correcta confirmada: **Si**; `C6-DOC-001` era la primera `TODO` no `BLOCKED` en `docs/roadmap_codex.md` al iniciar la corrida.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; `git diff --name-only` queda restringido al perimetro documental permitido para la tarea y su cierre operativo.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; el contrato se redujo al estado factual implementado, sin declarar capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `OPS-RWY-005` para restaurar el contrato canonico de `DATABASE_URL` y recuperar el gate canónico antes de retomar el residual de Ciclo 6.
+
+## Entrada 2026-03-27-CAT-FILT-001 (paridad de filtros publicos multiseccion)
+- **Fecha (UTC)**: `2026-03-27T17:15:00Z`
+- **ID de tarea**: `CAT-FILT-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: extender el mismo sistema visible de filtrado de `botica-natural` a `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas`, sin tocar dominio ni backend y dejando la peticion explicita del mantenedor registrada en la cola oficial.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `frontend/app/botica-natural/page.tsx`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/app/minerales-y-energia/page.tsx`
+  - `frontend/app/herramientas-esotericas/page.tsx`
+  - `frontend/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx`
+  - `frontend/infraestructura/api/herbal.ts`
+  - `backend/nucleo_herbal/presentacion/publica/views.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`
+  - `frontend/tests/botica-natural.test.ts`
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `frontend/tests/minerales-y-energia-publico.test.ts`
+  - `frontend/tests/herramientas-esotericas-publico.test.ts`
+  - `frontend/tests/comercial-multiseccion-regresion.test.ts`
+- **Archivos tocados**:
+  - `frontend/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/app/minerales-y-energia/page.tsx`
+  - `frontend/app/herramientas-esotericas/page.tsx`
+  - `frontend/tests/botica-natural.test.ts`
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `frontend/tests/minerales-y-energia-publico.test.ts`
+  - `frontend/tests/herramientas-esotericas-publico.test.ts`
+  - `frontend/tests/comercial-multiseccion-regresion.test.ts`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Registrar la peticion explicita del mantenedor como `CAT-FILT-001` dentro de la misma cola operativa, sin abrir backlog paralelo y sin reemplazar `OPS-RWY-005` como siguiente trabajo autonomo.
+  2. Reutilizar el contrato de filtros existente de `botica-natural` en vez de abrir un sistema nuevo: el backend ya soporta `beneficio`, `formato`, `modo_uso`, `precio_min` y `precio_max` por `seccion_publica`.
+  3. Parametrizar `PanelFiltrosBoticaNatural` con `rutaSeccion` y `textoAyuda` para evitar hardcodear `/botica-natural` y mantener una sola implementacion del rail de filtros.
+  4. Cablear `searchParams` y el rail de filtros solo en `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas`, sin tocar fichas, detalle ni contratos backend ya cerrados.
+  5. Dejar trazada una limitacion real no bloqueante: el seed local actual no rellena metadatos de filtro (`beneficio_principal`, `formato_comercial`, `modo_uso`, `precio_numerico`), asi que la utilidad comercial plena del filtrado dependera de curar datos reales/importados.
+  6. Restaurar los dos artefactos versionados bajo `frontend/.tmp-tests/` al estado previo del repo tras la limpieza temporal del runner, para no dejar una deriva ajena al objetivo de la tarea.
+- **Checks ejecutados**:
+  - `npm run lint -- --file app/velas-e-incienso/page.tsx --file app/minerales-y-energia/page.tsx --file app/herramientas-esotericas/page.tsx --file componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx` -> `OK`.
+  - `npm run test:botica-natural` -> `OK` (18 tests en verde).
+  - `npm run clean:tmp-tests` -> `OK`.
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/types/fetch-next.d.ts tests/velas-e-incienso-publico.test.ts tests/minerales-y-energia-publico.test.ts tests/herramientas-esotericas-publico.test.ts tests/comercial-multiseccion-regresion.test.ts infraestructura/api/herbal.ts contenido/home/seccionesPrincipales.ts componentes/admin/sincronizacionProductosAdmin.ts` -> `OK`.
+  - `node .tmp-tests/tests/velas-e-incienso-publico.test.js` -> `OK`.
+  - `node .tmp-tests/tests/minerales-y-energia-publico.test.js` -> `OK`.
+  - `node .tmp-tests/tests/herramientas-esotericas-publico.test.js` -> `OK`.
+  - `node .tmp-tests/tests/comercial-multiseccion-regresion.test.js` -> `OK`.
+  - `.\.venv\Scripts\python.exe manage.py shell -c "from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo; ..."` -> confirma que los productos publicados de `botica-natural`, `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` siguen con metadatos de filtro vacios en el seed local actual.
+  - `git diff --name-only -- frontend/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx frontend/app/velas-e-incienso/page.tsx frontend/app/minerales-y-energia/page.tsx frontend/app/herramientas-esotericas/page.tsx frontend/tests/botica-natural.test.ts frontend/tests/velas-e-incienso-publico.test.ts frontend/tests/minerales-y-energia-publico.test.ts frontend/tests/herramientas-esotericas-publico.test.ts frontend/tests/comercial-multiseccion-regresion.test.ts docs/roadmap_codex.md docs/bitacora_codex.md` -> solo archivos del perimetro propio de la tarea.
+- **Resultado verificable**:
+  - `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` ya renderizan el rail de filtros visible, aceptan `searchParams` y propagan esos filtros al helper publico multiseccion.
+  - `PanelFiltrosBoticaNatural` deja de estar acoplado a una sola ruta y se reutiliza con una configuracion minima por seccion.
+  - La regresion estatica protege la nueva paridad multiseccion sin tocar el contrato backend ya existente.
+  - La limitacion real de datos locales queda explicitada: el sistema de filtrado esta desplegado, pero el seed actual no trae metadatos para que los filtros produzcan segmentacion util en local.
+- **Bloqueos (si aplica)**:
+  - ninguno para `CAT-FILT-001`;
+  - limitacion no bloqueante detectada: el dataset local demo carece de metadatos de filtro y requerira una tarea posterior de curacion/importacion si se quiere utilidad comercial plena en local.
+- **Checklist de cierre aplicada (CAT-FILT-001 paridad de filtros publicos multiseccion)**:
+  1. Tarea correcta confirmada: **Si**; la corrida responde a una peticion explicita del mantenedor registrada como `CAT-FILT-001` dentro de `docs/roadmap_codex.md`, sin abrir una cola paralela.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo frontend del rail de filtros, regresion estatica y trazabilidad en roadmap/bitacora.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; los cambios propios de la corrida quedan limitados a frontend afectado + `docs/roadmap_codex.md` + `docs/bitacora_codex.md`. El diff global sigue mostrando `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md` y `docs/90_estado_implementacion.md` como cambios previos ajenos que no se tocaron en esta ejecucion.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `docs/90_estado_implementacion.md` ya marcaba las tres secciones como publicas DB-backed y esta corrida solo cierra la paridad de filtros visible.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `OPS-RWY-005` para restaurar el contrato canonico de `DATABASE_URL` y recuperar el gate canonico antes de abordar la curacion de metadatos de filtro en datos locales.
+
+## Entrada 2026-03-27-OPS-RWY-005 (contrato canonico DATABASE_URL en Railway example)
+- **Fecha (UTC)**: `2026-03-27T19:15:49Z`
+- **ID de tarea**: `OPS-RWY-005`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: restaurar un unico contrato versionado para `DATABASE_URL` entre `.env.railway.example`, el check de integridad operativa y su cobertura automatica, sin tocar producto ni mezclar despliegue real.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `.env.railway.example`
+  - `docs/deploy_railway.md`
+  - `docs/release_readiness_minima.md`
+  - `scripts/check_repo_operational_integrity.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_release_gate.py`
+  - `tests/scripts/test_check_repo_operational_integrity.py`
+- **Archivos tocados**:
+  - `scripts/check_repo_operational_integrity.py`
+  - `tests/scripts/test_check_repo_operational_integrity.py`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Tomar `DATABASE_URL=${{Postgres.DATABASE_URL}}` como contrato canonico porque ya era la version trazada simultaneamente en `.env.railway.example` y `docs/deploy_railway.md`.
+  2. Corregir solo el check de integridad y su test, evitando tocar `.env.railway.example` o la documentacion operativa que ya estaban alineadas.
+  3. Mantener el alcance estrictamente local y documental: sin despliegue real, sin cambios de secretos y sin mezclar los bloqueos externos de `AUT-003` / `OPS-RWY-003`.
+- **Checks ejecutados**:
+  - `python -m unittest tests.scripts.test_check_repo_operational_integrity` -> `OK` (6 tests).
+  - `python scripts/check_repo_operational_integrity.py` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `git diff --name-only -- scripts/check_repo_operational_integrity.py tests/scripts/test_check_repo_operational_integrity.py docs/roadmap_codex.md docs/bitacora_codex.md` -> diff limitado al perimetro propio de la tarea.
+- **Resultado verificable**:
+  - `scripts/check_repo_operational_integrity.py` deja de contradecir el contrato Railway versionado y vuelve a validar `.env.railway.example`.
+  - `tests/scripts/test_check_repo_operational_integrity.py` protege el placeholder canonico `Postgres.DATABASE_URL`.
+  - El gate canónico completo vuelve a pasar en verde y la primera `TODO` no `BLOCKED` retorna al residual de Ciclo 6 (`C6-INT-001`).
+- **Bloqueos (si aplica)**:
+  - ninguno para `OPS-RWY-005`;
+  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (OPS-RWY-005 contrato canonico DATABASE_URL)**:
+  1. Tarea correcta confirmada: **Si**; `OPS-RWY-005` era la primera `TODO` no `BLOCKED` tras `CAT-FILT-001`.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo script/test de integridad y trazabilidad en roadmap/bitacora.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `scripts/check_repo_operational_integrity.py`, `tests/scripts/test_check_repo_operational_integrity.py`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos no tocados en esta corrida.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; se cerró una contradiccion local de tooling/documentacion, sin declarar nueva capacidad de producto.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `C6-INT-001` para cerrar la continuidad minima entre `cuenta-demo` y el checkout demo legado `/encargo`.
+
+## Entrada 2026-03-27-C6-INT-001 (continuidad minima cuenta-demo -> /encargo)
+- **Fecha (UTC)**: `2026-03-27T19:35:12Z`
+- **ID de tarea**: `C6-INT-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: cerrar la continuidad minima entre `cuenta-demo` y el checkout demo legado `/encargo`, de forma que volver tras entrar o crear cuenta demo reactive el canal autenticado sin paso manual extra y sin tocar backend ni el contrato de `PedidoDemo`.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
+  - `frontend/componentes/catalogo/encargo/BloqueIdentificacionCheckoutDemo.tsx`
+  - `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx`
+  - `frontend/contenido/catalogo/checkoutDemo.ts`
+  - `frontend/contenido/catalogo/estadoCheckoutDemo.ts`
+  - `frontend/contenido/cuenta_demo/estadoCuentaDemo.ts`
+  - `frontend/tests/checkout-demo.test.ts`
+  - `frontend/tests/checkout-demo-ui.test.ts`
+  - `frontend/tests/cuenta-demo.test.ts`
+- **Archivos tocados**:
+  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
+  - `frontend/tests/checkout-demo-ui.test.ts`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Corregir la brecha en el propio handoff del checkout demo: cuando el usuario deriva desde `/encargo` a `cuenta-demo`, el borrador se guarda preparado para retorno autenticado (`continuarComoInvitado=false`) en lugar de conservar el estado invitado previo.
+  2. Mantener el alcance estrictamente frontend y sin reabrir cuenta demo ni backend, porque la API y el contrato de `PedidoDemo` ya soportaban `id_usuario` opcional y el problema era solo de continuidad local.
+  3. Añadir regresion estatica minima sobre ese cableado para evitar volver a dejar el retorno a `cuenta-demo` en modo manual.
+- **Checks ejecutados**:
+  - `npm run lint -- --file componentes/catalogo/encargo/FlujoEncargoConsulta.tsx` -> `OK`.
+  - `npm run test:checkout-demo` -> `OK` (bateria especifica de checkout demo, post-checkout y UI en verde).
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `git diff --name-only -- frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx frontend/tests/checkout-demo-ui.test.ts docs/roadmap_codex.md docs/bitacora_codex.md` -> diff propio limitado al perimetro de la tarea.
+- **Resultado verificable**:
+  - el desvio a `cuenta-demo` desde `/encargo` deja preparado el regreso en modo autenticado, eliminando la reactivacion manual de la cuenta demo al volver del login o registro;
+  - el modo invitado sigue disponible porque el usuario puede volver a pulsar `Continuar como invitado` tras retornar, sin tocar el contrato existente de `PedidoDemo`;
+  - la regresion estatica protege que el borrador del checkout demo se persista listo para retorno autenticado y con retorno seguro.
+- **Bloqueos (si aplica)**:
+  - ninguno para `C6-INT-001`;
+  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (C6-INT-001 continuidad minima cuenta-demo -> /encargo)**:
+  1. Tarea correcta confirmada: **Si**; `C6-INT-001` era la primera `TODO` no `BLOCKED` al iniciar la corrida.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se toco el handoff frontend de `/encargo`, su regresion minima y la trazabilidad obligatoria.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/tests/checkout-demo-ui.test.ts`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos no tocados en esta ejecucion.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `docs/90_estado_implementacion.md` ya marcaba `Cuenta demo` y `Checkout demo` como `DONE`, y esta corrida solo cierra el residual de integracion minima.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `C6-QA-001` para cubrir de forma integrada el recorrido `cesta -> encargo -> recibo -> email demo` y alinear el gate con esa proteccion contractual.
+
+## Entrada 2026-03-27-C6-QA-001 (cobertura integrada cesta -> encargo -> recibo -> email demo)
+- **Fecha (UTC)**: `2026-03-27T19:55:04Z`
+- **ID de tarea**: `C6-QA-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: reforzar la cobertura integrada del recorrido critico demo desde cesta/encargo hasta recibo y email demo, dejando el gate canónico alineado con esa proteccion contractual sin reabrir Ciclo 3 ni tocar producto.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `frontend/tests/checkout-demo.test.ts`
+  - `tests/nucleo_herbal/test_api_pedidos_demo.py`
+  - `scripts/check_release_gate.py`
+- **Archivos tocados**:
+  - `frontend/tests/checkout-demo.test.ts`
+  - `scripts/check_release_gate.py`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Reforzar la cobertura integrada en el borde frontend sin tocar codigo de producto: la nueva regresion arranca en la seleccion de cesta, construye el payload de `/encargo`, crea el pedido demo, resuelve la ruta de recibo y valida el email demo final.
+  2. No modificar `tests/nucleo_herbal/test_api_pedidos_demo.py`: la suite backend ya contenia el recorrido integral defendible; la brecha real era que el gate canónico no la exigia.
+  3. Alinear `scripts/check_release_gate.py` con un bloque bloqueante nuevo (`C7`) que ejecuta `tests.nucleo_herbal.test_api_pedidos_demo`, de modo que la proteccion integrada ya existente en backend quede dentro del cierre canónico.
+  4. Mantener el alcance estrictamente en tests/gate/trazabilidad, sin reabrir dominio, UI funcional ni contratos de `PedidoDemo`.
+- **Checks ejecutados**:
+  - `npm run test:checkout-demo` -> `OK` (22 tests de checkout demo, 5 de post-checkout y 9 de UI en verde).
+  - `python manage.py test tests.nucleo_herbal.test_api_pedidos_demo` -> `OK` (9 tests).
+  - `python -m unittest tests.scripts.test_check_release_gate_contract tests.scripts.test_check_release_gate_frontend` -> `OK` (10 tests).
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `git diff --name-only -- frontend/tests/checkout-demo.test.ts scripts/check_release_gate.py docs/roadmap_codex.md docs/bitacora_codex.md` -> diff propio limitado al perimetro de la tarea.
+- **Resultado verificable**:
+  - el recorrido critico demo queda cubierto en frontend como contrato continuo `cesta -> payload -> recibo -> email demo`, sin depender de saltos manuales entre helpers aislados;
+  - el gate canónico deja de omitir la suite backend que ya valida `pedido -> detalle -> email demo`, por lo que la cobertura integrada pasa a ser obligatoria en cierre;
+  - no se toca codigo de producto ni se reabre Ciclo 3: el cambio es de blindaje QA y trazabilidad operacional.
+- **Bloqueos (si aplica)**:
+  - ninguno para `C6-QA-001`;
+  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (C6-QA-001 cobertura integrada demo)**:
+  1. Tarea correcta confirmada: **Si**; `C6-QA-001` era la primera `TODO` no `BLOCKED` al iniciar la corrida.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron tests, gate y la trazabilidad obligatoria.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `frontend/tests/checkout-demo.test.ts`, `scripts/check_release_gate.py`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos no tocados en esta ejecucion.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `docs/90_estado_implementacion.md` ya declaraba el flujo demo legado como `DONE`, y esta corrida solo cierra el residual de cobertura integrada.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `C6-TRACE-001` para normalizar marcadores historicos ambiguos en `docs/90_estado_implementacion.md` y dejar una matriz compacta de recorridos criticos unida a frontend/backend/tests.
+
+## Entrada 2026-03-27-C6-TRACE-001 (historico normalizado + matriz compacta)
+- **Fecha (UTC)**: `2026-03-27T20:19:42Z`
+- **ID de tarea**: `C6-TRACE-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: normalizar la traza historica ambigua de `docs/90_estado_implementacion.md` y dejar una matriz compacta de recorridos criticos enlazada a rutas frontend, endpoints/backend y pruebas reales, sin tocar producto ni reabrir ciclos cerrados.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `backend/configuracion_django/urls.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls_rituales.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls_pedidos_demo.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls_cuentas_demo.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls_calendario_ritual.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_urls.py`
+  - `frontend/tests/home-raiz-secciones.test.ts`
+  - `frontend/tests/comercial-multiseccion-regresion.test.ts`
+  - `frontend/tests/checkout-demo.test.ts`
+  - `frontend/tests/checkout-demo-ui.test.ts`
+  - `frontend/tests/cuenta-demo.test.ts`
+  - `frontend/tests/calendario-ritual.test.ts`
+  - `frontend/tests/backoffice-admin.test.ts`
+  - `frontend/tests/backoffice-flujos.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `tests/nucleo_herbal/test_api_pedidos_demo.py`
+  - `tests/nucleo_herbal/test_api_cuentas_demo.py`
+  - `tests/nucleo_herbal/test_api_backoffice.py`
+  - `tests/nucleo_herbal/test_contratos_api_publica_frontend.py`
+  - `tests/nucleo_herbal/test_contratos_api_publica_demo_frontend.py`
+- **Archivos tocados**:
+  - `docs/90_estado_implementacion.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Normalizar solo los marcadores historicos absorbidos por cierres oficiales como `DONE (histórico normalizado)`, sin reescribir el historial funcional ni tocar el `EN_PROGRESO` real de `8.1 Transición formal demo -> real`.
+  2. Reemplazar los encabezados ambiguos `Ciclo 3 en progreso` por encabezados explícitos `Histórico Ciclo 3 ...` para evitar lecturas falsas del estado actual.
+  3. Ubicar la matriz compacta de recorridos criticos en `docs/13_testing_ci_y_quality_gate.md`, porque es el punto donde conviven gate, contratos API y suites de cobertura.
+  4. Referenciar esa matriz desde `docs/90_estado_implementacion.md` en lugar de duplicar dos fuentes de verdad parciales.
+  5. Mantener el alcance estrictamente documental: sin cambios de frontend/backend y sin alterar cierres factuales ya validados.
+- **Checks ejecutados**:
+  - `Select-String -Path docs/90_estado_implementacion.md -Pattern 'Ciclo 3 en progreso|EN_PROGRESO|DONE \\(histórico normalizado\\)|matriz compacta de recorridos críticos' -Encoding UTF8` -> `ciclo3_en_progreso_hits=0`; solo queda `Estado: **EN_PROGRESO**.` en la línea `109` (`8.1 Transición formal demo -> real`).
+  - `Select-String -Path docs/13_testing_ci_y_quality_gate.md -Pattern 'Matriz compacta de recorridos críticos|Secciones públicas comerciales|Checkout demo legado|Backoffice mínimo staff' -Encoding UTF8` -> `matriz_hits=6`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `git diff --name-only -- docs/90_estado_implementacion.md docs/13_testing_ci_y_quality_gate.md docs/roadmap_codex.md docs/bitacora_codex.md` -> `docs/13_testing_ci_y_quality_gate.md`, `docs/90_estado_implementacion.md`, `docs/bitacora_codex.md`, `docs/roadmap_codex.md`.
+- **Resultado verificable**:
+  - `docs/90_estado_implementacion.md` deja de mezclar cierres oficiales con etiquetas historicas `EN_PROGRESO` del viejo Ciclo 3; la lectura rapida ahora apunta explicitamente a `docs/roadmap_codex.md` para cola viva y a `docs/13_testing_ci_y_quality_gate.md` para la matriz de recorridos.
+  - `docs/13_testing_ci_y_quality_gate.md` incorpora una matriz viva y compacta que une recorrido critico, ruta frontend, endpoint/backend y cobertura principal para secciones publicas, herbal/ritual, checkout demo legado, recibo/email demo, cuenta demo, calendario ritual y backoffice.
+  - La trazabilidad documental queda alineada con la auditoria de Ciclo 6 (`B06-I3` + `B06-O2`) sin tocar producto ni abrir deuda nueva.
+- **Bloqueos (si aplica)**:
+  - ninguno para `C6-TRACE-001`;
+  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (C6-TRACE-001 historico normalizado + matriz compacta)**:
+  1. Tarea correcta confirmada: **Si**; `C6-TRACE-001` era la primera `TODO` no `BLOCKED` al iniciar la corrida.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/90_estado_implementacion.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a los cuatro documentos del alcance. El worktree conserva cambios previos ajenos no tocados en esta ejecucion.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la corrida solo aclara trazabilidad historica y documenta la matriz de cobertura sin declarar capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `C6-UX-001` para homogeneizar el microcopy comercial demo entre `/encargo` y el recibo/email demo contra el canon documental ya fijado.
+
+## Entrada 2026-03-27-C6-UX-001 (microcopy comercial demo homogeneizado)
+- **Fecha (UTC)**: `2026-03-27T20:39:04Z`
+- **ID de tarea**: `C6-UX-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: homogeneizar el microcopy comercial del flujo demo legado para que `/encargo`, la confirmacion y el email demo visible en UI usen el mismo canon de naming y de honestidad operativa, sin tocar contratos ni reabrir el checkout demo.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/10_checkout_y_flujos_ecommerce.md`
+  - `docs/15_glosario_del_proyecto.md`
+  - `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `frontend/app/encargo/page.tsx`
+  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
+  - `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`
+  - `frontend/tests/checkout-demo.test.ts`
+  - `frontend/tests/checkout-demo-ui.test.ts`
+- **Archivos tocados**:
+  - `frontend/app/encargo/page.tsx`
+  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
+  - `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Usar `checkout demo` para nombrar el recorrido `/encargo` y `pedido demo` para el objeto creado, siguiendo el canon fijado en `C6-DOC-001` y el glosario que evita llamar "compra" a una transaccion no real.
+  2. Hacer explicito `sin cobro real` tanto al iniciar el flujo como en la confirmacion final, porque `docs/10_checkout_y_flujos_ecommerce.md` lo fija como garantia contractual minima del demo.
+  3. Mantener intacta la salida manual existente (`consulta artesanal/manual`) y no tocar ni `PedidoDemo`, ni API, ni el email demo backend: el cambio queda limitado al copy visible y a la trazabilidad obligatoria.
+- **Checks ejecutados**:
+  - `Select-String -Path 'frontend/app/encargo/page.tsx','frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx','frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx' -Pattern 'Checkout demo|pedido demo|sin cobro real' -Encoding UTF8 | Measure-Object` -> `microcopy_hits=32`.
+  - `npm run lint -- --file app/encargo/page.tsx --file componentes/catalogo/encargo/FlujoEncargoConsulta.tsx --file componentes/catalogo/encargo/ReciboPedidoDemo.tsx` -> `OK`.
+  - `npm run test:checkout-demo` -> `OK` (22 + 5 + 9 tests en verde).
+  - `git diff --name-only -- frontend/app/encargo/page.tsx frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx docs/roadmap_codex.md docs/bitacora_codex.md` -> diff propio limitado a los cinco archivos del perimetro.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+- **Resultado verificable**:
+  - `/encargo` deja de presentarse como "solicitud artesanal" y pasa a nombrarse como `checkout demo` que crea un `pedido demo` sin cobro real, manteniendo la consulta manual como salida honesta.
+  - el recibo alinea titulo, estado, CTA de repeticion y bloque de email demo con el mismo vocabulario de `pedido demo`, eliminando contradicciones visibles entre inicio y cierre del recorrido.
+  - tras cerrar `C6-UX-001`, ya no quedan tareas `TODO` no `BLOCKED` en `docs/roadmap_codex.md`; la cola ejecutable pasa a vacia y el backlog restante queda totalmente bloqueado por `AUT-003` y `OPS-RWY-003`.
+- **Bloqueos (si aplica)**:
+  - ninguno para `C6-UX-001`;
+  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (C6-UX-001 microcopy comercial demo)**:
+  1. Tarea correcta confirmada: **Si**; `C6-UX-001` era la primera `TODO` no `BLOCKED` al iniciar la corrida.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `/encargo`, el recibo demo y la trazabilidad obligatoria.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `frontend/app/encargo/page.tsx`, `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos no tocados en esta ejecucion.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; el flujo demo legado ya estaba `DONE` y esta corrida solo cierra la brecha residual de microcopy `B06-O1`.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: revalidar `AUT-003` comprobando si ya existen `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro para restore drill; si siguen ausentes, mantener el bloqueo exacto sin tocar codigo de producto.
