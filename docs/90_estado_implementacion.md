@@ -83,24 +83,26 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   2. `velas-e-incienso` ya está publicada como sección DB-backed con listado y detalle propios; `seed_demo_publico.py` la sostiene con **3 productos publicados propios**, el frontend expone `/velas-e-incienso` + `/velas-e-incienso/[slug]` y la regresión mínima pública cubre listado, detalle y vacío honesto.
   3. `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py` conserva un fallback herbal especial solo para `botica-natural` cuando la sección no devuelve productos propios.
   4. `minerales-y-energia` ya está publicada como sección DB-backed con listado y detalle propios; `seed_demo_publico.py` la sostiene con **3 productos publicados propios**, el frontend expone `/minerales-y-energia` + `/minerales-y-energia/[slug]` y la regresión mínima pública ya cubre visibilidad, detalle, listado visible de 6 registros y vacío honesto en frontend/backend.
+  5. `herramientas-esotericas` ya está publicada como sección DB-backed con listado y detalle propios; `seed_demo_publico.py` la sostiene con **3 productos publicados propios**, el frontend expone `/herramientas-esotericas` + `/herramientas-esotericas/[slug]` y la regresión mínima pública ya cubre visibilidad, detalle y vacío honesto.
+  6. `CAT-QA-001` ya protege el recorrido transversal entre `home`, rutas públicas de sección, helper `obtenerProductosPublicosPorSeccion(...)` y resincronización contextual de importación/backoffice para las cuatro secciones comerciales.
 - **Regla operativa definida**:
   1. ninguna sección nueva debe abrir catálogo público DB-backed con menos de **3 productos publicados propios**; `botica-natural` mantiene su baseline de **5**.
   2. el vacío honesto es válido como estado runtime posterior a la apertura de la sección o bajo filtros, no como atajo para inaugurar una sección sin catálogo suficiente.
   3. el fallback cruzado entre secciones no se generaliza: solo sobrevive la compatibilidad legado de `botica-natural`.
 
 ## 7. Ruta operativa vigente
-- **Ruta vigente**: avance incremental del backlog autónomo local en `docs/roadmap_codex.md`, manteniendo `AUT-003` y `OPS-RWY-003` como bloqueos externos de release/go-live.
-- **Estado**: **EN_PROGRESO** con cola local activa y cierre externo de `V2-R10` todavía bloqueado.
+- **Ruta vigente**: cierre externo de `V2-R10` por desbloqueo de `AUT-003` y `OPS-RWY-003`; la cola autónoma local ya no tiene tareas ejecutables.
+- **Estado**: **BLOQUEADO** por dependencia externa de URLs/credenciales reales y entorno temporal seguro de restore drill.
 - **Condición de continuidad aplicada**:
   1. la coexistencia demo ↔ real sigue activa sin reabrir capacidades ya cerradas;
-  2. la cola autónoma correcta se ejecuta una tarea atómica por corrida desde `docs/roadmap_codex.md`;
+  2. tras cerrar `CAT-QA-001`, `docs/roadmap_codex.md` ya no contiene ninguna `TODO` no `BLOCKED`; el estado correcto pasa a backlog totalmente bloqueado;
   3. `AUT-003` y `OPS-RWY-003` siguen exigiendo `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro de restore drill para el cierre externo;
-  4. el siguiente paso local exacto es `CAT-DATA-004`.
+  4. el siguiente paso exacto es desbloquear `AUT-003` con URLs reales desplegadas, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un dump permitido en un entorno temporal seguro.
 
 ## 8. Deuda y bloqueos conocidos
 1. El cierre externo de `V2-R10` sigue bloqueado por ausencia de URLs/credenciales reales y entorno temporal seguro de restore drill en el runner actual.
-2. La cola autónoma local sigue activa, pero no corresponde inventar trabajo fuera de `docs/roadmap_codex.md` ni mezclarla con el desbloqueo externo de `V2-R10`.
-3. `AUT-004`, `AUT-005`, `CAT-DATA-003`, `SEC-MIN-001` y `SEC-MIN-002` ya dejaron la nueva sección pública de minerales con red mínima de regresión: `C4)` sigue alineado con el seed vigente, `scripts/check_release_gate.py` mantiene el gate local en verde, `seed_demo_publico.py` ya garantiza **3 productos publicados propios** para `minerales-y-energia`, el frontend ya expone listado/detalle públicos DB-backed y `tests/nucleo_herbal/test_exposicion_publica.py` + `frontend/tests/minerales-y-energia-publico.test.ts` ya cubren visibilidad, 6 registros visibles y vacío honesto; el siguiente paso local exacto pasa a ser `CAT-DATA-004`.
+2. La cola autónoma local ya quedó agotada; no corresponde inventar trabajo fuera de `docs/roadmap_codex.md` mientras `AUT-003` y `OPS-RWY-003` sigan bloqueadas.
+3. `CAT-QA-001` ya deja la expansión comercial protegida por regresión transversal: `frontend/tests/comercial-multiseccion-regresion.test.ts` enlaza `home` + rutas públicas + helper de catálogo + mapa canónico de backoffice, `frontend/tests/home-raiz-secciones.test.ts` mantiene la entrada principal sin falsos negativos sobre `botica-natural`, `frontend/tests/backoffice-flujos.test.ts` conserva la resincronización A+B+C+D y `tests/nucleo_herbal/test_exposicion_publica.py` mantiene listado y vacío honesto en backend para las secciones comerciales; el siguiente paso exacto pasa a ser el desbloqueo externo de `AUT-003`.
 
 ## 8.1 Transición formal demo → real
 - Capacidad: **Base arquitectónica de migración ecommerce real**.

@@ -289,16 +289,22 @@ Uso prohibido:
 - **Evidencia o síntoma**:
   - `docs/release_readiness_minima.md` exige backup real, restore drill real, deploy y smoke post-deploy.
   - `scripts/check_deployed_stack.py` requiere `BACKEND_BASE_URL` y `FRONTEND_BASE_URL`.
-  - el runner actual no dispone de URLs desplegadas reales ni de una `BOTICA_RESTORE_DATABASE_URL` operativa para el drill.
+  - `scripts/backup_restore_postgres.py` requiere `DATABASE_URL` para el backup real y `BOTICA_RESTORE_DATABASE_URL` para el restore drill real.
+  - el runner actual no dispone de URLs desplegadas reales ni de `DATABASE_URL`/`BOTICA_RESTORE_DATABASE_URL` operativas para cerrar el flujo externo.
 - **Alcance permitido**: `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, `docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`.
 - **Fuera de alcance**: cambios de producto, despliegues improvisados, uso de producción como base de restore drill, o cierre ficticio de `V2-R10` sin entorno real.
 - **Zonas probables**: `docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`.
 - **Checks obligatorios**:
   - exportar `BACKEND_BASE_URL` y `FRONTEND_BASE_URL` reales y ejecutar `python scripts/check_deployed_stack.py`;
-  - ejecutar backup real + restore drill real en base temporal segura con `python scripts/backup_restore_postgres.py`;
+  - exportar `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales y ejecutar backup real + restore drill real en base temporal segura con `python scripts/backup_restore_postgres.py`;
   - registrar resultado verificable de smoke y drill en bitácora antes de decidir cierre de `V2-R10`.
+- **Revalidacion local mas reciente**:
+  - `2026-03-27`: con los puertos `3000/8000` liberados y sin servicios residuales del launcher local, `python scripts/check_release_gate.py` vuelve a `OK`; ya no queda un bloqueo local del gate en este runner.
+  - `2026-03-27T13:51:03Z`: `python scripts/check_release_readiness.py` -> `OK`; `python scripts/check_deployed_stack.py` falla con `La variable obligatoria BACKEND_BASE_URL no esta definida.` y `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` falla con `[ERROR] Debes definir --database-url o DATABASE_URL.`.
+  - `2026-03-27T14:12:49Z`: el runner vuelve a estar limpio (`Get-NetTCPConnection -LocalPort 3000,8000 -State Listen` no encuentra listeners), `python scripts/check_release_gate.py` -> `OK` y `python scripts/check_release_readiness.py` -> `OK`; `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` siguen fallando exactamente por ausencia de `BACKEND_BASE_URL` y `DATABASE_URL`.
+  - `2026-03-27T14:53:12Z`: el runner sigue limpio (`Get-NetTCPConnection -LocalPort 3000,8000 -State Listen -ErrorAction SilentlyContinue` -> `NO_LISTENERS_3000_8000`), `python scripts/check_release_gate.py` -> `OK` y `python scripts/check_release_readiness.py` -> `OK`; `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` y `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file "$env:TEMP\\botica_backups\\dummy.dump"` siguen fallando exactamente por ausencia de `BACKEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
 - **Criterio de cierre**: smoke post-deploy y restore drill real ejecutados con resultado verificable y sin incidencias bloqueantes.
-- **Condición exacta de bloqueo**: faltan `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y acceso a un entorno temporal seguro para restore drill fuera de este runner.
+- **Condición exacta de bloqueo**: faltan `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y acceso a un entorno temporal seguro para restore drill fuera de este runner.
 
 ## CRX-007 — Bootstrap contrato 1
 - **Tipo**: `DOC`
@@ -668,7 +674,7 @@ Uso prohibido:
 ## CAT-DATA-004 — Seed/importación inicial reproducible para herramientas
 - **Tipo**: `DATA`
 - **Prioridad**: `P2`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: definir y cargar una base mínima reproducible para la sección canónica de herramientas sin contradecir el naming final.
 - **Evidencia o síntoma**:
   - no hay seed demo reproducible para herramientas en `seed_demo_publico.py`.
@@ -680,18 +686,22 @@ Uso prohibido:
   - seed/import reproducible y mínimo;
   - tests/checks de consistencia del dataset.
 - **Criterio de cierre**: herramientas dispone de dataset mínimo reproducible compatible con la sección canónica.
-- **Bloqueo conocido**: depende de `SEC-HER-001`, pero no es bloqueo externo.
+- **Evidencia de cierre CAT-DATA-004**:
+  1. `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py` ya incorpora 3 productos publicados propios para `herramientas-esotericas`, todos con `tipo_producto="herramientas-rituales"` y slugs canónicos (`pendulo-laton-dorado`, `cuenco-selenita-pulido`, `caldero-hierro-mini`).
+  2. `python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command tests.scripts.test_check_bootstrap_demo_expected_counts` -> `OK`; el seed queda idempotente, la sección de herramientas alcanza el mínimo de 3 productos propios y el contrato de conteos públicos sube a `14`.
+  3. `python scripts/check_release_gate.py` -> `OK`; el gate canónico sigue en verde tras ampliar el seed público de herramientas.
+- **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `SEC-HER-002`.
 
 ## SEC-HER-002 — Catálogo público DB-backed para la sección canónica de herramientas
 - **Tipo**: `FEATURE`
 - **Prioridad**: `P1`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: exponer la sección canónica de herramientas como catálogo público DB-backed una vez congelado el naming final.
 - **Evidencia o síntoma**:
   - `frontend/app/herramientas-esotericas/page.tsx` es hoy solo hero.
   - la sección existe en home y backoffice, pero no en árbol público equivalente con detalle/listado.
-  - el naming canónico ya está fijado, pero sigue faltando el dataset mínimo reproducible para no abrir la sección pública por debajo del umbral contractual.
+  - el naming canónico ya está fijado y `seed_demo_publico.py` ya garantiza **3 productos publicados propios** de `herramientas-esotericas`; la brecha restante es exclusivamente la exposición pública DB-backed.
 - **Alcance permitido**: `frontend/app/herramientas-esotericas/` o ruta canónica final, `frontend/componentes/catalogo/`, `frontend/infraestructura/api/herbal.ts`, `frontend/tests/`, `backend/nucleo_herbal/presentacion/publica/`, `tests/nucleo_herbal/`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
 - **Fuera de alcance**: renombrados masivos de dominio o reescritura del backoffice.
 - **Checks obligatorios**:
@@ -699,13 +709,19 @@ Uso prohibido:
   - routing coherente con helper reusable;
   - vacío/error alineados con contrato de sección pública.
 - **Criterio de cierre**: herramientas queda expuesta públicamente bajo un naming canónico y navegable.
+- **Evidencia de cierre SEC-HER-002**:
+  1. `frontend/app/herramientas-esotericas/page.tsx` ya consume `obtenerProductosPublicosPorSeccion("herramientas-esotericas")` con el contrato reusable de seccion publica y mantiene el hero comercial existente.
+  2. `frontend/app/herramientas-esotericas/[slug]/page.tsx` y `frontend/app/herramientas-esotericas/[slug]/not-found.tsx` ya exponen detalle publico propio y rechazan slugs de otras secciones con `notFound()`.
+  3. `frontend/componentes/botica-natural/contratoSeccionPublica.ts` y `frontend/componentes/catalogo/rutasProductoPublico.ts` ya incluyen `herramientas-esotericas` como seccion publica con copy, vacio honesto y routing canonico.
+  4. `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/herramientas-esotericas-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` + `node .tmp-tests/tests/herramientas-esotericas-publico.test.js` -> `OK`; la prueba especifica valida wiring de listado, detalle, vacio honesto y helper de rutas.
+  5. `python scripts/check_release_gate.py` -> `OK`; el gate canonico completo sigue en verde tras abrir la seccion publica de herramientas.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `SEC-HER-003`.
 
 ## SEC-HER-003 — Contratos/tests de visibilidad, límite y vacío para herramientas
 - **Tipo**: `HARDEN`
 - **Prioridad**: `P1`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: cerrar la cobertura contractual de la sección canónica de herramientas con el mismo estándar mínimo que el baseline.
 - **Evidencia o síntoma**:
   - hoy no existe sección pública final de herramientas ni tests públicos equivalentes.
@@ -717,13 +733,17 @@ Uso prohibido:
   - cobertura de vacío honesto;
   - quality gate aplicable.
 - **Criterio de cierre**: herramientas queda cubierta por regresión automática equivalente al baseline.
+- **Evidencia de cierre SEC-HER-003**:
+  1. `frontend/tests/herramientas-esotericas-publico.test.ts` ya cubre 5 pruebas para `herramientas-esotericas`: visibilidad de sus 3 productos públicos propios, contrato reusable de sección, detalle bajo slug canónico y vacío honesto sin fallback inventado.
+  2. `tests/nucleo_herbal/test_exposicion_publica.py` ya protege la API pública de herramientas con listado propio y ordenado de 3 registros visibles, y vacío honesto cuando la sección no tiene catálogo publicado sin caer en fallback herbal.
+  3. `python manage.py test tests.nucleo_herbal.test_exposicion_publica` -> `OK`; `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/herramientas-esotericas-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` + `node .tmp-tests/tests/herramientas-esotericas-publico.test.js` -> `OK`; `python scripts/check_release_gate.py` -> `OK`; `python scripts/check_release_readiness.py` -> `OK`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `CAT-SYNC-001`.
 
 ## CAT-SYNC-001 — Alinear importación y sincronización multisección con el mapa canónico final
 - **Tipo**: `HARDEN`
 - **Prioridad**: `P2`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: cerrar la paridad entre importación backend, sincronización frontend y mapa canónico de cuatro secciones comerciales.
 - **Evidencia o síntoma**:
   - `frontend/componentes/admin/sincronizacionProductosAdmin.ts` y `frontend/tests/backoffice-flujos.test.ts` cubren botica/velas/minerales, pero no herramientas.
@@ -735,13 +755,17 @@ Uso prohibido:
   - cobertura de sincronización contextual para las cuatro secciones;
   - confirmación de no regresión sobre botica/velas/minerales.
 - **Criterio de cierre**: importación y refresh multisección quedan alineados con el mapa canónico final de secciones.
+- **Evidencia de cierre CAT-SYNC-001**:
+  1. `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/servicio.py` ya valida `seccion_publica` contra el mapa final de cuatro secciones, y `tests/nucleo_herbal/infraestructura/test_importacion_masiva_admin.py` cubre tanto la confirmación válida de `herramientas-esotericas` como el rechazo de `amuletos-y-talismenes`.
+  2. `frontend/componentes/admin/sincronizacionProductosAdmin.ts` ya filtra refrescos/store al mapa canónico, y `frontend/tests/backoffice-flujos.test.ts` cubre botica + velas + herramientas confirmadas, ignora secciones confirmadas fuera del mapa y protege la resincronización A+B+C+D sin reintroducir snapshots previos.
+  3. `python manage.py test tests.nucleo_herbal.infraestructura.test_importacion_masiva_admin` -> `OK`; `npm.cmd run test:backoffice-flujos` (en `frontend/`) -> `OK`; `python scripts/check_release_gate.py` -> `OK`; `python scripts/check_release_readiness.py` -> `OK`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `CAT-QA-001`.
 
 ## CAT-QA-001 — Regresión home → hero de sección → listado público → importación/backoffice
 - **Tipo**: `HARDEN`
 - **Prioridad**: `P2`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: añadir una regresión transversal que garantice que la ampliación multisección no rompe home, entrada de sección, catálogo público ni refresco desde backoffice.
 - **Evidencia o síntoma**:
   - `botica-natural` tiene baseline fuerte de tests y hasta script E2E PostgreSQL dedicado.
@@ -753,6 +777,11 @@ Uso prohibido:
   - listado público y estado vacío/error;
   - importación/backoffice y refresco contextual multisección.
 - **Criterio de cierre**: la expansión comercial queda protegida por una regresión transversal demostrable.
+- **Evidencia de cierre CAT-QA-001**:
+  1. `frontend/tests/comercial-multiseccion-regresion.test.ts` ya fija el recorrido transversal de las cuatro secciones comerciales desde `home` hasta su ruta pública, el helper `obtenerProductosPublicosPorSeccion(...)` y el mapa canónico de resincronización de importación/backoffice.
+  2. `frontend/tests/home-raiz-secciones.test.ts` ya valida la entrada principal de secciones sin falsos negativos sobre `botica-natural`, alineada con el contrato reusable `BOTICA_NATURAL_PUBLICA`.
+  3. `python manage.py test tests.nucleo_herbal.test_exposicion_publica` -> `OK`; `npm.cmd run test:backoffice-flujos` (en `frontend/`) -> `OK`; la exposición pública backend y el refresco contextual multisección siguen en verde sin duplicar lógica de producto.
+  4. `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/comercial-multiseccion-regresion.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts infraestructura/api/backoffice.ts` + `node .tmp-tests/tests/comercial-multiseccion-regresion.test.js` -> `OK`; `npm.cmd run test:home-raiz` -> `OK`; `python scripts/check_release_gate.py` -> `OK`; `python scripts/check_release_readiness.py` -> `OK`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `OPS-RWY-003`.
 
@@ -775,15 +804,65 @@ Uso prohibido:
 - **Condición exacta de bloqueo**: falta acceso a Railway UI/logs y a las variables reales del servicio para ejecutar la validación fuera de este runner.
 - **Siguiente dependencia lógica**: ninguna; desbloqueo externo.
 
+## LOCAL-LAUNCH-001 â€” Launcher local con doble clic y apertura automÃ¡tica del home
+- **Tipo**: `OPS`
+- **Prioridad**: `P0`
+- **Estado**: `DONE`
+- **Contexto de activaciÃ³n**: peticiÃ³n explÃ­cita del mantenedor fuera de la cola autÃ³noma; se registra aquÃ­ sin abrir roadmap paralelo y, tras cerrarse, el estado correcto vuelve a backlog bloqueado.
+- **Objetivo**: permitir que `app launcher.bat` arranque el proyecto en local con doble clic, prepare el entorno mÃ­nimo y deje el navegador listo para abrir el home sin pasos manuales previos.
+- **Evidencia o sÃ­ntoma**:
+  - el repo no tenÃ­a `app launcher.bat`; solo existÃ­a `run_app.bat`.
+  - `run_app.bat` no abrÃ­a navegador, dependÃ­a de rutas relativas frÃ¡giles para doble clic y no aplicaba migraciones locales antes de arrancar.
+  - `setup_entorno.bat` priorizaba `py -3` aunque el launcher `py.exe` local estaba roto en esta mÃ¡quina, y leÃ­a mal el cÃ³digo de salida de `npm install` dentro del bloque.
+- **Alcance permitido**: `run_app.bat`, `setup_entorno.bat`, `app launcher.bat`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: cambios en dominio/producto, refactors de frontend/backend ajenos al arranque local, despliegue real o cambios de Railway.
+- **Checks obligatorios**:
+  - ejecuciÃ³n real del launcher en modo sin navegador para validar retorno `0`;
+  - verificaciÃ³n de escucha de `127.0.0.1:3000` y `127.0.0.1:8000`;
+  - comprobaciÃ³n de `GET /` del frontend y `GET /healthz` del backend.
+- **Criterio de cierre**: el proyecto se puede arrancar con doble clic sobre `app launcher.bat`, el home queda listo para abrirse automÃ¡ticamente y el bootstrap local deja backend + frontend operativos sin pasos manuales adicionales.
+- **Evidencia de cierre LOCAL-LAUNCH-001**:
+  1. `setup_entorno.bat` ya usa rutas basadas en `%~dp0`, valida un Python ejecutable real antes de crear `.venv`, crea `frontend/.env.local` desde `.env.example` cuando falta y deja de interpretar como error un `npm install` exitoso.
+  2. `run_app.bat` ya usa rutas absolutas para doble clic, aplica `migrate --noinput`, carga `seed_demo_publico` en primera base local SQLite, arranca Django en `127.0.0.1:8000`, arranca Next en `127.0.0.1:3000` y espera al frontend para abrir el navegador en `http://127.0.0.1:3000/`.
+  3. `app launcher.bat` ya existe como punto de entrada simple para Explorer y delega en `run_app.bat`.
+  4. `$env:BOTICA_NO_BROWSER='1'; & '.\app launcher.bat'` -> `exit code 0`; `Get-NetTCPConnection -LocalPort 8000,3000 -State Listen` -> ambos puertos en `Listen`; `Invoke-WebRequest http://127.0.0.1:3000/` -> `200`; `Invoke-WebRequest http://127.0.0.1:8000/healthz` -> `{"status": "ok", "database": "available"}`.
+- **Bloqueo conocido**: ninguno.
+- **Siguiente dependencia lÃ³gica**: `AUT-003`.
+
+## LOCAL-LAUNCH-002 - Canonizar `run_app.bat` como unico lanzador local
+- **Tipo**: `OPS`
+- **Prioridad**: `P0`
+- **Estado**: `DONE`
+- **Contexto de activacion**: aclaracion explicita del mantenedor: el lanzador se llama `run_app.bat`.
+- **Objetivo**: alinear la operativa local y la trazabilidad con el nombre canonico del launcher, eliminando el alias `app launcher.bat`.
+- **Evidencia o sintoma**:
+  - la corrida anterior dejo `app launcher.bat` como alias para Explorer.
+  - el mantenedor aclaro que el lanzador correcto y esperado es `run_app.bat`.
+- **Alcance permitido**: `run_app.bat`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, borrado de `app launcher.bat`.
+- **Fuera de alcance**: cambios funcionales en backend/frontend o nuevos ajustes de bootstrap.
+- **Checks obligatorios**:
+  - confirmar que `run_app.bat` sigue siendo el lanzador operativo;
+  - eliminar el alias para no dejar ambiguedad en el repo.
+- **Criterio de cierre**: `run_app.bat` queda como unico lanzador local canonico y la trazabilidad deja explicita la correccion.
+- **Evidencia de cierre LOCAL-LAUNCH-002**:
+  1. `app launcher.bat` se elimina del repo.
+  2. `run_app.bat` permanece intacto como launcher local operativo.
+  3. `docs/roadmap_codex.md` y `docs/bitacora_codex.md` registran la correccion de naming sin reescribir la entrada historica previa.
+- **Bloqueo conocido**: ninguno.
+- **Siguiente dependencia logica**: `AUT-003`.
+
 ## Radar de cola actual
-- **Actualizacion radar UTC**: `2026-03-27T12:15:21Z`; se revalida la cola tras cerrar `SEC-MIN-002`, con `minerales-y-energia` ya endurecida por regresión mínima frontend/backend y el gate canónico local todavía en verde.
+- **Nota launcher local**: `LOCAL-LAUNCH-001` dejo operativo el arranque local y `LOCAL-LAUNCH-002` canonizo `run_app.bat` como unico lanzador; en esta corrida no aparecieron listeners residuales en `3000` ni `8000`.
+- **Actualizacion radar UTC**: `2026-03-27T14:53:12Z`; se confirma que el backlog sigue totalmente bloqueado solo por dependencias externas reales de `AUT-003` y `OPS-RWY-003`, con `check_release_gate.py` y `check_release_readiness.py` en `OK` y con smoke, backup y restore-drill fallando exactamente por configuracion externa ausente.
 - **Fecha de revisión**: `2026-03-27`
-- **Diagnóstico**: la cola sigue activa y la primera `TODO` no `BLOCKED` pasa a ser `CAT-DATA-004`; `CAT-DATA-003` ya dejó `minerales-y-energia` con 3 productos publicados propios en el seed canónico, `SEC-MIN-001` abrió listado/detalle públicos DB-backed y `SEC-MIN-002` ya añadió la regresión mínima equivalente al baseline en frontend/backend. Los únicos bloqueos externos vigentes siguen siendo `AUT-003` y `OPS-RWY-003`.
+- **Diagnostico**: no existe ninguna tarea `TODO` no `BLOCKED` de producto. `AUT-003` y `OPS-RWY-003` siguen bloqueadas por dependencias externas reales; el runner local sigue limpio, el gate canonico permanece en verde y las validaciones mas especificas vuelven a fallar exactamente por ausencia de variables reales.
 - **Verificación aplicada**:
-  1. `python manage.py test tests.nucleo_herbal.test_exposicion_publica` -> `OK`; la API pública ya protege `minerales-y-energia` con listado propio ordenado de 6 registros visibles y vacío honesto sin fallback.
-  2. `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/minerales-y-energia-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` + `node .tmp-tests/tests/minerales-y-energia-publico.test.js` -> `OK`; el cliente público de minerales ya queda cubierto en visibilidad, detalle y vacío honesto.
-  3. `python scripts/check_release_gate.py` -> `OK`; el gate completo sigue en verde tras endurecer la sección pública de minerales.
-  4. `python scripts/check_release_readiness.py` -> `OK`; la documentación operativa sigue alineada tras actualizar roadmap/estado factual.
-  5. `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`; los bloqueos externos de `AUT-003` y `OPS-RWY-003` siguen vigentes.
-- **Estado de cola**: activa; primera `TODO` no `BLOCKED` = `CAT-DATA-004`.
-- **Siguiente acción exacta**: ejecutar `CAT-DATA-004` para definir y cargar la base mínima reproducible de la sección canónica de herramientas.
+  1. `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','DATABASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> las cuatro variables siguen `MISSING`; `AUT-003` y `OPS-RWY-003` permanecen bloqueadas externamente.
+  2. `Get-NetTCPConnection -LocalPort 3000,8000 -State Listen -ErrorAction SilentlyContinue` -> `NO_LISTENERS_3000_8000`; el runner local no tenia procesos residuales ocupando esos puertos en esta corrida.
+  3. `python scripts/check_release_gate.py` -> `OK`; no aparece deuda local nueva de release en este runner.
+  4. `python scripts/check_release_readiness.py` -> `OK`; la documentacion operativa de release permanece alineada con el bloqueo externo vigente.
+  5. `python scripts/check_deployed_stack.py` -> `ERROR`; `La variable obligatoria BACKEND_BASE_URL no esta definida.`.
+  6. `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` -> `ERROR`; `Debes definir --database-url o DATABASE_URL.`.
+  7. `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file "$env:TEMP\\botica_backups\\dummy.dump"` -> `ERROR`; `Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`.
+- **Estado de cola**: no existe ninguna `TODO` no `BLOCKED`; el backlog de producto sigue bloqueado externamente y ya no queda deuda local pendiente en el gate canonico.
+- **Siguiente acción exacta**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar el smoke post-deploy y el restore drill reales de `AUT-003`.

@@ -24,7 +24,7 @@ class TestSeedDemoPublicoCommand(DjangoTestCase):
 
         self.assertEqual(IntencionModelo.objects.filter(es_publica=True).count(), 2)
         self.assertEqual(PlantaModelo.objects.filter(publicada=True).count(), 2)
-        self.assertGreaterEqual(ProductoModelo.objects.filter(publicado=True).count(), 11)
+        self.assertGreaterEqual(ProductoModelo.objects.filter(publicado=True).count(), 14)
         self.assertEqual(RitualModelo.objects.filter(publicado=True).count(), 1)
 
         ritual = RitualModelo.objects.get(slug="cierre-sereno")
@@ -81,4 +81,28 @@ class TestSeedDemoPublicoCommand(DjangoTestCase):
                 "cuarzo-cristal-rodado",
                 "obsidiana-negra-bruta",
             },
+        )
+
+    def test_seed_demo_publico_garantiza_tres_productos_herramientas_esotericas(self) -> None:
+        call_command("seed_demo_publico")
+
+        productos_herramientas = ProductoModelo.objects.filter(
+            publicado=True,
+            seccion_publica="herramientas-esotericas",
+        )
+
+        self.assertEqual(productos_herramientas.count(), 3)
+        self.assertSetEqual(
+            set(productos_herramientas.values_list("slug", flat=True)),
+            {
+                "caldero-hierro-mini",
+                "cuenco-selenita-pulido",
+                "pendulo-laton-dorado",
+            },
+        )
+        self.assertTrue(
+            all(
+                producto.tipo_producto == "herramientas-rituales"
+                for producto in productos_herramientas
+            )
         )

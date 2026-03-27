@@ -69,10 +69,26 @@ export const MINERALES_Y_ENERGIA_PUBLICA: ConfiguracionSeccionPublica = crearCon
   },
 );
 
+export const HERRAMIENTAS_ESOTERICAS_PUBLICA: ConfiguracionSeccionPublica = crearConfiguracionSeccionPublica(
+  "herramientas-esotericas",
+  {
+    nombre: "Herramientas Esotericas",
+    descripcionCatalogo:
+      "Seleccion de herramientas rituales publicas conectada con catalogo real en produccion.",
+    ariaCatalogo: "Catalogo Herramientas Esotericas",
+    ariaFiltros: "Filtros de Herramientas Esotericas",
+    tituloErrorCatalogo: "No pudimos cargar Herramientas Esotericas",
+    tituloVacio: "Herramientas Esotericas sin productos publicados",
+    descripcionVacio:
+      "No hay productos publicos de herramientas esotericas en esta seccion ahora mismo. Cuando se publiquen en catalogo apareceran aqui.",
+  },
+);
+
 const CONFIGURACIONES_SECCIONES_PUBLICAS = new Map<string, ConfiguracionSeccionPublica>([
   [BOTICA_NATURAL_PUBLICA.slug, BOTICA_NATURAL_PUBLICA],
   [VELAS_E_INCIENSO_PUBLICA.slug, VELAS_E_INCIENSO_PUBLICA],
   [MINERALES_Y_ENERGIA_PUBLICA.slug, MINERALES_Y_ENERGIA_PUBLICA],
+  [HERRAMIENTAS_ESOTERICAS_PUBLICA.slug, HERRAMIENTAS_ESOTERICAS_PUBLICA],
 ]);
 
 const MENSAJES_ERROR_CATALOGO: Record<ErrorProductosSeccion, string> = {

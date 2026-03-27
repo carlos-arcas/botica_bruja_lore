@@ -6,6 +6,7 @@ const SECCIONES_CON_DETALLE_PUBLICO = new Set([
   SLUG_SECCION_PUBLICA_BASELINE,
   "velas-e-incienso",
   "minerales-y-energia",
+  "herramientas-esotericas",
 ]);
 
 export function construirHrefSeccionPublica(slugSeccion: string): string {

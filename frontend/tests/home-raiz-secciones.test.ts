@@ -153,5 +153,5 @@ test("las páginas de sección mantienen su entrada principal sin romper la jera
   const paginaBoticaNatural = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
   assert.equal(paginaBoticaNatural.includes("<ListadoProductosBoticaNatural"), true);
   assert.equal(paginaBoticaNatural.includes("<PanelFiltrosBoticaNatural"), true);
-  assert.equal(paginaBoticaNatural.includes("Botica Natural"), true);
+  assert.equal(paginaBoticaNatural.includes("BOTICA_NATURAL_PUBLICA.nombre"), true);
 });
