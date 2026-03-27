@@ -34,7 +34,7 @@ class CheckBootstrapDemoExpectedCountsTests(unittest.TestCase):
         esperados = {
             "intenciones_publicas": 2,
             "plantas_publicadas": 2,
-            "productos_publicados": 8,
+            "productos_publicados": 11,
             "rituales_publicados": 1,
         }
         output = io.StringIO()
@@ -56,7 +56,7 @@ class CheckBootstrapDemoExpectedCountsTests(unittest.TestCase):
         esperados = {
             "intenciones_publicas": 2,
             "plantas_publicadas": 2,
-            "productos_publicados": 8,
+            "productos_publicados": 11,
             "rituales_publicados": 1,
         }
         reales = dict(esperados)
@@ -74,7 +74,7 @@ class CheckBootstrapDemoExpectedCountsTests(unittest.TestCase):
         self.assertEqual(code, 1)
         texto = output.getvalue()
         self.assertIn("Resultado: ERROR", texto)
-        self.assertIn("productos_publicados: esperado=8 real=5", texto)
+        self.assertIn("productos_publicados: esperado=11 real=5", texto)
 
     def test_calcular_conteos_esperados_desde_seed_canonico(self) -> None:
         with patch.dict(os.environ, {"SECRET_KEY": "tests-secret"}, clear=False):
@@ -83,7 +83,7 @@ class CheckBootstrapDemoExpectedCountsTests(unittest.TestCase):
 
         self.assertEqual(conteos["intenciones_publicas"], 2)
         self.assertEqual(conteos["plantas_publicadas"], 2)
-        self.assertEqual(conteos["productos_publicados"], 8)
+        self.assertEqual(conteos["productos_publicados"], 11)
         self.assertEqual(conteos["rituales_publicados"], 1)
 
 

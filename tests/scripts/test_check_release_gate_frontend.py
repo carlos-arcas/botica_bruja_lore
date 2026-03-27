@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -47,6 +48,20 @@ class CheckReleaseGateFrontendTests(unittest.TestCase):
 
         self.assertEqual(results, [ok, ok, ok, ok, ok])
         self.assertEqual([call.args[1][0] for call in mocked.call_args_list], ["npm.cmd"] * 5)
+
+    def test_run_block_soporta_salida_utf8_binaria_de_next_build(self) -> None:
+        result = subprocess.CompletedProcess(
+            args=["npm.cmd", "run", "build"],
+            returncode=0,
+            stdout="✓ build completado".encode("utf-8"),
+            stderr=b"",
+        )
+
+        with patch.object(self.module, "_run", return_value=result):
+            block = self.module._run_block("G) Frontend - build", ["npm.cmd", "run", "build"])
+
+        self.assertEqual(block.status, "OK")
+        self.assertTrue(block.blocking)
 
 
 if __name__ == "__main__":

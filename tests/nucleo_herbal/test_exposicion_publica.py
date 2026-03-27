@@ -286,6 +286,83 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         self.assertEqual(data["seccion_slug"], "velas-e-incienso")
         self.assertEqual(data["productos"], [])
 
+    def test_listado_productos_por_seccion_minerales_devuelve_todos_publicos_propios(self) -> None:
+        for idx in range(6):
+            ProductoModelo.objects.create(
+                id=f"pro-min-{idx}",
+                sku=f"MIN-{idx:03d}",
+                slug=f"mineral-publico-demo-{idx}",
+                nombre=f"Mineral publico {idx}",
+                tipo_producto="minerales-y-piedras",
+                categoria_comercial="minerales-y-energia",
+                seccion_publica="minerales-y-energia",
+                descripcion_corta="demo",
+                precio_visible="12,00 EUR",
+                imagen_url="",
+                publicado=True,
+            )
+        ProductoModelo.objects.create(
+            id="pro-min-oculto",
+            sku="MIN-900",
+            slug="mineral-oculto",
+            nombre="Mineral oculto",
+            tipo_producto="minerales-y-piedras",
+            categoria_comercial="minerales-y-energia",
+            seccion_publica="minerales-y-energia",
+            descripcion_corta="demo",
+            precio_visible="12,00 EUR",
+            imagen_url="",
+            publicado=False,
+        )
+        ProductoModelo.objects.create(
+            id="pro-bn-visible-min",
+            sku="BN-902",
+            slug="botica-visible-minerales",
+            nombre="Botica visible minerales",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="botica",
+            planta=self.planta_melisa,
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 EUR",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/minerales-y-energia/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seccion_slug"], "minerales-y-energia")
+        self.assertEqual(len(data["productos"]), 6)
+        self.assertTrue(all(item["seccion_publica"] == "minerales-y-energia" for item in data["productos"]))
+        self.assertTrue(all(item["slug"].startswith("mineral-publico-demo-") for item in data["productos"]))
+        slugs = [item["slug"] for item in data["productos"]]
+        self.assertEqual(slugs, sorted(slugs))
+
+    def test_listado_productos_por_seccion_minerales_vacio_no_aplica_fallback_herbal(self) -> None:
+        ProductoModelo.objects.create(
+            id="pro-bn-fallback-min",
+            sku="BN-FALL-002",
+            slug="botica-fallback-minerales",
+            nombre="Botica fallback minerales",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="botica",
+            planta=self.planta_melisa,
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 EUR",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/minerales-y-energia/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seccion_slug"], "minerales-y-energia")
+        self.assertEqual(data["productos"], [])
+
 
     def test_listado_productos_por_seccion_filtra_invalidos_legacy(self) -> None:
         for slug in (

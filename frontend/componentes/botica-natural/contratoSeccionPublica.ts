@@ -55,9 +55,24 @@ export const VELAS_E_INCIENSO_PUBLICA: ConfiguracionSeccionPublica = crearConfig
   },
 );
 
+export const MINERALES_Y_ENERGIA_PUBLICA: ConfiguracionSeccionPublica = crearConfiguracionSeccionPublica(
+  "minerales-y-energia",
+  {
+    nombre: "Minerales y Energia",
+    descripcionCatalogo: "Seleccion mineral publica conectada con catalogo real en produccion.",
+    ariaCatalogo: "Catalogo Minerales y Energia",
+    ariaFiltros: "Filtros de Minerales y Energia",
+    tituloErrorCatalogo: "No pudimos cargar Minerales y Energia",
+    tituloVacio: "Minerales y Energia sin productos publicados",
+    descripcionVacio:
+      "No hay productos publicos de minerales y energia en esta seccion ahora mismo. Cuando se publiquen en catalogo apareceran aqui.",
+  },
+);
+
 const CONFIGURACIONES_SECCIONES_PUBLICAS = new Map<string, ConfiguracionSeccionPublica>([
   [BOTICA_NATURAL_PUBLICA.slug, BOTICA_NATURAL_PUBLICA],
   [VELAS_E_INCIENSO_PUBLICA.slug, VELAS_E_INCIENSO_PUBLICA],
+  [MINERALES_Y_ENERGIA_PUBLICA.slug, MINERALES_Y_ENERGIA_PUBLICA],
 ]);
 
 const MENSAJES_ERROR_CATALOGO: Record<ErrorProductosSeccion, string> = {

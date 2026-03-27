@@ -38,6 +38,32 @@ class CheckReleaseGateContractTests(unittest.TestCase):
         self.assertFalse(block.blocking)
         self.assertIn("tabla ausente", block.detail)
 
+    def test_run_block_tolera_streams_none_sin_attribute_error(self) -> None:
+        result = subprocess.CompletedProcess(
+            args=["npm.cmd", "run", "build"],
+            returncode=1,
+            stdout=None,
+            stderr=None,
+        )
+        with patch.object(self.module, "_run", return_value=result):
+            block = self.module._run_block("G) Frontend - build", ["npm.cmd", "run", "build"])
+
+        self.assertEqual(block.status, "ERROR")
+        self.assertEqual(block.detail, "exit=1")
+
+    def test_run_block_no_rebaja_a_skip_por_linea_incidental_en_salida_larga(self) -> None:
+        result = subprocess.CompletedProcess(
+            args=[self.module.PYTHON, "manage.py", "test", "tests.scripts"],
+            returncode=0,
+            stdout="Found 53 test(s).\nSKIP: alerta interna de prueba\nOK\n",
+            stderr="",
+        )
+        with patch.object(self.module, "_run", return_value=result):
+            block = self.module._run_block("C4) Test scripts operativos críticos", [self.module.PYTHON, "manage.py", "test", "tests.scripts"])
+
+        self.assertEqual(block.status, "OK")
+        self.assertTrue(block.blocking)
+
     def test_release_readiness_block_usa_script_esperado(self) -> None:
         expected = self.module.BlockResult(name="ok", status="OK", blocking=True)
         with patch.object(self.module, "_run_block", return_value=expected) as mocked:

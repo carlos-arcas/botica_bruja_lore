@@ -1805,3 +1805,276 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; la fuente factual ya no deja `AUT-004` como siguiente paso pendiente.
   10. Siguiente paso exacto definido: **Sí**.
 - **Siguiente paso exacto**: ejecutar `AUT-005` para endurecer `scripts/check_release_gate.py` en Windows antes de seguir con `CAT-DATA-003`.
+
+## Entrada 2026-03-27-AUT-005 (gate Windows endurecido para build frontend)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `AUT-005`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: recuperar la observabilidad real del gate en Windows evitando que `scripts/check_release_gate.py` aborte al capturar o imprimir la salida Unicode de `npm run build`.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `tests/scripts/test_check_release_gate_frontend.py`
+  - `tests/scripts/test_check_release_gate_contract.py`
+- **Archivos tocados**:
+  - `scripts/check_release_gate.py`
+  - `tests/scripts/test_check_release_gate_frontend.py`
+  - `tests/scripts/test_check_release_gate_contract.py`
+  - `docs/roadmap_codex.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener el alcance estrictamente en el wrapper del gate y sus tests, sin tocar runtime de producto ni comandos de build/frontend fuera del perímetro de `AUT-005`.
+  2. Cambiar la captura de procesos en `scripts/check_release_gate.py` a modo binario y centralizar la decodificación con fallback seguro para evitar `UnicodeDecodeError` en `subprocess` cuando `next build` emite bytes UTF-8 incompatibles con `cp1252`.
+  3. Endurecer también la impresión en consola con degradación segura de caracteres no representables para evitar el segundo fallo real detectado (`UnicodeEncodeError` al imprimir símbolos como `✓` en la consola Windows).
+  4. Restringir la heurística `SKIP:` a salidas efectivamente canónicas de una sola línea para que el gate no rebaje bloques reales a `SKIP` por líneas incidentales dentro de tests.
+- **Checks ejecutados**:
+  - `python scripts/check_release_gate.py` -> `ERROR` antes del cambio; reproduce `UnicodeDecodeError` en `subprocess.py` y `AttributeError` en `result.stdout.strip()` al llegar a `G) Frontend - build`.
+  - `npm.cmd run build` (en `frontend/`) -> `OK`; acota el fallo al wrapper del gate.
+  - `python -m unittest tests.scripts.test_check_release_gate_frontend tests.scripts.test_check_release_gate_contract` -> `FAIL` en la primera iteración de validación; aparece `UnicodeEncodeError` al imprimir `✓` en consola Windows y se corrige dentro de la misma corrida.
+  - `python -m unittest tests.scripts.test_check_release_gate_frontend tests.scripts.test_check_release_gate_contract` -> `OK`; cobertura final del hardening en verde.
+  - `python scripts/check_release_gate.py` -> `OK`; el gate completo vuelve a cerrar en verde y `G) Frontend - build` deja de abortar.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `git diff --name-only` -> `OK`; diff final acotado a `scripts/check_release_gate.py`, tests del gate y trazabilidad documental canónica.
+- **Resultado verificable**:
+  - `scripts/check_release_gate.py` ya no cae ni al capturar ni al imprimir salida Unicode de `next build` en Windows.
+  - el resumen final de `python scripts/check_release_gate.py` vuelve a dejar `C4)` y `G) Frontend - build` en `OK`.
+  - `docs/roadmap_codex.md` y `docs/90_estado_implementacion.md` dejan `CAT-DATA-003` como siguiente paso local exacto.
+- **Bloqueos (si aplica)**:
+  - ninguno para `AUT-005`;
+  - permanecen sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003` por falta de URLs/credenciales reales y entorno temporal seguro de restore drill.
+- **Checklist de cierre aplicada (AUT-005)**:
+  1. Tarea correcta confirmada: **Sí**; `AUT-005` era la primera `TODO` no `BLOCKED` del roadmap vigente.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo wrapper del gate, tests asociados y trazabilidad canónica.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (`scripts/check_release_gate.py`, `tests/scripts/test_check_release_gate_frontend.py`, `tests/scripts/test_check_release_gate_contract.py`, `docs/roadmap_codex.md`, `docs/90_estado_implementacion.md`, `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; el estado factual deja de señalar `AUT-005` como pendiente y mueve la cola local a `CAT-DATA-003`.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `CAT-DATA-003` para crear la base mínima reproducible de `minerales-y-energia` antes de abrir la sección pública.
+
+## Entrada 2026-03-27-CAT-DATA-003 (seed mínimo reproducible para minerales)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `CAT-DATA-003`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: crear la base mínima reproducible de `minerales-y-energia` en el seed canónico, sin abrir todavía la sección pública y sin mezclar la feature de catálogo DB-backed.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/esquemas.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/servicio.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/productos_contrato.py`
+  - `frontend/componentes/admin/sincronizacionProductosAdmin.ts`
+  - `frontend/componentes/admin/ModuloProductosAdmin.tsx`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Resolver `CAT-DATA-003` solo con seed canónico + pruebas + trazabilidad, sin abrir todavía `frontend/app/minerales-y-energia/` ni tocar contratos públicos de catálogo.
+  2. Usar el tipo de producto canónico `minerales-y-piedras` y mantener `seccion_publica="minerales-y-energia"` para no romper el mapa ya aceptado por backoffice y dominio.
+  3. Añadir exactamente 3 productos publicados propios de minerales (`cuarzo-cristal-rodado`, `amatista-punta-suave`, `obsidiana-negra-bruta`) para cumplir el umbral de `CAT-DATA-001` sin inflar alcance editorial.
+  4. Alinear el contrato de conteos de bootstrap a `11` productos públicos para no reabrir la deriva que ya había cerrado `AUT-004`.
+  5. Mantener intactos los cambios preexistentes del worktree ligados a `AUT-005` (`scripts/check_release_gate.py`, `tests/scripts/test_check_release_gate_contract.py`, `tests/scripts/test_check_release_gate_frontend.py`), sin revertirlos ni mezclarlos en esta tarea.
+- **Checks ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command tests.scripts.test_check_bootstrap_demo_expected_counts` -> `OK`; el seed es idempotente, crea `11` productos públicos y garantiza `3` para `minerales-y-energia`.
+  - `python scripts/check_release_gate.py` -> `OK`; el gate canónico completo permanece en verde tras ampliar el seed de catálogo.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `git status --short` -> `OK`; confirma que el worktree ya venía con cambios previos de `AUT-005` y que esta corrida añade cambios en 6 archivos propios de `CAT-DATA-003`.
+  - `git diff --stat -- backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py tests/scripts/test_check_bootstrap_demo_expected_counts.py docs/90_estado_implementacion.md docs/roadmap_codex.md docs/bitacora_codex.md` -> `OK`; diff acotado a 6 archivos, `151` inserciones y `23` borrados.
+- **Resultado verificable**:
+  - `seed_demo_publico.py` ya deja una base mínima reproducible de `minerales-y-energia` con 3 productos propios publicados.
+  - la prueba de seed confirma los slugs exactos de minerales y el contrato de bootstrap pasa a `11` productos públicos sin romper el gate.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` mueven el siguiente paso local exacto a `SEC-MIN-001`.
+- **Bloqueos (si aplica)**:
+  - ninguno para `CAT-DATA-003`;
+  - permanecen sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003` por falta de URLs/credenciales reales y entorno temporal seguro de restore drill.
+- **Checklist de cierre aplicada (CAT-DATA-003)**:
+  1. Tarea correcta confirmada: **Sí**; `CAT-DATA-003` era la primera `TODO` no `BLOCKED` vigente en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo seed, pruebas asociadas y trazabilidad canónica.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**; el diff propio de esta corrida queda acotado a los 6 archivos permitidos de `CAT-DATA-003`, aunque el worktree conserva cambios previos de `AUT-005` que no se tocaron.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; se registra solo la base mínima reproducible de seed y no se presenta como implementada la sección pública de minerales.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `SEC-MIN-001` para abrir `minerales-y-energia` como sección pública DB-backed reutilizando el baseline ya existente.
+
+## Entrada 2026-03-27-SEC-MIN-001 (catalogo publico DB-backed de minerales)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `SEC-MIN-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: abrir `minerales-y-energia` como sección pública DB-backed con listado y detalle equivalentes al baseline reutilizado, sin mezclar todavía la cobertura contractual amplia de `SEC-MIN-002`.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/app/velas-e-incienso/[slug]/page.tsx`
+  - `frontend/componentes/botica-natural/contratoSeccionPublica.ts`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/infraestructura/api/herbal.ts`
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+- **Archivos tocados**:
+  - `frontend/app/minerales-y-energia/page.tsx`
+  - `frontend/app/minerales-y-energia/[slug]/page.tsx`
+  - `frontend/app/minerales-y-energia/[slug]/not-found.tsx`
+  - `frontend/componentes/botica-natural/contratoSeccionPublica.ts`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/tests/minerales-y-energia-publico.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Reutilizar el baseline público ya probado en `velas-e-incienso` para no abrir una implementación paralela ni tocar backend fuera de alcance.
+  2. Mantener la responsabilidad del detalle público en el frontend: la página de minerales valida `seccion_publica` y rechaza slugs de otras secciones con `notFound()`.
+  3. Extender el contrato reutilizable de sección pública y el helper de rutas solo con `minerales-y-energia`, sin alterar el fallback legado de `botica-natural`.
+  4. Añadir una prueba frontend mínima específica de minerales para cerrar la feature con validación real, dejando la cobertura contractual más amplia para `SEC-MIN-002`.
+- **Checks ejecutados**:
+  - `npm.cmd run clean:tmp-tests` -> `OK`.
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/minerales-y-energia-publico.test.ts infraestructura/api/herbal.ts` -> `FAIL`; el comando aislado no incluía `tests/types/fetch-next.d.ts` y TypeScript rechazó `next` en `RequestInit`.
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/minerales-y-energia-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` -> `OK`.
+  - `node .tmp-tests/tests/minerales-y-energia-publico.test.js` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `Select-String -Path "docs/02_alcance_y_fases.md","docs/90_estado_implementacion.md" -Pattern "mínimo 3 productos publicados propios|minerales-y-energia" -Encoding UTF8` -> `OK`; confirma umbral mínimo de 3 productos propios y estado factual actualizado de la sección.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`.
+  - `git status --short -- "frontend/app/minerales-y-energia" "frontend/componentes/botica-natural/contratoSeccionPublica.ts" "frontend/componentes/catalogo/rutasProductoPublico.ts" "frontend/tests/minerales-y-energia-publico.test.ts" "docs/90_estado_implementacion.md" "docs/roadmap_codex.md" "docs/bitacora_codex.md"` -> `OK`; el perímetro propio de la tarea queda acotado a 9 rutas, sin tocar los cambios previos del worktree fuera de ese conjunto.
+- **Resultado verificable**:
+  - `minerales-y-energia` ya expone listado DB-backed y detalle público propios reutilizando el contrato comercial existente.
+  - el helper de rutas públicas ya dirige productos de minerales a `/minerales-y-energia/[slug]` y el detalle rechaza slugs de otras secciones.
+  - la validación mínima específica de minerales pasa en ejecución real y el gate canónico completo permanece en verde tras abrir la sección.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` ya dejan `SEC-MIN-002` como siguiente paso local exacto.
+- **Bloqueos (si aplica)**:
+  - ninguno para `SEC-MIN-001`;
+  - permanecen sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003` por falta de URLs/credenciales reales y entorno temporal seguro de restore drill.
+- **Checklist de cierre aplicada (SEC-MIN-001)**:
+  1. Tarea correcta confirmada: **Sí**; `SEC-MIN-001` era la primera `TODO` no `BLOCKED` vigente en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo frontend público reutilizable, prueba mínima específica y trazabilidad canónica.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**; el perímetro propio queda acotado por `git status --short -- ...` a las 9 rutas permitidas de la tarea, mientras el worktree conserva cambios previos no tocados.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; la sección pública de minerales ahora se declara implementada solo porque ya existe listado/detalle navegables y validación ejecutada.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `SEC-MIN-002` para añadir la cobertura contractual mínima de visibilidad, límite y vacío honesto para `minerales-y-energia`.
+
+## Entrada 2026-03-27-SEC-MIN-002 (regresion minima publica de minerales)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `SEC-MIN-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: endurecer la nueva sección pública de `minerales-y-energia` con cobertura contractual mínima equivalente al baseline, sin reabrir producto ni mezclar nuevas features.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `frontend/tests/minerales-y-energia-publico.test.ts`
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `frontend/tests/home-raiz-secciones.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `backend/nucleo_herbal/presentacion/publica/views.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`
+- **Archivos tocados**:
+  - `frontend/tests/minerales-y-energia-publico.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener el alcance en hardening puro: solo pruebas y trazabilidad canónica, sin volver a tocar `frontend/app/minerales-y-energia/` ni el backend de producto ya abierto en `SEC-MIN-001`.
+  2. Replicar el patrón de cierre de `SEC-VEL-002` para minerales: frontend cubre contrato público visible y backend protege el listado propio y el vacío honesto sin fallback.
+  3. Dejar explícito en frontend que `obtenerProductosPublicosPorSeccion("minerales-y-energia")` mantiene visibles 6 productos válidos sin recorte ni fallback inventado.
+  4. Dejar explícito en backend que la API pública de minerales devuelve solo productos propios, ordenados por slug, y permanece vacía cuando la sección no tiene catálogo publicado.
+- **Checks ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.test_exposicion_publica` -> `OK`; 30 tests en verde con los nuevos casos de minerales.
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/minerales-y-energia-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` (en `frontend/`) -> `OK`.
+  - `node .tmp-tests/tests/minerales-y-energia-publico.test.js` (en `frontend/`) -> `OK`; 5 pruebas en verde.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+- **Resultado verificable**:
+  - `tests/nucleo_herbal/test_exposicion_publica.py` ya cubre `minerales-y-energia` con listado público propio y ordenado de 6 registros visibles, y vacío honesto sin fallback herbal.
+  - `frontend/tests/minerales-y-energia-publico.test.ts` ya cubre visibilidad del listado de 6 productos, contrato reusable de sección pública, detalle propio y vacío honesto del cliente público.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` ya dejan `CAT-DATA-004` como siguiente paso local exacto.
+- **Bloqueos (si aplica)**:
+  - ninguno para `SEC-MIN-002`;
+  - permanecen sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003` por falta de URLs/credenciales reales y entorno temporal seguro de restore drill.
+- **Checklist de cierre aplicada (SEC-MIN-002)**:
+  1. Tarea correcta confirmada: **Sí**; `SEC-MIN-002` era la primera `TODO` no `BLOCKED` vigente en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo pruebas y trazabilidad canónica del hardening de minerales.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**; el trabajo propio queda acotado a 5 rutas permitidas, mientras el worktree conserva cambios previos no tocados fuera de este bloque.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; la sección pública de minerales ya estaba implementada y esta corrida solo cierra su red mínima de regresión.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `CAT-DATA-004` para definir y cargar la base mínima reproducible de la sección canónica de herramientas.

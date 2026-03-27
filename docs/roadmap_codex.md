@@ -577,7 +577,7 @@ Uso prohibido:
 ## AUT-005 — Endurecer `check_release_gate.py` ante salida Unicode de `next build` en Windows
 - **Tipo**: `HARDEN`
 - **Prioridad**: `P0`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: recuperar la observabilidad real del gate en Windows evitando que el bloque `G) Frontend - build` aborte por problemas de decodificación al capturar la salida de `npm run build`.
 - **Evidencia o síntoma**:
   - `python scripts/check_release_gate.py` aborta en `G) Frontend - build` con `UnicodeDecodeError` dentro de `subprocess.py` y termina después en `AttributeError` al asumir `result.stdout`/`result.stderr` siempre disponibles.
@@ -591,13 +591,17 @@ Uso prohibido:
   - ampliar o ajustar la cobertura de `tests/scripts/test_check_release_gate_frontend.py` / `tests/scripts/test_check_release_gate_contract.py`;
   - rerun de `python scripts/check_release_gate.py` confirmando que `G) Frontend - build` reporta `OK` o `ERROR` sin abortar el gate completo.
 - **Criterio de cierre**: el gate deja de caerse por codificación en Windows y reporta el resultado real del build de forma determinista.
+- **Evidencia de cierre AUT-005**:
+  1. `scripts/check_release_gate.py` deja de depender de `text=True` para capturar procesos: ahora lee `stdout`/`stderr` en binario, decodifica con fallback seguro y degrada caracteres no representables de consola sin abortar en Windows.
+  2. `python -m unittest tests.scripts.test_check_release_gate_frontend tests.scripts.test_check_release_gate_contract` -> `OK`; la cobertura protege salida UTF-8 binaria, `stdout`/`stderr` en `None` y evita degradar `C4)` a `SKIP` por líneas incidentales de tests.
+  3. `python scripts/check_release_gate.py` -> `OK`; `G) Frontend - build` reporta el resultado real de `next build` y el resumen final del gate vuelve a dejar `C4)` y `G)` en verde.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `CAT-DATA-003`.
 
 ## CAT-DATA-003 — Seed/importación inicial reproducible para `minerales-y-energia`
 - **Tipo**: `DATA`
 - **Prioridad**: `P2`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: crear la primera base mínima reproducible de minerales alineada con el contrato público final.
 - **Evidencia o síntoma**:
   - no hay seed demo equivalente para minerales en `seed_demo_publico.py`.
@@ -609,18 +613,22 @@ Uso prohibido:
   - coherencia con `CAT-DATA-001`;
   - tests/checks asociados al dataset mínimo.
 - **Criterio de cierre**: minerales dispone de base mínima reproducible y trazable para catálogo público.
+- **Evidencia de cierre CAT-DATA-003**:
+  1. `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py` ya incorpora 3 productos publicados propios de `minerales-y-energia` con `tipo_producto="minerales-y-piedras"` y slugs canónicos (`cuarzo-cristal-rodado`, `amatista-punta-suave`, `obsidiana-negra-bruta`).
+  2. `python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command tests.scripts.test_check_bootstrap_demo_expected_counts` -> `OK`; el seed queda idempotente, la sección de minerales alcanza el mínimo de 3 productos propios y el contrato de conteos públicos sube a `11`.
+  3. `python scripts/check_release_gate.py` -> `OK`; el gate canónico sigue en verde tras ampliar el seed público.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `SEC-MIN-001`.
 
 ## SEC-MIN-001 — Catálogo público DB-backed para `minerales-y-energia`
 - **Tipo**: `FEATURE`
 - **Prioridad**: `P1`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: abrir `minerales-y-energia` como sección pública DB-backed con listado y detalle equivalentes al baseline reutilizado.
 - **Evidencia o síntoma**:
   - la página actual de `frontend/app/minerales-y-energia/page.tsx` es solo hero.
   - la sincronización multisección ya contempla minerales en backoffice, pero no hay sección pública final equivalente.
-  - `docs/02_alcance_y_fases.md` y `docs/90_estado_implementacion.md` exigen **3 productos publicados propios** antes de inaugurar una sección pública nueva, y ese mínimo todavía no existe en `seed_demo_publico.py`.
+  - `docs/02_alcance_y_fases.md` y `docs/90_estado_implementacion.md` exigen **3 productos publicados propios** antes de inaugurar una sección pública nueva; ese mínimo ya existe en `seed_demo_publico.py`, así que la brecha restante es exclusivamente de exposición pública DB-backed.
 - **Alcance permitido**: `frontend/app/minerales-y-energia/`, `frontend/componentes/catalogo/`, `frontend/infraestructura/api/herbal.ts`, `frontend/tests/`, `backend/nucleo_herbal/presentacion/publica/`, `tests/nucleo_herbal/`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
 - **Fuera de alcance**: reabrir `botica-natural` o inventar nuevas taxonomías fuera del mapa actual.
 - **Checks obligatorios**:
@@ -628,13 +636,17 @@ Uso prohibido:
   - detalle público coherente con routing final;
   - estados vacío/error alineados con contrato reusable.
 - **Criterio de cierre**: `minerales-y-energia` queda navegable como catálogo público DB-backed.
+- **Evidencia de cierre SEC-MIN-001**:
+  1. `frontend/app/minerales-y-energia/page.tsx`, `frontend/app/minerales-y-energia/[slug]/page.tsx` y `frontend/app/minerales-y-energia/[slug]/not-found.tsx` ya abren listado, detalle y estado `not-found` propios reutilizando el baseline comercial existente.
+  2. `frontend/componentes/botica-natural/contratoSeccionPublica.ts` y `frontend/componentes/catalogo/rutasProductoPublico.ts` incorporan la configuración pública de `minerales-y-energia` y su routing de detalle sin mezclar otras secciones.
+  3. `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/minerales-y-energia-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` + `node .tmp-tests/tests/minerales-y-energia-publico.test.js` -> `OK`; `python scripts/check_release_gate.py` -> `OK`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `SEC-MIN-002`.
 
 ## SEC-MIN-002 — Contratos/tests de visibilidad, límite y vacío para `minerales-y-energia`
 - **Tipo**: `HARDEN`
 - **Prioridad**: `P1`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: añadir la cobertura contractual mínima necesaria para que minerales no nazca sin red de regresión.
 - **Evidencia o síntoma**:
   - la evidencia contractual actual del baseline público sigue concentrada en `botica-natural`.
@@ -646,6 +658,10 @@ Uso prohibido:
   - tests de estado vacío honesto;
   - quality gate aplicable de la sección.
 - **Criterio de cierre**: minerales queda protegida por tests equivalentes al baseline.
+- **Evidencia de cierre SEC-MIN-002**:
+  1. `frontend/tests/minerales-y-energia-publico.test.ts` amplía la cobertura de minerales a 5 pruebas y deja trazado el contrato de listado visible con 6 productos, detalle público propio, hero/empty-state y vacío honesto sin fallback.
+  2. `tests/nucleo_herbal/test_exposicion_publica.py` añade cobertura backend específica para minerales: listado público propio y ordenado con 6 registros visibles, y vacío honesto cuando la sección no tiene productos sin caer en fallback herbal.
+  3. `python manage.py test tests.nucleo_herbal.test_exposicion_publica` -> `OK`; `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/minerales-y-energia-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` + `node .tmp-tests/tests/minerales-y-energia-publico.test.js` -> `OK`; `python scripts/check_release_gate.py` -> `OK`; `python scripts/check_release_readiness.py` -> `OK`.
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `CAT-DATA-004`.
 
@@ -760,18 +776,14 @@ Uso prohibido:
 - **Siguiente dependencia lógica**: ninguna; desbloqueo externo.
 
 ## Radar de cola actual
-- **Actualizacion radar UTC**: `2026-03-27T10:05:00.7695601+01:00`; se revalida la cola multisección y `AUT-004` queda cerrado, por lo que el único frente local inmediato sobre el gate canónico pasa a ser el crash del wrapper frontend en Windows al capturar `next build`.
+- **Actualizacion radar UTC**: `2026-03-27T12:15:21Z`; se revalida la cola tras cerrar `SEC-MIN-002`, con `minerales-y-energia` ya endurecida por regresión mínima frontend/backend y el gate canónico local todavía en verde.
 - **Fecha de revisión**: `2026-03-27`
-- **Diagnóstico**: la cola sigue activa y la primera `TODO` no `BLOCKED` pasa a ser `AUT-005`; `AUT-004` ya reconcilió el contrato de conteos del bootstrap con el seed canónico y dejó `C4)` en verde, pero el gate aún aborta más adelante en `G) Frontend - build` por la captura Unicode de `npm run build` en Windows. El track Railway local sigue endurecido antes del boot sin tocar runtime productivo, y los únicos bloqueos externos vigentes siguen siendo `AUT-003` y `OPS-RWY-003`.
+- **Diagnóstico**: la cola sigue activa y la primera `TODO` no `BLOCKED` pasa a ser `CAT-DATA-004`; `CAT-DATA-003` ya dejó `minerales-y-energia` con 3 productos publicados propios en el seed canónico, `SEC-MIN-001` abrió listado/detalle públicos DB-backed y `SEC-MIN-002` ya añadió la regresión mínima equivalente al baseline en frontend/backend. Los únicos bloqueos externos vigentes siguen siendo `AUT-003` y `OPS-RWY-003`.
 - **Verificación aplicada**:
-  1. `Select-String -Path docs/02_alcance_y_fases.md,docs/90_estado_implementacion.md -Pattern 'mínimo 3 productos publicados propios|minerales-y-energia' -Encoding UTF8` -> confirma el umbral de **3 productos propios** antes de abrir la sección pública de minerales.
-  2. `Select-String -Path backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py -Pattern 'minerales-y-energia|velas-e-incienso|botica-natural' -Encoding UTF8` -> confirma que el seed actual solo cubre `botica-natural` y `velas-e-incienso`, sin masa mínima para minerales.
-  3. `python scripts/check_release_readiness.py` -> `OK`.
-  4. `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts` -> `FAIL`; se reproduce la deriva original con `AssertionError: 8 != 6` en `productos_publicados`.
-  5. `python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`; el seed sigue garantizando 8 productos públicos (`5` en `botica-natural` + `3` en `velas-e-incienso`).
-  6. `python manage.py test tests.scripts.test_check_bootstrap_demo_expected_counts tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`; contrato bootstrap y seed canónico quedan reconciliados tras el ajuste del test.
-  7. `python scripts/check_release_gate.py` -> `ERROR`; `C4) Test scripts operativos críticos` ya pasa y el siguiente bloqueo local real queda en `G) Frontend - build`, donde el wrapper aborta por `UnicodeDecodeError`/`AttributeError` al capturar la salida de `npm run build`.
-  8. `npm.cmd run build` (en `frontend/`) -> `OK`; el build real de Next.js termina bien y acota el fallo pendiente al wrapper `scripts/check_release_gate.py`.
-  9. `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`; los bloqueos externos de `AUT-003` y `OPS-RWY-003` siguen vigentes.
-- **Estado de cola**: activa; primera `TODO` no `BLOCKED` = `AUT-005`.
-- **Siguiente acción exacta**: ejecutar `AUT-005` para endurecer `scripts/check_release_gate.py` en Windows antes de seguir con `CAT-DATA-003`.
+  1. `python manage.py test tests.nucleo_herbal.test_exposicion_publica` -> `OK`; la API pública ya protege `minerales-y-energia` con listado propio ordenado de 6 registros visibles y vacío honesto sin fallback.
+  2. `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/minerales-y-energia-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` + `node .tmp-tests/tests/minerales-y-energia-publico.test.js` -> `OK`; el cliente público de minerales ya queda cubierto en visibilidad, detalle y vacío honesto.
+  3. `python scripts/check_release_gate.py` -> `OK`; el gate completo sigue en verde tras endurecer la sección pública de minerales.
+  4. `python scripts/check_release_readiness.py` -> `OK`; la documentación operativa sigue alineada tras actualizar roadmap/estado factual.
+  5. `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`; los bloqueos externos de `AUT-003` y `OPS-RWY-003` siguen vigentes.
+- **Estado de cola**: activa; primera `TODO` no `BLOCKED` = `CAT-DATA-004`.
+- **Siguiente acción exacta**: ejecutar `CAT-DATA-004` para definir y cargar la base mínima reproducible de la sección canónica de herramientas.

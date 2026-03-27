@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import locale
 import logging
 import os
 import platform
@@ -47,12 +48,11 @@ def _run(
     cmd: list[str],
     *,
     cwd: Path | None = None,
-) -> subprocess.CompletedProcess[str] | None:
+) -> subprocess.CompletedProcess[bytes] | None:
     try:
         return subprocess.run(
             cmd,
             cwd=cwd or ROOT_DIR,
-            text=True,
             capture_output=True,
             check=False,
         )
@@ -60,21 +60,56 @@ def _run(
         return None
 
 
-def _print_process_output(result: subprocess.CompletedProcess[str]) -> None:
-    if result.stdout.strip():
+def _decode_process_stream(stream: bytes | str | None) -> str:
+    if stream is None:
+        return ""
+    if isinstance(stream, str):
+        return stream
+
+    candidate_encodings: list[str] = []
+    for encoding in ("utf-8", locale.getpreferredencoding(False), "cp1252"):
+        normalized = (encoding or "").strip()
+        if normalized and normalized not in candidate_encodings:
+            candidate_encodings.append(normalized)
+
+    for encoding in candidate_encodings:
+        try:
+            return stream.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+
+    fallback_encoding = candidate_encodings[0] if candidate_encodings else "utf-8"
+    return stream.decode(fallback_encoding, errors="replace")
+
+
+def _safe_console_text(text: str) -> str:
+    if not text:
+        return ""
+
+    console_encoding = (sys.stdout.encoding or locale.getpreferredencoding(False) or "utf-8").strip() or "utf-8"
+    try:
+        text.encode(console_encoding)
+        return text
+    except UnicodeEncodeError:
+        return text.encode(console_encoding, errors="replace").decode(console_encoding, errors="replace")
+
+
+def _print_process_output(result: subprocess.CompletedProcess[bytes]) -> None:
+    stdout = _decode_process_stream(result.stdout)
+    stderr = _decode_process_stream(result.stderr)
+    if stdout.strip():
         print("--- stdout ---")
-        print(result.stdout.strip())
-    if result.stderr.strip():
+        print(_safe_console_text(stdout.strip()))
+    if stderr.strip():
         print("--- stderr ---")
-        print(result.stderr.strip())
+        print(_safe_console_text(stderr.strip()))
 
 
-def _extract_skip_detail(result: subprocess.CompletedProcess[str]) -> str | None:
-    for stream in (result.stdout, result.stderr):
-        for raw_line in stream.splitlines():
-            line = raw_line.strip()
-            if line.startswith("SKIP:"):
-                return line.removeprefix("SKIP:").strip()
+def _extract_skip_detail(result: subprocess.CompletedProcess[bytes]) -> str | None:
+    for stream in (_decode_process_stream(result.stdout), _decode_process_stream(result.stderr)):
+        normalized_lines = [raw_line.strip() for raw_line in stream.splitlines() if raw_line.strip()]
+        if len(normalized_lines) == 1 and normalized_lines[0].startswith("SKIP:"):
+            return normalized_lines[0].removeprefix("SKIP:").strip()
     return None
 
 
@@ -134,8 +169,10 @@ def _data_snapshot_block() -> BlockResult:
         print("[SKIP] no se pudieron consultar conteos (python no disponible)")
         return BlockResult(name=name, status="SKIP", blocking=False, detail="conteos no disponibles")
 
+    counts_stdout = _decode_process_stream(counts.stdout)
+    counts_stderr = _decode_process_stream(counts.stderr)
     if counts.returncode == 0:
-        skip_match = re.search(r"SNAPSHOT_SKIP:\s*(.+)", counts.stdout)
+        skip_match = re.search(r"SNAPSHOT_SKIP:\s*(.+)", counts_stdout)
         if skip_match:
             reason = skip_match.group(1).strip()
             print(f"[SKIP] snapshot no aplicable en este entorno: {reason}")
@@ -145,7 +182,7 @@ def _data_snapshot_block() -> BlockResult:
         print("[OK] snapshot de conteos obtenido")
         return BlockResult(name=name, status="OK", blocking=False)
 
-    short_error = counts.stderr.strip().splitlines()[-1] if counts.stderr.strip() else f"exit={counts.returncode}"
+    short_error = counts_stderr.strip().splitlines()[-1] if counts_stderr.strip() else f"exit={counts.returncode}"
     print(f"[SKIP] no se pudieron consultar conteos en este entorno: {short_error}")
     return BlockResult(name=name, status="SKIP", blocking=False, detail=short_error)
 

@@ -82,7 +82,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. `botica-natural` mantiene el baseline público DB-backed completo; `seed_demo_publico.py`, `docs/deploy_railway.md` y `scripts/validate_botica_natural_postgres_e2e.py` la anclan en **5 productos publicados**.
   2. `velas-e-incienso` ya está publicada como sección DB-backed con listado y detalle propios; `seed_demo_publico.py` la sostiene con **3 productos publicados propios**, el frontend expone `/velas-e-incienso` + `/velas-e-incienso/[slug]` y la regresión mínima pública cubre listado, detalle y vacío honesto.
   3. `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py` conserva un fallback herbal especial solo para `botica-natural` cuando la sección no devuelve productos propios.
-  4. `minerales-y-energia` y `herramientas-esotericas` no tienen todavía masa seed pública equivalente ni sección pública final abierta.
+  4. `minerales-y-energia` ya está publicada como sección DB-backed con listado y detalle propios; `seed_demo_publico.py` la sostiene con **3 productos publicados propios**, el frontend expone `/minerales-y-energia` + `/minerales-y-energia/[slug]` y la regresión mínima pública ya cubre visibilidad, detalle, listado visible de 6 registros y vacío honesto en frontend/backend.
 - **Regla operativa definida**:
   1. ninguna sección nueva debe abrir catálogo público DB-backed con menos de **3 productos publicados propios**; `botica-natural` mantiene su baseline de **5**.
   2. el vacío honesto es válido como estado runtime posterior a la apertura de la sección o bajo filtros, no como atajo para inaugurar una sección sin catálogo suficiente.
@@ -95,12 +95,12 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. la coexistencia demo ↔ real sigue activa sin reabrir capacidades ya cerradas;
   2. la cola autónoma correcta se ejecuta una tarea atómica por corrida desde `docs/roadmap_codex.md`;
   3. `AUT-003` y `OPS-RWY-003` siguen exigiendo `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro de restore drill para el cierre externo;
-  4. el siguiente paso local exacto es `AUT-005`.
+  4. el siguiente paso local exacto es `CAT-DATA-004`.
 
 ## 8. Deuda y bloqueos conocidos
 1. El cierre externo de `V2-R10` sigue bloqueado por ausencia de URLs/credenciales reales y entorno temporal seguro de restore drill en el runner actual.
 2. La cola autónoma local sigue activa, pero no corresponde inventar trabajo fuera de `docs/roadmap_codex.md` ni mezclarla con el desbloqueo externo de `V2-R10`.
-3. `AUT-004` ya cerró la deriva interna entre `seed_demo_publico.py` y `tests/scripts/test_check_bootstrap_demo_expected_counts.py`, dejando `C4)` en verde; el gate canónico local sigue en rojo porque `scripts/check_release_gate.py` aborta en `G) Frontend - build` al capturar salida Unicode de `npm run build` en Windows, por lo que el siguiente paso local exacto pasa a ser `AUT-005`.
+3. `AUT-004`, `AUT-005`, `CAT-DATA-003`, `SEC-MIN-001` y `SEC-MIN-002` ya dejaron la nueva sección pública de minerales con red mínima de regresión: `C4)` sigue alineado con el seed vigente, `scripts/check_release_gate.py` mantiene el gate local en verde, `seed_demo_publico.py` ya garantiza **3 productos publicados propios** para `minerales-y-energia`, el frontend ya expone listado/detalle públicos DB-backed y `tests/nucleo_herbal/test_exposicion_publica.py` + `frontend/tests/minerales-y-energia-publico.test.ts` ya cubren visibilidad, 6 registros visibles y vacío honesto; el siguiente paso local exacto pasa a ser `CAT-DATA-004`.
 
 ## 8.1 Transición formal demo → real
 - Capacidad: **Base arquitectónica de migración ecommerce real**.
