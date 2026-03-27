@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[1]
 
 _ENV_REQUIRED = (
+    "SECRET_KEY=",
+    "DATABASE_URL=",
     "PUBLIC_SITE_URL=",
     "DEFAULT_FROM_EMAIL=",
     "STRIPE_PUBLIC_KEY=",
@@ -18,7 +20,36 @@ _ENV_REQUIRED = (
     "STRIPE_WEBHOOK_SECRET=",
     "PAYMENT_SUCCESS_URL=",
     "PAYMENT_CANCEL_URL=",
+    "EMAIL_BACKEND=",
 )
+
+_PREBOOT_REQUIRED_VARS = (
+    "SECRET_KEY",
+    "DATABASE_URL",
+    "PUBLIC_SITE_URL",
+    "PAYMENT_SUCCESS_URL",
+    "PAYMENT_CANCEL_URL",
+    "DEFAULT_FROM_EMAIL",
+    "EMAIL_BACKEND",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+)
+
+_RELEASE_DOC_REQUIRED_MARKERS = (
+    "CHECKLIST DE RELEASE",
+    "PRIVACIDAD OPERATIVA",
+    "Fuente canónica previa al boot",
+    "HTTPS absoluto",
+    "dominio real (no `.local`)",
+    "SMTP real",
+    "pg_dump",
+    "pg_restore",
+    "backup_restore_postgres.py",
+    "BOTICA_BACKUP_DIR",
+)
+
+_DEPLOY_DOC_SECTION_START = "## 2) Variables requeridas en Railway UI"
+_DEPLOY_DOC_SECTION_END = "### 2.1) Admin provisional seguro (opcional y controlado)"
 
 
 def _require(condition: bool, message: str) -> None:
@@ -26,28 +57,52 @@ def _require(condition: bool, message: str) -> None:
         raise RuntimeError(message)
 
 
+def _require_markers(content: str, markers: tuple[str, ...], file_label: str) -> None:
+    for marker in markers:
+        _require(marker in content, f"Falta '{marker}' en {file_label}")
+
+
+def _extract_section(content: str, start_marker: str, end_marker: str, file_label: str) -> str:
+    start = content.find(start_marker)
+    end = content.find(end_marker)
+    _require(start >= 0, f"No se encontró '{start_marker}' en {file_label}")
+    _require(end > start, f"No se encontró '{end_marker}' después de '{start_marker}' en {file_label}")
+    return content[start:end]
+
+
 def _check_env_example() -> None:
     print("A) .env.railway.example endurecido")
     content = (ROOT_DIR / ".env.railway.example").read_text(encoding="utf-8")
-    for entry in _ENV_REQUIRED:
-        _require(entry in content, f"Falta '{entry}' en .env.railway.example")
+    _require_markers(content, _ENV_REQUIRED, ".env.railway.example")
     print("[OK] Variables críticas documentadas en .env.railway.example")
 
 
 def _check_release_doc() -> None:
-    print("B) Checklist release + backup/restore")
-    content = (ROOT_DIR / "docs/release_readiness_minima.md").read_text(encoding="utf-8")
-    required_markers = (
-        "pg_dump",
-        "pg_restore",
-        "backup_restore_postgres.py",
-        "BOTICA_BACKUP_DIR",
-        "CHECKLIST DE RELEASE",
-        "PRIVACIDAD OPERATIVA",
+    print("B) Contrato documental preflight (release + Railway)")
+    release_content = (ROOT_DIR / "docs/release_readiness_minima.md").read_text(encoding="utf-8")
+    deploy_content = (ROOT_DIR / "docs/deploy_railway.md").read_text(encoding="utf-8")
+    deploy_variables_section = _extract_section(
+        deploy_content,
+        _DEPLOY_DOC_SECTION_START,
+        _DEPLOY_DOC_SECTION_END,
+        "docs/deploy_railway.md",
     )
-    for marker in required_markers:
-        _require(marker in content, f"Falta marcador obligatorio '{marker}' en docs/release_readiness_minima.md")
-    print("[OK] Checklist y estrategia mínima de backup/restore presentes")
+    _require_markers(
+        release_content,
+        _RELEASE_DOC_REQUIRED_MARKERS,
+        "docs/release_readiness_minima.md",
+    )
+    _require_markers(
+        release_content,
+        _PREBOOT_REQUIRED_VARS,
+        "docs/release_readiness_minima.md",
+    )
+    _require_markers(
+        deploy_variables_section,
+        _PREBOOT_REQUIRED_VARS,
+        "docs/deploy_railway.md (sección Railway UI)",
+    )
+    print("[OK] Checklist release y contrato Railway previos al boot están alineados")
 
 
 def _check_runtime_env_safety() -> None:

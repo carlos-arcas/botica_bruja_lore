@@ -33,6 +33,7 @@ Los estados oficiales de proyecto y capacidad son:
 - Backend (dominio/aplicación/infraestructura/presentación pública): **implementado para recorrido demo completo, checkout/pedido real, cuenta real y endurecimientos operativos V2 ya cerrados**.
 - Frontend (home + herbal + rituales + calendario + flujo ecommerce demo legado + checkout real + área privada cliente): **implementado y navegable**.
 - Backoffice/admin mínimo: **implementado para operación demo y real mínima, incluyendo inventario, incidencias/postventa básica y ACL v2 dentro del alcance ya cerrado**.
+- Naming factual vigente para herramientas: la sección/ruta pública y de backoffice permanece en `herramientas-esotericas`, mientras el `tipo_producto` canónico de dominio, importación y seed permanece en `herramientas-rituales`.
 - Checkout demo + confirmación/recibo/email demo: **DONE (Ciclo 3)**.
 - Cuenta demo con valor (registro/auth demo, perfil, historial): **DONE como legado controlado (Ciclo 4)**.
 - Checkout/pago real + operación mínima post-pago: **DONE en coexistencia controlada con el legado demo**.
@@ -76,17 +77,30 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - **Último hito incremental cerrado con evidencia verificable**: `V2-R09` (seguridad y ACL v2).
 - **Evidencia de cierre vigente**: `docs/roadmap_ecommerce_real_v2.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/roadmap_codex.md`.
 
+## 6.1 Contrato activo de catálogo público por sección
+- **Estado factual vigente**:
+  1. `botica-natural` mantiene el baseline público DB-backed completo; `seed_demo_publico.py`, `docs/deploy_railway.md` y `scripts/validate_botica_natural_postgres_e2e.py` la anclan en **5 productos publicados**.
+  2. `velas-e-incienso` ya está publicada como sección DB-backed con listado y detalle propios; `seed_demo_publico.py` la sostiene con **3 productos publicados propios**, el frontend expone `/velas-e-incienso` + `/velas-e-incienso/[slug]` y la regresión mínima pública cubre listado, detalle y vacío honesto.
+  3. `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py` conserva un fallback herbal especial solo para `botica-natural` cuando la sección no devuelve productos propios.
+  4. `minerales-y-energia` y `herramientas-esotericas` no tienen todavía masa seed pública equivalente ni sección pública final abierta.
+- **Regla operativa definida**:
+  1. ninguna sección nueva debe abrir catálogo público DB-backed con menos de **3 productos publicados propios**; `botica-natural` mantiene su baseline de **5**.
+  2. el vacío honesto es válido como estado runtime posterior a la apertura de la sección o bajo filtros, no como atajo para inaugurar una sección sin catálogo suficiente.
+  3. el fallback cruzado entre secciones no se generaliza: solo sobrevive la compatibilidad legado de `botica-natural`.
+
 ## 7. Ruta operativa vigente
-- **Ruta vigente**: cierre externo de `V2-R10` (go-live checklist v2).
-- **Estado**: **BLOCKED** por dependencia externa verificable, trazada como `AUT-003` en `docs/roadmap_codex.md`.
+- **Ruta vigente**: avance incremental del backlog autónomo local en `docs/roadmap_codex.md`, manteniendo `AUT-003` y `OPS-RWY-003` como bloqueos externos de release/go-live.
+- **Estado**: **EN_PROGRESO** con cola local activa y cierre externo de `V2-R10` todavía bloqueado.
 - **Condición de continuidad aplicada**:
   1. la coexistencia demo ↔ real sigue activa sin reabrir capacidades ya cerradas;
-  2. la cola autónoma correcta permanece sin `TODO` no `BLOCKED` mientras no se cumpla el desbloqueo externo;
-  3. el siguiente paso exacto es disponer de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales para smoke post-deploy y restore drill.
+  2. la cola autónoma correcta se ejecuta una tarea atómica por corrida desde `docs/roadmap_codex.md`;
+  3. `AUT-003` y `OPS-RWY-003` siguen exigiendo `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro de restore drill para el cierre externo;
+  4. el siguiente paso local exacto es `AUT-004`.
 
 ## 8. Deuda y bloqueos conocidos
 1. El cierre externo de `V2-R10` sigue bloqueado por ausencia de URLs/credenciales reales y entorno temporal seguro de restore drill en el runner actual.
-2. Mientras ese criterio no se cumpla, no corresponde inventar cola paralela ni reabrir capacidades ya cerradas; el estado honesto es backlog operativo totalmente bloqueado.
+2. La cola autónoma local sigue activa, pero no corresponde inventar trabajo fuera de `docs/roadmap_codex.md` ni mezclarla con el desbloqueo externo de `V2-R10`.
+3. El gate canónico local volvió a quedar en rojo por una deriva interna entre `seed_demo_publico.py` (8 productos publicados vigentes) y `tests/scripts/test_check_bootstrap_demo_expected_counts.py` (todavía espera 6); el siguiente paso local exacto pasa a ser `AUT-004`.
 
 ## 8.1 Transición formal demo → real
 - Capacidad: **Base arquitectónica de migración ecommerce real**.
