@@ -2976,3 +2976,215 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara capacidad nueva.
   10. Siguiente paso exacto definido: **Si**.
 - **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` en modo real.
+
+## Entrada 2026-03-27-AUT-003 (revalidacion de gate verde y bloqueo externo persistente)
+- **Fecha (UTC)**: `2026-03-27T15:12:26Z`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: revalidar el primer bloqueo activo ejecutando los checks mas especificos del cierre externo y confirmar si aparecio deuda local nueva de release antes de seguir documentando.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-003` en `BLOCKED`; no aparecio ninguna URL, credencial ni acceso externo nuevos que habiliten smoke real o backup/restore reales.
+  2. No tocar codigo de producto ni abrir nuevas tareas: sigue sin existir una primera `TODO` no `BLOCKED`.
+  3. Actualizar solo la trazabilidad canonica con el gate local en verde y los errores exactos de los checks externos aun bloqueados.
+- **Checks ejecutados**:
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','DATABASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `Get-NetTCPConnection -LocalPort 3000,8000 -State Listen -ErrorAction SilentlyContinue` -> `NO_LISTENERS_3000_8000`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_deployed_stack.py` -> `ERROR`; `La variable obligatoria BACKEND_BASE_URL no esta definida.`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` -> `ERROR`; `Debes definir --database-url o DATABASE_URL.`.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run` -> `ERROR`; `Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`.
+  - `python scripts/check_release_gate.py` -> `OK`.
+- **Resultado verificable**:
+  - el gate canonico sigue en verde y el runner local sigue limpio, sin listeners residuales en `3000/8000`;
+  - `check_release_readiness.py` sigue en `OK`, sin deriva documental nueva del contrato de release;
+  - el smoke post-deploy, el backup y el restore-drill siguen bloqueados exactamente por configuracion externa ausente;
+  - el backlog permanece totalmente bloqueado por dependencias externas reales, sin deuda local nueva.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido para restore drill.
+  - `OPS-RWY-003` sigue bloqueada por falta de acceso verificable a Railway UI/logs y a las variables reales del servicio.
+- **Diagnostico concreto**:
+  - no existe ninguna tarea `TODO` no `BLOCKED`;
+  - el repo no presenta ningun fallo local nuevo de gate o readiness;
+  - los comandos especificos del cierre externo siguen fallando de forma inmediata por configuracion ausente.
+- **Causa probable**:
+  - el runner actual no recibe las URLs reales desplegadas ni las credenciales/variables necesarias para smoke, backup y restore drill.
+- **Evidencia verificable**:
+  - `python scripts/check_release_gate.py` devuelve `OK`.
+  - `python scripts/check_release_readiness.py` devuelve `OK`.
+  - `python scripts/check_deployed_stack.py` devuelve error de configuracion por `BACKEND_BASE_URL` ausente.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` devuelve error por `DATABASE_URL` ausente.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run` devuelve error por `BOTICA_RESTORE_DATABASE_URL` ausente.
+- **Impacto sobre la tarea**:
+  - `AUT-003` no puede avanzar a smoke real ni a backup/restore reales en esta corrida.
+- **Dependencia que bloquea**:
+  - provision de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido;
+  - acceso externo verificable a Railway para `OPS-RWY-003`.
+- **Siguiente accion exacta**:
+  - aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para reintentar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` en modo real.
+- **Criterio de desbloqueo**:
+  - disponer de las cuatro variables reales y del entorno temporal seguro, ejecutar smoke post-deploy + backup real + restore drill real con resultado verificable.
+- **Fecha/punto de revision**:
+  - siguiente ejecucion aplicable con variables reales y acceso externo disponibles.
+- **Checklist de cierre aplicada (AUT-003 gate verde y bloqueo externo persistente)**:
+  1. Tarea correcta confirmada: **Si**; no existia ninguna `TODO` no `BLOCKED` y correspondia revalidar el primer bloqueo activo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo revalidacion del bloqueo y trazabilidad documental.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; los cambios propios de esta corrida se limitan a `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` en modo real.
+
+## Entrada 2026-03-27-OPS-RWY-004 (alineacion Railway env con variables reales aportadas)
+- **Fecha (UTC)**: `2026-03-27T15:25:28Z`
+- **ID de tarea**: `OPS-RWY-004`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: alinear el contrato versionado Railway del repo con las variables reales aportadas por el mantenedor, distinguir variables de servicio frente a variables operativas de smoke/restore y dejar evidencia honesta de lo que sigue bloqueado.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/deploy_railway.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/seo_operativa_search_console.md`
+  - `.env.railway.example`
+  - `backend/configuracion_django/settings.py`
+  - `backend/configuracion_django/validaciones_entorno.py`
+  - `frontend/.env.example`
+  - `frontend/infraestructura/seo/metadataSeo.ts`
+  - `frontend/infraestructura/configuracion/adminUrl.ts`
+  - `frontend/infraestructura/configuracion/debugLogs.ts`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `.env.railway.example`
+  - `docs/deploy_railway.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener sin cambios los guardrails de backend y scripts; el ajuste requerido era de contrato versionado y trazabilidad, no de relajar validaciones.
+  2. Separar explicitamente variables de boot backend, variables frontend, alias opcionales del servicio PostgreSQL y variables operativas de smoke/restore para evitar volver a tratar `BACKEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` como si fueran variables de arranque del servicio.
+  3. Alinear `.env.railway.example` con el uso real del frontend (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_ADMIN_BASE_URL`) y con el alias de servicio PostgreSQL ya aportado (`Postgres`), sin versionar secretos reales.
+  4. Revalidar el entorno real con las URLs publicas ya aportadas: el frontend responde, el backend no sirve `/healthz` ni las APIs publicas y el restore drill sigue bloqueado por falta de `BOTICA_RESTORE_DATABASE_URL`.
+- **Checks ejecutados**:
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `$env:BACKEND_BASE_URL='https://boticabrujalore-production.up.railway.app'; $env:FRONTEND_BASE_URL='https://boticabrujalore.up.railway.app'; python scripts/check_deployed_stack.py` -> `ERROR`; backend `404` en `/healthz`, `/api/v1/herbal/plantas/` y `/api/v1/rituales/`; frontend `200` en `/`, `/hierbas` y `/rituales`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups" --database-url 'postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}'` -> `OK`.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run` -> `ERROR`; `Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`.
+  - `git diff --name-only` -> `.env.railway.example`, `docs/deploy_railway.md`, `docs/release_readiness_minima.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Resultado verificable**:
+  - el repo documenta ya de forma consistente que `BACKEND_BASE_URL`/`FRONTEND_BASE_URL` son variables operativas del smoke post-deploy y que `BOTICA_RESTORE_DATABASE_URL` es exclusiva del restore drill sobre base temporal;
+  - `.env.railway.example` refleja ya el contrato visible del frontend para canonical/SEO y admin (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_ADMIN_BASE_URL`);
+  - `check_release_readiness.py` sigue en `OK` tras la alineacion documental;
+  - el smoke real ya no esta bloqueado por falta de URL: ahora falla por `404` real del backend desplegado;
+  - el backup dry-run queda cubierto con `DATABASE_URL` en forma de referencia Railway, pero el restore drill sigue sin poder planificarse por falta de `BOTICA_RESTORE_DATABASE_URL`.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada porque el backend desplegado devuelve `404` en las rutas que el smoke considera obligatorias y porque sigue faltando `BOTICA_RESTORE_DATABASE_URL` para restore drill real.
+  - `OPS-RWY-003` sigue bloqueada porque sigue sin haber acceso verificable a Railway UI/logs para explicar el `404` del backend y certificar boot limpio con `DEBUG=false`.
+- **Checklist de cierre aplicada (OPS-RWY-004 alineacion Railway env)**:
+  1. Tarea correcta confirmada: **Si**; es una peticion explicita del mantenedor fuera de la cola bloqueada y quedo registrada en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo contrato Railway, ejemplos/documentacion y trazabilidad de validacion externa.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; los cambios propios de esta corrida se limitan a `.env.railway.example`, `docs/deploy_railway.md`, `docs/release_readiness_minima.md`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara ninguna implementacion de producto nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: completar en Railway UI las variables backend pendientes del contrato (`PUBLIC_SITE_URL`, `PAYMENT_SUCCESS_URL`, `PAYMENT_CANCEL_URL`, `DEFAULT_FROM_EMAIL`, `EMAIL_BACKEND`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`), definir `BOTICA_RESTORE_DATABASE_URL` contra una base temporal segura y capturar logs del backend que hoy responde `404` para reejecutar `python scripts/check_deployed_stack.py` y el restore drill real.
+
+## Entrada 2026-03-27-ROADMAP-REPLAN-001 (replan backlog residual Ciclo 6 + launcher local)
+- **Fecha (UTC)**: `2026-03-27T15:53:19Z`
+- **ID de tarea**: `ROADMAP-REPLAN-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: replanificar `docs/roadmap_codex.md` y `docs/bitacora_codex.md` para romper la cola vacia con backlog residual defendible, sin tocar producto, sin reabrir `DONE` historicos y manteniendo `AUT-003`/`OPS-RWY-003` en `BLOCKED`.
+- **Fuentes de verdad consultadas**:
+  - `docs/90_estado_implementacion.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/00_vision_proyecto.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`
+  - `docs/ciclos/ciclo_03_roadmap_prompts.md`
+  - `docs/ciclos/ciclo_04_roadmap_prompts.md`
+  - `run_app.bat`
+  - `setup_entorno.bat`
+  - `docs/10_checkout_y_flujos_ecommerce.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-003` y `OPS-RWY-003` en `BLOCKED` porque la evidencia nueva sigue siendo externa: backend desplegado con `404`, falta `BOTICA_RESTORE_DATABASE_URL` y sigue sin existir acceso verificable a Railway UI/logs para cerrar el incidente fuera de este runner.
+  2. No reinyectar como cola pendiente desde cero los prompts brutos de Ciclo 3/Ciclo 4: `docs/90_estado_implementacion.md` declara `Checkout demo` `DONE (Ciclo 3)`, `Cuenta demo` `DONE como legado controlado (Ciclo 4)` y cierra historicamente ambos ciclos.
+  3. Extraer solo backlog residual defendible desde `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`, mapeando `B06-C1`, `B06-C2`, `B06-I1`, `B06-I2`, `B06-I3`, `B06-O1` y `B06-O2` a tareas nuevas, atomicas y ordenadas.
+  4. Añadir `LOCAL-LAUNCH-003` como hardening contractual del launcher canonico `run_app.bat`, sin reabrir `LOCAL-LAUNCH-001` ni `LOCAL-LAUNCH-002`, que permanecen como historico `DONE`.
+  5. Reescribir el radar para distinguir entre: a) producto/go-live todavia bloqueado externamente; b) nueva cola ejecutable abierta por peticion explicita del mantenedor dentro del mismo roadmap, sin backlog paralelo.
+- **Checks ejecutados**:
+  - `Select-String -Path 'docs/90_estado_implementacion.md' -Pattern '\| Checkout demo \| DONE \|','\| Historial de pedidos demo \| DONE \|','Cuenta demo con valor \(registro/auth demo, perfil, historial\): \*\*DONE como legado controlado \(Ciclo 4\)\*\*','## 25\. Cierre oficial de Ciclo 3 tras Prompt 8','## 31\. Cierre oficial de Ciclo 4 y apertura controlada de Ciclo 5','## 36\. Ciclo 6 — Prompt 1 oficial'` -> confirma cierres de Ciclo 3/Ciclo 4 y apertura auditada de Ciclo 6 sin reabrirlos.
+  - `Select-String -Path 'docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md' -Pattern 'B06-C1','B06-C2','B06-I1','B06-I2','B06-I3','B06-O1','B06-O2','Backlog priorizado propuesto para Ciclo 6'` -> confirma backlog residual oficial y su prioridad.
+  - `Select-String -Path 'docs/roadmap_codex.md' -Pattern '^## LOCAL-LAUNCH-001','^## LOCAL-LAUNCH-002','^## LOCAL-LAUNCH-003','^## C6-DOC-001','^## C6-INT-001','^## C6-QA-001','^## C6-TRACE-001','^## C6-UX-001','^## AUT-003','^## OPS-RWY-003'` -> confirma preservacion de historicos `DONE`, bloqueos externos y nuevo bloque ordenado.
+  - `$content = Get-Content 'docs/roadmap_codex.md'; ...` -> `AUT-003=BLOCKED`, `OPS-RWY-003=BLOCKED`, `LOCAL-LAUNCH-001=DONE`, `LOCAL-LAUNCH-002=DONE`, `LOCAL-LAUNCH-003=TODO`, `C6-DOC-001=TODO`, `C6-INT-001=TODO`, `C6-QA-001=TODO`, `C6-TRACE-001=TODO`, `C6-UX-001=TODO`.
+  - `Select-String -Path 'run_app.bat' -Pattern 'setup_entorno\.bat','migrate --noinput','seed_demo_publico','runserver 127\.0\.0\.1:8000','npm run dev -- --hostname 127\.0\.0\.1 --port 3000','Start-Process'` -> confirma bootstrap, migraciones, seed local, arranque backend/frontend y apertura automatica del navegador ya presentes en el launcher canonico.
+  - `Test-Path` sobre `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/ciclos/ciclo_03_roadmap_prompts.md`, `docs/ciclos/ciclo_04_roadmap_prompts.md`, `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`, `docs/90_estado_implementacion.md`, `run_app.bat`, `setup_entorno.bat`, `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`, `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx`, `frontend/contenido/cuenta_demo/estadoCuentaDemo.ts`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_demo.py`, `frontend/tests/checkout-demo.test.ts`, `tests/nucleo_herbal/test_api_pedidos_demo.py`, `scripts/check_release_gate.py` -> todas las rutas citadas existen (`True`).
+  - `git diff --name-only -- docs/roadmap_codex.md docs/bitacora_codex.md` -> `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+  - `git status --short -- docs/roadmap_codex.md docs/bitacora_codex.md` -> `M docs/bitacora_codex.md`, `M docs/roadmap_codex.md`.
+- **Resultado verificable**:
+  - `docs/roadmap_codex.md` deja de estar en cola vacia/backlog totalmente bloqueado: la primera `TODO` no `BLOCKED` pasa a ser `LOCAL-LAUNCH-003`.
+  - `AUT-003` y `OPS-RWY-003` permanecen en `BLOCKED` sin rebaja ficticia de su criterio de desbloqueo.
+  - `LOCAL-LAUNCH-001` y `LOCAL-LAUNCH-002` se conservan como historico `DONE`; `LOCAL-LAUNCH-003` solo endurece contractualmente el launcher final `run_app.bat`.
+  - Ciclo 3/Ciclo 4 no se reinyectan como backlog bruto pendiente; las tareas nuevas salen exclusivamente del residual de Ciclo 6 y de la peticion explicita de hardening del launcher local.
+  - El radar final ya separa con claridad estado factual de producto/go-live frente a cola ejecutable residual pedida por el mantenedor.
+- **Bloqueos (si aplica)**:
+  - ninguno para esta replanificacion documental;
+  - persisten sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (ROADMAP-REPLAN-001)**:
+  1. Tarea correcta confirmada: **Si**; la peticion explicita del mantenedor fue replanificar la misma cola operativa cuando el estado previo era cola vacia/backlog bloqueado.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo gobernanza documental y trazabilidad operativa.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el trabajo propio queda restringido a `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara ninguna implementacion de producto nueva ni se reabren cierres historicos sin brecha residual verificable.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `LOCAL-LAUNCH-003` con foco exclusivo en smoke contractual de `run_app.bat`.

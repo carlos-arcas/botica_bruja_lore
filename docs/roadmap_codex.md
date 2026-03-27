@@ -68,6 +68,12 @@ Uso prohibido:
 | `CAT-SYNC-001` | Alinear importación multisección final | `docs/07_arquitectura_tecnica.md` | `docs/90_estado_implementacion.md`, `frontend/componentes/admin/sincronizacionProductosAdmin.ts`, `frontend/tests/backoffice-flujos.test.ts`, `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/servicio.py`, `backend/nucleo_herbal/presentacion/backoffice_views/productos_contrato.py` | coherencia entre mapa canónico de secciones, importación y refresh contextual | La sincronización frontend está probada para botica/velas/minerales, pero no para herramientas; además el upsert backend de productos persiste `seccion_publica` sin validar existencia canónica. | Endurecer tras cerrar naming y seeds mínimos. |
 | `CAT-QA-001` | Regresión multisección end-to-end | `docs/13_testing_ci_y_quality_gate.md` | `docs/90_estado_implementacion.md`, `frontend/tests/home-raiz-secciones.test.ts`, `frontend/tests/backoffice-flujos.test.ts`, `tests/nucleo_herbal/test_exposicion_publica.py`, `scripts/validate_botica_natural_postgres_e2e.py` | recorrido home → hero → listado público → importación/backoffice para nuevas secciones | El repo tiene regresión fuerte de `botica-natural`, pero no una batería equivalente que cubra la expansión multisección completa posterior. | Debe llegar al final del bloque, cuando existan secciones y seeds mínimos reales. |
 | `OPS-RWY-003` | Validación externa Railway real | `docs/deploy_railway.md` | `.env.railway.example`, `docs/release_readiness_minima.md`, `backend/configuracion_django/settings.py`, `backend/configuracion_django/validaciones_entorno.py`, Railway UI/logs externos | validación externa con variables reales y boot limpio en Railway | La incidencia operativa solo se puede cerrar con variables reales, acceso a Railway UI y verificación de arranque limpio fuera de este runner. | Mantener `BLOCKED` hasta contar con acceso externo verificable; no sustituye `AUT-003`, que sigue cubriendo smoke/restore de go-live. |
+| `LOCAL-LAUNCH-003` | Smoke contractual launcher local | `docs/90_estado_implementacion.md` | `run_app.bat`, `setup_entorno.bat`, `docs/bitacora_codex.md` | endurecimiento contractual del doble clic sobre el launcher canonico | `LOCAL-LAUNCH-001` y `LOCAL-LAUNCH-002` ya cerraron creacion y naming; la brecha residual defendible es blindar el smoke del artefacto final `run_app.bat` sin reabrirlo desde cero. | Debe validar contrato real del launcher actual, no recrear el launcher ni alterar los cierres historicos. |
+| `C6-DOC-001` | Alinear checkout demo y naming | `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` | `docs/90_estado_implementacion.md`, `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md` | consistencia documental del flujo demo legado | El backlog residual oficial de Ciclo 6 fija solo brechas de contrato y naming (`B06-C1` + `B06-C2`), mientras `docs/90` confirma Ciclos 3 y 4 ya cerrados. | No reiniciar prompts brutos de Ciclo 3/4; solo alinear el delta documental verificable. |
+| `C6-INT-001` | Integracion minima cuenta-demo ↔ checkout demo | `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` | `docs/90_estado_implementacion.md`, `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_demo.py` | continuidad minima entre cuenta demo y checkout demo legado | La auditoria de Ciclo 6 delimita una unica brecha de integracion (`B06-I1`) sobre capacidades que ya existen y siguen `DONE` en `docs/90`. | Debe ser un ajuste acotado de continuidad, no una reapertura de cuenta demo ni de checkout desde cero. |
+| `C6-QA-001` | Cobertura integrada cesta → encargo → recibo → email | `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` | `docs/13_testing_ci_y_quality_gate.md`, `frontend/tests/checkout-demo.test.ts`, `tests/nucleo_herbal/test_api_pedidos_demo.py`, `scripts/check_release_gate.py` | endurecimiento del recorrido critico demo legado | La brecha residual `B06-I2` pide cobertura integrada del recorrido completo; no cuestiona que el flujo ya exista ni que el gate actual este activo. | Debe reforzar la no regresion del flujo integrado, no reabrir el Ciclo 3 oficial. |
+| `C6-TRACE-001` | Normalizar historico y matriz de recorridos criticos | `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` | `docs/90_estado_implementacion.md`, `docs/bitacora_codex.md`, `docs/13_testing_ci_y_quality_gate.md` | trazabilidad historica y matriz compacta de recorridos | La auditoria de Ciclo 6 agrupa `B06-I3` + `B06-O2` como deuda documental residual defendible tras ciclos cerrados. | Debe limpiar etiquetas historicas ambiguas y dejar una matriz viva, sin reescribir cierres factuales. |
+| `C6-UX-001` | Homogeneizar microcopy comercial demo | `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` | `docs/90_estado_implementacion.md`, `frontend/app/encargo/page.tsx`, `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx` | consistencia UX del flujo comercial demo legado | La brecha `B06-O1` es residual y de baja prioridad: microcopy heterogeneo entre superficies ya implementadas. | Debe ejecutarse al final del bloque y solo tras cerrar naming/documentacion canonicos. |
 
 ## CRX-001 — Bootstrap de gobernanza Codex
 - **Estado**: `DONE`
@@ -290,7 +296,8 @@ Uso prohibido:
   - `docs/release_readiness_minima.md` exige backup real, restore drill real, deploy y smoke post-deploy.
   - `scripts/check_deployed_stack.py` requiere `BACKEND_BASE_URL` y `FRONTEND_BASE_URL`.
   - `scripts/backup_restore_postgres.py` requiere `DATABASE_URL` para el backup real y `BOTICA_RESTORE_DATABASE_URL` para el restore drill real.
-  - el runner actual no dispone de URLs desplegadas reales ni de `DATABASE_URL`/`BOTICA_RESTORE_DATABASE_URL` operativas para cerrar el flujo externo.
+  - con URLs reales el smoke deja de fallar por variable ausente, pero sigue siendo bloqueante si el backend público no sirve `/healthz` y las APIs esperadas.
+  - el backup real sigue necesitando `DATABASE_URL` resuelta en el runner y el restore drill sigue exigiendo `BOTICA_RESTORE_DATABASE_URL` independiente sobre una base temporal segura.
 - **Alcance permitido**: `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, `docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`.
 - **Fuera de alcance**: cambios de producto, despliegues improvisados, uso de producción como base de restore drill, o cierre ficticio de `V2-R10` sin entorno real.
 - **Zonas probables**: `docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`.
@@ -303,8 +310,9 @@ Uso prohibido:
   - `2026-03-27T13:51:03Z`: `python scripts/check_release_readiness.py` -> `OK`; `python scripts/check_deployed_stack.py` falla con `La variable obligatoria BACKEND_BASE_URL no esta definida.` y `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` falla con `[ERROR] Debes definir --database-url o DATABASE_URL.`.
   - `2026-03-27T14:12:49Z`: el runner vuelve a estar limpio (`Get-NetTCPConnection -LocalPort 3000,8000 -State Listen` no encuentra listeners), `python scripts/check_release_gate.py` -> `OK` y `python scripts/check_release_readiness.py` -> `OK`; `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` siguen fallando exactamente por ausencia de `BACKEND_BASE_URL` y `DATABASE_URL`.
   - `2026-03-27T14:53:12Z`: el runner sigue limpio (`Get-NetTCPConnection -LocalPort 3000,8000 -State Listen -ErrorAction SilentlyContinue` -> `NO_LISTENERS_3000_8000`), `python scripts/check_release_gate.py` -> `OK` y `python scripts/check_release_readiness.py` -> `OK`; `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` y `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file "$env:TEMP\\botica_backups\\dummy.dump"` siguen fallando exactamente por ausencia de `BACKEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
+  - `2026-03-27T15:25:28Z`: con `BACKEND_BASE_URL=https://boticabrujalore-production.up.railway.app` y `FRONTEND_BASE_URL=https://boticabrujalore.up.railway.app`, `python scripts/check_deployed_stack.py` deja de fallar por configuración ausente y pasa a fallar por entorno real: el frontend responde `200` en `/`, `/hierbas` y `/rituales`, pero el backend devuelve `404` en `/healthz`, `/api/v1/herbal/plantas/` y `/api/v1/rituales/`; `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups" --database-url 'postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}'` -> `OK`.
 - **Criterio de cierre**: smoke post-deploy y restore drill real ejecutados con resultado verificable y sin incidencias bloqueantes.
-- **Condición exacta de bloqueo**: faltan `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y acceso a un entorno temporal seguro para restore drill fuera de este runner.
+- **Condición exacta de bloqueo**: el smoke real ya dispone de `BACKEND_BASE_URL` y `FRONTEND_BASE_URL`, pero el backend desplegado sigue devolviendo `404` en `/healthz` y APIs públicas; además falta `BOTICA_RESTORE_DATABASE_URL` y acceso a una base temporal segura para completar el restore drill real fuera de este runner.
 
 ## CRX-007 — Bootstrap contrato 1
 - **Tipo**: `DOC`
@@ -851,18 +859,170 @@ Uso prohibido:
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia logica**: `AUT-003`.
 
+## OPS-RWY-004 - Alineacion repo-docs-scripts para Railway env con variables reales aportadas
+- **Tipo**: `OPS`
+- **Prioridad**: `P0`
+- **Estado**: `DONE`
+- **Contexto de activación**: petición explícita del mantenedor fuera de la cola autónoma bloqueada; se registra aquí sin abrir roadmap paralelo.
+- **Objetivo**: alinear el contrato Railway del repo con las variables reales aportadas, separar variables de servicio de variables operativas de smoke/restore y dejar trazabilidad honesta de lo resuelto y lo que sigue bloqueado.
+- **Evidencia o síntoma**:
+  - `docs/deploy_railway.md` y `.env.railway.example` no distinguían con suficiente claridad variables de boot, variables opcionales del frontend y variables operativas de smoke/restore.
+  - `.env.railway.example` no reflejaba `NEXT_PUBLIC_SITE_URL` ni `NEXT_PUBLIC_ADMIN_BASE_URL`, aunque el frontend y la operativa SEO sí las contemplan.
+  - el mantenedor ya aportó URLs públicas reales y wiring Railway suficiente para pasar de un bloqueo por variable ausente a una validación real del entorno desplegado.
+- **Alcance permitido**: `.env.railway.example`, `docs/deploy_railway.md`, `docs/release_readiness_minima.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: desplegar desde este runner, inventar secretos/URLs no aportados, relajar guardrails de producción o cerrar ficticiamente `AUT-003`/`OPS-RWY-003`.
+- **Checks obligatorios**:
+  - `python scripts/check_release_readiness.py`
+  - `$env:BACKEND_BASE_URL='https://boticabrujalore-production.up.railway.app'; $env:FRONTEND_BASE_URL='https://boticabrujalore.up.railway.app'; python scripts/check_deployed_stack.py`
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups" --database-url 'postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}'`
+- **Criterio de cierre**: contrato documental y ejemplo de entorno alineados con el repo actual, con evidencia verificable de smoke/backup y sin inventar los valores que siguen faltando.
+- **Evidencia de cierre OPS-RWY-004**:
+  1. `.env.railway.example`, `docs/deploy_railway.md` y `docs/release_readiness_minima.md` separan ya variables de boot backend, variables frontend, alias opcionales del servicio PostgreSQL y variables operativas de `check_deployed_stack.py` / `backup_restore_postgres.py`.
+  2. `python scripts/check_release_readiness.py` -> `OK`; el contrato versionado sigue alineado con el preflight mínimo.
+  3. `python scripts/check_deployed_stack.py` con las URLs reales aportadas falla por entorno real y no por variable ausente: frontend `200` en `/`, `/hierbas` y `/rituales`; backend `404` en `/healthz`, `/api/v1/herbal/plantas/` y `/api/v1/rituales/`.
+  4. `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups" --database-url 'postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}'` -> `OK`; `BOTICA_RESTORE_DATABASE_URL` sigue pendiente para restore drill.
+- **Bloqueo conocido**: la tarea local queda cerrada, pero `AUT-003` y `OPS-RWY-003` siguen bloqueadas por el entorno real desplegado y por el restore drill pendiente.
+- **Siguiente dependencia logica**: `OPS-RWY-003` y `AUT-003`.
+
+## Replan residual Ciclo 6 + launcher local
+- **Origen**: peticion explicita del mantenedor para romper la cola vacia sin falsificar el estado real del repo ni reabrir cierres historicos.
+- **Regla de este bloque**:
+  1. `AUT-003` y `OPS-RWY-003` se mantienen en `BLOCKED` mientras la evidencia siga siendo externa.
+  2. No se reinyectan los prompts brutos de Ciclo 3 o Ciclo 4 como backlog pendiente desde cero; `docs/90_estado_implementacion.md` los declara `DONE` y `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` solo habilita backlog residual.
+  3. `LOCAL-LAUNCH-001` y `LOCAL-LAUNCH-002` permanecen `DONE`; `LOCAL-LAUNCH-003` nace solo como hardening contractual del launcher canonico `run_app.bat`.
+- **Lectura factual aplicada**:
+  1. `docs/90_estado_implementacion.md` declara `Checkout demo` `DONE (Ciclo 3)` y `Cuenta demo` `DONE como legado controlado (Ciclo 4)`.
+  2. `docs/ciclos/ciclo_03_roadmap_prompts.md` y `docs/ciclos/ciclo_04_roadmap_prompts.md` siguen siendo roadmap historico de ejecucion, no cola pendiente actual.
+  3. `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` acota el backlog residual defendible a `B06-C1`, `B06-C2`, `B06-I1`, `B06-I2`, `B06-I3`, `B06-O1` y `B06-O2`.
+  4. `run_app.bat` ya orquesta `setup_entorno.bat`, migraciones, seed local SQLite en primera base, arranque Django/Next y apertura automatica del navegador; la brecha residual defendible es verificar contractualmente ese comportamiento sobre el launcher canonico actual.
+
+## LOCAL-LAUNCH-003 - Smoke contractual de doble clic en `run_app.bat`
+- **Tipo**: `OPS`
+- **Prioridad**: `P0`
+- **Estado**: `TODO`
+- **Objetivo**: blindar y verificar contractualmente el arranque local con doble clic sobre `run_app.bat`, incluyendo prerequisitos minimos reales, listeners en puertos canonicos y apertura automatica del home.
+- **Mapeo backlog residual**: hardening residual del launcher local ya `DONE`, sin reabrir `LOCAL-LAUNCH-001` ni `LOCAL-LAUNCH-002`.
+- **Evidencia o sintoma**:
+  - `LOCAL-LAUNCH-001` ya dejo operativo el arranque local y `LOCAL-LAUNCH-002` canonizo `run_app.bat` como unico lanzador.
+  - `run_app.bat` ya llama a `setup_entorno.bat`, aplica `migrate --noinput`, siembra `seed_demo_publico` en primera base SQLite local, arranca Django en `127.0.0.1:8000`, arranca Next en `127.0.0.1:3000` y abre navegador cuando el frontend responde.
+  - falta un smoke contractual explicito del artefacto final `run_app.bat` como launcher canonico tras el cambio de naming y con foco en doble clic/puertos/home.
+- **Alcance permitido**: `run_app.bat`, `setup_entorno.bat`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: reabrir `LOCAL-LAUNCH-001`/`002`, crear un launcher alternativo, tocar producto o mezclar este hardening con `AUT-003`/`OPS-RWY-003`.
+- **Checks obligatorios**:
+  - verificar prerequisitos minimos reales de Python/npm/.venv y `.env.local`;
+  - ejecutar el launcher canonico en modo verificable para confirmar listeners en `127.0.0.1:3000` y `127.0.0.1:8000`;
+  - comprobar `GET /` del frontend y `GET /healthz` del backend;
+  - registrar contrato de apertura automatica del home y salidas operativas del script.
+- **Criterio de cierre**: existe evidencia verificable de que `run_app.bat` cumple el contrato de doble clic sobre el artefacto final canonico, sin reabrir ni reescribir los cierres historicos previos.
+- **Bloqueo conocido**: ninguno.
+- **Siguiente dependencia logica**: `C6-DOC-001`.
+
+## C6-DOC-001 - Alinear contrato real de checkout demo y naming canonico
+- **Tipo**: `DOC`
+- **Prioridad**: `P1`
+- **Estado**: `TODO`
+- **Objetivo**: alinear el contrato real del checkout demo legado y fijar un naming canonico unico para el flujo `/encargo` sin prometer mas de lo implementado.
+- **Mapeo backlog residual**: `B06-C1` + `B06-C2`.
+- **Evidencia o sintoma**:
+  - `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` documenta que `docs/10_checkout_y_flujos_ecommerce.md` sobredimensiona el contrato real implementado para `PedidoDemo`.
+  - la misma auditoria marca ambiguedad operativa entre "checkout demo" y superficies reales nombradas como `encargo/consulta`.
+  - `docs/90_estado_implementacion.md` confirma que el flujo ya existe y esta `DONE`; la brecha es de contrato/naming, no de implementacion base.
+- **Alcance permitido**: `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: rehacer checkout demo, reabrir Ciclo 3/Ciclo 4 desde cero, tocar checkout real o mezclar nuevas features de cuenta.
+- **Checks obligatorios**:
+  - contrastar naming y contrato contra `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`, `docs/90_estado_implementacion.md` y repo real;
+  - verificar que la nomenclatura canonica queda consistente en docs de flujo, estado y gate;
+  - registrar delta exacto entre contrato implementado y contrato documentado previo.
+- **Criterio de cierre**: el flujo demo legado queda documentado con naming canonico unico y contrato honesto, sin sobredeclarar capacidad ni reabrir ciclos ya cerrados.
+- **Bloqueo conocido**: ninguno.
+- **Siguiente dependencia logica**: `C6-INT-001`.
+
+## C6-INT-001 - Integracion minima cuenta-demo ↔ checkout demo
+- **Tipo**: `HARDEN`
+- **Prioridad**: `P2`
+- **Estado**: `TODO`
+- **Objetivo**: cerrar la brecha minima de continuidad entre cuenta demo y checkout demo legado, sin convertir el flujo en auth real ni reabrir la cuenta demo desde cero.
+- **Mapeo backlog residual**: `B06-I1`.
+- **Evidencia o sintoma**:
+  - la auditoria de Ciclo 6 detecta que la API ya soporta `id_usuario` opcional, pero la continuidad entre cuenta demo y checkout demo sigue siendo manual.
+  - `docs/90_estado_implementacion.md` confirma que `Cuenta demo` y `Checkout demo` ya existen y estan `DONE`; el residual es solo de integracion minima.
+  - el valor declarado de "autenticado vs invitado" pierde credibilidad si no existe continuidad minima reutilizable.
+- **Alcance permitido**: `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx`, `frontend/contenido/cuenta_demo/estadoCuentaDemo.ts`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_demo.py`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: auth real, cookies/sesion productiva, reapertura completa de Ciclo 4 o cambios de negocio fuera del flujo demo legado.
+- **Checks obligatorios**:
+  - demostrar continuidad minima de estado/canal entre cuenta demo y flujo `/encargo`;
+  - validar que no se rompe el modo invitado ni el contrato existente de `PedidoDemo`;
+  - ejecutar pruebas de no regresion del flujo afectado.
+- **Criterio de cierre**: la cuenta demo aporta continuidad minima verificable al flujo demo legado sin alterar el alcance historico ya cerrado de cuenta/checkouts.
+- **Bloqueo conocido**: ninguno.
+- **Siguiente dependencia logica**: `C6-QA-001`.
+
+## C6-QA-001 - Cobertura integrada cesta -> encargo -> recibo -> email
+- **Tipo**: `QA`
+- **Prioridad**: `P2`
+- **Estado**: `TODO`
+- **Objetivo**: reforzar la cobertura integrada del recorrido critico demo desde cesta/encargo hasta recibo y email demo, para blindar regresiones transversales que hoy no quedan cubiertas de forma unificada.
+- **Mapeo backlog residual**: `B06-I2`.
+- **Evidencia o sintoma**:
+  - la auditoria de Ciclo 6 constata que el gate actual ejecuta pruebas puntuales de checkout demo, cuenta demo y calendario ritual, pero no un recorrido unificado cesta -> encargo -> recibo -> email.
+  - `docs/90_estado_implementacion.md` ya traza el cierre oficial del Ciclo 3, por lo que la brecha residual es de cobertura integrada, no de existencia del flujo.
+- **Alcance permitido**: `frontend/tests/checkout-demo.test.ts`, `tests/nucleo_herbal/test_api_pedidos_demo.py`, `scripts/check_release_gate.py`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: reabrir el dominio del pedido demo, introducir tooling E2E ajeno al repo o mezclar cambios de cuenta demo fuera del recorrido critico.
+- **Checks obligatorios**:
+  - cubrir el recorrido integrado cesta/encargo -> pedido demo -> recibo -> email demo;
+  - dejar el gate alineado con la nueva cobertura contractual;
+  - demostrar no regresion del circuito demo legado.
+- **Criterio de cierre**: el recorrido critico demo queda protegido por al menos una cobertura integrada verificable y el gate refleja esa proteccion sin reabrir el Ciclo 3.
+- **Bloqueo conocido**: ninguno.
+- **Siguiente dependencia logica**: `C6-TRACE-001`.
+
+## C6-TRACE-001 - Normalizar historico y matriz de recorridos criticos
+- **Tipo**: `DOC`
+- **Prioridad**: `P2`
+- **Estado**: `TODO`
+- **Objetivo**: normalizar marcadores historicos ambiguos en `docs/90_estado_implementacion.md` y dejar una matriz compacta de recorridos criticos que una ruta frontend, endpoint/backend y prueba de cobertura.
+- **Mapeo backlog residual**: `B06-I3` + `B06-O2`.
+- **Evidencia o sintoma**:
+  - la auditoria de Ciclo 6 detecta etiquetas historicas tipo "Ciclo 3 en progreso" dentro de un documento cuyo estado global ya declara ciclos cerrados.
+  - tambien detecta ausencia de una matriz unica de recorridos criticos para auditoria y mantenimiento rapido.
+- **Alcance permitido**: `docs/90_estado_implementacion.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: reescribir historial funcional, reabrir ciclos cerrados o alterar estado factual implementado sin evidencia.
+- **Checks obligatorios**:
+  - verificar consistencia entre etiquetas historicas y estado global de `docs/90_estado_implementacion.md`;
+  - construir una matriz viva recorrido -> frontend -> backend -> test de cobertura;
+  - registrar que no se modifican cierres factuales sin evidencia nueva.
+- **Criterio de cierre**: la traza historica queda menos ambigua y existe una matriz compacta y mantenible de recorridos criticos, sin tocar el estado real implementado mas alla de la aclaracion documental.
+- **Bloqueo conocido**: ninguno.
+- **Siguiente dependencia logica**: `C6-UX-001`.
+
+## C6-UX-001 - Homogeneizar microcopy comercial demo
+- **Tipo**: `UX`
+- **Prioridad**: `P3`
+- **Estado**: `TODO`
+- **Objetivo**: homogeneizar el microcopy comercial del flujo demo legado para que naming, tono y continuidad entre `/encargo` y el recibo/email demo sean coherentes con el contrato documental canonico.
+- **Mapeo backlog residual**: `B06-O1`.
+- **Evidencia o sintoma**:
+  - la auditoria de Ciclo 6 detecta microcopy heterogeneo entre superficies del flujo demo legado.
+  - la brecha es residual y de baja prioridad; no cuestiona que el recorrido ya exista ni que sea navegable.
+- **Alcance permitido**: `frontend/app/encargo/page.tsx`, `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: rediseños amplios, cambios de negocio, nuevas features o reapertura del contrato base del checkout demo.
+- **Checks obligatorios**:
+  - revisar consistencia de naming y tono contra el canon fijado en `C6-DOC-001`;
+  - validar que no se degrada navegabilidad ni claridad del flujo demo legado;
+  - registrar evidencia visual o textual minima de la homogeneizacion.
+- **Criterio de cierre**: el microcopy comercial demo queda coherente con el naming canonico y sin contradicciones visibles entre inicio y cierre del recorrido.
+- **Bloqueo conocido**: ninguno.
+- **Siguiente dependencia logica**: `AUT-003` y `OPS-RWY-003` permanecen aparte como bloqueos externos de go-live.
+
 ## Radar de cola actual
-- **Nota launcher local**: `LOCAL-LAUNCH-001` dejo operativo el arranque local y `LOCAL-LAUNCH-002` canonizo `run_app.bat` como unico lanzador; en esta corrida no aparecieron listeners residuales en `3000` ni `8000`.
-- **Actualizacion radar UTC**: `2026-03-27T14:53:12Z`; se confirma que el backlog sigue totalmente bloqueado solo por dependencias externas reales de `AUT-003` y `OPS-RWY-003`, con `check_release_gate.py` y `check_release_readiness.py` en `OK` y con smoke, backup y restore-drill fallando exactamente por configuracion externa ausente.
-- **Fecha de revisión**: `2026-03-27`
-- **Diagnostico**: no existe ninguna tarea `TODO` no `BLOCKED` de producto. `AUT-003` y `OPS-RWY-003` siguen bloqueadas por dependencias externas reales; el runner local sigue limpio, el gate canonico permanece en verde y las validaciones mas especificas vuelven a fallar exactamente por ausencia de variables reales.
-- **Verificación aplicada**:
-  1. `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','DATABASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> las cuatro variables siguen `MISSING`; `AUT-003` y `OPS-RWY-003` permanecen bloqueadas externamente.
-  2. `Get-NetTCPConnection -LocalPort 3000,8000 -State Listen -ErrorAction SilentlyContinue` -> `NO_LISTENERS_3000_8000`; el runner local no tenia procesos residuales ocupando esos puertos en esta corrida.
-  3. `python scripts/check_release_gate.py` -> `OK`; no aparece deuda local nueva de release en este runner.
-  4. `python scripts/check_release_readiness.py` -> `OK`; la documentacion operativa de release permanece alineada con el bloqueo externo vigente.
-  5. `python scripts/check_deployed_stack.py` -> `ERROR`; `La variable obligatoria BACKEND_BASE_URL no esta definida.`.
-  6. `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` -> `ERROR`; `Debes definir --database-url o DATABASE_URL.`.
-  7. `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file "$env:TEMP\\botica_backups\\dummy.dump"` -> `ERROR`; `Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`.
-- **Estado de cola**: no existe ninguna `TODO` no `BLOCKED`; el backlog de producto sigue bloqueado externamente y ya no queda deuda local pendiente en el gate canonico.
-- **Siguiente acción exacta**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar el smoke post-deploy y el restore drill reales de `AUT-003`.
+- **Nota launcher local**: `LOCAL-LAUNCH-001` y `LOCAL-LAUNCH-002` siguen `DONE`; `run_app.bat` permanece como unico launcher canonico y el backlog nuevo abre solo `LOCAL-LAUNCH-003` como smoke contractual residual del artefacto final.
+- **Actualizacion radar UTC**: `2026-03-27T15:47:07Z`; se replanifica la cola por peticion explicita del mantenedor con backlog residual defendible de Ciclo 6 y del launcher local, mientras `AUT-003` y `OPS-RWY-003` siguen `BLOCKED` por evidencia externa verificable.
+- **Fecha de revision**: `2026-03-27`
+- **Diagnostico**: ya existe una cola ejecutable nueva sin falsificar el estado real del repo. El producto/go-live sigue bloqueado externamente segun `docs/90_estado_implementacion.md`, pero el mantenedor ha pedido reabrir la cola solo con backlog residual defendible: primero `LOCAL-LAUNCH-003` y despues el residual oficial de Ciclo 6 (`C6-DOC-001`, `C6-INT-001`, `C6-QA-001`, `C6-TRACE-001`, `C6-UX-001`).
+- **Verificacion aplicada**:
+  1. `LOCAL-LAUNCH-001` y `LOCAL-LAUNCH-002` siguen en `DONE`; `run_app.bat` existe y ya cubre `setup_entorno.bat`, migraciones, seed local, arranque backend/frontend y apertura automatica del navegador.
+  2. `docs/90_estado_implementacion.md` declara `Checkout demo` `DONE (Ciclo 3)` y `Cuenta demo` `DONE como legado controlado (Ciclo 4)`, por lo que no procede reinyectar los roadmaps brutos de Ciclo 3/Ciclo 4 como backlog pendiente desde cero.
+  3. `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` fija como backlog residual defendible solo `B06-C1`, `B06-C2`, `B06-I1`, `B06-I2`, `B06-I3`, `B06-O1` y `B06-O2`.
+  4. `AUT-003` y `OPS-RWY-003` siguen `BLOCKED`: el smoke real mantiene `404` del backend desplegado y el restore drill sigue sin `BOTICA_RESTORE_DATABASE_URL` ni entorno temporal seguro.
+- **Estado de cola**: la primera `TODO` no `BLOCKED` pasa a ser `LOCAL-LAUNCH-003`; detras queda el bloque residual de Ciclo 6 ordenado y ejecutable sin reabrir `DONE` historicos ni abrir un backlog paralelo.
+- **Siguiente accion exacta**: ejecutar `LOCAL-LAUNCH-003` con foco exclusivo en smoke contractual de `run_app.bat`.
