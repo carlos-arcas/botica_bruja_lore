@@ -760,20 +760,21 @@ test("sincronización S0→S1 del padre conserva otras secciones y evita reintro
   );
 });
 
-test("importación contextual multisección detecta todas las secciones confirmadas desde el staging", () => {
+test("importacion contextual multiseccion detecta botica, velas y herramientas confirmadas desde el staging", () => {
   const detalle = {
     lote: { id: 100 },
-    resumen: { total: 3, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 2, con_imagen: 0, sin_imagen: 3, seleccionadas: 2 },
+    resumen: { total: 4, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 3, con_imagen: 0, sin_imagen: 4, seleccionadas: 3 },
     filas: [
       { id: 1, numero: 1, datos: { seccion_publica: "botica-natural" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-1", titulo: "Rosa", tipo: "producto", resumen_datos: "ok" },
       { id: 2, numero: 2, datos: { seccion_publica: "velas-e-incienso" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-2", titulo: "Vela", tipo: "producto", resumen_datos: "ok" },
       { id: 3, numero: 3, datos: { seccion_publica: "minerales-y-energia" }, errores: [], warnings: [], estado: "valida", seleccionado: false, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "", identificador: "SKU-3", titulo: "Cuarzo", tipo: "producto", resumen_datos: "ok" },
+      { id: 4, numero: 4, datos: { seccion_publica: "herramientas-esotericas" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-4", titulo: "Pendulo", tipo: "producto", resumen_datos: "ok" },
     ],
   };
 
   const secciones = resolverSeccionesAfectadasImportacion(detalle, "botica-natural");
 
-  assert.deepEqual(secciones, ["botica-natural", "velas-e-incienso"]);
+  assert.deepEqual(secciones, ["botica-natural", "velas-e-incienso", "herramientas-esotericas"]);
 });
 
 test("resolver secciones afectadas ignora proxies ambiguos en resultado_confirmacion", () => {
@@ -791,6 +792,22 @@ test("resolver secciones afectadas ignora proxies ambiguos en resultado_confirma
   const secciones = resolverSeccionesAfectadasImportacion(detalle, "botica-natural");
 
   assert.deepEqual(secciones, ["botica-natural"]);
+});
+
+test("resolver secciones afectadas ignora secciones confirmadas fuera del mapa canonico", () => {
+  const detalle = {
+    lote: { id: 1021 },
+    resumen: { total: 3, validas: 0, warnings: 0, invalidas: 0, descartadas: 0, confirmadas: 3, con_imagen: 0, sin_imagen: 3, seleccionadas: 3 },
+    filas: [
+      { id: 1, numero: 1, datos: { seccion_publica: "botica-natural" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-1", titulo: "Rosa", tipo: "producto", resumen_datos: "ok" },
+      { id: 2, numero: 2, datos: { seccion_publica: "amuletos-y-talismenes" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-2", titulo: "Amuleto", tipo: "producto", resumen_datos: "ok" },
+      { id: 3, numero: 3, datos: { seccion_publica: "herramientas-esotericas" }, errores: [], warnings: [], estado: "confirmada", seleccionado: true, imagen: "", estado_imagen: "ausente" as const, resultado_confirmacion: "ok", identificador: "SKU-3", titulo: "Pendulo", tipo: "producto", resumen_datos: "ok" },
+    ],
+  };
+
+  const secciones = resolverSeccionesAfectadasImportacion(detalle, "botica-natural");
+
+  assert.deepEqual(secciones, ["botica-natural", "herramientas-esotericas"]);
 });
 
 test("regresión explícita A+B confirmadas no arrastra C con filas fallidas, ausentes o descartadas", () => {
@@ -812,20 +829,24 @@ test("regresión explícita A+B confirmadas no arrastra C con filas fallidas, au
   assert.equal(secciones.includes("minerales-y-energia"), false);
 });
 
-test("regresión explícita A+B+C actualiza store global sin tocar la vista local activa", () => {
+test("regresion explicita A+B+C+D actualiza store global sin tocar la vista local activa", () => {
   const s0 = [
     { id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: false },
     { id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: false },
     { id: "c-1", nombre: "Cuarzo", seccion_publica: "minerales-y-energia", publicado: false },
+    { id: "d-1", nombre: "Pendulo", seccion_publica: "herramientas-esotericas", publicado: false },
   ];
   const s1a = [{ id: "a-1", nombre: "Rosa", seccion_publica: "botica-natural", publicado: true }];
   const s1b = [{ id: "b-1", nombre: "Vela lunar", seccion_publica: "velas-e-incienso", publicado: true }];
   const s1c = [{ id: "c-1", nombre: "Cuarzo", seccion_publica: "minerales-y-energia", publicado: true }];
+  const s1d = [{ id: "d-1", nombre: "Pendulo", seccion_publica: "herramientas-esotericas", publicado: true }];
 
   const storeSincronizado = actualizarItemsSecciones(s0, {
     "botica-natural": s1a,
     "velas-e-incienso": s1b,
     "minerales-y-energia": s1c,
+    "herramientas-esotericas": s1d,
+    "amuletos-y-talismenes": [{ id: "x-1", nombre: "Amuleto", seccion_publica: "amuletos-y-talismenes", publicado: true }],
   });
 
   const vistaLocalProtegida = debeActualizarVistaLocal({
@@ -839,6 +860,8 @@ test("regresión explícita A+B+C actualiza store global sin tocar la vista loca
   assert.deepEqual(storeSincronizado.filter((item) => item.seccion_publica === "botica-natural"), s1a);
   assert.deepEqual(storeSincronizado.filter((item) => item.seccion_publica === "velas-e-incienso"), s1b);
   assert.deepEqual(storeSincronizado.filter((item) => item.seccion_publica === "minerales-y-energia"), s1c);
+  assert.deepEqual(storeSincronizado.filter((item) => item.seccion_publica === "herramientas-esotericas"), s1d);
+  assert.equal(storeSincronizado.some((item) => item.seccion_publica === "amuletos-y-talismenes"), false);
   assert.deepEqual(vistaLocalProtegida, s1a);
 });
 

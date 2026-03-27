@@ -1,5 +1,12 @@
 import type { DetalleImportacion } from "../../infraestructura/api/backoffice";
 
+const SECCIONES_PUBLICAS_CANONICAS = new Set([
+  "botica-natural",
+  "velas-e-incienso",
+  "minerales-y-energia",
+  "herramientas-esotericas",
+]);
+
 export type ResultadoSincronizacionSecciones = {
   seccionesSincronizadas: string[];
   seccionesPendientes: { seccion: string; detalle: string }[];
@@ -13,6 +20,10 @@ export type ContextoVistaProductos = {
 
 function extraerSeccionFila(detalleFila: Record<string, string>): string {
   return String(detalleFila.seccion_publica ?? "").trim();
+}
+
+function esSeccionCanonica(seccion: string): boolean {
+  return SECCIONES_PUBLICAS_CANONICAS.has(seccion);
 }
 
 function filaFueConfirmada(detalleFila: DetalleImportacion["filas"][number]): boolean {
@@ -40,10 +51,12 @@ export function actualizarItemsSecciones(
   itemsActuales: Record<string, unknown>[],
   itemsPorSeccion: Record<string, Record<string, unknown>[]>,
 ): Record<string, unknown>[] {
-  return Object.entries(itemsPorSeccion).reduce(
-    (acumulado, [seccion, itemsSeccion]) => actualizarItemsSeccion(acumulado, seccion, itemsSeccion),
-    itemsActuales,
-  );
+  return Object.entries(itemsPorSeccion)
+    .filter(([seccion]) => esSeccionCanonica(seccion))
+    .reduce(
+      (acumulado, [seccion, itemsSeccion]) => actualizarItemsSeccion(acumulado, seccion, itemsSeccion),
+      itemsActuales,
+    );
 }
 
 export function sincronizarProductoMutado(
@@ -62,9 +75,10 @@ export function resolverSeccionesAfectadasImportacion(
     detalle.filas
       .filter(filaFueConfirmada)
       .map((fila) => extraerSeccionFila(fila.datos))
+      .filter(esSeccionCanonica)
       .filter(Boolean),
   );
-  if (secciones.size === 0 && seccionActiva) secciones.add(seccionActiva);
+  if (secciones.size === 0 && esSeccionCanonica(seccionActiva)) secciones.add(seccionActiva);
   return Array.from(secciones);
 }
 

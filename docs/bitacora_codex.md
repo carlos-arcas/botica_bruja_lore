@@ -2078,3 +2078,901 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; la sección pública de minerales ya estaba implementada y esta corrida solo cierra su red mínima de regresión.
   10. Siguiente paso exacto definido: **Sí**.
 - **Siguiente paso exacto**: ejecutar `CAT-DATA-004` para definir y cargar la base mínima reproducible de la sección canónica de herramientas.
+
+## Entrada 2026-03-27-CAT-DATA-004 (seed minimo reproducible para herramientas)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `CAT-DATA-004`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: definir y cargar la base mínima reproducible de `herramientas-esotericas` respetando la convención canónica `seccion_publica="herramientas-esotericas"` + `tipo_producto="herramientas-rituales"`, sin abrir todavía la sección pública DB-backed.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/esquemas.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/servicio.py`
+  - `frontend/componentes/admin/sincronizacionProductosAdmin.ts`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener el alcance en seed + pruebas + trazabilidad canónica, sin tocar todavía `frontend/app/herramientas-esotericas/` ni la API pública de sección.
+  2. Materializar la convención cerrada en `SEC-HER-001` usando exactamente 3 productos publicados propios de `herramientas-esotericas`, todos con `tipo_producto="herramientas-rituales"`.
+  3. Subir el conteo público canónico de bootstrap a `14` y cubrirlo con pruebas para que el gate no quede desalineado tras ampliar el seed.
+  4. Regenerar `frontend/.tmp-tests` tras el gate para no dejar borrados fuera de alcance, porque en este repo esos artefactos de test están versionados.
+- **Checks ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command tests.scripts.test_check_bootstrap_demo_expected_counts` -> `OK`; 8 tests en verde, seed idempotente y 14 productos publicados.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `OK`; `C2)` valida el seed con 14 productos y el gate completo sigue en verde.
+  - `npm.cmd run test:calendario-ritual` (en `frontend/`) -> `OK`; además de validar el contrato de calendario, regenera `frontend/.tmp-tests` y deja el worktree sin borrados ajenos a la tarea.
+- **Resultado verificable**:
+  - `seed_demo_publico.py` ya deja 3 productos publicados propios en `herramientas-esotericas`: `pendulo-laton-dorado`, `cuenco-selenita-pulido` y `caldero-hierro-mini`.
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py` ya protege la sección de herramientas con conteo exacto, slugs canónicos y `tipo_producto="herramientas-rituales"`.
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py` ya alinea el contrato de bootstrap con `14` productos publicados.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` dejan `SEC-HER-002` como siguiente paso local exacto.
+- **Bloqueos (si aplica)**:
+  - ninguno para `CAT-DATA-004`;
+  - permanecen sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003` por falta de URLs/credenciales reales y entorno temporal seguro de restore drill.
+- **Checklist de cierre aplicada (CAT-DATA-004)**:
+  1. Tarea correcta confirmada: **Sí**; `CAT-DATA-004` era la primera `TODO` no `BLOCKED` vigente en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo seed, pruebas asociadas y trazabilidad canónica.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**; el perímetro propio queda acotado a 6 rutas permitidas por la tarea.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; se declara solo la base mínima reproducible del seed y no la exposición pública DB-backed de herramientas.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `SEC-HER-002` para abrir `herramientas-esotericas` como catálogo público DB-backed reutilizando el baseline ya existente.
+
+## Entrada 2026-03-27-SEC-HER-002 (catalogo publico DB-backed de herramientas)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `SEC-HER-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: abrir `herramientas-esotericas` como seccion publica DB-backed con listado y detalle propios bajo el slug canonico, reutilizando el baseline comercial ya probado y sin reabrir naming ni backoffice.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/app/velas-e-incienso/[slug]/page.tsx`
+  - `frontend/app/minerales-y-energia/page.tsx`
+  - `frontend/app/minerales-y-energia/[slug]/page.tsx`
+  - `frontend/componentes/botica-natural/contratoSeccionPublica.ts`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/infraestructura/api/herbal.ts`
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `frontend/tests/minerales-y-energia-publico.test.ts`
+- **Archivos tocados**:
+  - `frontend/app/herramientas-esotericas/page.tsx`
+  - `frontend/app/herramientas-esotericas/[slug]/page.tsx`
+  - `frontend/app/herramientas-esotericas/[slug]/not-found.tsx`
+  - `frontend/componentes/botica-natural/contratoSeccionPublica.ts`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/tests/herramientas-esotericas-publico.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Reutilizar el patron ya estabilizado en `velas-e-incienso` y `minerales-y-energia` para no abrir una tercera implementacion distinta.
+  2. Mantener el backend sin cambios: la API publica por seccion y el detalle por slug ya cubren el wiring necesario para esta tarea.
+  3. Validar la pertenencia de la ficha al slug canonico `herramientas-esotericas` desde la pagina de detalle y devolver `notFound()` cuando el producto pertenezca a otra seccion.
+  4. Dejar la cobertura minima de frontend acotada al wiring de listado, detalle, rutas y vacio honesto, reservando la regresion contractual mas amplia para `SEC-HER-003`.
+- **Checks ejecutados**:
+  - `npm.cmd run clean:tmp-tests` -> `OK`.
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/herramientas-esotericas-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` -> `OK`.
+  - `node .tmp-tests/tests/herramientas-esotericas-publico.test.js` -> `OK`; 4 pruebas en verde.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `npm.cmd run test:calendario-ritual` (en `frontend/`) -> `OK`; regenera `frontend/.tmp-tests` versionado y evita borrados fuera de alcance.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`.
+- **Resultado verificable**:
+  - `herramientas-esotericas` ya expone listado publico DB-backed reutilizando `ListadoProductosBoticaNatural` y el contrato reusable de seccion publica.
+  - `herramientas-esotericas/[slug]` ya resuelve detalle publico propio y rechaza slugs de otras secciones con `notFound()`.
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts` ya enruta productos de herramientas al slug canonico publico.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` ya dejan `SEC-HER-003` como siguiente paso local exacto.
+- **Bloqueos (si aplica)**:
+  - ninguno para `SEC-HER-002`;
+  - permanecen sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003` por falta de URLs/credenciales reales y entorno temporal seguro de restore drill.
+- **Checklist de cierre aplicada (SEC-HER-002)**:
+  1. Tarea correcta confirmada: **Si**; `SEC-HER-002` era la primera `TODO` no `BLOCKED` vigente en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo frontend publico reutilizable, prueba minima especifica y trazabilidad canonica.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el trabajo propio queda acotado a 9 rutas permitidas, mientras el worktree conserva cambios previos no tocados fuera de este bloque.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la seccion publica de herramientas solo se declara implementada porque ya existe listado/detalle navegables y validacion ejecutada.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `SEC-HER-003` para cerrar la regresion automatica minima de `herramientas-esotericas` con contratos de visibilidad, limite y vacio honesto equivalentes al baseline.
+
+## Entrada 2026-03-27-SEC-HER-003 (regresion minima publica de herramientas)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `SEC-HER-003`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: endurecer `herramientas-esotericas` con cobertura contractual minima equivalente al baseline, sin reabrir producto ni mezclar nuevas features fuera de la seccion publica ya abierta.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `frontend/tests/herramientas-esotericas-publico.test.ts`
+  - `frontend/tests/minerales-y-energia-publico.test.ts`
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `backend/nucleo_herbal/presentacion/publica/views.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`
+- **Archivos tocados**:
+  - `frontend/tests/herramientas-esotericas-publico.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener el alcance en hardening puro: solo pruebas y trazabilidad canonica, sin volver a tocar `frontend/app/herramientas-esotericas/` ni el backend de producto ya abierto en `SEC-HER-002`.
+  2. Cerrar el contrato frontend con el mismo patron usado en `minerales-y-energia`: listado visible real, detalle ya existente y vacio honesto sin fallback inventado.
+  3. Cerrar el contrato backend de la seccion con dos casos minimos y suficientes: listado propio ordenado de 3 productos publicados y vacio honesto cuando solo exista catalogo herbal en otras secciones.
+  4. Actualizar `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` solo para reflejar estado factual y siguiente paso exacto, sin reordenar la cola autonoma.
+- **Checks ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.test_exposicion_publica` -> `OK`; 32 tests en verde con los nuevos casos de herramientas.
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/herramientas-esotericas-publico.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts` (en `frontend/`) -> `OK`.
+  - `node .tmp-tests/tests/herramientas-esotericas-publico.test.js` (en `frontend/`) -> `OK`; 5 pruebas en verde.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`.
+  - `git status --short -- frontend/tests/herramientas-esotericas-publico.test.ts tests/nucleo_herbal/test_exposicion_publica.py docs/90_estado_implementacion.md docs/roadmap_codex.md docs/bitacora_codex.md` -> `?? frontend/tests/herramientas-esotericas-publico.test.ts`, `M tests/nucleo_herbal/test_exposicion_publica.py`, `M docs/90_estado_implementacion.md`, `M docs/roadmap_codex.md`, `M docs/bitacora_codex.md`.
+- **Resultado verificable**:
+  - `frontend/tests/herramientas-esotericas-publico.test.ts` ya cubre visibilidad de los 3 productos publicos propios de herramientas, detalle bajo slug canonico y vacio honesto sin fallback.
+  - `tests/nucleo_herbal/test_exposicion_publica.py` ya protege `herramientas-esotericas` con listado propio y ordenado de 3 registros visibles, y vacio honesto cuando la seccion no tiene catalogo publicado.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` ya dejan `CAT-SYNC-001` como siguiente paso local exacto.
+- **Bloqueos (si aplica)**:
+  - ninguno para `SEC-HER-003`;
+  - permanecen sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003` por falta de URLs/credenciales reales y entorno temporal seguro de restore drill.
+- **Checklist de cierre aplicada (SEC-HER-003)**:
+  1. Tarea correcta confirmada: **Si**; `SEC-HER-003` era la primera `TODO` no `BLOCKED` vigente en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo pruebas y trazabilidad canonica del hardening de herramientas.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el trabajo propio queda acotado a 5 rutas permitidas.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la seccion publica de herramientas ya estaba implementada y esta corrida solo cierra su red minima de regresion.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `CAT-SYNC-001` para alinear importacion backend, sincronizacion frontend y mapa canonico de cuatro secciones comerciales.
+
+## Entrada 2026-03-27-CAT-SYNC-001 (alineacion multiseccion de importacion y backoffice)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `CAT-SYNC-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: alinear la importacion de productos y la resincronizacion contextual del backoffice con el mapa canonico final de cuatro secciones comerciales, sin tocar home publica ni abrir nuevas secciones.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/servicio.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/productos_contrato.py`
+  - `frontend/componentes/admin/sincronizacionProductosAdmin.ts`
+  - `frontend/tests/backoffice-flujos.test.ts`
+  - `tests/nucleo_herbal/infraestructura/test_importacion_masiva_admin.py`
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/servicio.py`
+  - `tests/nucleo_herbal/infraestructura/test_importacion_masiva_admin.py`
+  - `frontend/componentes/admin/sincronizacionProductosAdmin.ts`
+  - `frontend/tests/backoffice-flujos.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Endurecer solo `seccion_publica` en la importacion backend, sin mezclar esta tarea con una validacion mas amplia de `tipo_producto` ni con cambios de home/catalogo publico.
+  2. Reutilizar el mapa canonico ya vigente en backoffice para fijar exactamente cuatro secciones validas: `botica-natural`, `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas`.
+  3. Blindar la resincronizacion frontend para ignorar claves fuera del mapa canonico tanto al resolver secciones afectadas como al actualizar el store global tras confirmar un lote.
+  4. Mantener el alcance en importacion backend + sincronizacion de backoffice + regresiones + trazabilidad, sin tocar UI publica ni nuevas taxonomias.
+- **Checks ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.infraestructura.test_importacion_masiva_admin` -> `OK`; 11 tests en verde con cobertura nueva para rechazo de seccion fuera del mapa y confirmacion valida de `herramientas-esotericas`.
+  - `npm.cmd run test:backoffice-flujos` (en `frontend/`) -> `OK`; 62 pruebas en verde cubriendo las cuatro secciones, el filtrado de secciones no canonicas y la resincronizacion A+B+C+D.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`.
+- **Resultado verificable**:
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/servicio.py` ya rechaza filas de productos con `seccion_publica` fuera del mapa canonico final y normaliza las validas antes de persistir.
+  - `tests/nucleo_herbal/infraestructura/test_importacion_masiva_admin.py` ya cubre importacion valida de `herramientas-esotericas` y el rechazo explicito de `amuletos-y-talismenes`.
+  - `frontend/componentes/admin/sincronizacionProductosAdmin.ts` ya refresca solo secciones canonicas y evita contaminar el store con claves fuera del mapa.
+  - `frontend/tests/backoffice-flujos.test.ts` ya protege la deteccion multiseccion y la resincronizacion global/local para las cuatro secciones comerciales sin reintroducir snapshots previos.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` ya dejan `CAT-QA-001` como siguiente paso local exacto.
+- **Bloqueos (si aplica)**:
+  - ninguno para `CAT-SYNC-001`;
+  - permanecen sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003` por falta de URLs/credenciales reales y entorno temporal seguro de restore drill.
+- **Checklist de cierre aplicada (CAT-SYNC-001)**:
+  1. Tarea correcta confirmada: **Si**; `CAT-SYNC-001` era la primera `TODO` no `BLOCKED` vigente en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo importacion backend, sincronizacion contextual de backoffice, regresiones asociadas y trazabilidad documental.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el trabajo propio queda acotado a 7 rutas permitidas, conviviendo con cambios previos no tocados en el worktree.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; se declara solo alineacion de importacion/backoffice, no nuevas capacidades publicas.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `CAT-QA-001` para añadir la regresion transversal home -> hero de seccion -> listado publico -> importacion/backoffice sobre las cuatro secciones comerciales.
+
+## Entrada 2026-03-27-CAT-QA-001 (regresion transversal multiseccion home-publico-backoffice)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `CAT-QA-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: cerrar una regresion transversal demostrable para las cuatro secciones comerciales que una `home`, rutas publicas de seccion, helper de catalogo y resincronizacion contextual de importacion/backoffice, sin abrir E2E externo ni tocar codigo de producto.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `frontend/tests/home-raiz-secciones.test.ts`
+  - `frontend/tests/backoffice-flujos.test.ts`
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `frontend/tests/minerales-y-energia-publico.test.ts`
+  - `frontend/tests/herramientas-esotericas-publico.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `frontend/app/botica-natural/page.tsx`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/app/minerales-y-energia/page.tsx`
+  - `frontend/app/herramientas-esotericas/page.tsx`
+  - `frontend/componentes/admin/sincronizacionProductosAdmin.ts`
+- **Archivos tocados**:
+  - `frontend/tests/comercial-multiseccion-regresion.test.ts`
+  - `frontend/tests/home-raiz-secciones.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Concentrar la regresion nueva en `frontend/tests/` para enlazar home -> ruta publica -> helper de catalogo -> mapa canonico de importacion/backoffice sin abrir un E2E externo fuera del runner local.
+  2. Reutilizar `tests.nucleo_herbal.test_exposicion_publica` y `frontend/tests/backoffice-flujos.test.ts` como validacion especifica de listado publico backend y refresco contextual multiseccion, evitando duplicar logica de producto ya cubierta.
+  3. Corregir `frontend/tests/home-raiz-secciones.test.ts` como falso negativo: `botica-natural/page.tsx` ya renderiza el nombre desde `BOTICA_NATURAL_PUBLICA.nombre`, por lo que el test debia alinearse con el contrato reusable vigente.
+  4. Declarar el estado posterior como backlog totalmente bloqueado: tras cerrar `CAT-QA-001` no queda ninguna `TODO` no `BLOCKED` y los desbloqueos restantes dependen de URLs/credenciales reales y entorno temporal seguro.
+- **Checks ejecutados**:
+  - `npm.cmd run clean:tmp-tests` (en `frontend/`) -> `OK`.
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/comercial-multiseccion-regresion.test.ts tests/types/fetch-next.d.ts infraestructura/api/herbal.ts infraestructura/api/backoffice.ts` (en `frontend/`) -> `OK`.
+  - `node .tmp-tests/tests/comercial-multiseccion-regresion.test.js` (en `frontend/`) -> `OK`; 3 pruebas en verde.
+  - `npm.cmd run test:home-raiz` (en `frontend/`) -> `OK`; 7 pruebas en verde tras alinear `botica-natural` con el contrato reusable.
+  - `npm.cmd run test:backoffice-flujos` (en `frontend/`) -> `OK`; 62 pruebas en verde.
+  - `python manage.py test tests.nucleo_herbal.test_exposicion_publica` -> `OK`; 32 pruebas en verde.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','BOTICA_RESTORE_DATABASE_URL','DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`, `DATABASE_URL=MISSING`.
+- **Resultado verificable**:
+  - `frontend/tests/comercial-multiseccion-regresion.test.ts` ya protege el set comercial canonico de `home`, las paginas publicas de seccion, el helper `obtenerProductosPublicosPorSeccion(...)` y la resincronizacion contextual con el mismo mapa de cuatro secciones.
+  - `frontend/tests/home-raiz-secciones.test.ts` ya valida la entrada principal de secciones sin depender de literales obsoletos de `botica-natural`.
+  - `frontend/tests/backoffice-flujos.test.ts` y `tests/nucleo_herbal/test_exposicion_publica.py` siguen en verde, por lo que el refresco contextual multiseccion y el listado/vacio honesto backend permanecen consistentes con la nueva regresion transversal.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` ya reflejan que no queda cola local ejecutable y que el repo depende solo de desbloqueos externos reales.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro con dump permitido para smoke post-deploy + restore drill real.
+  - `OPS-RWY-003` sigue bloqueada por falta de acceso a Railway UI/logs y a las variables reales del servicio para validar el arranque limpio fuera de este runner.
+- **Checklist de cierre aplicada (CAT-QA-001)**:
+  1. Tarea correcta confirmada: **Si**; `CAT-QA-001` era la primera `TODO` no `BLOCKED` vigente en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo pruebas y trazabilidad canonica del recorrido transversal multiseccion.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el trabajo propio queda acotado a 5 rutas y no toca producto ni infraestructura fuera del alcance.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la corrida declara solo la regresion transversal y el agotamiento honesto de la cola local.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: desbloquear `AUT-003` aportando `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar smoke post-deploy + restore drill real.
+
+## Entrada 2026-03-27-LOCAL-LAUNCH-001 (launcher local por doble clic)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `LOCAL-LAUNCH-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: absorber la peticion explicita del mantenedor para que el proyecto pueda arrancar en local con doble clic sobre `app launcher.bat`, dejando browser + home listos sin pasos manuales previos.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `run_app.bat`
+  - `setup_entorno.bat`
+  - `frontend/.env.example`
+  - `frontend/infraestructura/api/herbal.ts`
+  - `frontend/app/page.tsx`
+  - `backend/configuracion_django/urls.py`
+- **Archivos tocados**:
+  - `run_app.bat`
+  - `setup_entorno.bat`
+  - `app launcher.bat`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Registrar la peticion explicita del mantenedor como tarea extraordinaria propia (`LOCAL-LAUNCH-001`) para no romper la regla de una sola cola operativa ni dejar la ejecucion fuera de norma.
+  2. Mantener el alcance en operativa local: sin tocar dominio, APIs ni UX publica de producto; solo launcher, bootstrap local y trazabilidad.
+  3. Endurecer `setup_entorno.bat` para doble clic real: usar `%~dp0`, validar un Python ejecutable antes de crear `.venv`, crear `frontend/.env.local` desde `.env.example` y corregir la lectura del exit code de `npm install`.
+  4. Endurecer `run_app.bat` para uso local: usar rutas absolutas, aplicar `migrate --noinput`, sembrar `seed_demo_publico` solo en primera base SQLite local, levantar Django en `127.0.0.1:8000`, levantar Next en `127.0.0.1:3000` y abrir navegador cuando el home responda.
+  5. Crear `app launcher.bat` como entrada estable para Explorer sin romper compatibilidad con `run_app.bat`.
+- **Checks ejecutados**:
+  - `where.exe py` -> `C:\Windows\py.exe`, `C:\Users\arcas\AppData\Local\Microsoft\WindowsApps\py.exe`.
+  - `where.exe python` -> `C:\Program Files\Python313\python.exe`, `C:\Users\arcas\AppData\Local\Programs\Python\Python312\python.exe`, `C:\Users\arcas\AppData\Local\Microsoft\WindowsApps\python.exe`.
+  - `py -0p` -> evidencia de que `py -3` apuntaba a una instalacion rota de `Python313` en el perfil del usuario; sirvio para diagnosticar el falso positivo del launcher.
+  - `python --version` -> `Python 3.13.12`.
+  - `$env:BOTICA_NO_BROWSER='1'; & '.\app launcher.bat'` -> `exit code 0`.
+  - `Get-NetTCPConnection -LocalPort 8000,3000 -State Listen` -> `3000 Listen`, `8000 Listen`.
+  - `Invoke-WebRequest -Uri http://127.0.0.1:3000/ -UseBasicParsing -TimeoutSec 5` -> `StatusCode 200`.
+  - `Invoke-WebRequest -Uri http://127.0.0.1:8000/healthz -UseBasicParsing -TimeoutSec 5` -> `{"status": "ok", "database": "available"}`.
+  - `git diff --name-only` -> el worktree ya venia sucio por tareas previas en backend/frontend/docs; el diff propio de esta corrida queda acotado a launcher + roadmap + bitacora, sin revertir cambios ajenos.
+- **Resultado verificable**:
+  - el repo ya dispone de `app launcher.bat` como entrada de doble clic;
+  - el launcher local crea/prepara el entorno minimo, levanta frontend y backend y deja resuelto el home en `http://127.0.0.1:3000/`;
+  - el backend queda accesible en `http://127.0.0.1:8000/healthz` tras el arranque;
+  - el backlog vuelve a su estado honesto de bloqueado externamente una vez absorbida esta peticion extraordinaria.
+- **Bloqueos (si aplica)**:
+  - ninguno para `LOCAL-LAUNCH-001`;
+  - permanecen sin cambios los bloqueos externos `AUT-003` y `OPS-RWY-003` por falta de URLs/credenciales reales y entorno temporal seguro de restore drill.
+- **Checklist de cierre aplicada (LOCAL-LAUNCH-001)**:
+  1. Tarea correcta confirmada: **Si**; la peticion explicita del mantenedor se registro en `docs/roadmap_codex.md` como `LOCAL-LAUNCH-001` y se ejecuto como unica tarea de esta corrida extraordinaria.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo launcher local, bootstrap asociado y trazabilidad documental.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el trabajo propio se limita a `run_app.bat`, `setup_entorno.bat`, `app launcher.bat`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`, conviviendo con cambios previos no tocados del worktree.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; esta corrida solo declara operativa local del launcher, no una capacidad funcional nueva del producto.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: desbloquear `AUT-003` aportando `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar smoke post-deploy + restore drill real.
+
+## Entrada 2026-03-27-LOCAL-LAUNCH-002 (correccion de naming del launcher)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `LOCAL-LAUNCH-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: alinear el nombre del lanzador con la aclaracion explicita del mantenedor: el lanzador canonico es `run_app.bat`.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `run_app.bat`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - borrado de `app launcher.bat`
+- **Decisiones tomadas**:
+  1. No tocar de nuevo `run_app.bat` porque el comportamiento ya estaba corregido y la aclaracion era de naming, no funcional.
+  2. Eliminar `app launcher.bat` para evitar dos puntos de entrada y dejar `run_app.bat` como unico lanzador local canonico.
+  3. Registrar la correccion en una nueva entrada append-only, sin reescribir la entrada historica `LOCAL-LAUNCH-001`.
+- **Checks ejecutados**:
+  - `git status --short -- run_app.bat setup_entorno.bat "app launcher.bat" docs/roadmap_codex.md docs/bitacora_codex.md` -> `run_app.bat` y `setup_entorno.bat` siguen presentes; `app launcher.bat` queda retirado; roadmap y bitacora actualizados.
+- **Resultado verificable**:
+  - `run_app.bat` queda como unico lanzador local canonico del repo.
+  - desaparece el alias `app launcher.bat`, evitando ambiguedad operativa.
+- **Bloqueos (si aplica)**:
+  - ninguno para `LOCAL-LAUNCH-002`.
+- **Checklist de cierre aplicada (LOCAL-LAUNCH-002)**:
+  1. Tarea correcta confirmada: **Si**; correccion extraordinaria del mantenedor registrada y cerrada en esta misma cola operativa.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo naming canonico del launcher y trazabilidad.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara capacidad nueva de producto.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: desbloquear `AUT-003` aportando `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar smoke post-deploy + restore drill real.
+
+## Entrada 2026-03-27-AUT-003 (revalidacion externa y saneamiento del bloqueo)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: revalidar el criterio exacto de desbloqueo externo de `AUT-003`, sanear su contrato canonico en `docs/roadmap_codex.md` y dejar trazada la ambiguedad del ultimo gate local sin inventar backlog nuevo.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `frontend/app/admin/(panel)/layout.tsx`
+  - `frontend/app/admin/login/page.tsx`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-003` en `BLOCKED`; las dependencias externas reales siguen ausentes y ahora quedan nombradas de forma consistente con el checklist canonico de release.
+  2. Corregir solo trazabilidad documental: `AUT-003` pasa a exigir explicitamente `DATABASE_URL` ademas de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
+  3. No abrir una tarea nueva de producto por el fallo de `next build` hasta revalidarlo en un runner limpio; en esta corrida el mismo worktree seguia sirviendo frontend/backend locales del launcher local.
+  4. Mantener `OPS-RWY-003` sin cambios; el acceso externo a Railway UI/logs sigue siendo una dependencia separada y no resuelta.
+- **Checks ejecutados**:
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python -c "..."` sobre `docs/release_readiness_minima.md` -> `DATABASE_URL=True`, `BOTICA_RESTORE_DATABASE_URL=True`; la deriva estaba en `docs/roadmap_codex.md`.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','DATABASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `Get-NetTCPConnection -LocalPort 3000,8000 -State Listen` -> `3000 Listen`, `8000 Listen`.
+  - `Get-CimInstance Win32_Process -Filter "ProcessId=48612 OR ProcessId=32472"` -> `node ... start-server.js` y `.venv\\Scripts\\python.exe manage.py runserver 127.0.0.1:8000` seguian activos en este worktree.
+  - `python scripts/check_release_gate.py` -> `ERROR`; bloque `G) Frontend - build` falla con `PageNotFoundError` para `/admin/productos` y `/admin/login`.
+- **Resultado verificable**:
+  - `docs/roadmap_codex.md` ya alinea `AUT-003` con `docs/release_readiness_minima.md` y `scripts/backup_restore_postgres.py`, exigiendo tambien `DATABASE_URL` para el backup real previo al restore drill.
+  - Los bloqueos externos de `AUT-003` y `OPS-RWY-003` siguen intactos porque continúan ausentes `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y el acceso externo verificable a Railway.
+  - El fallo de `check_release_gate.py` no se promueve a nueva tarea de producto en esta corrida porque la validacion ocurrio con servicios locales del mismo worktree todavia activos; queda pendiente de reproduccion limpia.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido para backup real + restore drill.
+  - `OPS-RWY-003` sigue bloqueada por falta de acceso a Railway UI/logs y a las variables reales del servicio para validar el arranque limpio fuera de este runner.
+  - La revalidacion local del gate queda condicionada a detener antes los servicios residuales del launcher local para obtener una señal limpia del build.
+- **Checklist de cierre aplicada (AUT-003)**:
+  1. Tarea correcta confirmada: **Si**; no existia ninguna `TODO` no `BLOCKED` y, segun el protocolo de cola vacia/backlog bloqueado, se revalido primero `AUT-003` como bloqueo activo con posibilidad teorica de desbloqueo por evidencia nueva.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo saneamiento documental y revalidacion de bloqueo, sin tocar producto.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara capacidad nueva ni cierre ficticio de producto.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: detener los servicios locales residuales del launcher local y reejecutar `python scripts/check_release_gate.py`; si el fallo de `next build` persiste en runner limpio, registrar una nueva tarea atomica antes de retomar `AUT-003`.
+
+## Entrada 2026-03-27-AUT-003 (revalidacion limpia del gate local)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: cerrar la ambiguedad local del bloqueo de `AUT-003` ejecutando el siguiente paso exacto pendiente, revalidar el gate canonico en runner limpio y dejar el backlog bloqueado solo por dependencias externas reales.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-003` en `BLOCKED`; el gate local ya no es un bloqueo y el unico impedimento real sigue siendo externo.
+  2. No abrir tarea nueva de producto ni de gate: con el runner limpio, `python scripts/check_release_gate.py` vuelve a `OK`.
+  3. Actualizar solo trazabilidad canonica en roadmap y bitacora para reflejar que la cola sigue vacia/bloqueada sin deuda local pendiente.
+- **Diagnostico concreto**:
+  - no existe ninguna tarea `TODO` no `BLOCKED`;
+  - `AUT-003` y `OPS-RWY-003` siguen dependiendo de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro para restore drill;
+  - la duda previa sobre `next build` estaba contaminada por procesos locales del launcher.
+- **Causa probable**:
+  - el launcher local habia dejado `node ... start-server.js` en `3000` y `manage.py runserver 127.0.0.1:8000`, alterando la senal del gate en la corrida anterior.
+- **Checks ejecutados**:
+  - `Get-NetTCPConnection -LocalPort 3000,8000 -State Listen` + `Get-CimInstance Win32_Process ...` -> se confirmaron procesos activos del mismo worktree en `3000` y `8000`.
+  - `Stop-Process -Id 48612,32472 -Force` -> `OK`; los puertos quedaron liberados.
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','DATABASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `python scripts/check_release_gate.py` -> `OK`; veredicto final `OK` incluyendo `G) Frontend - build`.
+  - `python scripts/check_release_readiness.py` -> no fue necesario reejecutarlo de forma aislada tras el gate porque el propio gate ya lo ejecuto en verde.
+- **Resultado verificable**:
+  - el bloqueo local sobre `check_release_gate.py` queda descartado;
+  - el backlog permanece totalmente bloqueado solo por dependencias externas reales de deploy/smoke/restore;
+  - `docs/roadmap_codex.md` ya deja la cola vacia honesta y el siguiente paso exacto puramente externo.
+- **Impacto sobre la tarea**:
+  - `AUT-003` no puede cerrarse todavia, pero ya no requiere mas saneamiento local en este runner.
+- **Dependencia que bloquea**:
+  - provision de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y acceso a una base temporal segura para ejecutar restore drill real;
+  - acceso externo verificable a Railway para `OPS-RWY-003`.
+- **Criterio de desbloqueo**:
+  - disponer de las cuatro variables reales y del entorno temporal seguro, ejecutar smoke post-deploy + backup real + restore drill real con resultado verificable.
+- **Fecha/punto de revision**:
+  - siguiente ejecucion aplicable con credenciales/URLs reales disponibles.
+- **Checklist de cierre aplicada (AUT-003 revalidacion limpia)**:
+  1. Tarea correcta confirmada: **Si**; no existia ninguna `TODO` no `BLOCKED` y correspondia revalidar el primer bloqueo activo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo revalidacion del bloqueo y trazabilidad documental.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` en modo real.
+
+## Entrada 2026-03-27-AUT-003 (revalidacion de gate verde y bloqueo externo intacto)
+- **Fecha (UTC)**: `2026-03-27T14:53:12Z`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: revalidar el primer bloqueo activo de la cola con los checks mas especificos disponibles, confirmar que no aparecio deuda local nueva de release y dejar trazado append-only el bloqueo externo vigente.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-003` en `BLOCKED`; no aparecio evidencia nueva que habilite smoke post-deploy, backup real ni restore drill real desde este runner.
+  2. No tocar codigo de producto ni abrir tareas nuevas: la cola sigue vacia y el impedimento real sigue siendo externo.
+  3. Actualizar solo la trazabilidad canonica con un check fresco del gate, el estado limpio del runner y los errores exactos de smoke/backup/restore.
+- **Checks ejecutados**:
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','DATABASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `Get-NetTCPConnection -LocalPort 3000,8000 -State Listen -ErrorAction SilentlyContinue` -> `NO_LISTENERS_3000_8000`.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_deployed_stack.py` -> `ERROR`; `La variable obligatoria BACKEND_BASE_URL no esta definida.`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` -> `ERROR`; `Debes definir --database-url o DATABASE_URL.`.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file "$env:TEMP\botica_backups\dummy.dump"` -> `ERROR`; `Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`.
+- **Resultado verificable**:
+  - el gate canonico completo sigue en verde y no aparece deuda local nueva de release en este runner;
+  - la documentacion operativa de release sigue alineada y verificable (`check_release_readiness.py` en `OK`);
+  - el runner local sigue limpio, sin listeners residuales en `3000/8000`;
+  - el smoke post-deploy, el backup dry-run y el restore-drill dry-run siguen bloqueados exactamente por ausencia de variables reales, no por un fallo del repo.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido para restore drill.
+  - `OPS-RWY-003` sigue bloqueada por falta de acceso verificable a Railway UI/logs y a las variables reales del servicio.
+- **Diagnostico concreto**:
+  - no existe ninguna tarea `TODO` no `BLOCKED`;
+  - el gate canonico completo sigue en `OK`;
+  - los comandos especificos del cierre externo siguen fallando inmediatamente por configuracion ausente.
+- **Causa probable**:
+  - el runner actual no recibe las URLs reales desplegadas ni las credenciales/variables necesarias para smoke, backup y restore drill.
+- **Evidencia verificable**:
+  - `python scripts/check_release_gate.py` devuelve `OK`.
+  - `python scripts/check_release_readiness.py` devuelve `OK`.
+  - `python scripts/check_deployed_stack.py` devuelve error de configuracion por `BACKEND_BASE_URL` ausente.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` devuelve error por `DATABASE_URL` ausente.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file "$env:TEMP\botica_backups\dummy.dump"` devuelve error por `BOTICA_RESTORE_DATABASE_URL` ausente.
+- **Impacto sobre la tarea**:
+  - `AUT-003` no puede avanzar a smoke real ni a backup/restore reales en esta corrida.
+- **Dependencia que bloquea**:
+  - provision de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido;
+  - acceso externo verificable a Railway para `OPS-RWY-003`.
+- **Siguiente accion exacta**:
+  - aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para reintentar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` con datos reales.
+- **Criterio de desbloqueo**:
+  - disponer de las cuatro variables reales y del entorno temporal seguro, ejecutar smoke post-deploy + backup real + restore drill real con resultado verificable.
+- **Fecha/punto de revision**:
+  - siguiente ejecucion aplicable con variables reales y acceso externo disponibles.
+- **Checklist de cierre aplicada (AUT-003 gate verde + bloqueo externo intacto)**:
+  1. Tarea correcta confirmada: **Si**; no existia ninguna `TODO` no `BLOCKED` y correspondia revalidar el primer bloqueo activo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo revalidacion del bloqueo y trazabilidad documental.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; los cambios propios de esta corrida se limitan a `docs/roadmap_codex.md` y `docs/bitacora_codex.md`, conviviendo con cambios previos ajenos ya presentes en el worktree.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` con datos reales.
+
+## Entrada 2026-03-27-AUT-003 (revalidacion de gate sano y bloqueo externo intacto)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: revalidar el primer bloqueo activo de la cola en un runner limpio, confirmar que no aparecio deuda local nueva de release y dejar trazado el bloqueo externo vigente con checks actualizados.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-003` en `BLOCKED`; no aparecio evidencia nueva que habilite smoke post-deploy ni backup/restore reales en este runner.
+  2. No tocar codigo de producto ni abrir nuevas tareas: la cola sigue vacia y el impedimento real sigue siendo externo.
+  3. Actualizar solo trazabilidad documental con una revalidacion mas reciente del gate, el readiness y los fallos exactos por configuracion ausente.
+- **Checks ejecutados**:
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','DATABASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `Get-NetTCPConnection -LocalPort 3000,8000 -State Listen` -> sin listeners; PowerShell devuelve `no encontro objetos` cuando no hay sockets coincidentes.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_deployed_stack.py` -> `ERROR`; `La variable obligatoria BACKEND_BASE_URL no esta definida.`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` -> `ERROR`; `Debes definir --database-url o DATABASE_URL.`.
+- **Resultado verificable**:
+  - el gate canonico completo sigue en verde y no hay deuda local nueva de release en este runner;
+  - la documentacion operativa de release sigue alineada (`check_release_readiness.py` en `OK`);
+  - el smoke post-deploy y el backup/restore siguen bloqueados exactamente por ausencia de variables reales, no por un fallo del repo;
+  - el backlog permanece totalmente bloqueado por dependencias externas reales.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido para restore drill.
+  - `OPS-RWY-003` sigue bloqueada por falta de acceso verificable a Railway UI/logs y a las variables reales del servicio.
+- **Diagnostico concreto**:
+  - no existe ninguna tarea `TODO` no `BLOCKED`;
+  - el runner local esta limpio y el gate canonico pasa;
+  - los comandos especificos del cierre externo siguen fallando inmediatamente por configuracion ausente.
+- **Causa probable**:
+  - el runner actual no recibe las URLs desplegadas reales ni las credenciales/variables necesarias para backup y restore drill.
+- **Evidencia verificable**:
+  - `python scripts/check_release_gate.py` devuelve `OK`.
+  - `python scripts/check_release_readiness.py` devuelve `OK`.
+  - `python scripts/check_deployed_stack.py` devuelve error de configuracion por `BACKEND_BASE_URL` ausente.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` devuelve error por `DATABASE_URL` ausente.
+- **Impacto sobre la tarea**:
+  - `AUT-003` no puede avanzar a smoke real ni a restore drill real en esta corrida.
+- **Dependencia que bloquea**:
+  - provision de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido;
+  - acceso externo verificable a Railway para `OPS-RWY-003`.
+- **Siguiente accion exacta**:
+  - aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para reintentar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` con datos reales.
+- **Criterio de desbloqueo**:
+  - disponer de las cuatro variables reales y del entorno temporal seguro, ejecutar smoke post-deploy + backup real + restore drill real con resultado verificable.
+- **Fecha/punto de revision**:
+  - siguiente ejecucion aplicable con variables reales y acceso externo disponibles.
+- **Checklist de cierre aplicada (AUT-003 gate sano + bloqueo externo)**:
+  1. Tarea correcta confirmada: **Si**; no existia ninguna `TODO` no `BLOCKED` y correspondia revalidar el primer bloqueo activo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo revalidacion del bloqueo y trazabilidad documental.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; los cambios propios de esta corrida se limitan a `docs/roadmap_codex.md` y `docs/bitacora_codex.md`, conviviendo con cambios previos ajenos ya presentes en el worktree.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` con datos reales.
+
+## Entrada 2026-03-27-AUT-003 (revalidacion de smoke y backup bloqueados por entorno)
+- **Fecha (UTC)**: `2026-03-27`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: revalidar el primer bloqueo activo de la cola ejecutando los checks mas especificos de smoke post-deploy y backup/restore para confirmar si aparecio evidencia nueva de desbloqueo.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-003` en `BLOCKED`; no aparecio evidencia nueva que permita ejecutar smoke post-deploy ni backup/restore fuera de este runner.
+  2. No tocar codigo de producto ni abrir tareas nuevas: la cola sigue vacia y el bloqueo sigue siendo puramente externo.
+  3. Actualizar solo la trazabilidad canonica con errores exactos de los comandos hoy bloqueados por entorno.
+- **Checks ejecutados**:
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','DATABASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_deployed_stack.py` -> `ERROR`; `La variable obligatoria BACKEND_BASE_URL no esta definida.`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` -> `ERROR`; `Debes definir --database-url o DATABASE_URL.`.
+- **Resultado verificable**:
+  - la documentacion operativa de release sigue alineada y verificable (`check_release_readiness.py` en `OK`);
+  - el smoke post-deploy sigue sin poder ejecutarse por falta de `BACKEND_BASE_URL` y, por transitividad, de `FRONTEND_BASE_URL`;
+  - el backup/restore sigue sin poder iniciarse por falta de `DATABASE_URL`;
+  - el backlog permanece totalmente bloqueado por dependencias externas reales, sin deuda local nueva.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido para restore drill.
+  - `OPS-RWY-003` sigue bloqueada por falta de acceso verificable a Railway UI/logs y a las variables reales del servicio.
+- **Diagnostico concreto**:
+  - no existe ninguna tarea `TODO` no `BLOCKED`;
+  - los comandos especificos del cierre externo fallan inmediatamente por configuracion ausente, no por errores del repo.
+- **Causa probable**:
+  - el runner actual no recibe las URLs reales desplegadas ni las credenciales/variables necesarias para backup y restore drill.
+- **Evidencia verificable**:
+  - `python scripts/check_deployed_stack.py` devuelve error de configuracion por `BACKEND_BASE_URL` ausente.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` devuelve error por `DATABASE_URL` ausente.
+  - `python scripts/check_release_readiness.py` permanece en `OK`, confirmando que el bloqueo es de entorno externo y no de deriva documental.
+- **Impacto sobre la tarea**:
+  - `AUT-003` no puede avanzar a smoke real ni a restore drill real en esta corrida.
+- **Dependencia que bloquea**:
+  - provision de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido;
+  - acceso externo verificable a Railway para `OPS-RWY-003`.
+- **Siguiente acción exacta**:
+  - aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para reintentar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` en modo real.
+- **Criterio de desbloqueo**:
+  - disponer de las cuatro variables reales y del entorno temporal seguro, ejecutar smoke post-deploy + backup real + restore drill real con resultado verificable.
+- **Fecha/punto de revision**:
+  - siguiente ejecucion aplicable con variables reales y acceso externo disponibles.
+- **Checklist de cierre aplicada (AUT-003 bloqueo de entorno)**:
+  1. Tarea correcta confirmada: **Si**; no existia ninguna `TODO` no `BLOCKED` y correspondia revalidar el primer bloqueo activo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo revalidacion del bloqueo y trazabilidad documental.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` en modo real.
+
+## Entrada 2026-03-27-AUT-003 (revalidacion de smoke, backup y restore-drill aun bloqueados)
+- **Fecha (UTC)**: `2026-03-27T14:32:52Z`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: revalidar el primer bloqueo activo de la cola con los checks mas especificos disponibles para smoke post-deploy y backup/restore, sin tocar codigo de producto.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-003` en `BLOCKED`; no aparecio evidencia nueva que permita ejecutar smoke post-deploy ni backup/restore reales desde este runner.
+  2. No tocar codigo de producto ni abrir nuevas tareas: la cola sigue vacia y el impedimento real sigue siendo externo.
+  3. Actualizar solo la trazabilidad canonica con el estado limpio del runner y los errores exactos de smoke, backup y restore-drill.
+- **Checks ejecutados**:
+  - `$names = 'BACKEND_BASE_URL','FRONTEND_BASE_URL','DATABASE_URL','BOTICA_RESTORE_DATABASE_URL'; foreach ($name in $names) { ... }` -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `Get-NetTCPConnection -LocalPort 3000,8000 -State Listen -ErrorAction SilentlyContinue` -> `NO_LISTENERS_3000_8000`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_deployed_stack.py` -> `ERROR`; `La variable obligatoria BACKEND_BASE_URL no esta definida.`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` -> `ERROR`; `Debes definir --database-url o DATABASE_URL.`.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run` -> `ERROR`; `Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`.
+- **Resultado verificable**:
+  - la documentacion operativa de release sigue alineada y verificable (`check_release_readiness.py` en `OK`);
+  - el runner local esta limpio, sin listeners residuales en `3000/8000`;
+  - el smoke post-deploy sigue bloqueado por falta de `BACKEND_BASE_URL` y, por transitividad, de `FRONTEND_BASE_URL`;
+  - el backup dry-run sigue bloqueado por falta de `DATABASE_URL`;
+  - el restore-drill dry-run sigue bloqueado por falta de `BOTICA_RESTORE_DATABASE_URL`;
+  - el backlog permanece totalmente bloqueado por dependencias externas reales.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido para restore drill.
+  - `OPS-RWY-003` sigue bloqueada por falta de acceso verificable a Railway UI/logs y a las variables reales del servicio.
+- **Diagnostico concreto**:
+  - no existe ninguna tarea `TODO` no `BLOCKED`;
+  - los comandos especificos del cierre externo siguen fallando inmediatamente por configuracion ausente, no por errores del repo.
+- **Causa probable**:
+  - el runner actual no recibe las URLs reales desplegadas ni las credenciales/variables necesarias para smoke, backup y restore drill.
+- **Evidencia verificable**:
+  - `python scripts/check_release_readiness.py` devuelve `OK`.
+  - `python scripts/check_deployed_stack.py` devuelve error de configuracion por `BACKEND_BASE_URL` ausente.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\botica_backups"` devuelve error por `DATABASE_URL` ausente.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run` devuelve error por `BOTICA_RESTORE_DATABASE_URL` ausente.
+- **Impacto sobre la tarea**:
+  - `AUT-003` no puede avanzar a smoke real ni a backup/restore reales en esta corrida.
+- **Dependencia que bloquea**:
+  - provision de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y de un entorno temporal seguro con dump permitido;
+  - acceso externo verificable a Railway para `OPS-RWY-003`.
+- **Siguiente acción exacta**:
+  - aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para reintentar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` en modo real.
+- **Criterio de desbloqueo**:
+  - disponer de las cuatro variables reales y del entorno temporal seguro, ejecutar smoke post-deploy + backup real + restore drill real con resultado verificable.
+- **Fecha/punto de revision**:
+  - siguiente ejecucion aplicable con variables reales y acceso externo disponibles.
+- **Checklist de cierre aplicada (AUT-003 smoke/backup/restore bloqueados)**:
+  1. Tarea correcta confirmada: **Si**; no existia ninguna `TODO` no `BLOCKED` y correspondia revalidar el primer bloqueo activo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo revalidacion del bloqueo y trazabilidad documental.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo `docs/roadmap_codex.md` y `docs/bitacora_codex.md` como cambios propios de esta corrida.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; no se declara capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un entorno temporal seguro con dump permitido para ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` en modo real.
