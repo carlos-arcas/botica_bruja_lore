@@ -1,11 +1,13 @@
 # CHECKLIST DE RELEASE — seguridad, privacidad y backup/restore (mínimo operativo)
 
 ## 1) Seguridad de configuración (bloqueante)
+> Fuente canónica previa al boot: esta lista bloqueante manda sobre el checklist visible de Railway UI y debe reflejarse sin divergencias en `docs/deploy_railway.md`.
+
 - `DEBUG=false`.
 - `SECRET_KEY` definida y no trivial.
 - `DATABASE_URL` PostgreSQL válida (sin SQLite en producción).
 - `PUBLIC_SITE_URL`, `PAYMENT_SUCCESS_URL` y `PAYMENT_CANCEL_URL` en **HTTPS absoluto**.
-- `EMAIL_BACKEND` de producción (no `locmem`, `console` ni `filebased`).
+- `EMAIL_BACKEND` de producción (SMTP real, no `locmem`, `console` ni `filebased`).
 - `DEFAULT_FROM_EMAIL` con dominio real (no `.local`).
 - `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET` definidas.
 

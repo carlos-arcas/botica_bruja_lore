@@ -12,13 +12,14 @@ test("la imagen de tarjetas de producto navega a la ficha correspondiente", () =
   assert.equal(tarjetaBotica.includes('Link href={hrefFicha} className="botica-natural__media-enlace"'), true);
   assert.equal(tarjetaColecciones.includes("href={`/colecciones/${producto.slug}`}"), true);
   assert.equal(tarjetaColecciones.includes("className={estilos.mediaEnlace}"), true);
-  assert.equal(rutas.includes("/botica-natural/${producto.slug}"), true);
+  assert.equal(rutas.includes("resolverSlugRutaDetallePublica(producto)"), true);
+  assert.equal(rutas.includes('export const SLUG_SECCION_PUBLICA_BASELINE = "botica-natural";'), true);
 });
 
 test("la imagen de tarjeta ritual navega a su ficha ritual", () => {
   const tarjeta = readFileSync(join(process.cwd(), "componentes/rituales/TarjetaRitual.tsx"), "utf8");
 
-  assert.equal(tarjeta.includes("Link href={ritual.urlDetalle} className=\"tarjeta-media-enlace\""), true);
+  assert.equal(tarjeta.includes('Link href={ritual.urlDetalle} className="tarjeta-media-enlace"'), true);
   assert.equal(tarjeta.includes("Abrir ficha ritual de"), true);
 });
 
@@ -33,13 +34,15 @@ test("el fallback visual de imagen se mantiene dentro de zona clickable", () => 
   const tarjetaProducto = readFileSync(join(process.cwd(), "componentes/botica-natural/TarjetaProductoBoticaNatural.tsx"), "utf8");
   const bloqueRelacionados = readFileSync(join(process.cwd(), "componentes/catalogo/relacionados/BloqueProductosRelacionados.tsx"), "utf8");
   const tarjetaRitual = readFileSync(join(process.cwd(), "componentes/rituales/TarjetaRitual.tsx"), "utf8");
+  const imagenProducto = readFileSync(join(process.cwd(), "componentes/botica-natural/ImagenProductoBoticaNatural.tsx"), "utf8");
 
-  assert.match(tarjetaProducto, /<Link href=\{hrefFicha\}[\s\S]*botica-natural__imagen--fallback/);
-  assert.match(bloqueRelacionados, /<Link href=\{hrefFicha\}[\s\S]*botica-natural__imagen--fallback/);
+  assert.equal(tarjetaProducto.includes('Link href={hrefFicha} className="botica-natural__media-enlace"'), true);
+  assert.equal(bloqueRelacionados.includes('Link href={hrefFicha} className="botica-natural__media-enlace"'), true);
+  assert.equal(imagenProducto.includes('botica-natural__imagen--fallback'), true);
   assert.match(tarjetaRitual, /<Link href=\{ritual\.urlDetalle\}[\s\S]*tarjeta-media-fallback/);
 });
 
-test("no hay regresión del CTA Agregar al carrito en cards comerciales", () => {
+test("no hay regresion del CTA Agregar al carrito en cards comerciales", () => {
   const tarjetaProducto = readFileSync(join(process.cwd(), "componentes/botica-natural/TarjetaProductoBoticaNatural.tsx"), "utf8");
   const bloqueRelacionados = readFileSync(join(process.cwd(), "componentes/catalogo/relacionados/BloqueProductosRelacionados.tsx"), "utf8");
 

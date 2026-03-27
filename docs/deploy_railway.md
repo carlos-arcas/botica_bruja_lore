@@ -53,6 +53,7 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-ma
 ## 2) Variables requeridas en Railway UI
 
 ### Backend
+- Lista bloqueante previa al boot, alineada con `docs/release_readiness_minima.md`:
 - `SECRET_KEY`
 - `DEBUG=false`
 - `DATABASE_URL` **obligatoria** (inyectada desde el servicio PostgreSQL).
@@ -60,8 +61,11 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-ma
 - `ALLOWED_HOSTS` (CSV)
 - `CSRF_TRUSTED_ORIGINS` (CSV con URLs completas)
 - `PUBLIC_SITE_URL` (URL HTTPS pública canónica)
+- `PAYMENT_SUCCESS_URL` (URL HTTPS absoluta de retorno tras pago real)
+- `PAYMENT_CANCEL_URL` (URL HTTPS absoluta de cancelación de pago real)
 - `DEFAULT_FROM_EMAIL` (dominio real, no `.local`)
 - `EMAIL_BACKEND` de producción (SMTP real, no `locmem/console/filebased`)
+- `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET` para cobro real/webhooks
 - Variables opcionales para acceso admin provisional seguro:
   - `CREAR_ADMIN_PROVISIONAL=true` (ejecución explícita durante predeploy)
   - `ADMIN_USUARIO_PROVISIONAL=karkas`

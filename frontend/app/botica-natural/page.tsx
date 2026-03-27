@@ -1,14 +1,12 @@
-import { ContenedorPaginaComercial } from "@/componentes/shell/ContenedorPaginaComercial";
+import {
+  BOTICA_NATURAL_PUBLICA,
+  resolverMensajeErrorCatalogoSeccionPublica,
+} from "@/componentes/botica-natural/contratoSeccionPublica";
 import { ListadoProductosBoticaNatural } from "@/componentes/botica-natural/ListadoProductosBoticaNatural";
 import { PanelFiltrosBoticaNatural } from "@/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural";
+import { ContenedorPaginaComercial } from "@/componentes/shell/ContenedorPaginaComercial";
 import { resolverFiltrosBoticaDesdeSearchParams } from "@/contenido/catalogo/filtrosBoticaNatural";
 import { obtenerProductosPublicosPorSeccion } from "@/infraestructura/api/herbal";
-
-function resolverMensajeError(tipoError: "fetch_error" | "http_error" | "respuesta_invalida"): string {
-  if (tipoError === "http_error") return "No se pudo consultar el catálogo público de Botica Natural (error HTTP).";
-  if (tipoError === "respuesta_invalida") return "El catálogo público respondió con un formato inválido y no se puede renderizar.";
-  return "No hay conexión con el backend público de Botica Natural.";
-}
 
 export default async function PaginaBoticaNatural({
   searchParams,
@@ -16,19 +14,19 @@ export default async function PaginaBoticaNatural({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<JSX.Element> {
   const filtros = resolverFiltrosBoticaDesdeSearchParams((await searchParams) ?? {});
-  const resultado = await obtenerProductosPublicosPorSeccion("botica-natural", filtros);
+  const resultado = await obtenerProductosPublicosPorSeccion(BOTICA_NATURAL_PUBLICA.slug, filtros);
 
   if (resultado.estado === "error") {
     return (
       <ContenedorPaginaComercial>
-        <section aria-label="Catálogo Botica Natural" className="botica-natural__bloque">
+        <section aria-label={BOTICA_NATURAL_PUBLICA.ariaCatalogo} className="botica-natural__bloque">
           <header className="botica-natural__cabecera">
-            <h1>Botica Natural</h1>
-            <p>Selección herbal pública conectada con catálogo real en producción.</p>
+            <h1>{BOTICA_NATURAL_PUBLICA.nombre}</h1>
+            <p>{BOTICA_NATURAL_PUBLICA.descripcionCatalogo}</p>
           </header>
           <section aria-live="polite" className="botica-natural__estado-vacio">
-            <h2>No pudimos cargar Botica Natural</h2>
-            <p>{resolverMensajeError(resultado.tipoError)}</p>
+            <h2>{BOTICA_NATURAL_PUBLICA.tituloErrorCatalogo}</h2>
+            <p>{resolverMensajeErrorCatalogoSeccionPublica(BOTICA_NATURAL_PUBLICA, resultado.tipoError)}</p>
             <p>{resultado.mensaje}</p>
           </section>
         </section>
@@ -38,17 +36,20 @@ export default async function PaginaBoticaNatural({
 
   return (
     <ContenedorPaginaComercial>
-      <section aria-label="Catálogo Botica Natural" className="botica-natural__layout-catalogo">
-        <aside className="botica-natural__rail-filtros" aria-label="Filtros de Botica Natural">
-          <h2>Filtrar catálogo</h2>
+      <section aria-label={BOTICA_NATURAL_PUBLICA.ariaCatalogo} className="botica-natural__layout-catalogo">
+        <aside className="botica-natural__rail-filtros" aria-label={BOTICA_NATURAL_PUBLICA.ariaFiltros}>
+          <h2>Filtrar catalogo</h2>
           <PanelFiltrosBoticaNatural filtrosActivos={filtros} />
         </aside>
         <section className="botica-natural__bloque botica-natural__bloque--catalogo">
           <header className="botica-natural__cabecera">
-            <h1>Botica Natural</h1>
-            <p>Selección herbal pública conectada con catálogo real en producción.</p>
+            <h1>{BOTICA_NATURAL_PUBLICA.nombre}</h1>
+            <p>{BOTICA_NATURAL_PUBLICA.descripcionCatalogo}</p>
           </header>
-          <ListadoProductosBoticaNatural productos={resultado.productos} />
+          <ListadoProductosBoticaNatural
+            productos={resultado.productos}
+            configuracionSeccion={BOTICA_NATURAL_PUBLICA}
+          />
         </section>
       </section>
     </ContenedorPaginaComercial>

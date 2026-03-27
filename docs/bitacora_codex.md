@@ -869,3 +869,812 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (aplica para no reabrir capacidades ya `DONE` ni forzar un cierre ficticio de `V2-R10`).
   10. Siguiente paso exacto definido: **Sí**.
 - **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales en un entorno temporal seguro y, con ellas, ejecutar `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+
+## Entrada 2026-03-26-ROADMAP-BACKLOG-01 (apertura de backlog comercial y operativo posterior a V1/V2)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `ROADMAP-BACKLOG-01`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecución**: romper la situación de cola vacía incorporando backlog nuevo, real y atómico en `docs/roadmap_codex.md`, usando evidencia de repo y sin tocar producto.
+- **Contexto de cola al arrancar**: la cola operativa estaba vacía y solo persistía `AUT-003` en `BLOCKED` por dependencia externa verificable.
+- **Fuentes de verdad consultadas**:
+  - `docs/90_estado_implementacion.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/00_vision_proyecto.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/roadmap_cierre_ecommerce_real_incremental.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `.env.railway.example`
+  - `backend/configuracion_django/settings.py`
+  - `backend/configuracion_django/validaciones_entorno.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls.py`
+  - `backend/nucleo_herbal/presentacion/publica/views.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/servicio.py`
+  - `frontend/app/botica-natural/page.tsx`
+  - `frontend/app/botica-natural/[slug]/page.tsx`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/app/minerales-y-energia/page.tsx`
+  - `frontend/app/herramientas-esotericas/page.tsx`
+  - `frontend/componentes/botica-natural/`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/componentes/admin/sincronizacionProductosAdmin.ts`
+  - `frontend/contenido/home/seccionesPrincipales.ts`
+  - `frontend/tests/botica-natural.test.ts`
+  - `frontend/tests/home-raiz-secciones.test.ts`
+  - `frontend/tests/backoffice-flujos.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `tests/nucleo_herbal/test_deploy_guards.py`
+  - `scripts/check_release_readiness.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `AUT-003` exactamente como estaba en `BLOCKED`, porque su dependencia externa sigue vigente.
+  2. Abrir la nueva cola ejecutable solo en `docs/roadmap_codex.md`; no tocar roadmaps históricos V1/V2 porque la trazabilidad existente ya basta y no hacía falta una nota adicional.
+  3. No reabrir como `TODO` el baseline de `botica-natural` ni el hardening base de Railway: ambos ya tienen evidencia `DONE`; se abren solo brechas residuales de auditoría, paridad, naming, datos, sync y QA.
+  4. Dejar `OPS-RWY-001` como primera `TODO` no `BLOCKED`, porque es local, pequeña, verificable y ataca la incidencia operativa aportada por el mantenedor sin depender de Railway UI.
+- **Candidatos añadidos finalmente al roadmap**:
+  - `OPS-RWY-001`
+  - `SEC-PAR-001`
+  - `SEC-HER-001`
+  - `CAT-DATA-001`
+  - `CAT-UI-001`
+  - `OPS-RWY-002`
+  - `SEC-VEL-001`
+  - `SEC-VEL-002`
+  - `SEC-MIN-001`
+  - `SEC-MIN-002`
+  - `SEC-HER-002`
+  - `SEC-HER-003`
+  - `CAT-DATA-002`
+  - `CAT-DATA-003`
+  - `CAT-DATA-004`
+  - `CAT-SYNC-001`
+  - `CAT-QA-001`
+  - `OPS-RWY-003` (`BLOCKED`)
+- **Candidatos descartados o no reabiertos tal cual**:
+  - No se reabrió `botica-natural` como feature base: el baseline ya está cerrado con evidencia en `R09`; la brecha real es de paridad reutilizable respecto a otras secciones.
+  - No se reabrió el hardening de variables críticas Railway como si faltara implementación: `R15` ya cerró guardrails backend, `.env.railway.example` y readiness mínimo; la deuda residual es auditoría/preflight/validación externa.
+  - `AUT-003` no se convirtió en `TODO`: se preservó como bloqueo externo de go-live y se separó del incidente Railway más acotado.
+  - `CAT-DATA-002` no se abrió “desde cero”: se registró como brecha residual porque ya existe un seed mínimo parcial de `velas-e-incienso`.
+- **Checks ejecutados**:
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `Select-String -Path docs/roadmap_codex.md -Pattern '^## OPS-RWY-001','^## AUT-003','^## Radar de cola actual'` -> confirma backlog nuevo, `AUT-003` en `BLOCKED` y radar actualizado.
+  - `$content = Get-Content -Raw docs/roadmap_codex.md; ...` -> `FIRST_BLOCK_PRESENT=YES`, `AUT003_BLOCKED=YES`.
+  - `git diff -- docs/roadmap_codex.md` -> diff coherente, solo documental, sin tocar producto.
+- **Resultado verificable**:
+  - la cola ejecutable deja de estar vacía;
+  - `AUT-003` sigue `BLOCKED` sin alteración de su criterio de desbloqueo;
+  - el roadmap nuevo queda ordenado por auditorías locales, luego reusable/tests, después datos/sync/QA y finalmente validación externa;
+  - el backlog no reabre cierres históricos ficticios: usa solo brechas residuales reales.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada por URLs/credenciales reales y restore drill externo.
+  - `OPS-RWY-003` queda `BLOCKED` por acceso externo a Railway UI/logs y variables reales.
+- **Checklist de cierre aplicada (ROADMAP-BACKLOG-01)**:
+  1. Tarea correcta confirmada: **No aplica** (corrida extraordinaria de gobernanza pedida explícitamente por el mantenedor para abrir cola nueva; no era ejecución de la primera `TODO` existente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `OPS-RWY-001` contrastando la incidencia Railway con `.env.railway.example`, `docs/deploy_railway.md`, `docs/release_readiness_minima.md`, `backend/configuracion_django/settings.py`, `backend/configuracion_django/validaciones_entorno.py`, `scripts/check_release_readiness.py` y `tests/nucleo_herbal/test_deploy_guards.py`.
+
+## Entrada 2026-03-26-OPS-RWY-001 (auditoria boot Railway)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `OPS-RWY-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: auditar la incidencia de arranque Railway para separar con evidencia qué guardrails ya existen en backend y qué brecha residual sigue abierta entre documentación, preflight y cobertura de tests.
+- **Fuentes de verdad consultadas**:
+  - `docs/90_estado_implementacion.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/00_vision_proyecto.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `.env.railway.example`
+  - `backend/configuracion_django/settings.py`
+  - `backend/configuracion_django/validaciones_entorno.py`
+  - `scripts/check_release_readiness.py`
+  - `tests/nucleo_herbal/test_deploy_guards.py`
+  - `tests/scripts/test_check_release_readiness.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Ejecutar `OPS-RWY-001` como primera `TODO` no `BLOCKED` real de la cola actual, respetando el backlog nuevo ya registrado por petición explícita del mantenedor.
+  2. No reabrir `R15`, porque `docs/90_estado_implementacion.md` ya acredita el hardening base y la inspección de `settings.py` + `validaciones_entorno.py` confirma el fail-fast backend vigente.
+  3. Cerrar la auditoría dejando una sola brecha residual clara: el problema ya no es “falta de guardrail backend”, sino desalineación entre checklist visible de Railway, preflight automatizado y cobertura de tests.
+  4. Mantener el worktree heredado sin tocar código de producto ni documentación operativa fuera del roadmap/bitácora; el endurecimiento funcional queda diferido a `OPS-RWY-002`.
+- **Checks ejecutados**:
+  - `git -c safe.directory=C:/Users/arcas/.codex/worktrees/d70a/botica_bruja_lore status --short --branch` -> branch `codex/inspecciona-cola-del-roadmapff`; el worktree ya traía diff documental en `docs/roadmap_codex.md` y `docs/bitacora_codex.md`, y esta corrida solo lo extiende.
+  - `Select-String -Path backend/configuracion_django/settings.py,backend/configuracion_django/validaciones_entorno.py -Pattern 'DATABASE_URL|SECRET_KEY|PUBLIC_SITE_URL|PAYMENT_SUCCESS_URL|PAYMENT_CANCEL_URL|DEFAULT_FROM_EMAIL|EMAIL_BACKEND'` -> confirma guardrails de arranque para base de datos, secreto, URLs públicas/pago y correo seguro.
+  - `Select-String -Path .env.railway.example,docs/deploy_railway.md,docs/release_readiness_minima.md -Pattern 'DATABASE_URL|SECRET_KEY|DEBUG=false|PUBLIC_SITE_URL|PAYMENT_SUCCESS_URL|PAYMENT_CANCEL_URL|DEFAULT_FROM_EMAIL|EMAIL_BACKEND|STRIPE_SECRET_KEY|STRIPE_WEBHOOK_SECRET'` -> `.env.railway.example` y `docs/release_readiness_minima.md` cubren el núcleo crítico; `docs/deploy_railway.md` no lista todavía `PAYMENT_SUCCESS_URL`, `PAYMENT_CANCEL_URL`, `STRIPE_SECRET_KEY` ni `STRIPE_WEBHOOK_SECRET` en el checklist principal de Railway UI.
+  - `Select-String -Path tests/nucleo_herbal/test_deploy_guards.py,tests/scripts/test_check_release_readiness.py -Pattern 'DATABASE_URL|SECRET_KEY|PUBLIC_SITE_URL|PAYMENT_SUCCESS_URL|PAYMENT_CANCEL_URL|DEFAULT_FROM_EMAIL|EMAIL_BACKEND|Release readiness mínimo validado'` -> `test_deploy_guards.py` cubre `DATABASE_URL`, `SECRET_KEY`, `PUBLIC_SITE_URL` y `EMAIL_BACKEND`; no aparecen casos dedicados para `PAYMENT_SUCCESS_URL`, `PAYMENT_CANCEL_URL` ni `DEFAULT_FROM_EMAIL` inseguro; `test_check_release_readiness.py` solo blinda la ruta verde del script.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `ERROR`; el runner carece de `django`, `next` y `tsc`, así que el gate no es verificable aquí como PASS de entorno completo.
+- **Resultado verificable**:
+  - el backend ya falla rápido por condiciones críticas de arranque y no hace falta reabrir `R15`;
+  - la deuda residual exacta está en la capa previa al boot: `docs/deploy_railway.md` no refleja aún toda la lista mínima visible de Railway, `check_release_readiness.py` verifica marcadores pero no el contrato completo ni valores inseguros, y la cobertura de `test_deploy_guards.py` no blinda todavía URLs de pago ni `DEFAULT_FROM_EMAIL`;
+  - `OPS-RWY-001` queda cerrada con un diagnóstico acotado y deja `OPS-RWY-002` como endurecimiento local del hilo Railway;
+  - la cola general sigue activa y la primera `TODO` no `BLOCKED` pasa a ser `SEC-PAR-001`.
+- **Bloqueos (si aplica)**: ninguno para `OPS-RWY-001`; se mantienen solo los bloqueos externos ya existentes de `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (OPS-RWY-001)**:
+  1. Tarea correcta confirmada: **Sí** (`OPS-RWY-001` era la primera `TODO` no `BLOCKED` del roadmap vigente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (solo `docs/roadmap_codex.md` y `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (`R15` se mantiene `DONE` y la auditoría solo describe la brecha residual no implementada).
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `SEC-PAR-001` auditando qué piezas del baseline público de `botica-natural` son reutilizables y qué brecha exacta separa a `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` de esa paridad.
+
+## Entrada 2026-03-26-SEC-PAR-001 (auditoria paridad baseline publico)
+- **Fecha (UTC)**: 2026-03-26
+- **ID de tarea**: `SEC-PAR-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: inventariar con evidencia qué partes del baseline público `botica-natural` ya son reutilizables, qué piezas siguen acopladas al baseline y cuál es la brecha exacta que separa a velas, minerales y herramientas de una paridad pública DB-backed.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `frontend/app/botica-natural/page.tsx`
+  - `frontend/app/botica-natural/[slug]/page.tsx`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/app/minerales-y-energia/page.tsx`
+  - `frontend/app/herramientas-esotericas/page.tsx`
+  - `frontend/componentes/botica-natural/`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/componentes/catalogo/relacionados/BloqueProductosRelacionados.tsx`
+  - `frontend/componentes/catalogo/disponibilidad/EstadoDisponibilidadProducto.tsx`
+  - `frontend/infraestructura/api/herbal.ts`
+  - `backend/nucleo_herbal/presentacion/publica/views.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls.py`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `frontend/tests/botica-natural.test.ts`
+  - `frontend/tests/cards-media-clickable.test.ts`
+  - `frontend/tests/home-raiz-secciones.test.ts`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Cerrar `SEC-PAR-001` sin tocar código de producto, porque el entregable exigido por la tarea es un inventario verificable de reutilización y huecos, no una extracción/implementación.
+  2. Considerar ya reusable la capa de datos pública por sección (backend + `frontend/infraestructura/api/herbal.ts`) y no reabrir esa superficie como problema de dominio o de infraestructura.
+  3. Encapsular la brecha real en dos frentes posteriores separados: `SEC-HER-001` para naming canónico de herramientas y `CAT-UI-001` para extracción del contrato reusable de listado/detalle público.
+  4. Mantener el orden del roadmap: aunque esta auditoría alimenta `CAT-UI-001`, la primera `TODO` no `BLOCKED` posterior queda en `SEC-HER-001`.
+- **Checks ejecutados**:
+  - `git -c safe.directory=C:/Users/arcas/.codex/worktrees/d70a/botica_bruja_lore status --short --branch` -> rama `codex/inspecciona-cola-del-roadmapff`; al arrancar solo había diff documental en `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  - `Select-String -Path 'docs/roadmap_codex.md' -Pattern '^## SEC-PAR-001' -Context 0,20` -> confirma alcance, checks y estado `TODO` previo de la tarea elegida.
+  - `Get-Content`/`Select-String` sobre `frontend/app/botica-natural/page.tsx`, `frontend/app/botica-natural/[slug]/page.tsx`, `frontend/componentes/botica-natural/`, `frontend/componentes/catalogo/rutasProductoPublico.ts`, `frontend/componentes/catalogo/relacionados/BloqueProductosRelacionados.tsx`, `frontend/infraestructura/api/herbal.ts`, `backend/nucleo_herbal/presentacion/publica/views.py` y `urls.py` -> confirma que backend/API ya son genéricos por sección, pero layout, routing y naming visual siguen acoplados a `botica-natural`.
+  - `Get-ChildItem -Path 'frontend/app' -Recurse -Directory | Where-Object { $_.FullName -match 'botica-natural|velas-e-incienso|minerales-y-energia|herramientas-esotericas' }` -> solo existe `frontend/app/botica-natural/[slug]`; las otras tres secciones no tienen árbol de detalle.
+  - `Get-Content` sobre `frontend/tests/botica-natural.test.ts`, `frontend/tests/cards-media-clickable.test.ts` y `frontend/tests/home-raiz-secciones.test.ts` -> evidencia contractual actual centrada en `botica-natural` y confirma que velas/minerales/herramientas siguen en hero-only.
+  - `Get-ChildItem -Path '.' -Recurse -File | Select-String -Pattern '\"velas-e-incienso\"|\"minerales-y-energia\"|\"herramientas-esotericas\"'` -> confirma presencia de esas secciones en home, backoffice, contratos y seed, separando la brecha pública de la brecha de dominio/backoffice.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+- **Resultado verificable**:
+  - la referencia reusable ya existe en la capa de datos pública: listado por sección, detalle de producto y DTO con `seccion_publica`;
+  - el bloqueo de paridad no está en backend, sino en frontend público: helper de rutas fijado a `/botica-natural/${slug}`, único `[slug]` público, componentes nombrados/estilados para baseline y tests que blindan ese acoplamiento;
+  - `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` ya tienen presencia en home/backoffice/contratos, pero no tienen listado DB-backed, detalle público, vacíos/errores propios ni regresión equivalente;
+  - `SEC-PAR-001` queda cerrada y la cola pasa a `SEC-HER-001` como primera `TODO` no `BLOCKED`.
+- **Bloqueos (si aplica)**: ninguno para `SEC-PAR-001`.
+- **Checklist de cierre aplicada (SEC-PAR-001)**:
+  1. Tarea correcta confirmada: **Sí** (`SEC-PAR-001` era la primera `TODO` no `BLOCKED` del roadmap vigente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (solo `docs/roadmap_codex.md` y `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (la auditoría contrasta explícitamente el baseline ya implementado con el backlog público aún no abierto en las otras tres secciones).
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `SEC-HER-001` contrastando naming visible, `seccion_publica` y `tipo_producto` de herramientas para congelar el mapa canónico antes de abrir catálogo público, seed e importación finales.
+
+## Entrada 2026-03-27-SEC-HER-001 (naming canonico herramientas)
+- **Fecha (UTC)**: 2026-03-27
+- **ID de tarea**: `SEC-HER-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: congelar el mapa canónico entre slug de sección pública, naming visible y `tipo_producto` de herramientas antes de abrir catálogo público, seed e importación finales.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `frontend/contenido/home/seccionesPrincipales.ts`
+  - `frontend/componentes/admin/ModuloProductosAdmin.tsx`
+  - `frontend/componentes/admin/sincronizacionProductosAdmin.ts`
+  - `frontend/app/herramientas-esotericas/page.tsx`
+  - `backend/nucleo_herbal/dominio/entidades.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/productos.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/productos_contrato.py`
+  - `backend/nucleo_herbal/presentacion/backoffice_views/exportacion.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/importacion/servicio.py`
+  - `tests/nucleo_herbal/test_entidades.py`
+  - `tests/nucleo_herbal/test_casos_de_uso.py`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+- **Archivos tocados**:
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `herramientas-esotericas` como slug y naming visibles canónicos de sección pública porque es la convención ya implementada en home, ruta pública, backoffice, exportación y tests.
+  2. Mantener `herramientas-rituales` como `tipo_producto` canónico porque es la familia comercial estable ya usada por dominio, contrato backoffice, seed demo y tests, y coincide con el lenguaje de `docs/05_modelo_de_dominio_y_entidades.md`.
+  3. Declarar explícitamente que `seccion_publica` y `tipo_producto` son ejes distintos y no deben colapsarse: la primera nombra la superficie pública y la segunda clasifica la familia de producto.
+  4. Descartar `herramientas` a secas como naming canónico en esta fase por falta de evidencia implementada y para no abrir alias nuevos antes de `SEC-HER-002`.
+- **Checks ejecutados**:
+  - `Select-String -Path 'docs/roadmap_codex.md' -Pattern '^## SEC-HER-001' -Context 0,20` -> confirmó que `SEC-HER-001` era la primera `TODO` no `BLOCKED` y acotó el perímetro permitido.
+  - `Get-ChildItem -Recurse -File frontend,backend,tests,docs | Select-String -Pattern 'herramientas-esotericas|herramientas-rituales'` -> inventarió la evidencia real en home, ruta pública, backoffice, seed, exportación, contrato y tests.
+  - `Select-String -Path 'docs/05_modelo_de_dominio_y_entidades.md' -Pattern 'Producto|herramienta ritual' -Context 0,3` -> confirmó que el documento rector de dominio ya encuadra “herramienta ritual” como tipo de producto.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+- **Resultado verificable**:
+  - `docs/05_modelo_de_dominio_y_entidades.md` deja explícito que `Producto` maneja `seccion_publica` como eje de navegación comercial y que para herramientas la convención canónica es `seccion_publica="herramientas-esotericas"` + `tipo_producto="herramientas-rituales"`.
+  - `docs/90_estado_implementacion.md` refleja el estado factual vigente de ese naming sin reabrir código ni migraciones.
+  - `docs/roadmap_codex.md` cierra `SEC-HER-001` con la decisión trazada y mueve la cola a `CAT-DATA-001`.
+  - No se tocaron rutas, datos, seeds ni código funcional; el diff queda dentro del perímetro documental permitido.
+- **Bloqueos (si aplica)**: ninguno para `SEC-HER-001`.
+- **Checklist de cierre aplicada (SEC-HER-001)**:
+  1. Tarea correcta confirmada: **Sí** (`SEC-HER-001` era la primera `TODO` no `BLOCKED` del roadmap vigente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (`docs/05_modelo_de_dominio_y_entidades.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (la decisión se formaliza sin presentar como implementado ningún renombrado o catálogo nuevo).
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `CAT-DATA-001` para fijar cuántos productos publicados necesita cada sección, cuándo aplica vacío honesto y cuándo se permite fallback antes de abrir nuevas secciones públicas.
+
+## Entrada 2026-03-27-CAT-DATA-001 (criterio minimo catalogo publico)
+- **Fecha (UTC)**: 2026-03-27
+- **ID de tarea**: `CAT-DATA-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: fijar el mínimo visible reutilizable por sección para abrir catálogo público sin humo, dejando trazado cuándo aplica vacío honesto y cuándo el fallback de `botica-natural` se preserva solo como excepción legado.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `frontend/componentes/botica-natural/ListadoProductosBoticaNatural.tsx`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `scripts/validate_botica_natural_postgres_e2e.py`
+- **Archivos tocados**:
+  - `docs/02_alcance_y_fases.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `botica-natural` como baseline público especial con umbral canónico de **5** productos publicados propios, porque ese número ya está fijado por `seed_demo_publico`, `docs/deploy_railway.md` y `scripts/validate_botica_natural_postgres_e2e.py`.
+  2. Fijar **3** productos publicados propios como umbral mínimo para abrir nuevas secciones públicas DB-backed (`velas-e-incienso`, `minerales-y-energia`, `herramientas-esotericas`), para sostener compra directa y descubrimiento guiado sin catálogo humo.
+  3. Declarar que `1` o `2` productos publicados solo valen como seed/curación interna; no justifican abrir una sección pública nueva.
+  4. Preservar el fallback herbal de `botica-natural` solo como compatibilidad legado/bootstrap y prohibir su generalización a nuevas secciones para no mezclar catálogos entre `seccion_publica`.
+  5. Limitar el vacío honesto a estados posteriores a la apertura pública de la sección o a filtros activos; no usarlo como sustituto del mínimo de catálogo requerido.
+- **Checks ejecutados**:
+  - `Select-String -Path docs/roadmap_codex.md -Pattern '^## CAT-DATA-001' -Context 0,20` -> confirmó que `CAT-DATA-001` era la primera `TODO` no `BLOCKED` del roadmap vigente.
+  - `Select-String -Path backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py -Pattern 'listar_publicos_por_seccion|botica-natural|fallback' -Context 3,6` -> confirmó que el fallback herbal especial existe hoy solo para `botica-natural`.
+  - `@' ... Counter(sections) ... '@ | python -` sobre `seed_demo_publico.py` -> confirmó masa seed factual actual: `botica-natural=5`, `velas-e-incienso=1`.
+  - `Get-ChildItem -Recurse -File docs,scripts,tests,frontend,backend | Select-String -Pattern '5 productos|asegura los 5|devolviendo 5'` -> confirmó que el baseline de `botica-natural` ya está anclado también en deploy y validación E2E.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+- **Resultado verificable**:
+  - `docs/02_alcance_y_fases.md` deja fijado el contrato mínimo reusable por sección para abrir catálogo público en fase demo.
+  - `docs/90_estado_implementacion.md` separa el estado factual actual (`botica-natural=5`, `velas-e-incienso=1`, resto sin seed equivalente) de la regla operativa futura (`3` para nuevas secciones).
+  - `docs/roadmap_codex.md` cierra `CAT-DATA-001` con evidencia y mueve la primera `TODO` no `BLOCKED` a `CAT-UI-001`.
+  - No se tocaron seeds, repositorios ni reglas runtime; el diff queda dentro del perímetro documental permitido.
+- **Bloqueos (si aplica)**: ninguno para `CAT-DATA-001`.
+- **Checklist de cierre aplicada (CAT-DATA-001)**:
+  1. Tarea correcta confirmada: **Sí** (`CAT-DATA-001` era la primera `TODO` no `BLOCKED` del roadmap vigente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (`docs/02_alcance_y_fases.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (la regla nueva distingue explícitamente entre baseline factual ya implementado y umbral mínimo aún no implementado para nuevas secciones).
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `CAT-UI-001` para separar el contrato reusable de listado/detalle público del baseline `botica-natural` antes de abrir nuevas secciones DB-backed.
+
+## Entrada 2026-03-27-CAT-UI-001 (contrato reusable baseline publico)
+- **Fecha (UTC)**: 2026-03-27
+- **ID de tarea**: `CAT-UI-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: extraer el contrato reusable minimo del baseline publico `botica-natural` para que nuevas secciones no nazcan como copia dura de listado, mensajes y routing.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `frontend/app/botica-natural/page.tsx`
+  - `frontend/app/botica-natural/[slug]/not-found.tsx`
+  - `frontend/componentes/botica-natural/ListadoProductosBoticaNatural.tsx`
+  - `frontend/componentes/botica-natural/TarjetaProductoBoticaNatural.tsx`
+  - `frontend/componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/tests/botica-natural.test.ts`
+  - `frontend/tests/cards-media-clickable.test.ts`
+- **Archivos tocados**:
+  - `frontend/componentes/botica-natural/contratoSeccionPublica.ts`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/componentes/botica-natural/ListadoProductosBoticaNatural.tsx`
+  - `frontend/componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx`
+  - `frontend/app/botica-natural/page.tsx`
+  - `frontend/app/botica-natural/[slug]/not-found.tsx`
+  - `frontend/tests/botica-natural.test.ts`
+  - `frontend/tests/cards-media-clickable.test.ts`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear `frontend/componentes/botica-natural/contratoSeccionPublica.ts` como fuente unica del baseline publico para copy, labels, vacio y error de catalogo.
+  2. Hacer explicito en `frontend/componentes/catalogo/rutasProductoPublico.ts` que el detalle publico soportado hoy sigue siendo solo la baseline, sin seguir hardcodeando la ruta completa en el helper.
+  3. Mantener sin cambios de alcance la realidad de producto: no se abren rutas nuevas para `velas-e-incienso`, `minerales-y-energia` ni `herramientas-esotericas`; solo se deja el write-scope preparado.
+  4. Reajustar `frontend/tests/cards-media-clickable.test.ts` para validar el fallback visual donde vive realmente (`ImagenProductoBoticaNatural`) en vez de asumirlo inline en la card.
+- **Checks ejecutados**:
+  - `Select-String -Path 'docs/roadmap_codex.md' -Pattern '^## CAT-UI-001' -Context 0,20` -> confirmó que `CAT-UI-001` era la primera `TODO` no `BLOCKED`.
+  - `Get-Content` sobre `frontend/app/botica-natural/page.tsx`, `frontend/app/botica-natural/[slug]/not-found.tsx`, `frontend/componentes/botica-natural/ListadoProductosBoticaNatural.tsx`, `frontend/componentes/botica-natural/TarjetaProductoBoticaNatural.tsx`, `frontend/componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx`, `frontend/componentes/catalogo/rutasProductoPublico.ts`, `frontend/tests/botica-natural.test.ts` y `frontend/tests/cards-media-clickable.test.ts` -> inventario de superficie reusable y acoplamientos baseline.
+  - `npm.cmd ci` (en `frontend/`) -> dependencias instaladas desde `package-lock.json` para poder validar el cambio en este worktree.
+  - `npm.cmd run lint -- --file app/botica-natural/page.tsx --file app/botica-natural/[slug]/not-found.tsx --file componentes/botica-natural/ListadoProductosBoticaNatural.tsx --file componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx --file componentes/catalogo/rutasProductoPublico.ts --file componentes/botica-natural/contratoSeccionPublica.ts` -> `OK`.
+  - `npm.cmd run test:botica-natural` -> `OK` (17/17).
+  - `npm.cmd run clean:tmp-tests; .\\node_modules\\.bin\\tsc.cmd --module commonjs --target es2020 --outDir .tmp-tests tests/cards-media-clickable.test.ts; node .tmp-tests/cards-media-clickable.test.js` -> `OK` (6/6).
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `git status --short` + `git diff --name-only` -> el worktree ya arrastraba diff documental previo en `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` y `docs/90_estado_implementacion.md`; esta corrida no los tocó y dejó sus cambios propios dentro del perímetro permitido, incluyendo el nuevo `frontend/componentes/botica-natural/contratoSeccionPublica.ts`.
+- **Resultado verificable**:
+  - el baseline público ya tiene contrato reusable explícito para copy, labels, estado vacío/error y nombre visible de sección;
+  - el helper de rutas deja trazado el soporte real de detalle público actual sin seguir acoplando el string completo `/botica-natural/${slug}`;
+  - la página, el detalle y el `not-found` de `botica-natural` consumen el mismo contrato y reducen duplicación;
+  - la cobertura específica del baseline queda actualizada y verde para el nuevo contrato reusable.
+- **Bloqueos (si aplica)**: ninguno para `CAT-UI-001`.
+- **Checklist de cierre aplicada (CAT-UI-001)**:
+  1. Tarea correcta confirmada: **Sí** (`CAT-UI-001` era la primera `TODO` no `BLOCKED` del roadmap vigente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** para los cambios introducidos en esta corrida; `git status --short` deja el nuevo contrato y los cambios de `CAT-UI-001` dentro de scope, mientras el worktree ya arrastraba diff documental previo fuera de scope y no se tocó.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (no se declara abierta ninguna sección pública nueva; solo se endurece el baseline existente y el write-scope futuro).
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `OPS-RWY-002` para alinear doc -> script -> tests del preflight Railway antes del boot; dentro del track multisección, `SEC-VEL-001` queda ya desbloqueado como siguiente dependencia lógica.
+
+## Entrada 2026-03-27-OPS-RWY-002 (preflight Railway antes del boot)
+- **Fecha (UTC)**: 2026-03-27
+- **ID de tarea**: `OPS-RWY-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: cerrar la brecha residual entre guardrails backend ya implementados y el contrato preflight de release/deploy para Railway antes del boot, sin tocar Railway UI ni reabrir validaciones runtime ya cerradas.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `.env.railway.example`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `backend/configuracion_django/settings.py`
+  - `backend/configuracion_django/validaciones_entorno.py`
+  - `tests/nucleo_herbal/test_deploy_guards.py`
+- **Archivos tocados**:
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_readiness.py`
+  - `tests/nucleo_herbal/test_deploy_guards.py`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener intacto el guardrail runtime ya cerrado en `backend/configuracion_django/validaciones_entorno.py`; el endurecimiento se limita a contrato documental, preflight automatizado y tests de evidencias.
+  2. Declarar `docs/release_readiness_minima.md` como fuente canónica previa al boot y exigir que `docs/deploy_railway.md` replique esa lista bloqueante en la sección principal de variables Railway UI.
+  3. Endurecer `scripts/check_release_readiness.py` para contrastar el mismo set de variables críticas entre `.env.railway.example`, `docs/release_readiness_minima.md` y `docs/deploy_railway.md`, en lugar de validar solo marcadores dispersos.
+  4. Añadir cobertura explícita en `tests/nucleo_herbal/test_deploy_guards.py` para `PAYMENT_SUCCESS_URL`, `PAYMENT_CANCEL_URL`, `DEFAULT_FROM_EMAIL` ausente y `DEFAULT_FROM_EMAIL` con dominio `.local`.
+  5. Aceptar la reejecución del gate en modo UTF-8 (`PYTHONUTF8=1`) como forma verificable de salvar una limitación de decodificación Windows ajena al alcance funcional del task.
+- **Checks ejecutados**:
+  - `Select-String -Path 'docs/roadmap_codex.md' -Pattern '^## OPS-RWY-002' -Context 0,20` -> confirmó que `OPS-RWY-002` era la primera `TODO` no `BLOCKED`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python manage.py test tests.nucleo_herbal.test_deploy_guards` -> `OK` (14 tests).
+  - `python scripts/check_release_gate.py` -> `ERROR`; el runner Windows decodificó la salida de `npm run build` con `cp1252` y el gate cayó en `UnicodeDecodeError`/`AttributeError` antes de emitir veredicto funcional.
+  - `$env:PYTHONUTF8='1'; python scripts/check_release_gate.py` -> `OK`; el gate técnico completo quedó en verde con el mismo código del repo y sin tocar alcance adicional.
+  - `git status --short docs/release_readiness_minima.md docs/deploy_railway.md scripts/check_release_readiness.py tests/nucleo_herbal/test_deploy_guards.py docs/roadmap_codex.md docs/bitacora_codex.md` + `git diff --name-only -- ...` -> la corrida deja exactamente 6 archivos dentro del perímetro permitido de la tarea; el worktree ya arrastraba diff previo fuera de scope y no se tocó.
+- **Resultado verificable**:
+  - el checklist de release declara explícitamente la lista bloqueante previa al boot como fuente canónica y `docs/deploy_railway.md` ya replica esa lista en el bloque principal de Railway UI;
+  - `check_release_readiness.py` detecta ahora divergencias doc↔script↔env example sobre `SECRET_KEY`, `DATABASE_URL`, `PUBLIC_SITE_URL`, `PAYMENT_SUCCESS_URL`, `PAYMENT_CANCEL_URL`, `DEFAULT_FROM_EMAIL`, `EMAIL_BACKEND`, `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET`;
+  - la suite `test_deploy_guards.py` cubre ya los casos faltantes de URLs de pago y `DEFAULT_FROM_EMAIL`, alineando el preflight con el guardrail backend real;
+  - el gate canónico completo quedó verificado en este runner una vez fijado explícitamente el modo UTF-8 para la ejecución.
+- **Bloqueos (si aplica)**:
+  - ninguno para `OPS-RWY-002`;
+  - `AUT-003` y `OPS-RWY-003` se mantienen como bloqueos externos independientes y sin cambios.
+- **Checklist de cierre aplicada (OPS-RWY-002)**:
+  1. Tarea correcta confirmada: **Sí** (`OPS-RWY-002` era la primera `TODO` no `BLOCKED` del roadmap vigente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (`docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `scripts/check_release_readiness.py`, `tests/nucleo_herbal/test_deploy_guards.py`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí** (`R15` sigue `DONE`; esta corrida endurece exclusivamente el contrato preboot/documental y la evidencia de tests asociada).
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `SEC-VEL-001` para abrir `velas-e-incienso` como sección pública DB-backed apoyada en el baseline reusable ya estabilizado.
+
+## Entrada 2026-03-27-ROADMAP-VELAS-PRIORIDAD (saneamiento de cola previo a `SEC-VEL-001`)
+- **Fecha (UTC)**: 2026-03-27
+- **ID de tarea**: `ROADMAP-VELAS-PRIORIDAD`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: corregir la prioridad operativa antes de tocar producto, porque `SEC-VEL-001` seguía marcada como primera `TODO` pese a no cumplir todavía el mínimo documental de catálogo público exigido para abrir `velas-e-incienso`.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `backend/nucleo_herbal\infraestructura\persistencia_django\repositorios.py`
+  - `frontend/app/velas-e-incienso/page.tsx`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Aplicar precedencia documental estricta: el umbral mínimo vigente de `docs/02_alcance_y_fases.md` y `docs/90_estado_implementacion.md` manda sobre la cola cuando una `TODO` contradice el estado factual.
+  2. No tocar código de producto ni abrir `velas-e-incienso` públicamente con un solo seed, porque eso violaría el contrato de **3 productos publicados propios** fijado en `CAT-DATA-001`.
+  3. Reordenar `docs/roadmap_codex.md` para que `CAT-DATA-002` pase a ser la primera `TODO` no `BLOCKED`, dejando `SEC-VEL-001` inmediatamente después como siguiente feature real.
+  4. Mantener el saneamiento acotado a gobernanza operativa y trazabilidad; no se reabrieron ni alteraron los bloqueos externos de `AUT-003` y `OPS-RWY-003`.
+- **Checks ejecutados**:
+  - `Select-String -Path 'backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py' -Pattern '"seccion_publica": "velas-e-incienso"' -Encoding UTF8 | Measure-Object` -> `Count = 1`.
+  - `Select-String -Path 'docs/02_alcance_y_fases.md','docs/90_estado_implementacion.md' -Pattern '3 productos publicados propios|mínimo 3 productos publicados propios' -Encoding UTF8` -> confirma el mínimo documental de **3** productos propios antes de abrir una sección pública nueva.
+  - `Select-String -Path 'docs/roadmap_codex.md' -Pattern '^## CAT-DATA-002','^## SEC-VEL-001','^## Radar de cola actual' -Encoding UTF8` -> confirma el nuevo orden canónico de la cola y el radar actualizado.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `$env:PYTHONUTF8='1'; python scripts/check_release_gate.py` -> `OK`; el gate técnico canónico siguió verde tras el saneamiento documental.
+  - `git status --short docs/roadmap_codex.md docs/bitacora_codex.md` + `git diff --name-only -- docs/roadmap_codex.md docs/bitacora_codex.md` -> la corrida deja exactamente 2 archivos dentro del perímetro permitido; el worktree mantiene diff heredado fuera de scope sin tocar.
+- **Resultado verificable**:
+  - `SEC-VEL-001` deja de figurar como primera `TODO` ejecutable sin soporte de datos suficiente.
+  - `CAT-DATA-002` pasa a ser la primera `TODO` no `BLOCKED` para llevar `velas-e-incienso` al mínimo de 3 productos publicados propios antes de abrir catálogo público.
+  - el radar del roadmap queda alineado con la evidencia real del seed y con el contrato mínimo ya fijado en `CAT-DATA-001`.
+  - el saneamiento se verificó sin tocar runtime de producto y sin degradar el gate técnico canónico.
+- **Bloqueos (si aplica)**:
+  - ninguno para este saneamiento de cola;
+  - `AUT-003` y `OPS-RWY-003` se mantienen como bloqueos externos independientes y sin cambios.
+- **Checklist de cierre aplicada (ROADMAP-VELAS-PRIORIDAD)**:
+  1. Tarea correcta confirmada: **No aplica como feature**; la primera `TODO` detectada (`SEC-VEL-001`) quedó invalidada por contradicción documental/factual y esta corrida se limitó al saneamiento previo permitido por Fase 1.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (`docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; la cola queda reordenada sin presentar como implementada una sección que aún no cumple el mínimo de catálogo.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `CAT-DATA-002` para completar la base reproducible mínima de `velas-e-incienso` hasta 3 productos publicados propios antes de retomar `SEC-VEL-001`.
+
+## Entrada 2026-03-27-CAT-DATA-002 (seed mínimo reproducible para `velas-e-incienso`)
+- **Fecha (UTC)**: 2026-03-27
+- **ID de tarea**: `CAT-DATA-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: completar la base mínima reproducible de `velas-e-incienso` hasta 3 productos publicados propios, sin abrir todavía UI pública ni ampliar taxonomía.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_readiness.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Cerrar la brecha de datos con el cambio mínimo: añadir exactamente dos productos seed publicados adicionales para `velas-e-incienso`, sin tocar importación genérica ni UI pública.
+  2. Mantener el contrato actual de dominio/backoffice usando tipos ya canónicos (`inciensos-y-sahumerios` y `herramientas-rituales`) dentro de la misma sección pública.
+  3. Blindar el umbral con test específico para `velas-e-incienso` en lugar de dejar la validación difusa en el total global del seed.
+  4. No tocar `var/dev.sqlite3`; la validación ejecutable real del seed se resolvió sobre SQLite temporal fuera del repo para respetar el perímetro y evitar basura local.
+- **Checks ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK` (3 tests; crea BD temporal de test, ejecuta `seed_demo_publico` y valida idempotencia + mínimos de botica y velas).
+  - `python manage.py seed_demo_publico` -> `ERROR` sobre la SQLite local por `django.db.utils.OperationalError: no such table: nucleo_intencion`; se diagnosticó como falta de migraciones locales, no como fallo del seed.
+  - `DATABASE_URL=sqlite:///TEMP/... DEBUG=true SECRET_KEY=seed-validation-key python manage.py migrate --noinput` -> `OK` sobre SQLite temporal fuera del repo.
+  - `DATABASE_URL=sqlite:///TEMP/... DEBUG=true SECRET_KEY=seed-validation-key python manage.py seed_demo_publico` -> `OK` sobre SQLite temporal fuera del repo.
+  - consulta ORM posterior sobre esa SQLite temporal -> `count=3` para `velas-e-incienso`, con slugs `incienso-ruda-proteccion`, `vela-lunar-blanca`, `vela-miel-dorada`.
+  - `Select-String -Path docs/02_alcance_y_fases.md,docs/90_estado_implementacion.md -Pattern 'mínimo 3 productos publicados propios|3 productos publicados propios' -Encoding UTF8` -> `OK`; el umbral documental vigente sigue siendo **3**.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `git diff --name-only -- backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py docs/roadmap_codex.md docs/bitacora_codex.md` -> solo aparecen los 4 archivos de esta tarea; el worktree mantiene diff heredado fuera de scope sin tocar.
+- **Resultado verificable**:
+  - `seed_demo_publico.py` deja `velas-e-incienso` con 3 productos publicados propios y reproducibles.
+  - el test dedicado obliga ya ese mínimo y evita reabrir la brecha en futuras corridas.
+  - `CAT-DATA-002` queda `DONE` y `SEC-VEL-001` pasa a ser la primera `TODO` no `BLOCKED`.
+- **Bloqueos (si aplica)**: ninguno para `CAT-DATA-002`.
+- **Checklist de cierre aplicada (CAT-DATA-002)**:
+  1. Tarea correcta confirmada: **Sí** (`CAT-DATA-002` era la primera `TODO` no `BLOCKED` del roadmap vigente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (`seed_demo_publico.py`, `test_seed_demo_publico_command.py`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`); el diff ajeno preexistente permanece intacto.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; el umbral documental de 3 productos propios se contrastó antes de cerrar y el seed queda alineado con ese contrato.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `SEC-VEL-001` para abrir `velas-e-incienso` como sección pública DB-backed apoyada en el baseline reusable y en el seed mínimo ya validado.
+
+## Entrada 2026-03-27-SEC-VEL-001 (catalogo publico `velas-e-incienso`)
+- **Fecha (UTC)**: 2026-03-27
+- **ID de tarea**: `SEC-VEL-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: abrir `velas-e-incienso` como seccion publica DB-backed con listado y detalle propios, reutilizando el baseline estabilizado de `botica-natural` sin mezclar otras secciones ni tocar dominio/backend de producto.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/componentes/botica-natural/contratoSeccionPublica.ts`
+  - `frontend/componentes/botica-natural/ListadoProductosBoticaNatural.tsx`
+  - `frontend/componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/infraestructura/api/herbal.ts`
+  - `frontend/componentes/shell/ContenedorPaginaComercial.tsx`
+  - `frontend/componentes/secciones/HeroSeccionPrincipal.tsx`
+  - `frontend/tests/botica-natural.test.ts`
+- **Archivos tocados**:
+  - `frontend/componentes/botica-natural/contratoSeccionPublica.ts`
+  - `frontend/componentes/catalogo/rutasProductoPublico.ts`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/app/velas-e-incienso/[slug]/page.tsx`
+  - `frontend/app/velas-e-incienso/[slug]/not-found.tsx`
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Reutilizar `ListadoProductosBoticaNatural` y `FichaProductoBoticaNatural` como baseline visual/comercial ya estabilizado, encapsulando solo la configuracion propia de `velas-e-incienso`.
+  2. Mantener el scope en frontend publico: no se tocaron seeds, modelos ni vistas backend porque la API publica por seccion ya estaba disponible y `CAT-DATA-002` ya habia cerrado el minimo de 3 productos propios.
+  3. Abrir un detalle publico propio en `/velas-e-incienso/[slug]` y rechazar slugs cuya `seccion_publica` no corresponda a velas, para no mezclar rutas entre secciones.
+  4. Actualizar `docs/90_estado_implementacion.md` para que la fuente factual superior refleje la apertura publica real de velas y deje `SEC-VEL-002` como siguiente paso local.
+- **Checks ejecutados**:
+  - `npm run lint -- --file app/velas-e-incienso/page.tsx --file app/velas-e-incienso/[slug]/page.tsx --file app/velas-e-incienso/[slug]/not-found.tsx --file componentes/botica-natural/contratoSeccionPublica.ts --file componentes/catalogo/rutasProductoPublico.ts` -> `OK`.
+  - `npm run test:botica-natural` -> `OK` (17 tests); el baseline reusable no regresa.
+  - `./node_modules/.bin/tsc --module commonjs --target es2020 --outDir .tmp-tests tests/velas-e-incienso-publico.test.ts` -> `OK`.
+  - `node .tmp-tests/velas-e-incienso-publico.test.js` -> `OK` (2 tests) para listado/routing/detalle de velas.
+  - `npm run clean:tmp-tests` -> `OK`.
+  - `npm run build` -> `OK`; Next genera `/velas-e-incienso` y `/velas-e-incienso/[slug]` como rutas validas.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `Select-String -Path docs/roadmap_codex.md -Pattern '^## SEC-VEL-001','^## SEC-VEL-002','^## Radar de cola actual' -Context 0,12` -> `OK`; `SEC-VEL-001` queda `DONE` y la primera `TODO` no `BLOCKED` pasa a `SEC-VEL-002`.
+  - `Select-String -Path docs/90_estado_implementacion.md -Pattern '^## 6.1 Contrato activo de catálogo público por sección','^## 7. Ruta operativa vigente','velas-e-incienso ya está publicada|SEC-VEL-002' -Context 0,10` -> `OK`; la fuente factual queda alineada con la apertura publica de velas.
+  - `git status --short -- frontend/componentes/botica-natural/contratoSeccionPublica.ts frontend/componentes/catalogo/rutasProductoPublico.ts frontend/app/velas-e-incienso/page.tsx frontend/app/velas-e-incienso/[slug]/page.tsx frontend/app/velas-e-incienso/[slug]/not-found.tsx frontend/tests/velas-e-incienso-publico.test.ts docs/90_estado_implementacion.md docs/roadmap_codex.md docs/bitacora_codex.md` -> `OK`; el diff de esta corrida queda acotado a 9 rutas dentro del perimetro permitido.
+- **Resultado verificable**:
+  - `velas-e-incienso` deja de ser una pagina solo-hero y pasa a consumir la API publica real de seccion con vacio honesto sobre el contrato reusable.
+  - la ruta `/velas-e-incienso/[slug]` ya existe, compila y devuelve `not-found` si se intenta abrir un producto de otra `seccion_publica`.
+  - `construirHrefFichaProductoPublico()` ya enruta productos de velas a su detalle publico propio, sin romper el baseline actual de `botica-natural`.
+  - `docs/90_estado_implementacion.md` y `docs/roadmap_codex.md` quedan alineados con el estado implementado y dejan `SEC-VEL-002` como siguiente tarea ejecutable.
+- **Bloqueos (si aplica)**:
+  - ninguno para `SEC-VEL-001`;
+  - residuo no bloqueante detectado: `frontend/infraestructura/api/herbal.ts` sigue logando con la etiqueta legacy `[botica-natural]` cuando falla el fetch de seccion durante prerender sin backend, pero no rompe contrato publico ni la feature cerrada.
+- **Checklist de cierre aplicada (SEC-VEL-001)**:
+  1. Tarea correcta confirmada: **Sí** (`SEC-VEL-001` era la primera `TODO` no `BLOCKED` del roadmap vigente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo frontend publico reusable + trazabilidad factual asociada.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (`frontend/componentes/botica-natural/contratoSeccionPublica.ts`, `frontend/componentes/catalogo/rutasProductoPublico.ts`, `frontend/app/velas-e-incienso/page.tsx`, `frontend/app/velas-e-incienso/[slug]/page.tsx`, `frontend/app/velas-e-incienso/[slug]/not-found.tsx`, `frontend/tests/velas-e-incienso-publico.test.ts`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; `docs/90_estado_implementacion.md` refleja ya la seccion publica de velas abierta y el siguiente paso local exacto.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `SEC-VEL-002` para blindar `velas-e-incienso` con contratos automáticos de visibilidad, límite y vacío equivalentes al baseline.
+
+## Entrada 2026-03-27-SEC-VEL-002 (contratos publicos de `velas-e-incienso`)
+- **Fecha (UTC)**: 2026-03-27
+- **ID de tarea**: `SEC-VEL-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: blindar `velas-e-incienso` con cobertura automática mínima equivalente al baseline público, sin reabrir runtime de producto ni ampliar alcance fuera de tests y trazabilidad.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `frontend/tests/botica-natural.test.ts`
+  - `frontend/tests/home-raiz-secciones.test.ts`
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `frontend/app/velas-e-incienso/page.tsx`
+  - `frontend/app/velas-e-incienso/[slug]/page.tsx`
+  - `frontend/componentes/botica-natural/contratoSeccionPublica.ts`
+  - `frontend/componentes/botica-natural/ListadoProductosBoticaNatural.tsx`
+  - `frontend/infraestructura/api/herbal.ts`
+- **Archivos tocados**:
+  - `frontend/tests/velas-e-incienso-publico.test.ts`
+  - `tests/nucleo_herbal/test_exposicion_publica.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener el alcance en hardening puro: solo tests frontend/backend y actualización documental del estado operativo, sin tocar runtime de catálogo ni contratos de API fuera del perímetro permitido.
+  2. Reutilizar el baseline de `botica-natural` como espejo de contrato, pero expresando la regresión de velas en su propio fichero para no mezclar responsabilidades ni tocar `frontend/tests/botica-natural.test.ts`, que ya arrastra diff previo fuera de esta corrida.
+  3. Cubrir el vacío honesto en los dos bordes relevantes: frontend (`obtenerProductosPublicosPorSeccion` devolviendo `[]`) y backend (`/api/v1/herbal/secciones/velas-e-incienso/productos/` sin fallback herbal).
+  4. Actualizar `docs/90_estado_implementacion.md` porque la ruta factual vigente seguía apuntando a `SEC-VEL-002`; tras el cierre, el siguiente paso local exacto pasa a `SEC-MIN-001`.
+- **Checks ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.test_exposicion_publica` -> `OK` (28 tests).
+  - `npm run clean:tmp-tests` (en `frontend/`) -> `OK`.
+  - `./node_modules/.bin/tsc --module commonjs --target es2020 --outDir .tmp-tests tests/types/fetch-next.d.ts tests/velas-e-incienso-publico.test.ts infraestructura/api/herbal.ts` (en `frontend/`) -> `OK`.
+  - `node .tmp-tests/tests/velas-e-incienso-publico.test.js` (en `frontend/`) -> `OK` (4 tests).
+  - `npm run test:home-raiz` (en `frontend/`) -> `FAIL` no bloqueante; cae por una aserción preexistente de literal en `app/botica-natural/page.tsx` (`"Botica Natural"` ausente) fuera del perímetro de `SEC-VEL-002`.
+  - comprobación puntual con script Node sobre `app/velas-e-incienso/page.tsx`, `app/minerales-y-energia/page.tsx`, `app/herramientas-esotericas/page.tsx`, `app/tarot/page.tsx`, `app/rituales/page.tsx` y `app/agenda-mistica/page.tsx` -> `OK`; todas mantienen `idSeccion="..."`, confirmando que el `FAIL` exploratorio de `test:home-raiz` no procede de velas.
+- **Resultado verificable**:
+  - `frontend/tests/velas-e-incienso-publico.test.ts` cubre ya listado real, detalle público propio, hero/copy de sección y vacío honesto sin fallback en runtime frontend.
+  - `tests/nucleo_herbal/test_exposicion_publica.py` protege backend contra dos regresiones clave de velas: mezclar productos de otra sección y reutilizar el fallback herbal legado de `botica-natural`.
+  - `docs/roadmap_codex.md` deja `SEC-VEL-002` en `DONE` y mueve la primera `TODO` no `BLOCKED` a `SEC-MIN-001`.
+  - `docs/90_estado_implementacion.md` queda alineado con el estado factual actual y con el siguiente paso local exacto.
+- **Bloqueos (si aplica)**:
+  - ninguno para `SEC-VEL-002`.
+  - riesgo no bloqueante detectado: `npm run test:home-raiz` sigue cayendo por una aserción literal sobre `app/botica-natural/page.tsx` ajena a esta tarea y al runtime de velas.
+- **Checklist de cierre aplicada (SEC-VEL-002)**:
+  1. Tarea correcta confirmada: **Sí** (`SEC-VEL-002` era la primera `TODO` no `BLOCKED` del roadmap vigente).
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo tests de velas y trazabilidad factual/operativa.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí** (`frontend/tests/velas-e-incienso-publico.test.ts`, `tests/nucleo_herbal/test_exposicion_publica.py`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`).
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; la fuente factual ya no deja a velas como siguiente paso pendiente y mantiene coherencia con la cola local.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `SEC-MIN-001` para abrir `minerales-y-energia` como sección pública DB-backed con listado y detalle equivalentes al baseline reusable.
+
+## Entrada 2026-03-27-ROADMAP-MINERALES-PRIORIDAD (saneamiento de cola por seed mínimo y gate roto)
+- **Fecha (UTC)**: 2026-03-27
+- **ID de tarea**: `ROADMAP-MINERALES-PRIORIDAD`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: sanear la cola multisección para que las aperturas públicas respeten el mínimo contractual de catálogo y para reflejar que el gate canónico ahora está roto por una deriva real de conteos del bootstrap.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No abrir `SEC-MIN-001` porque contradice el contrato vigente: `minerales-y-energia` exige 3 productos publicados propios antes de inaugurar catálogo público DB-backed y el seed actual no los aporta.
+  2. Elevar una prioridad más urgente que las features de catálogo: `AUT-004` pasa a ser la primera `TODO` porque `python scripts/check_release_gate.py` falla en `C4)` por una deriva entre el seed público vigente (8 productos) y el test contractual del bootstrap (6).
+  3. Reordenar la cola de secciones para que `CAT-DATA-003` anteceda a `SEC-MIN-001` y `CAT-DATA-004` anteceda a `SEC-HER-002`, evitando abrir catálogo sin masa mínima.
+  4. Mantener el alcance en saneamiento documental canónico; no se tocó frontend, backend ni datos seed del producto.
+- **Checks ejecutados**:
+  - `Select-String -Path docs/02_alcance_y_fases.md,docs/90_estado_implementacion.md -Pattern 'mínimo 3 productos publicados propios|3 productos publicados propios|minerales-y-energia' -Encoding UTF8` -> `OK`; confirma el umbral contractual y que minerales aún no tiene seed mínima ni sección pública abierta.
+  - `Select-String -Path backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py -Pattern 'minerales-y-energia|velas-e-incienso|botica-natural' -Encoding UTF8` -> `OK`; confirma que el seed actual no contiene productos de `minerales-y-energia`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `ERROR`; falla en `C4) Test scripts operativos críticos` porque `tests/scripts/test_check_bootstrap_demo_expected_counts.py` espera `productos_publicados = 6` y el seed vigente ya publica 8.
+  - `git diff --name-only -- docs/roadmap_codex.md docs/90_estado_implementacion.md docs/bitacora_codex.md` -> `OK`; el diff queda limitado a los 3 documentos canónicos de esta corrida.
+- **Resultado verificable**:
+  - `docs/roadmap_codex.md` deja de presentar `SEC-MIN-001` como primera `TODO` ejecutable sin seed mínima previa y eleva `AUT-004` como siguiente trabajo real para recuperar el gate.
+  - `CAT-DATA-003` queda como siguiente tarea de producto para minerales y `CAT-DATA-004` queda antes de la apertura pública de herramientas.
+  - `docs/90_estado_implementacion.md` alinea la ruta operativa vigente y los bloqueos conocidos con la deriva detectada en el gate.
+- **Bloqueos (si aplica)**:
+  - ninguno para este saneamiento documental;
+  - riesgo operativo abierto: el gate canónico permanece en rojo hasta cerrar `AUT-004`.
+- **Checklist de cierre aplicada (ROADMAP-MINERALES-PRIORIDAD)**:
+  1. Tarea correcta confirmada: **Sí**; la primera `TODO` detectada (`SEC-MIN-001`) quedó invalidada por contradicción documental/factual y esta corrida se limitó al saneamiento previo permitido por Fase 1.
+  2. Una sola tarea ejecutada en la corrida: **Sí**.
+  3. Alcance respetado sin sobrealcance: **Sí**; solo se tocaron `docs/roadmap_codex.md`, `docs/90_estado_implementacion.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Sí**.
+  5. Checks ejecutados y registrados: **Sí**.
+  6. Roadmap actualizado: **Sí**.
+  7. Bitácora actualizada: **Sí**.
+  8. Diff dentro del perímetro permitido: **Sí**.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Sí**; no se presenta como implementada una sección que sigue sin seed mínima.
+  10. Siguiente paso exacto definido: **Sí**.
+- **Siguiente paso exacto**: ejecutar `AUT-004` para alinear los conteos esperados del bootstrap demo con el seed público vigente y recuperar el gate canónico antes de seguir con `CAT-DATA-003`.
