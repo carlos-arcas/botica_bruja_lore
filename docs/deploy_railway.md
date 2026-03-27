@@ -56,23 +56,47 @@ PYTHONPATH=${PYTHONPATH:-$(pwd)}:${PYTHONPATH:-} python ${DJANGO_MANAGE_PATH:-ma
 - Lista bloqueante previa al boot, alineada con `docs/release_readiness_minima.md`:
 - `SECRET_KEY`
 - `DEBUG=false`
-- `DATABASE_URL` **obligatoria** (inyectada desde el servicio PostgreSQL).
+- `DATABASE_URL=${{Postgres.DATABASE_URL}}` **obligatoria** (inyectada desde el servicio PostgreSQL).
   - Si falta en Railway/producción, el backend falla por diseño con error de configuración temprano.
 - `ALLOWED_HOSTS` (CSV)
 - `CSRF_TRUSTED_ORIGINS` (CSV con URLs completas)
-- `PUBLIC_SITE_URL` (URL HTTPS pública canónica)
+- `PUBLIC_SITE_URL` (URL HTTPS pública canónica del frontend)
 - `PAYMENT_SUCCESS_URL` (URL HTTPS absoluta de retorno tras pago real)
 - `PAYMENT_CANCEL_URL` (URL HTTPS absoluta de cancelación de pago real)
 - `DEFAULT_FROM_EMAIL` (dominio real, no `.local`)
 - `EMAIL_BACKEND` de producción (SMTP real, no `locmem/console/filebased`)
 - `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET` para cobro real/webhooks
-- Variables opcionales para acceso admin provisional seguro:
-  - `CREAR_ADMIN_PROVISIONAL=true` (ejecución explícita durante predeploy)
-  - `ADMIN_USUARIO_PROVISIONAL=karkas`
-  - `ADMIN_PASSWORD_PROVISIONAL=<valor-seguro>`
+- Variables opcionales / no bloqueantes de contrato:
+  - `STRIPE_PUBLIC_KEY`
+  - `LOG_LEVEL`
+  - `DATABASE_PUBLIC_URL=${{Postgres.DATABASE_PUBLIC_URL}}` como alias operativo si se quiere reflejar también la URL pública de PostgreSQL; el repo no la consume para arrancar.
+  - `DEBUG_LOG_VIEWER_ENABLED` y `DEBUG_LOG_VIEWER_KEY`
+  - acceso admin provisional seguro:
+    - `CREAR_ADMIN_PROVISIONAL=true` (ejecución explícita durante predeploy)
+    - `ADMIN_USUARIO_PROVISIONAL=karkas`
+    - `ADMIN_PASSWORD_PROVISIONAL=<valor-seguro>`
 
 ### Frontend
 - `NEXT_PUBLIC_API_BASE_URL` con la URL pública del backend.
+- `NEXT_PUBLIC_SITE_URL` con la URL pública del frontend.
+  - Debe coincidir con `PUBLIC_SITE_URL` para mantener canonical/SEO consistentes.
+- `NEXT_PUBLIC_ADMIN_BASE_URL` es opcional; si falta, el frontend deriva admin desde `NEXT_PUBLIC_API_BASE_URL`.
+- `GOOGLE_SITE_VERIFICATION_TOKEN` es opcional para Search Console.
+- `NEXT_PUBLIC_STRIPE_PUBLIC_KEY` es opcional si se expone clave publicable de Stripe en frontend.
+- `DEBUG_LOG_VIEWER_ENABLED` puede repetirse también en el servicio frontend si se quiere mostrar el acceso técnico al visor de logs.
+
+### PostgreSQL
+- Las variables `DATABASE_URL`, `DATABASE_PUBLIC_URL`, `PGDATABASE`, `PGHOST`, `PGPASSWORD`, `PGPORT`, `PGUSER`, `POSTGRES_DB`, `POSTGRES_PASSWORD`, `POSTGRES_USER`, `PGDATA`, `RAILWAY_DEPLOYMENT_DRAINING_SECONDS` y `SSL_CERT_DAYS` pertenecen al servicio PostgreSQL gestionado.
+- Backend y scripts operativos consumen solo la conexión resultante:
+  - `DATABASE_URL=${{Postgres.DATABASE_URL}}` para la conexión privada canónica.
+  - `DATABASE_PUBLIC_URL=${{Postgres.DATABASE_PUBLIC_URL}}` es opcional y no la usa el repo para boot, readiness ni smoke.
+
+### Variables operativas fuera de Railway UI del servicio
+- `BACKEND_BASE_URL` y `FRONTEND_BASE_URL` **no** son variables de arranque del backend ni del frontend.
+  - Solo se usan al ejecutar `python scripts/check_deployed_stack.py`.
+  - Se derivan directamente de las URLs públicas desplegadas, incluyendo `https://`.
+- `BOTICA_RESTORE_DATABASE_URL` **no** debe apuntar a producción.
+  - Solo se usa en `python scripts/backup_restore_postgres.py restore-drill` contra una base temporal segura.
 
 Referencia operativa mínima de pre-release y backup/restore: `docs/release_readiness_minima.md`.
 
@@ -144,6 +168,13 @@ Este hardening reduce el riesgo de que Railway arranque otro proyecto/settings p
 NEXT_PUBLIC_API_BASE_URL=https://TU-BACKEND.up.railway.app
 ```
 
+El dominio canónico público debe quedar alineado entre backend y frontend:
+
+```env
+PUBLIC_SITE_URL=https://TU-FRONTEND.up.railway.app
+NEXT_PUBLIC_SITE_URL=https://TU-FRONTEND.up.railway.app
+```
+
 Para el acceso real al Django Admin desde el header público:
 
 - `NEXT_PUBLIC_ADMIN_BASE_URL` es opcional y permite separar el origen del admin.
@@ -158,10 +189,16 @@ NEXT_PUBLIC_ADMIN_BASE_URL=https://TU-BACKEND.up.railway.app
 En Railway, `DATABASE_URL` debe referenciar el servicio PostgreSQL real del proyecto.
 
 ```env
-DATABASE_URL=${{SERVICE_NAME.DATABASE_URL}}
+DATABASE_URL=${{Postgres.DATABASE_URL}}
 ```
 
-Reemplaza `SERVICE_NAME` por el nombre real del servicio Postgres en Railway UI.
+Si quieres reflejar también la URL pública del servicio PostgreSQL como alias operativo, usa:
+
+```env
+DATABASE_PUBLIC_URL=${{Postgres.DATABASE_PUBLIC_URL}}
+```
+
+`DATABASE_PUBLIC_URL` no la consume el repo para boot ni para el smoke post-deploy; es solo una referencia operativa adicional.
 
 ## 6) Verificaciones tras deploy
 

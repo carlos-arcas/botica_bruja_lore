@@ -24,6 +24,7 @@
 - Tener `pg_dump` y `pg_restore` disponibles en `PATH`.
 - Definir `DATABASE_URL` (origen) y una URL separada para restore drill (`BOTICA_RESTORE_DATABASE_URL`).
 - Definir `BOTICA_BACKUP_DIR` apuntando **fuera del repositorio** (por ejemplo `/tmp/botica_backups`).
+- Si ejecutas los scripts fuera de Railway, la shell debe recibir las URLs ya resueltas; las referencias `${{...}}` solo se expanden dentro de Railway UI/runtime.
 
 ### Opción recomendada (script reutilizable V2)
 ```bash
@@ -60,6 +61,8 @@ pg_restore --no-owner --no-privileges --clean --if-exists --dbname="$BOTICA_REST
 4. Restore drill en base temporal cuando el entorno lo permita.
 5. Deploy.
 6. Smoke post-deploy (`python scripts/check_deployed_stack.py` con URLs reales).
+   - Exportar `BACKEND_BASE_URL` y `FRONTEND_BASE_URL` con URLs HTTPS completas del despliegue real.
+   - Estas dos variables son operativas del runner de verificación; no sustituyen `PUBLIC_SITE_URL` ni `NEXT_PUBLIC_SITE_URL` del contrato de boot.
 
 ### Diagnóstico desglosado opcional
 - `python scripts/check_release_readiness.py`
