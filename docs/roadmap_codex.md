@@ -616,7 +616,7 @@ Uso prohibido:
 ## AUT-006 — Realinear conteos bootstrap demo con seed canónico expandido
 - **Tipo**: `QA`
 - **Prioridad**: `P0`
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: recuperar `C4) Test scripts operativos críticos` del gate canónico alineando el contrato de conteos esperados del bootstrap con el `seed_demo_publico` vigente, sin revertir la expansión concurrente del seed ni rebajar cobertura.
 - **Evidencia o síntoma**:
   - `python scripts/check_release_gate.py` falla en `C4)` porque `tests.scripts.test_check_bootstrap_demo_expected_counts.CheckBootstrapDemoExpectedCountsTests.test_calcular_conteos_esperados_desde_seed_canonico` sigue esperando `intenciones_publicas=2`, `plantas_publicadas=2` y `rituales_publicados=1`, pero el seed canónico vigente ya da `4`, `4` y `5`.
@@ -632,7 +632,11 @@ Uso prohibido:
   - `python scripts/check_release_gate.py`
   - `python scripts/check_release_readiness.py`
 - **Criterio de cierre**: `C4)` vuelve a verde y el contrato de conteos queda derivado del seed vigente sin literales obsoletos.
-- **Bloqueo conocido**: el worktree está sucio con cambios concurrentes en `seed_demo_publico.py`, CORS y tests relacionados; el fix debe acomodarse a esos cambios sin revertirlos.
+- **Evidencia de cierre AUT-006**:
+  1. `tests/scripts/test_check_bootstrap_demo_expected_counts.py` deja de fijar el contrato obsoleto `2/2/14/1`: mueve los casos `main()` a conteos sintéticos y actualiza el contrato canónico del seed a `4` intenciones públicas, `4` plantas publicadas, `14` productos publicados y `5` rituales publicados.
+  2. `python -m unittest tests.scripts.test_check_bootstrap_demo_expected_counts` -> `OK` y `python manage.py test tests.scripts` -> `OK`; `C4)` deja de fallar por `AssertionError: 4 != 2`.
+  3. `python scripts/check_release_readiness.py` -> `OK` y `python scripts/check_release_gate.py` -> `OK`; el gate canónico vuelve a quedar superado.
+- **Bloqueo conocido**: ninguno en esta tarea; terminada `AUT-006`, la cola local vuelve a depender de `AUT-003` y `OPS-RWY-003`.
 - **Siguiente dependencia lógica**: `AUT-003`.
 
 ## CAT-DATA-003 — Seed/importación inicial reproducible para `minerales-y-energia`
@@ -1264,6 +1268,10 @@ Uso prohibido:
 - **Siguiente dependencia logica**: terminada esta peticion extraordinaria, la cola autonoma vuelve a `AUT-006`; no procede tocar auth/cuenta fuera de este perimetro salvo nueva peticion explicita.
 
 ## Radar de cola actual
+- **Actualizacion radar UTC**: `2026-03-28T11:28:51Z` (`AUT-006`); `python -m unittest tests.scripts.test_check_bootstrap_demo_expected_counts` -> `OK`, `python manage.py test tests.scripts` -> `OK`, `python scripts/check_release_readiness.py` -> `OK` y `python scripts/check_release_gate.py` -> `OK`. No quedan tareas `TODO` no `BLOCKED`; la cola vuelve a estado de cola vacia / backlog totalmente bloqueado.
+- **Estado de cola actual**: sin `TODO` no `BLOCKED`; permanecen `AUT-003` y `OPS-RWY-003` como bloqueos externos vigentes.
+- **Consistencia documental actual**: `docs/90_estado_implementacion.md` vuelve a quedar alineado con la cola efectiva al desaparecer la deuda local que había reabierto `AUT-006`.
+- **Siguiente accion exacta actual**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
 - **Actualizacion radar UTC**: `2026-03-28T08:43:57Z` (`RADAR-SAN-002`); `AUT-006` sigue siendo la primera `TODO` no `BLOCKED` real porque `python scripts/check_release_gate.py` continua fallando en `C4)` con `AssertionError: 4 != 2`, mientras `python scripts/check_release_readiness.py` sigue en `OK`.
 - **Contradiccion detectada**: `docs/90_estado_implementacion.md` sigue describiendo cola autonoma agotada y siguiente paso externo (`AUT-003`/`OPS-RWY-003`), pero la evidencia ejecutada hoy mantiene una deuda local verificable en `AUT-006`; la correccion de `docs/90_estado_implementacion.md` queda fuera del perimetro permitido de esta corrida.
 - **Bloqueo externo revalidado**: `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` siguen ausentes; por tanto `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` y `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` siguen fallando por configuracion ausente y no procede tratar `AUT-003` como siguiente paso efectivo.
