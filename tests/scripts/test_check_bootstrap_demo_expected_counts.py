@@ -14,6 +14,13 @@ SCRIPT_PATH = (
     Path(__file__).resolve().parents[2] / "scripts" / "check_bootstrap_demo_expected_counts.py"
 )
 
+CONTEOS_CANONICOS_VIGENTES = {
+    "intenciones_publicas": 4,
+    "plantas_publicadas": 4,
+    "productos_publicados": 14,
+    "rituales_publicados": 5,
+}
+
 
 def _load_module():
     spec = importlib.util.spec_from_file_location(
@@ -31,20 +38,20 @@ class CheckBootstrapDemoExpectedCountsTests(unittest.TestCase):
         self.module = _load_module()
 
     def test_main_ok_cuando_conteos_coinciden(self) -> None:
-        esperados = {
-            "intenciones_publicas": 2,
-            "plantas_publicadas": 2,
-            "productos_publicados": 14,
+        conteos_stub = {
+            "intenciones_publicas": 1,
+            "plantas_publicadas": 1,
+            "productos_publicados": 1,
             "rituales_publicados": 1,
         }
         output = io.StringIO()
 
         with patch.object(self.module, "_bootstrap_django"):
             with patch.object(
-                self.module, "_calcular_conteos_esperados", return_value=esperados
+                self.module, "_calcular_conteos_esperados", return_value=conteos_stub
             ):
                 with patch.object(
-                    self.module, "_calcular_conteos_reales", return_value=esperados
+                    self.module, "_calcular_conteos_reales", return_value=conteos_stub
                 ):
                     with redirect_stdout(output):
                         code = self.module.main()
@@ -53,19 +60,19 @@ class CheckBootstrapDemoExpectedCountsTests(unittest.TestCase):
         self.assertIn("Resultado: OK", output.getvalue())
 
     def test_main_falla_con_mismatch_de_productos(self) -> None:
-        esperados = {
-            "intenciones_publicas": 2,
-            "plantas_publicadas": 2,
-            "productos_publicados": 14,
+        conteos_stub = {
+            "intenciones_publicas": 1,
+            "plantas_publicadas": 1,
+            "productos_publicados": 3,
             "rituales_publicados": 1,
         }
-        reales = dict(esperados)
+        reales = dict(conteos_stub)
         reales["productos_publicados"] = 5
         output = io.StringIO()
 
         with patch.object(self.module, "_bootstrap_django"):
             with patch.object(
-                self.module, "_calcular_conteos_esperados", return_value=esperados
+                self.module, "_calcular_conteos_esperados", return_value=conteos_stub
             ):
                 with patch.object(self.module, "_calcular_conteos_reales", return_value=reales):
                     with redirect_stdout(output):
@@ -74,17 +81,14 @@ class CheckBootstrapDemoExpectedCountsTests(unittest.TestCase):
         self.assertEqual(code, 1)
         texto = output.getvalue()
         self.assertIn("Resultado: ERROR", texto)
-        self.assertIn("productos_publicados: esperado=14 real=5", texto)
+        self.assertIn("productos_publicados: esperado=3 real=5", texto)
 
-    def test_calcular_conteos_esperados_desde_seed_canonico(self) -> None:
+    def test_calcular_conteos_esperados_desde_seed_canonico_expandido(self) -> None:
         with patch.dict(os.environ, {"SECRET_KEY": "tests-secret"}, clear=False):
             self.module._bootstrap_django()
             conteos = self.module._calcular_conteos_esperados()
 
-        self.assertEqual(conteos["intenciones_publicas"], 2)
-        self.assertEqual(conteos["plantas_publicadas"], 2)
-        self.assertEqual(conteos["productos_publicados"], 14)
-        self.assertEqual(conteos["rituales_publicados"], 1)
+        self.assertEqual(conteos, CONTEOS_CANONICOS_VIGENTES)
 
 
 if __name__ == "__main__":

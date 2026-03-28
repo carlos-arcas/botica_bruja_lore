@@ -4363,3 +4363,61 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; se confirmo que verificacion email, recuperacion por email y libreta ya existian, y se anadio solo la brecha nueva pedida (Google + onboarding opcional) sin declarar capacidades inexistentes.
   10. Siguiente paso exacto definido: **Si**.
 - **Siguiente paso exacto**: retomar `AUT-006` como primera `TODO` no `BLOCKED` de la cola autonoma y no extender auth/cuenta fuera de este perimetro salvo nueva peticion explicita del mantenedor.
+
+## Entrada 2026-03-28-AUT-006 (conteos bootstrap demo alineados)
+- **Fecha (UTC)**: `2026-03-28T11:28:51Z`
+- **ID de tarea**: `AUT-006`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: recuperar `C4) Test scripts operativos criticos` del gate canonico alineando el test contractual de conteos bootstrap con el `seed_demo_publico` vigente, sin tocar el seed concurrente ni rebajar cobertura.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `scripts/check_bootstrap_demo_expected_counts.py`
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_catalogo.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_rituales.py`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+- **Archivos tocados**:
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `scripts/check_bootstrap_demo_expected_counts.py` sin cambios porque ya deriva los conteos del seed canónico vigente; la deriva estaba en el test contractual.
+  2. Sustituir los literales obsoletos `2/2/14/1` por el contrato vigente `4/4/14/5` solo en la prueba que valida el seed real.
+  3. Desacoplar las pruebas de `main()` del contrato de negocio usando conteos sintéticos, para que sigan verificando el comportamiento del script sin fijar accidentalmente el contrato antiguo.
+  4. Cerrar `AUT-006` y devolver la cola a estado de backlog totalmente bloqueado, porque no quedan `TODO` no `BLOCKED` y el siguiente frente real sigue siendo externo (`AUT-003` / `OPS-RWY-003`).
+- **Checks ejecutados**:
+  - `python -m unittest tests.scripts.test_check_bootstrap_demo_expected_counts` -> `OK`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python manage.py test tests.scripts` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `OK`; `C4)` vuelve a verde y el veredicto final del gate pasa a `OK — gate tecnico superado`.
+  - `npm run clean:tmp-tests` -> `OK`; limpia el residuo generado por los checks frontend.
+  - `git diff --name-only` -> `docs/roadmap_codex.md`, `tests/scripts/test_check_bootstrap_demo_expected_counts.py` antes de actualizar esta bitacora.
+- **Resultado verificable**:
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py` ya valida el seed expandido (`4` intenciones publicas, `4` plantas publicadas, `14` productos publicados, `5` rituales publicados).
+  - `python manage.py test tests.scripts` deja de fallar por `AssertionError: 4 != 2`.
+  - `python scripts/check_release_gate.py` termina en `VEREDICTO: OK — gate tecnico superado`.
+- **Bloqueos (si aplica)**:
+  - ninguno para `AUT-006`;
+  - permanecen fuera de esta tarea `AUT-003` y `OPS-RWY-003` como bloqueos externos vigentes.
+- **Checklist de cierre aplicada (AUT-006)**:
+  1. Tarea correcta confirmada: **Si**; `AUT-006` era la primera `TODO` no `BLOCKED` en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado: **Si**; solo se tocaron el test contractual y la trazabilidad obligatoria.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff final queda limitado a `tests/scripts/test_check_bootstrap_demo_expected_counts.py`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  9. Definido vs implementado validado con `docs/90_estado_implementacion.md` cuando aplica: **Si**; al cerrar `AUT-006`, la cola vuelve a quedar coherente con el estado de backlog bloqueado por dependencia externa descrito en `docs/90`.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
