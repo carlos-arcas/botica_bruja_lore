@@ -1,5 +1,6 @@
 import json
 import unittest
+from unittest.mock import patch
 
 try:
     from django.contrib.auth.models import User
@@ -7,6 +8,7 @@ try:
     from django.test import TestCase as DjangoTestCase
     from django.test.utils import override_settings
 
+    from backend.nucleo_herbal.aplicacion.puertos.verificador_google_identity import IdentidadGoogleVerificada
     from backend.nucleo_herbal.infraestructura.persistencia_django.models import CuentaClienteModelo, ProductoModelo
     from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
     from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import PedidoRealModelo
@@ -22,6 +24,7 @@ except ModuleNotFoundError:
 
 @unittest.skipUnless(DJANGO_DISPONIBLE, "Django no está instalado en el entorno local.")
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", PUBLIC_SITE_URL="http://frontend.test")
+@override_settings(GOOGLE_CLIENT_ID="google-client-id-test")
 class ApiCuentaClienteTests(DjangoTestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -60,6 +63,59 @@ class ApiCuentaClienteTests(DjangoTestCase):
         self.assertFalse(response.json()["cuenta"]["email_verificado"])
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("verificar-email?token=", mail.outbox[0].body)
+
+    @patch("backend.nucleo_herbal.infraestructura.google_identity.VerificadorGoogleIdentityHttp.verificar")
+    def test_google_crea_cuenta_verificada_sin_reenviar_email(self, verificar_google) -> None:
+        verificar_google.return_value = IdentidadGoogleVerificada(
+            google_sub="google-sub-1",
+            email="google-nueva@test.dev",
+            nombre_visible="Lore Google",
+            email_verificado=True,
+        )
+
+        response = self.client.post(
+            "/api/v1/cuenta/google/",
+            data=json.dumps({"credential": "cred-google-demo"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["es_nueva_cuenta"])
+        self.assertEqual(payload["cuenta"]["email"], "google-nueva@test.dev")
+        cuenta = CuentaClienteModelo.objects.get(email="google-nueva@test.dev")
+        self.assertEqual(cuenta.google_sub, "google-sub-1")
+        self.assertTrue(cuenta.email_verificado)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertTrue(self.client.get("/api/v1/cuenta/sesion/").json()["autenticado"])
+
+    @patch("backend.nucleo_herbal.infraestructura.google_identity.VerificadorGoogleIdentityHttp.verificar")
+    def test_google_vincula_cuenta_existente_por_email(self, verificar_google) -> None:
+        cuenta = self._registrar_cuenta(email="google-existente@test.dev")
+        self.client.post("/api/v1/cuenta/logout/", content_type="application/json")
+        emails_antes = len(mail.outbox)
+        verificar_google.return_value = IdentidadGoogleVerificada(
+            google_sub="google-sub-2",
+            email="google-existente@test.dev",
+            nombre_visible="Lore Vinculada",
+            email_verificado=True,
+        )
+
+        response = self.client.post(
+            "/api/v1/cuenta/google/",
+            data=json.dumps({"credential": "cred-google-existente"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertFalse(payload["es_nueva_cuenta"])
+        self.assertEqual(payload["cuenta"]["id_usuario"], cuenta["id_usuario"])
+        cuenta_modelo = CuentaClienteModelo.objects.get(email="google-existente@test.dev")
+        self.assertEqual(cuenta_modelo.google_sub, "google-sub-2")
+        self.assertTrue(cuenta_modelo.email_verificado)
+        self.assertEqual(len(mail.outbox), emails_antes)
+        self.assertTrue(self.client.get("/api/v1/cuenta/sesion/").json()["autenticado"])
 
 
     def test_solicitud_recuperacion_email_existente_e_inexistente_es_generica(self) -> None:

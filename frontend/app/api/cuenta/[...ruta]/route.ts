@@ -13,3 +13,11 @@ export async function POST(request: NextRequest, context: { params: { ruta: stri
   }
   return respuesta;
 }
+
+export async function PUT(request: NextRequest, context: { params: { ruta: string[] } }): Promise<Response> {
+  return reenviarCuenta(request, context.params.ruta);
+}
+
+export async function DELETE(request: NextRequest, context: { params: { ruta: string[] } }): Promise<Response> {
+  return reenviarCuenta(request, context.params.ruta);
+}

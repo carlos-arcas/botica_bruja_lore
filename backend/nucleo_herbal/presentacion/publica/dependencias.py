@@ -30,6 +30,7 @@ from ...aplicacion.casos_de_uso_cuentas_cliente import (
     RegistrarCuentaCliente,
     SolicitarRecuperacionPasswordCuentaCliente,
 )
+from ...aplicacion.casos_de_uso_google_cuenta_cliente import AutenticarCuentaClienteGoogle
 from ...aplicacion.casos_de_uso_direcciones_cuenta_cliente import (
     ActualizarDireccionCuentaCliente,
     CrearDireccionCuentaCliente,
@@ -63,6 +64,7 @@ from ...aplicacion.casos_de_uso_rituales import (
     ObtenerRitualesRelacionadosPorIntencion,
 )
 from ...infraestructura.notificaciones_email import NotificadorEmailPostPago
+from ...infraestructura.google_identity import VerificadorGoogleIdentityHttp
 from ...infraestructura.notificaciones_email_recuperacion_password import NotificadorEmailRecuperacionPasswordCuenta
 from ...infraestructura.notificaciones_email_verificacion import NotificadorEmailVerificacionCuenta
 from ...infraestructura.validacion_password_cuenta import ValidadorPasswordCuentaClienteDjango
@@ -134,6 +136,7 @@ class ServiciosPublicosPedidosDemo:
 class ServiciosPublicosCuentaCliente:
     registrar_cuenta_cliente: RegistrarCuentaCliente
     autenticar_cuenta_cliente: AutenticarCuentaCliente
+    autenticar_google_cuenta_cliente: AutenticarCuentaClienteGoogle
     obtener_sesion_cuenta_cliente: ObtenerSesionCuentaCliente
     listar_direcciones_cuenta_cliente: ListarDireccionesCuentaCliente
     crear_direccion_cuenta_cliente: CrearDireccionCuentaCliente
@@ -269,6 +272,10 @@ def construir_servicios_publicos_cuenta_cliente() -> ServiciosPublicosCuentaClie
             notificador_verificacion_email=notificador_verificacion,
         ),
         autenticar_cuenta_cliente=AutenticarCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
+        autenticar_google_cuenta_cliente=AutenticarCuentaClienteGoogle(
+            repositorio_cuentas_cliente=repositorio_cuentas,
+            verificador_google_identity=VerificadorGoogleIdentityHttp(),
+        ),
         obtener_sesion_cuenta_cliente=ObtenerSesionCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
         listar_direcciones_cuenta_cliente=ListarDireccionesCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
         crear_direccion_cuenta_cliente=CrearDireccionCuentaCliente(repositorio_cuentas_cliente=repositorio_cuentas),
