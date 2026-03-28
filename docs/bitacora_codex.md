@@ -3707,3 +3707,659 @@ PY`
   9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; el flujo demo legado ya estaba `DONE` y esta corrida solo cierra la brecha residual de microcopy `B06-O1`.
   10. Siguiente paso exacto definido: **Si**.
 - **Siguiente paso exacto**: revalidar `AUT-003` comprobando si ya existen `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro para restore drill; si siguen ausentes, mantener el bloqueo exacto sin tocar codigo de producto.
+
+## Entrada 2026-03-27-NAV-SHELL-001 (reordenacion de navegacion y cabecera)
+- **Fecha (UTC)**: `2026-03-27T23:19:04Z`
+- **ID de tarea**: `NAV-SHELL-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: alinear la navegacion publica con la IA pedida por el mantenedor: limpiar el nav principal, convertir `Tienda` y `Guias` en hubs desplegables, mover `Carrito` y `Login/Mi cuenta` fuera de la barra y recolocar la marca en una cabecera superior horizontal.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `frontend/contenido/shell/navegacionGlobal.ts`
+  - `frontend/componentes/shell/CabeceraComercial.tsx`
+  - `frontend/componentes/shell/NavegacionPrincipal.tsx`
+  - `frontend/componentes/shell/shellComercial.module.css`
+  - `frontend/app/guias/page.tsx`
+  - `frontend/app/calendario-ritual/page.tsx`
+  - `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx`
+  - `frontend/app/acceso/page.tsx`
+  - `frontend/app/login/page.tsx`
+  - `frontend/app/mi-cuenta/page.tsx`
+  - `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`
+  - `frontend/app/cesta/page.tsx`
+  - `frontend/componentes/catalogo/cesta/IndicadorCestaRitual.tsx`
+  - `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`
+  - `frontend/tests/shell-global.test.ts`
+- **Archivos tocados**:
+  - `frontend/contenido/shell/navegacionGlobal.ts`
+  - `frontend/componentes/shell/CabeceraComercial.tsx`
+  - `frontend/componentes/shell/NavegacionPrincipal.tsx`
+  - `frontend/componentes/shell/AccesosCabecera.tsx`
+  - `frontend/componentes/shell/shellComercial.module.css`
+  - `frontend/componentes/catalogo/cesta/IndicadorCestaRitual.tsx`
+  - `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`
+  - `frontend/app/cesta/page.tsx`
+  - `frontend/app/acceso/page.tsx`
+  - `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`
+  - `frontend/tests/shell-global.test.ts`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Quitar del nav principal `Colecciones`, `La Botica`, `Encargo`, `Acceso`, `Mi cuenta` y `Cuenta demo`, porque la peticion del mantenedor exige una cabecera mas limpia y ya no quiere esos accesos dentro del rail central.
+  2. Reagrupar el plano comercial bajo `Tienda` y el plano editorial bajo `Guias`, respetando la separacion editorial/comercial ya fijada por `docs/05_modelo_de_dominio_y_entidades.md`.
+  3. Mover `Carrito` y `Login/Mi cuenta` a un bloque externo de cabecera, junto a `Acceso admin`, para tratarlos como accesos utilitarios y no como destinos del mapa principal.
+  4. Renombrar `Mi seleccion` a `Carrito` y sacar el CTA visible de la cesta del flujo legado `/encargo`, apuntandolo al checkout real ya disponible.
+  5. Mantener el alcance estrictamente en navegacion/cabecera y no reabrir ni el contenido profundo de `Guias`, ni el dominio de `Calendario ritual`, ni el backend de autenticacion.
+- **Checks ejecutados**:
+  - `npm run lint -- --file app/acceso/page.tsx --file app/cesta/page.tsx --file componentes/catalogo/cesta/IndicadorCestaRitual.tsx --file componentes/catalogo/cesta/VistaCestaRitual.tsx --file componentes/cuenta_cliente/PanelCuentaCliente.tsx --file componentes/shell/AccesosCabecera.tsx --file componentes/shell/CabeceraComercial.tsx --file componentes/shell/NavegacionPrincipal.tsx --file contenido/shell/navegacionGlobal.ts` -> `OK`.
+  - `npm run test:shell` -> `OK`.
+  - `npm run test:cesta` -> `OK`.
+  - `npm run build` -> `OK`.
+  - `cmd /c start "codex-next-dev" /b npm.cmd run dev -- --hostname 127.0.0.1 --port 3000 ^> .codex-dev.log 2^>^&1` -> servidor local levantado para verificacion visual.
+  - `Invoke-WebRequest http://127.0.0.1:3000` -> `200`.
+  - `npx --yes @playwright/cli -s=navhome open http://127.0.0.1:3000` -> `OK`.
+  - `npx --yes @playwright/cli -s=navhome resize 1440 1100` -> `OK`.
+  - `npx --yes @playwright/cli -s=navhome snapshot` -> `OK`.
+  - `npx --yes @playwright/cli -s=navhome screenshot` -> `C:\Users\arcas\.codex\worktrees\d70a\botica_bruja_lore\frontend\.playwright-cli\page-2026-03-27T23-13-01-171Z.png`.
+  - `git diff --name-only` -> `frontend/app/acceso/page.tsx`, `frontend/app/cesta/page.tsx`, `frontend/componentes/catalogo/cesta/IndicadorCestaRitual.tsx`, `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`, `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`, `frontend/componentes/shell/CabeceraComercial.tsx`, `frontend/componentes/shell/NavegacionPrincipal.tsx`, `frontend/componentes/shell/shellComercial.module.css`, `frontend/contenido/shell/navegacionGlobal.ts`, `frontend/tests/shell-global.test.ts`.
+  - `git ls-files --others --exclude-standard` -> `frontend/componentes/shell/AccesosCabecera.tsx`.
+- **Resultado verificable**:
+  - la cabecera publica deja a la marca en una franja superior horizontal y el nav principal queda reducido a `Inicio`, `Tienda`, `Guias`, `Tarot` y `Calendario ritual`;
+  - `Tienda` despliega `Botica`, `Velas e incienso`, `Minerales y energia` y `Herramientas esotericas`, mientras `Guias` despliega `Compendio`, `Articulos`, `Glosario botanico`, `Propiedades de las plantas` y `Rituales`;
+  - `Carrito`, `Login/Mi cuenta` y `Acceso admin` quedan fuera del nav principal, alineados con el comportamiento pedido por el mantenedor;
+  - `Mi seleccion` desaparece como nomenclatura visible y la cesta ya no deriva al flujo legado `/encargo`;
+  - la verificacion visual Playwright confirma que el hero ya no queda pegado a la izquierda del nav anterior, sino bajo una cabecera superior mas coherente.
+- **Bloqueos (si aplica)**:
+  - ninguno para `NAV-SHELL-001`;
+  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (NAV-SHELL-001 navegacion y cabecera)**:
+  1. Tarea correcta confirmada: **Si**; la cola estaba en estado vacio / backlog totalmente bloqueado y esta corrida responde a una peticion explicita del mantenedor registrada como `NAV-SHELL-001` en `docs/roadmap_codex.md`, sin abrir una cola paralela.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron navegacion/cabecera, etiquetado de cesta/cuenta y la trazabilidad obligatoria.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; `git diff --name-only` queda limitado a archivos del perimetro y el unico untracked propio es `frontend/componentes/shell/AccesosCabecera.tsx`. El harness deja marcas de timestamp en `frontend/.tmp-tests`, pero `git diff -- frontend/.tmp-tests` no muestra cambios de contenido y esos artefactos no forman parte de la entrega.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `Calendario ritual`, cuenta real y checkout real ya existian segun `docs/90_estado_implementacion.md`, y esta corrida solo corrige su exposicion en navegacion sin declarar capacidades nuevas.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: revalidar `AUT-003` comprobando si ya existen `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro para restore drill; si siguen ausentes, mantener el bloqueo exacto sin tocar codigo de producto.
+
+## Entrada 2026-03-27-AUT-003 (revalidacion de bloqueo externo smoke/restore)
+- **Fecha (UTC)**: `2026-03-27T23:33:34Z`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: revalidar si el cierre externo de `V2-R10` ya podia ejecutarse desde este runner o si el bloqueo seguia intacto por ausencia de variables y entorno seguro para smoke post-deploy + backup/restore.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No tocar codigo de producto porque no existe ninguna `TODO` no `BLOCKED` y `docs/90_estado_implementacion.md` mantiene el cierre de `V2-R10` como dependencia externa.
+  2. Revalidar el primer bloqueo vivo (`AUT-003`) con los checks mas especificos que el entorno permite: smoke post-deploy y backup/restore.
+  3. Mantener `AUT-003` en `BLOCKED` porque faltan `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`, y sigue sin existir dump permitido ni base temporal segura para el restore drill.
+  4. Mantener `OPS-RWY-003` aparte y sin revalidacion profunda porque sigue dependiendo de acceso externo verificable a Railway UI/logs, fuera de este runner.
+- **Checks ejecutados**:
+  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
+  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
+  - `python scripts/check_release_readiness.py` -> `OK`.
+- **Resultado verificable**:
+  - sigue sin existir ninguna `TODO` no `BLOCKED`; la cola ejecutable permanece vacia.
+  - `AUT-003` sigue `BLOCKED` porque el runner no dispone de las variables minimas para ejecutar ni smoke post-deploy ni backup/restore.
+  - `OPS-RWY-003` sigue `BLOCKED` porque tampoco existe acceso externo verificable a Railway UI/logs desde este entorno.
+  - no se toco codigo de producto; solo gobernanza documental para dejar trazabilidad del bloqueo real.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` depende de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, un dump permitido y una base temporal segura fuera de produccion.
+  - `OPS-RWY-003` depende de acceso externo verificable a Railway UI/logs y variables reales de despliegue.
+- **Diagnostico concreto**: el runner actual no puede ni iniciar la revalidacion externa de `AUT-003` porque faltan las variables base del smoke y del backup/restore; por tanto el backlog sigue totalmente bloqueado.
+- **Causa probable**: las URLs/credenciales reales del despliegue y la infraestructura temporal de restore drill no estan expuestas en este entorno de automatizacion.
+- **Evidencia verificable**:
+  - `python scripts/check_deployed_stack.py` falla antes de hacer red por ausencia de `BACKEND_BASE_URL`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run` falla por ausencia de `DATABASE_URL`.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` falla por ausencia de `BOTICA_RESTORE_DATABASE_URL`.
+  - la comprobacion de entorno confirma `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+- **Impacto sobre la tarea**: no es posible cerrar `AUT-003`, no puede declararse `PASS` de go-live y tampoco procede abrir implementacion local de producto.
+- **Dependencia que bloquea**: provision externa de URLs/credenciales reales, dump permitido y base temporal segura; para `OPS-RWY-003`, acceso verificable a Railway UI/logs.
+- **Siguiente accion exacta**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+- **Criterio de desbloqueo**: las cuatro variables y el entorno temporal seguro existen y permiten ejecutar de verdad el smoke post-deploy y el backup/restore sin errores de configuracion previos.
+- **Fecha/punto de revision**: siguiente corrida con variables reales disponibles o revision manual el `2026-03-29` UTC, lo que ocurra primero.
+- **Checklist de cierre aplicada (AUT-003 revalidacion de bloqueo externo)**:
+  1. Tarea correcta confirmada: **No aplica**; no habia `TODO` no `BLOCKED` y la corrida se limita a revalidar el primer bloqueo externo vivo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio se limita a los dos documentos canonicos y el worktree conserva cambios previos ajenos no tocados en esta ejecucion.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la corrida solo revalida un bloqueo externo y no declara capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: aportar las variables reales y el entorno temporal seguro para reejecutar `AUT-003`; si siguen ausentes en la siguiente corrida, mantener `BLOCKED` sin tocar codigo de producto.
+
+## Entrada 2026-03-27-LOCAL-LAUNCH-004 (guardarrail de puertos y reutilizacion)
+- **Fecha (UTC)**: `2026-03-27T23:36:48Z`
+- **ID de tarea**: `LOCAL-LAUNCH-004`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: corregir el launcher canonico `run_app.bat` para que no vuelva a fallar con `EADDRINUSE` cuando `3000/8000` esten ocupados por procesos residuales, reutilizando listeners del propio worktree y abortando con mensaje claro solo si el puerto lo ocupa un proceso ajeno.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `run_app.bat`
+  - `setup_entorno.bat`
+- **Archivos tocados**:
+  - `run_app.bat`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Registrar la incidencia reportada por el mantenedor como tarea extraordinaria `LOCAL-LAUNCH-004`, porque la cola autonoma estaba vacia / totalmente bloqueada y no correspondia abrir un backlog paralelo.
+  2. Limitar el cambio a `run_app.bat`: sin tocar frontend/backend de producto, sin cambiar puertos canonicos y sin matar procesos ajenos automaticamente desde el launcher.
+  3. Anadir una inspeccion previa de `127.0.0.1:3000` y `127.0.0.1:8000` que clasifica listeners como `repo` o `foreign` segun su `CommandLine`; si el proceso es del propio worktree, el launcher lo reutiliza, y si es ajeno, corta con error explicito.
+  4. Mantener `setup_entorno.bat`, migraciones y arranque normal cuando no hay conflicto ajeno; el fix evita el `EADDRINUSE` visible del frontend y deja trazabilidad concreta del puerto bloqueado.
+  5. Limpiar manualmente los arboles residuales detectados durante la verificacion (`taskkill /PID 42636 /T /F` y `taskkill /PID 49300 /T /F`) para revalidar el arranque del launcher en limpio, sin incorporar ese comportamiento destructivo al script.
+- **Checks ejecutados**:
+  - `Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort 3000 -State Listen | Select-Object LocalAddress,LocalPort,OwningProcess,State | Format-List` -> `3000` estaba en `Listen` por `PID 30728`.
+  - `Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort 8000 -State Listen | Select-Object LocalAddress,LocalPort,OwningProcess,State | Format-List` -> en la primera reproduccion `8000` estaba en `Listen` por `PID 46820`.
+  - `Get-CimInstance Win32_Process -Filter "ProcessId = 30728"` -> `CommandLine` apunta a `...botica_bruja_lore\frontend\node_modules\next\dist\server\lib\start-server.js`.
+  - `Get-CimInstance Win32_Process -Filter "ProcessId = 46820"` -> `CommandLine` apunta a un `manage.py runserver 127.0.0.1:8000` ajeno a este worktree.
+  - `cmd /c run_app.bat` -> tras el fix devuelve `exit code 1` con `[ERROR] El puerto 8000 ya esta en uso por python.exe (PID 46820) y no pertenece a este repo.` en vez de volver a caer en `EADDRINUSE`.
+  - `cmd /c "taskkill /PID 42636 /T /F && taskkill /PID 49300 /T /F"` -> `OK`; se cerraron los arboles residuales detectados para revalidar el arranque.
+  - `cmd /c "set BOTICA_NO_BROWSER=1&& run_app.bat"` -> `OK`; el launcher reporta `Backend Django ya estaba en ejecucion ... Se reutiliza.` y `Frontend Next ya estaba en ejecucion ... Se reutiliza.` cuando los listeners ya pertenecen al propio repo.
+  - `Invoke-WebRequest http://127.0.0.1:3000/ -UseBasicParsing | Select-Object StatusCode | Format-List` -> `StatusCode : 200`.
+  - `git diff --name-only -- run_app.bat docs/roadmap_codex.md docs/bitacora_codex.md` -> diff propio limitado a `run_app.bat`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+- **Resultado verificable**:
+  - `run_app.bat` ya no lanza `next dev`/`runserver` a ciegas cuando `3000/8000` estan ocupados.
+  - el caso reportado por el mantenedor queda cubierto: si el listener de `3000` pertenece a este repo, el launcher lo reutiliza y deja de romperse por `EADDRINUSE`; si `8000` o `3000` pertenecen a otro proceso, el script corta con diagnostico explicito.
+  - el frontend del repo queda operativo tras la reutilizacion (`GET /` en `3000` devuelve `200`).
+- **Bloqueos (si aplica)**:
+  - ninguno para `LOCAL-LAUNCH-004`;
+  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
+- **Checklist de cierre aplicada (LOCAL-LAUNCH-004 guardarrail de puertos y reutilizacion)**:
+  1. Tarea correcta confirmada: **Si**; la cola estaba vacia / totalmente bloqueada y la peticion explicita del mantenedor se registro como `LOCAL-LAUNCH-004` en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `run_app.bat` y la trazabilidad obligatoria en roadmap/bitacora.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `run_app.bat`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos en frontend/docs que no se tocaron en esta ejecucion.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la tarea solo endurece el launcher local existente y no declara capacidad nueva de producto.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: revalidar `AUT-003` comprobando si ya existen `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro para restore drill; si siguen ausentes, mantener el bloqueo exacto sin tocar codigo de producto.
+
+## Entrada 2026-03-27-AUT-003 (revalidacion de bloqueo externo con gate local en verde)
+- **Fecha (UTC)**: `2026-03-27T23:54:36Z`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: revalidar si el cierre externo de `V2-R10` ya podia activarse desde este runner tras los cambios locales recientes o si la cola seguia vacia / totalmente bloqueada por falta de variables reales para smoke post-deploy y backup/restore.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No tocar codigo de producto porque no existe ninguna `TODO` no `BLOCKED` y la fuente factual superior (`docs/90_estado_implementacion.md`) mantiene el cierre de `V2-R10` como dependencia externa.
+  2. Revalidar `AUT-003` con doble evidencia: salud local del repo (`check_release_gate.py` y `check_release_readiness.py`) y bloqueo externo especifico (`check_deployed_stack.py` + `backup_restore_postgres.py`).
+  3. Mantener `AUT-003` en `BLOCKED` porque siguen ausentes `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`, y tampoco existe dump permitido ni base temporal segura para el restore drill.
+  4. Mantener `OPS-RWY-003` separado y tambien bloqueado, porque sigue dependiendo de acceso externo verificable a Railway UI/logs y no de deuda local del repo.
+- **Checks ejecutados**:
+  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
+  - `python scripts/backup_restore_postgres.py backup --dry-run` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
+  - `git status --short` -> el worktree conserva cambios previos ajenos en frontend/run_app y esta corrida suma solo trazabilidad documental canonica.
+- **Resultado verificable**:
+  - el gate tecnico canonico y el readiness documental siguen en `OK`, asi que no aparece deuda local nueva que justifique abrir trabajo de producto.
+  - sigue sin existir ninguna `TODO` no `BLOCKED`; la cola ejecutable permanece vacia.
+  - `AUT-003` sigue `BLOCKED` porque el runner no dispone de las variables minimas para ejecutar smoke post-deploy ni backup/restore reales.
+  - `OPS-RWY-003` sigue `BLOCKED` porque tampoco existe acceso externo verificable a Railway UI/logs desde este entorno.
+  - no se toco codigo de producto; solo gobernanza documental para dejar trazabilidad fresca del bloqueo real.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` depende de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, un dump permitido y una base temporal segura fuera de produccion.
+  - `OPS-RWY-003` depende de acceso externo verificable a Railway UI/logs y variables reales de despliegue.
+- **Diagnostico concreto**: el repositorio pasa el gate local, pero el runner actual sigue sin poder iniciar la validacion externa de `AUT-003` porque faltan las variables base del smoke y del backup/restore; por tanto el backlog sigue totalmente bloqueado.
+- **Causa probable**: las URLs/credenciales reales del despliegue y la infraestructura temporal de restore drill no estan expuestas en este entorno de automatizacion.
+- **Evidencia verificable**:
+  - la comprobacion de entorno confirma `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `python scripts/check_deployed_stack.py` falla antes de hacer red por ausencia de `BACKEND_BASE_URL`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run` falla por ausencia de `DATABASE_URL`.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` falla por ausencia de `BOTICA_RESTORE_DATABASE_URL`.
+  - `python scripts/check_release_gate.py` y `python scripts/check_release_readiness.py` terminan en `OK`, descartando una regresion local del repo como causa del bloqueo.
+- **Impacto sobre la tarea**: no es posible cerrar `AUT-003`, no puede declararse `PASS` de go-live y tampoco procede abrir implementacion local de producto.
+- **Dependencia que bloquea**: provision externa de URLs/credenciales reales, dump permitido y base temporal segura; para `OPS-RWY-003`, acceso verificable a Railway UI/logs.
+- **Siguiente accion exacta**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+- **Criterio de desbloqueo**: las cuatro variables y el entorno temporal seguro existen y permiten ejecutar de verdad el smoke post-deploy y el backup/restore sin errores de configuracion previos.
+- **Fecha/punto de revision**: siguiente corrida con variables reales disponibles o revision manual el `2026-03-30` UTC, lo que ocurra primero.
+- **Checklist de cierre aplicada (AUT-003 revalidacion externa con gate local en verde)**:
+  1. Tarea correcta confirmada: **No aplica**; no habia `TODO` no `BLOCKED` y la corrida se limita a revalidar el primer bloqueo externo vivo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio agregado en esta corrida se limita a los dos documentos canonicos y el worktree conserva cambios previos ajenos en `frontend/.tmp-tests`, shell frontend y `run_app.bat`.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la corrida solo revalida un bloqueo externo y no declara capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: mantener `AUT-003` en `BLOCKED` hasta disponer de las variables reales, el dump permitido y la base temporal segura; cuando existan, reejecutar smoke post-deploy y backup/restore reales antes de cualquier cierre de go-live.
+
+## Entrada 2026-03-28-CAL-VRT-001 (calendario virtual mensual, seed ritual real y conexion local)
+- **Fecha (UTC)**: `2026-03-28T00:32:14Z`
+- **ID de tarea**: `CAL-VRT-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: completar la feature de calendario virtual con vista mensual, notas por dia y anadido de rituales desde la lista publicada, sembrar en la BBDD local rituales reales conectados a productos reales para pruebas y corregir la incidencia visible donde las tiendas no cargaban productos.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `backend/configuracion_django/settings.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`
+  - `backend/nucleo_herbal/presentacion/publica/views.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx`
+  - `frontend/infraestructura/api/calendarioRitual.ts`
+  - `frontend/infraestructura/api/herbal.ts`
+  - `frontend/infraestructura/api/rituales.ts`
+  - `run_app.bat`
+  - `frontend/.env.local` (solo para verificacion local, no versionado)
+- **Archivos tocados**:
+  - `backend/configuracion_django/settings.py`
+  - `backend/configuracion_django/middleware_cors.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_catalogo.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_rituales.py`
+  - `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx`
+  - `frontend/componentes/calendario_ritual/ResumenEditorialPorFecha.tsx`
+  - `frontend/componentes/calendario_ritual/calendarioRitualEditorial.module.css`
+  - `frontend/contenido/calendario_ritual/calendarioVirtual.ts`
+  - `frontend/contenido/calendario_ritual/formatoCalendarioVirtual.ts`
+  - `frontend/infraestructura/calendario_ritual/almacenCalendarioVirtual.ts`
+  - `frontend/package.json`
+  - `frontend/tests/calendario-virtual.test.ts`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+  - `tests/nucleo_herbal/test_contratos_api_publica_frontend.py`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Registrar la peticion del mantenedor como tarea extraordinaria `CAL-VRT-001` porque la cola autonoma seguia vacia / totalmente bloqueada y no correspondia inventar trabajo paralelo.
+  2. Mantener el calendario virtual en frontend como agenda local del navegador, separada de la logica oficial de `ReglaCalendario`, respetando la frontera de dominio fijada por `docs/05_modelo_de_dominio_y_entidades.md`.
+  3. Resolver la prueba de datos con seed real e idempotente en vez de insertar manualmente filas sueltas: 14 productos publicos, 5 rituales publicados y 5 reglas activas del calendario para marzo/abril de 2026.
+  4. Corregir la conexion cliente-servidor del calendario desde la capa de integracion: middleware CORS minimo y controlado para el frontend local, en lugar de duplicar API o mover logica editorial al cliente.
+  5. Mantener fuera de alcance los binarios de imagen y cualquier refactor global ajeno al calendario/rituales/catalogo.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`.
+  - `npm run test:calendario-ritual` -> `OK`.
+  - `.venv\Scripts\python.exe manage.py seed_demo_publico` -> `OK`; resultado local: `intenciones: creados=2, actualizados=2`, `plantas: creados=2, actualizados=2`, `productos: creados=0, actualizados=14`, `rituales: creados=5, actualizados=0`, `reglas_calendario: creados=5, actualizados=0`.
+  - `npm run lint -- --file componentes/calendario_ritual/CalendarioRitualEditorial.tsx --file componentes/calendario_ritual/ResumenEditorialPorFecha.tsx --file contenido/calendario_ritual/calendarioVirtual.ts --file contenido/calendario_ritual/formatoCalendarioVirtual.ts --file infraestructura/calendario_ritual/almacenCalendarioVirtual.ts` -> `OK`.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_contratos_api_publica_frontend tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`.
+  - `Invoke-WebRequest http://127.0.0.1:8010/api/v1/herbal/secciones/botica-natural/productos/` -> `200`; devuelve 5 productos publicos en `botica-natural`.
+  - `Invoke-WebRequest http://127.0.0.1:8010/api/v1/calendario-ritual/?fecha=2026-03-28` -> `200`; devuelve 4 rituales activos.
+  - `Invoke-WebRequest http://127.0.0.1:8010/api/v1/rituales/ -Headers @{ Origin = 'http://127.0.0.1:3000' }` -> `200`; cabeceras `Access-Control-Allow-Origin: http://127.0.0.1:3000` y `Vary: Origin`.
+  - `npx --yes @playwright/cli open http://127.0.0.1:3000/botica-natural` + `snapshot` -> confirma 5 fichas renderizadas.
+  - `npx --yes @playwright/cli goto http://127.0.0.1:3000/calendario-ritual` + `snapshot` + `fill` + `click` -> confirma selector con 6 rituales publicados, 4 sugerencias editoriales activas y guardado local de nota + 1 ritual para `2026-03-28`.
+  - `npx --yes @playwright/cli localstorage-list` -> `botica_bruja_calendario_virtual_v1={"2026-03-28":{"nota":"Prueba local de agenda para cierre de marzo","rituales":["altar-lunar-cuarzo"]}}`.
+  - `Get-NetTCPConnection -State Listen -LocalPort 3000,8010` -> listeners activos en `3000` (frontend) y `8010` (backend) durante la verificacion.
+- **Resultado verificable**:
+  - `/botica-natural` vuelve a renderizar las 5 fichas publicas de la seccion y deja de mostrar el error HTTP visible en la captura original.
+  - `/calendario-ritual` deja de ser solo una consulta por fecha: ahora ofrece rejilla mensual, nota editable, anadido/eliminacion de rituales publicados por dia, marcadores visuales y sugerencias editoriales activas.
+  - el seed local deja preparada una base coherente de pruebas con productos reales de catalogo y rituales reales conectados a esos productos.
+  - los fetch cliente del calendario dejan de fallar por CORS y el runtime del componente deja de romper por `ReferenceError: formatearMes is not defined`.
+- **Bloqueos (si aplica)**:
+  - ninguno para `CAL-VRT-001`;
+  - permanecen aparte `AUT-003` y `OPS-RWY-003` como bloqueos externos de go-live.
+- **Checklist de cierre aplicada (CAL-VRT-001 calendario virtual + seed + conexion local)**:
+  1. Tarea correcta confirmada: **Si**; la cola estaba vacia / totalmente bloqueada y la peticion explicita del mantenedor se registro como `CAL-VRT-001` en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron calendario virtual, seed publico, integracion local CORS y la trazabilidad obligatoria.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio de esta tarea queda en calendario/seed/CORS/tests/docs. El worktree conserva cambios previos ajenos en shell/cesta/navegacion y artefactos temporales `.tmp-tests` / `.playwright-cli` que no se han revertido ni mezclado en la implementacion.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; el calendario ritual ya existia como capacidad editorial parcial y esta corrida cierra la brecha entre definido y usable en local sin declarar compra real ni cambiar el dominio oficial.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: volver a estado de cola vacia / backlog bloqueado y, salvo nueva peticion explicita del mantenedor, revalidar `AUT-003` y `OPS-RWY-003` cuando exista evidencia externa nueva.
+
+## Entrada 2026-03-28-AUT-003 (revalidacion externa sin variables reales en el runner)
+- **Fecha (UTC)**: `2026-03-28T00:13:27Z`
+- **ID de tarea**: `AUT-003`
+- **Estado final**: `BLOCKED`
+- **Objetivo de la ejecucion**: revalidar si aparecio evidencia nueva para desbloquear el smoke post-deploy y el backup/restore reales de `V2-R10`, o si la cola seguia vacia / totalmente bloqueada por ausencia de variables operativas reales.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No tocar codigo de producto porque sigue sin existir ninguna `TODO` no `BLOCKED` y `docs/90_estado_implementacion.md` mantiene el cierre de `V2-R10` como dependencia externa.
+  2. Revalidar `AUT-003` con el check mas especifico disponible para el bloqueo (`check_deployed_stack.py` y `backup_restore_postgres.py`) y con los checks normativos de release/trazabilidad (`check_release_readiness.py` y `check_release_gate.py`).
+  3. Mantener `AUT-003` en `BLOCKED` porque el runner sigue sin exponer `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`; por tanto no es posible ejecutar smoke post-deploy ni backup/restore reales.
+  4. Mantener `OPS-RWY-003` aparte y tambien bloqueado porque continua dependiendo de acceso externo verificable a Railway UI/logs.
+- **Checks ejecutados**:
+  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
+  - `python scripts/check_release_gate.py` -> `OK`.
+  - `git status --short` -> el worktree conserva cambios previos ajenos en frontend/run_app y esta corrida suma solo trazabilidad documental canonica.
+- **Resultado verificable**:
+  - `python scripts/check_release_gate.py` y `python scripts/check_release_readiness.py` siguen en `OK`, asi que no aparece deuda local nueva de release/trazabilidad.
+  - `python scripts/check_deployed_stack.py` ni siquiera puede iniciar el smoke remoto porque `BACKEND_BASE_URL` sigue ausente.
+  - `python scripts/backup_restore_postgres.py` sigue sin poder planificar backup/restore por ausencia de `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
+  - sigue sin existir ninguna `TODO` no `BLOCKED`; la cola ejecutable permanece vacia.
+  - no se toco codigo de producto; solo gobernanza documental append-only para dejar evidencia fresca del bloqueo externo.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` depende de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, un dump permitido y una base temporal segura fuera de produccion.
+  - `OPS-RWY-003` depende de acceso externo verificable a Railway UI/logs y variables reales de despliegue.
+- **Diagnostico concreto**: el repo sigue sano localmente, pero el runner actual continua sin las variables base del smoke post-deploy ni del backup/restore; por tanto `AUT-003` no puede avanzar y el backlog sigue totalmente bloqueado.
+- **Causa probable**: las URLs/credenciales reales del despliegue y la infraestructura temporal de restore drill siguen sin estar expuestas en este entorno de automatizacion.
+- **Evidencia verificable**:
+  - la comprobacion de entorno confirma `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `python scripts/check_deployed_stack.py` falla antes de hacer red por ausencia de `BACKEND_BASE_URL`.
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` falla por ausencia de `DATABASE_URL`.
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` falla por ausencia de `BOTICA_RESTORE_DATABASE_URL`.
+  - `python scripts/check_release_gate.py` y `python scripts/check_release_readiness.py` terminan en `OK`, descartando una regresion local del repo como causa del bloqueo.
+- **Impacto sobre la tarea**: no es posible cerrar `AUT-003`, no puede declararse `PASS` de go-live y tampoco procede abrir implementacion local de producto.
+- **Dependencia que bloquea**: provision externa de URLs/credenciales reales, dump permitido y base temporal segura; para `OPS-RWY-003`, acceso verificable a Railway UI/logs.
+- **Siguiente accion exacta**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+- **Criterio de desbloqueo**: las cuatro variables y el entorno temporal seguro existen y permiten ejecutar de verdad el smoke post-deploy y el backup/restore sin errores de configuracion previos.
+- **Fecha/punto de revision**: siguiente corrida con variables reales disponibles o revision manual el `2026-03-31` UTC, lo que ocurra primero.
+- **Checklist de cierre aplicada (AUT-003 revalidacion externa sin variables reales)**:
+  1. Tarea correcta confirmada: **No aplica**; no habia ninguna `TODO` no `BLOCKED` y la corrida se limita a revalidar el primer bloqueo externo vivo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio agregado en esta corrida se limita a los dos documentos canonicos y el worktree conserva cambios previos ajenos en `frontend/.tmp-tests`, shell frontend y `run_app.bat`.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la corrida solo revalida un bloqueo externo y no declara capacidad nueva.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: mantener `AUT-003` en `BLOCKED` hasta disponer de las variables reales, el dump permitido y la base temporal segura; cuando existan, reejecutar smoke post-deploy y backup/restore reales antes de cualquier cierre de go-live.
+
+## Entrada 2026-03-28-ROADMAP-SAN-001 (repriorizacion canonica por regresion local del gate)
+- **Fecha (UTC)**: `2026-03-28T00:35:08Z`
+- **ID de tarea**: `ROADMAP-SAN-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: sanear `docs/roadmap_codex.md` y `docs/bitacora_codex.md` al detectar que la prioridad real cambió durante la revalidación de `AUT-003`: el gate canónico local ya no está en verde y la cola deja de ser “solo bloqueo externo”.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+  - `scripts/check_bootstrap_demo_expected_counts.py`
+  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No tocar codigo de producto porque la cola partia sin `TODO` ejecutable, el worktree ya estaba sucio con cambios concurrentes en seed/CORS/tests y la regla obligatoria en este caso es sanear roadmap/bitacora antes de cualquier implementacion.
+  2. Revalidar `AUT-003` con sus checks especificos (`check_deployed_stack.py`, `backup_restore_postgres.py`) y con los checks normativos de release/trazabilidad (`check_release_readiness.py`, `check_release_gate.py`).
+  3. Declarar obsoleta la descripcion de “cola vacia / backlog totalmente bloqueado solo por entorno externo”, porque `python scripts/check_release_gate.py` ahora falla localmente en `C4) Test scripts operativos críticos`.
+  4. Registrar una nueva primera `TODO` no `BLOCKED` (`AUT-006`) para restaurar el gate local alineando el contrato de conteos bootstrap con el seed canónico expandido.
+  5. Mantener `AUT-003` y `OPS-RWY-003` en `BLOCKED`, porque las variables reales de despliegue y el entorno seguro de restore drill siguen ausentes en este runner.
+- **Checks ejecutados**:
+  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
+  - `python scripts/check_release_gate.py` -> `ERROR`; bloque `C4) Test scripts operativos críticos` falla por `tests.scripts.test_check_bootstrap_demo_expected_counts.CheckBootstrapDemoExpectedCountsTests.test_calcular_conteos_esperados_desde_seed_canonico` con `AssertionError: 4 != 2`.
+  - `git diff -- backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py tests/nucleo_herbal/test_contratos_api_publica_frontend.py backend/configuracion_django/settings.py` -> confirma cambios concurrentes en seed/CORS/tests y que el seed/test del comando ya reflejan `4` intenciones publicas, `4` plantas publicadas, `14` productos, `5` rituales y `5` reglas de calendario activas.
+  - `Select-String -Path docs/roadmap_codex.md -Pattern '^- \\*\\*Estado\\*\\*: `TODO`'` -> sin coincidencias antes del saneamiento.
+- **Resultado verificable**:
+  - la cola deja de describirse como vacia: tras el saneamiento, la primera `TODO` no `BLOCKED` pasa a ser `AUT-006`.
+  - `AUT-003` sigue sin poder avanzar por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
+  - `OPS-RWY-003` sigue `BLOCKED` por acceso externo verificable pendiente a Railway UI/logs.
+  - no se tocó codigo de producto ni se revirtieron cambios concurrentes; esta corrida solo deja gobernanza canonica consistente con la evidencia real del runner.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` depende de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, un dump permitido y una base temporal segura fuera de produccion.
+  - `OPS-RWY-003` depende de acceso externo verificable a Railway UI/logs y variables reales de despliegue.
+  - `AUT-006` queda **ejecutable** localmente; no esta bloqueada, pero debe respetar el worktree sucio y no revertir la expansion concurrente del seed.
+- **Diagnostico concreto**: el repo ya no esta “solo bloqueado externamente”; existe una regresion local verificable del gate en `C4)` causada por deriva entre el seed canónico expandido y el test contractual de conteos bootstrap.
+- **Causa probable**: el seed demo fue ampliado y dividido (`seed_demo_publico_catalogo.py` + `seed_demo_publico_rituales.py`) y la prueba `tests/scripts/test_check_bootstrap_demo_expected_counts.py` quedo anclada al contrato anterior (`2/2/14/1`).
+- **Evidencia verificable**:
+  - `python scripts/check_release_gate.py` falla con `AssertionError: 4 != 2` en `test_calcular_conteos_esperados_desde_seed_canonico`.
+  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py` ya valida el seed nuevo (`4/4/14/5` + `5` reglas activas), así que el drift está en el contrato bootstrap y no en el nuevo seed.
+  - las variables externas necesarias para `AUT-003` siguen ausentes, por lo que el bloqueo externo no desapareció; simplemente dejó de ser la prioridad inmediata.
+- **Impacto sobre la tarea**: no procede seguir tratando `AUT-003` como siguiente paso efectivo hasta recuperar primero el gate local; la cola correcta debe exponer `AUT-006` como primera `TODO` no `BLOCKED`.
+- **Dependencia que bloquea**: ninguna para `ROADMAP-SAN-001`; el saneamiento era autocontenible. Los bloqueos externos permanecen en `AUT-003` y `OPS-RWY-003`.
+- **Siguiente accion exacta**: ejecutar `AUT-006` ajustando `scripts/check_bootstrap_demo_expected_counts.py` y/o `tests/scripts/test_check_bootstrap_demo_expected_counts.py` al seed canónico expandido, rerun de `python manage.py test tests.scripts` y `python scripts/check_release_gate.py`, y solo despues volver a revalidar `AUT-003`.
+- **Criterio de desbloqueo**: no aplica para esta corrida documental; la salida correcta era dejar el roadmap honesto y la siguiente `TODO` exacta visible.
+- **Fecha/punto de revision**: siguiente corrida inmediata tras este saneamiento, empezando por `AUT-006`.
+- **Checklist de cierre aplicada (ROADMAP-SAN-001 repriorizacion canonica)**:
+  1. Tarea correcta confirmada: **Si**; no habia `TODO` no `BLOCKED` y la evidencia nueva obligaba a sanear roadmap/bitacora al cambiar la prioridad real.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio de esta corrida queda limitado a los dos documentos canonicos y se preservan los cambios previos ajenos del worktree.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `docs/90_estado_implementacion.md` sigue marcando `AUT-003` como bloqueo externo, pero la evidencia local del gate obliga a interponer `AUT-006` antes de revalidarlo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `AUT-006` y no volver a `AUT-003` hasta que `python scripts/check_release_gate.py` deje `C4)` en verde otra vez.
+
+## Entrada 2026-03-28-RADAR-SAN-002 (revalidacion canonica de cola frente a gate y docs/90)
+- **Fecha (UTC)**: `2026-03-28T08:43:57Z`
+- **ID de tarea**: `RADAR-SAN-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: revalidar si la primera `TODO` no `BLOCKED` seguia siendo real, comprobar si aparecio evidencia nueva para desbloquear `AUT-003` y dejar trazada la contradiccion vigente entre la cola canonica y `docs/90_estado_implementacion.md`.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/deploy_railway.md`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_deployed_stack.py`
+  - `scripts/backup_restore_postgres.py`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No crear una nueva `TODO`: `AUT-006` ya existe, sigue siendo ejecutable y continua siendo la primera `TODO` no `BLOCKED` real.
+  2. Mantener `AUT-003` y `OPS-RWY-003` en `BLOCKED` porque el runner sigue sin `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` ni `BOTICA_RESTORE_DATABASE_URL`.
+  3. Registrar en el radar canónico que `docs/90_estado_implementacion.md` quedó desfasado respecto a la cola real y al gate de hoy, sin tocar `docs/90` porque queda fuera del perimetro permitido de esta corrida.
+  4. No tocar codigo de producto, tests, CI ni dependencias; el saneamiento queda limitado a trazabilidad documental canonica.
+- **Checks ejecutados**:
+  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  - `python scripts/check_release_readiness.py` -> `OK`.
+  - `python scripts/check_release_gate.py` -> `ERROR`; solo falla `C4) Test scripts operativos críticos` por `tests.scripts.test_check_bootstrap_demo_expected_counts.CheckBootstrapDemoExpectedCountsTests.test_calcular_conteos_esperados_desde_seed_canonico` con `AssertionError: 4 != 2`.
+  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
+  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
+  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
+  - `Select-String -Path docs/90_estado_implementacion.md -Pattern 'Ruta operativa vigente|cola autonoma local|AUT-003|V2-R10'` -> confirma que `docs/90` sigue describiendo cola local agotada y siguiente paso exclusivamente externo.
+- **Resultado verificable**:
+  - `AUT-006` sigue siendo la primera `TODO` no `BLOCKED` real; no hace falta crear una tarea nueva ni reabrir una ya cerrada.
+  - `AUT-003` no puede avanzar hoy porque faltan las variables externas minimas para smoke post-deploy y backup/restore.
+  - la contradiccion vigente queda explicitada: `docs/90_estado_implementacion.md` sigue diciendo que la cola local esta agotada, pero la evidencia ejecutada hoy demuestra que el gate local continua roto en `C4)` y mantiene trabajo local pendiente.
+  - el saneamiento se limita a `docs/roadmap_codex.md` y `docs/bitacora_codex.md`, sin tocar producto.
+- **Bloqueos (si aplica)**:
+  - `AUT-003` sigue bloqueada por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, dump permitido y base temporal segura.
+  - `OPS-RWY-003` sigue bloqueada por acceso externo pendiente a Railway UI/logs y variables reales del servicio.
+  - la contradiccion con `docs/90_estado_implementacion.md` queda detectada, pero su correccion documental no entra en el perimetro permitido de esta corrida.
+- **Checklist de cierre aplicada (RADAR-SAN-002 revalidacion canonica)**:
+  1. Tarea correcta confirmada: **Si**; la corrida responde a una inspeccion explicita de radar y se registra en el radar canonico sin alterar el orden de la cola ejecutable.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio de esta corrida queda limitado a los dos documentos canonicos y se preservan los cambios ajenos del worktree.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; precisamente se deja trazado que `docs/90` quedo desalineado respecto a la cola real y al gate ejecutado hoy.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: ejecutar `AUT-006` para reparar `C4)` del gate canónico y solo despues volver a revalidar `AUT-003`.
+
+## Entrada 2026-03-28-CUENTA-001 (alta escalonada + Google + recuperacion email)
+- **Fecha (UTC)**: `2026-03-28T10:36:18Z`
+- **ID de tarea**: `CUENTA-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: implementar el alta real en dos pasos (credenciales + onboarding opcional de envio), anadir alta/login con Google sobre la misma `CuentaCliente`, mantener la recuperacion de password funcional y exigir datos de envio/contacto pendientes cuando falten en checkout real.
+- **Fuentes de verdad consultadas**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `AGENTS.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Archivos tocados**:
+  - `backend/configuracion_django/settings.py`
+  - `backend/nucleo_herbal/aplicacion/dto.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_google_cuenta_cliente.py`
+  - `backend/nucleo_herbal/aplicacion/puertos/repositorios_cuentas_cliente.py`
+  - `backend/nucleo_herbal/aplicacion/puertos/verificador_google_identity.py`
+  - `backend/nucleo_herbal/infraestructura/google_identity.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_cuentas_cliente.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0037_cuenta_cliente_google_sub.py`
+  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls_cuentas_cliente.py`
+  - `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`
+  - `frontend/.env.example`
+  - `.env.railway.example`
+  - `frontend/app/api/cuenta/[...ruta]/route.ts`
+  - `frontend/app/mi-cuenta/direcciones/page.tsx`
+  - `frontend/componentes/cuenta_cliente/FormularioCuentaCliente.tsx`
+  - `frontend/componentes/cuenta_cliente/BotonGoogleCuentaCliente.tsx`
+  - `frontend/componentes/cuenta_cliente/PanelDireccionesCuentaCliente.tsx`
+  - `frontend/contenido/cuenta_cliente/rutasCuentaCliente.ts`
+  - `frontend/infraestructura/api/cuentasCliente.ts`
+  - `frontend/contenido/catalogo/checkoutRealDirecciones.ts`
+  - `tests/nucleo_herbal/test_api_cuentas_cliente.py`
+  - `tests/nucleo_herbal/test_casos_de_uso_google_cuenta_cliente.py`
+  - `frontend/tests/cuenta-cliente.test.ts`
+  - `frontend/tests/cuenta-cliente-proxy.test.ts`
+  - `frontend/tests/checkout-real.test.ts`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Modelar Google como variante de autenticacion sobre la misma `CuentaCliente`, almacenando `google_sub` y vinculando por email si la cuenta ya existe, sin abrir un segundo perfil de cliente.
+  2. Reutilizar `/mi-cuenta/direcciones` como onboarding opcional tras el alta real; el usuario puede omitirlo, pero checkout real reutiliza la libreta y sigue exigiendo datos de contacto/envio antes de comprar.
+  3. Mantener la recuperacion de password por email como canal canonico funcional y no implementar SMS en esta corrida, porque su version fiable de produccion depende de proveedor externo con coste y queda fuera del alcance aprobado.
+  4. Corregir el proxy Next de cuenta para reenviar tambien `PUT` y `DELETE`, desbloqueando la libreta de direcciones ya implementada en backend.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_api_cuentas_cliente tests.nucleo_herbal.test_casos_de_uso_google_cuenta_cliente backend.nucleo_herbal.presentacion.tests.test_cuenta_cliente_direcciones` -> `OK (28 tests)`.
+  - `.venv\Scripts\python.exe manage.py makemigrations --check --dry-run` -> `No changes detected`.
+  - `npm run test:cuenta-cliente` -> `OK`.
+  - `npm run test:cuenta-proxy` -> `OK`.
+  - `npm run test:checkout-real` -> `OK`.
+  - `npm run lint -- --file app/mi-cuenta/direcciones/page.tsx --file app/api/cuenta/[...ruta]/route.ts --file componentes/cuenta_cliente/FormularioCuentaCliente.tsx --file componentes/cuenta_cliente/PanelDireccionesCuentaCliente.tsx --file componentes/cuenta_cliente/BotonGoogleCuentaCliente.tsx --file contenido/cuenta_cliente/rutasCuentaCliente.ts --file infraestructura/api/cuentasCliente.ts --file contenido/catalogo/checkoutRealDirecciones.ts` -> `OK`.
+  - `git status --short` -> worktree sucio preexistente en seed/calendario/shell; la corrida suma solo el perimetro de cuenta/auth/tests/docs y no revierte cambios ajenos.
+- **Resultado verificable**:
+  - `POST /api/v1/cuenta/google/` crea o vincula una `CuentaCliente` real, inicia sesion backend y devuelve `es_nueva_cuenta` para decidir si redirigir a onboarding.
+  - `/registro` y `/acceso` ya permiten entrada por email/password o por Google; el alta nueva deriva a onboarding opcional de direcciones y el login existente entra en la cuenta real sin abrir rutas paralelas.
+  - `/mi-cuenta/direcciones?onboarding=1` funciona como segundo paso opcional y checkout real precarga telefono/nombre desde la direccion guardada cuando existe.
+  - la recuperacion de password por email sigue cubierta y en verde; no se introduce SMS ni dependencia nueva de terceros en este alcance.
+- **Bloqueos (si aplica)**: ninguno para `CUENTA-001`; permanecen aparte `AUT-003` y `OPS-RWY-003` como bloqueos externos y `AUT-006` como primera `TODO` no `BLOCKED` autonoma.
+- **Checklist de cierre aplicada (CUENTA-001)**:
+  1. Tarea correcta confirmada: **Si**; es una peticion explicita del mantenedor registrada en `docs/roadmap_codex.md`, sin abrir cola paralela y sin alterar el orden autonomo mas alla de la excepcion documentada.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron auth/cuenta real, onboarding de direcciones, tests asociados y trazabilidad obligatoria.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; el diff propio de la corrida queda acotado al perimetro de cuenta/auth/tests/docs y convive con cambios ajenos preexistentes del worktree sin revertirlos.
+  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; se confirmo que verificacion email, recuperacion por email y libreta ya existian, y se anadio solo la brecha nueva pedida (Google + onboarding opcional) sin declarar capacidades inexistentes.
+  10. Siguiente paso exacto definido: **Si**.
+- **Siguiente paso exacto**: retomar `AUT-006` como primera `TODO` no `BLOCKED` de la cola autonoma y no extender auth/cuenta fuera de este perimetro salvo nueva peticion explicita del mantenedor.

@@ -7,6 +7,7 @@ try:
         IntencionModelo,
         PlantaModelo,
         ProductoModelo,
+        ReglaCalendarioModelo,
         RitualModelo,
     )
 
@@ -22,20 +23,53 @@ class TestSeedDemoPublicoCommand(DjangoTestCase):
         call_command("seed_demo_publico")
         call_command("seed_demo_publico")
 
-        self.assertEqual(IntencionModelo.objects.filter(es_publica=True).count(), 2)
-        self.assertEqual(PlantaModelo.objects.filter(publicada=True).count(), 2)
+        self.assertEqual(IntencionModelo.objects.filter(es_publica=True).count(), 4)
+        self.assertEqual(PlantaModelo.objects.filter(publicada=True).count(), 4)
         self.assertGreaterEqual(ProductoModelo.objects.filter(publicado=True).count(), 14)
-        self.assertEqual(RitualModelo.objects.filter(publicado=True).count(), 1)
+        self.assertEqual(RitualModelo.objects.filter(publicado=True).count(), 5)
+        self.assertEqual(ReglaCalendarioModelo.objects.filter(activa=True).count(), 5)
 
-        ritual = RitualModelo.objects.get(slug="cierre-sereno")
-        self.assertEqual(ritual.intenciones.count(), 1)
+        ritual = RitualModelo.objects.get(slug="limpieza-umbral-romero-ruda")
+        self.assertEqual(ritual.intenciones.count(), 2)
         self.assertEqual(ritual.plantas_relacionadas.count(), 1)
-        self.assertEqual(ritual.productos_relacionados.count(), 1)
+        self.assertEqual(ritual.productos_relacionados.count(), 4)
 
         producto_melisa = ProductoModelo.objects.get(slug="melisa-a-granel-50g")
         self.assertIsNotNone(producto_melisa.planta)
         self.assertEqual(producto_melisa.planta.slug, "melisa")
 
+        producto_lavanda = ProductoModelo.objects.get(slug="lavanda-flores-40g")
+        self.assertIsNotNone(producto_lavanda.planta)
+        self.assertEqual(producto_lavanda.planta.slug, "lavanda")
+
+        respuesta = self.client.get("/api/v1/calendario-ritual/?fecha=2026-03-28")
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertGreaterEqual(len(respuesta.json()["rituales"]), 4)
+
+    def test_seed_demo_publico_reutiliza_producto_existente_por_slug_sin_reescribir_pk(self) -> None:
+        producto = ProductoModelo.objects.create(
+            id="pro-demo-manazanilla",
+            sku="HERB-LEGACY-004",
+            slug="manzanilla-dulce-60g",
+            nombre="Manzanilla previa",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="hierbas-a-granel",
+            seccion_publica="botica-natural",
+            descripcion_corta="Version previa",
+            precio_visible="7,10 EUR",
+            publicado=True,
+        )
+
+        call_command("seed_demo_publico")
+
+        producto.refresh_from_db()
+        self.assertEqual(producto.id, "pro-demo-manazanilla")
+        self.assertEqual(producto.sku, "HERB-DEMO-004")
+        self.assertEqual(producto.nombre, "Manzanilla dulce 60g")
+        self.assertEqual(
+            ProductoModelo.objects.filter(slug="manzanilla-dulce-60g").count(),
+            1,
+        )
 
     def test_seed_demo_publico_garantiza_cinco_productos_botica_natural(self) -> None:
         call_command("seed_demo_publico")

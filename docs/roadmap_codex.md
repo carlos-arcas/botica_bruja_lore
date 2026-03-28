@@ -69,6 +69,7 @@ Uso prohibido:
 | `CAT-QA-001` | Regresión multisección end-to-end | `docs/13_testing_ci_y_quality_gate.md` | `docs/90_estado_implementacion.md`, `frontend/tests/home-raiz-secciones.test.ts`, `frontend/tests/backoffice-flujos.test.ts`, `tests/nucleo_herbal/test_exposicion_publica.py`, `scripts/validate_botica_natural_postgres_e2e.py` | recorrido home → hero → listado público → importación/backoffice para nuevas secciones | El repo tiene regresión fuerte de `botica-natural`, pero no una batería equivalente que cubra la expansión multisección completa posterior. | Debe llegar al final del bloque, cuando existan secciones y seeds mínimos reales. |
 | `OPS-RWY-003` | Validación externa Railway real | `docs/deploy_railway.md` | `.env.railway.example`, `docs/release_readiness_minima.md`, `backend/configuracion_django/settings.py`, `backend/configuracion_django/validaciones_entorno.py`, Railway UI/logs externos | validación externa con variables reales y boot limpio en Railway | La incidencia operativa solo se puede cerrar con variables reales, acceso a Railway UI y verificación de arranque limpio fuera de este runner. | Mantener `BLOCKED` hasta contar con acceso externo verificable; no sustituye `AUT-003`, que sigue cubriendo smoke/restore de go-live. |
 | `LOCAL-LAUNCH-003` | Smoke contractual launcher local | `docs/90_estado_implementacion.md` | `run_app.bat`, `setup_entorno.bat`, `docs/bitacora_codex.md` | endurecimiento contractual del doble clic sobre el launcher canonico | `LOCAL-LAUNCH-001` y `LOCAL-LAUNCH-002` ya cerraron creacion y naming; la brecha residual defendible es blindar el smoke del artefacto final `run_app.bat` sin reabrirlo desde cero. | Debe validar contrato real del launcher actual, no recrear el launcher ni alterar los cierres historicos. |
+| `LOCAL-LAUNCH-004` | Guardarrail de puertos y reutilizacion | `docs/90_estado_implementacion.md` | `run_app.bat`, `docs/bitacora_codex.md`, `AGENTS.md` | robustez del launcher ante listeners residuales locales | Peticion explicita del mantenedor: el launcher vuelve a fallar con `EADDRINUSE` aunque no haya ventanas visibles; hace falta distinguir puertos ocupados por este repo frente a procesos ajenos y evitar relanzar `next dev`/`runserver` a ciegas. | Debe endurecer solo `run_app.bat`, registrar evidencia del conflicto real y mantener una unica cola operativa. |
 | `C6-DOC-001` | Alinear checkout demo y naming | `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` | `docs/90_estado_implementacion.md`, `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md` | consistencia documental del flujo demo legado | El backlog residual oficial de Ciclo 6 fija solo brechas de contrato y naming (`B06-C1` + `B06-C2`), mientras `docs/90` confirma Ciclos 3 y 4 ya cerrados. | No reiniciar prompts brutos de Ciclo 3/4; solo alinear el delta documental verificable. |
 | `C6-INT-001` | Integracion minima cuenta-demo ↔ checkout demo | `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` | `docs/90_estado_implementacion.md`, `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_demo.py` | continuidad minima entre cuenta demo y checkout demo legado | La auditoria de Ciclo 6 delimita una unica brecha de integracion (`B06-I1`) sobre capacidades que ya existen y siguen `DONE` en `docs/90`. | Debe ser un ajuste acotado de continuidad, no una reapertura de cuenta demo ni de checkout desde cero. |
 | `C6-QA-001` | Cobertura integrada cesta → encargo → recibo → email | `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md` | `docs/13_testing_ci_y_quality_gate.md`, `frontend/tests/checkout-demo.test.ts`, `tests/nucleo_herbal/test_api_pedidos_demo.py`, `scripts/check_release_gate.py` | endurecimiento del recorrido critico demo legado | La brecha residual `B06-I2` pide cobertura integrada del recorrido completo; no cuestiona que el flujo ya exista ni que el gate actual este activo. | Debe reforzar la no regresion del flujo integrado, no reabrir el Ciclo 3 oficial. |
@@ -612,6 +613,28 @@ Uso prohibido:
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia lógica**: `CAT-DATA-003`.
 
+## AUT-006 — Realinear conteos bootstrap demo con seed canónico expandido
+- **Tipo**: `QA`
+- **Prioridad**: `P0`
+- **Estado**: `TODO`
+- **Objetivo**: recuperar `C4) Test scripts operativos críticos` del gate canónico alineando el contrato de conteos esperados del bootstrap con el `seed_demo_publico` vigente, sin revertir la expansión concurrente del seed ni rebajar cobertura.
+- **Evidencia o síntoma**:
+  - `python scripts/check_release_gate.py` falla en `C4)` porque `tests.scripts.test_check_bootstrap_demo_expected_counts.CheckBootstrapDemoExpectedCountsTests.test_calcular_conteos_esperados_desde_seed_canonico` sigue esperando `intenciones_publicas=2`, `plantas_publicadas=2` y `rituales_publicados=1`, pero el seed canónico vigente ya da `4`, `4` y `5`.
+  - `git diff -- backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py` muestra que el seed fue expandido y partido en `seed_demo_publico_catalogo.py` + `seed_demo_publico_rituales.py`; la prueba del comando ya valida `4` intenciones públicas, `4` plantas publicadas, `14` productos, `5` rituales y `5` reglas de calendario activas.
+  - `scripts/check_bootstrap_demo_expected_counts.py` deriva los conteos desde el seed canónico, pero su test contractual sigue anclado al estado anterior.
+- **Revalidacion local mas reciente**:
+  - `2026-03-28T08:43:35Z`: `python scripts/check_release_readiness.py` -> `OK`; `python scripts/check_release_gate.py` -> `ERROR` solo en `C4)` por `AssertionError: 4 != 2` dentro de `tests.scripts.test_check_bootstrap_demo_expected_counts.CheckBootstrapDemoExpectedCountsTests.test_calcular_conteos_esperados_desde_seed_canonico`; `python scripts/check_deployed_stack.py` y `python scripts/backup_restore_postgres.py` siguen fallando por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`, asi que `AUT-006` sigue siendo la primera `TODO` no `BLOCKED` real.
+- **Alcance permitido**: `scripts/check_bootstrap_demo_expected_counts.py`, `tests/scripts/test_check_bootstrap_demo_expected_counts.py`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: reescribir `seed_demo_publico.py`, revertir los cambios concurrentes de seed/CORS/calendario, tocar frontend/backoffice o alterar el criterio de `AUT-003`.
+- **Checks obligatorios**:
+  - `python -m unittest tests.scripts.test_check_bootstrap_demo_expected_counts`
+  - `python manage.py test tests.scripts`
+  - `python scripts/check_release_gate.py`
+  - `python scripts/check_release_readiness.py`
+- **Criterio de cierre**: `C4)` vuelve a verde y el contrato de conteos queda derivado del seed vigente sin literales obsoletos.
+- **Bloqueo conocido**: el worktree está sucio con cambios concurrentes en `seed_demo_publico.py`, CORS y tests relacionados; el fix debe acomodarse a esos cambios sin revertirlos.
+- **Siguiente dependencia lógica**: `AUT-003`.
+
 ## CAT-DATA-003 — Seed/importación inicial reproducible para `minerales-y-energia`
 - **Tipo**: `DATA`
 - **Prioridad**: `P2`
@@ -924,6 +947,34 @@ Uso prohibido:
 - **Bloqueo conocido**: ninguno.
 - **Siguiente dependencia logica**: `C6-DOC-001`.
 
+## LOCAL-LAUNCH-004 - Guardarrail de puertos y reutilizacion en `run_app.bat`
+- **Tipo**: `OPS`
+- **Prioridad**: `P0`
+- **Estado**: `DONE`
+- **Origen**: peticion explicita del mantenedor fuera de la cola autonoma; se registra en esta misma cola sin crear backlog paralelo.
+- **Objetivo**: evitar que `run_app.bat` vuelva a fallar con `EADDRINUSE` cuando `127.0.0.1:3000` o `127.0.0.1:8000` ya estan ocupados por procesos residuales, reutilizando listeners del propio worktree y abortando solo cuando el puerto pertenece a otro proceso ajeno.
+- **Mapeo backlog residual**: incidencia operativa local del launcher canonico; no reabre `LOCAL-LAUNCH-001`/`002`/`003`.
+- **Evidencia o sintoma**:
+  - el mantenedor reporta que el launcher no funciona aunque ya no hay consolas ni navegadores abiertos.
+  - la evidencia local muestra `127.0.0.1:3000` ocupado por un `node.exe` residual del propio repo (`...botica_bruja_lore\frontend\node_modules\next\dist\server\lib\start-server.js`) y `127.0.0.1:8000` ocupado en otra corrida por un `python.exe` ajeno a este worktree.
+  - `run_app.bat` arrancaba siempre nuevas ventanas `cmd /k` para backend/frontend sin inspeccionar previamente la ocupacion real de puertos.
+- **Alcance permitido**: `run_app.bat`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: crear otro launcher, tocar backend/frontend de producto, cambiar puertos canonicos o matar procesos ajenos de forma automatica desde el script.
+- **Checks obligatorios**:
+  - identificar propietarios reales de `127.0.0.1:3000` y `127.0.0.1:8000` con `Get-NetTCPConnection` + `Get-CimInstance Win32_Process`;
+  - ejecutar `run_app.bat` con un puerto ajeno ocupado para validar abortado temprano con mensaje explicito;
+  - ejecutar `run_app.bat` con listeners del propio repo activos para validar reutilizacion sin nuevo `EADDRINUSE`;
+  - comprobar respuesta del frontend local tras la reutilizacion.
+- **Criterio de cierre**: `run_app.bat` deja de relanzar `next dev`/`runserver` a ciegas, distingue entre listeners propios y ajenos y el escenario reportado por el mantenedor queda cubierto por evidencia verificable.
+- **Evidencia de cierre LOCAL-LAUNCH-004**:
+  1. `run_app.bat` incorpora inspeccion previa de `3000/8000`, reutiliza listeners cuyo comando pertenece a este worktree y aborta con mensaje claro cuando el puerto lo ocupa un proceso ajeno.
+  2. `Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort 3000,8000 -State Listen` junto con `Get-CimInstance Win32_Process` confirmo el caso real del maintainer: `3000` estaba ocupado por un `next dev` residual del propio repo y `8000` podia quedar ocupado por un `python runserver` ajeno.
+  3. `cmd /c run_app.bat` ya no cae en `EADDRINUSE`: cuando `8000` estaba ocupado por un proceso ajeno devolvio `[ERROR] El puerto 8000 ya esta en uso por python.exe (PID 46820) y no pertenece a este repo.` y salio con `exit code 1`.
+  4. `cmd /c "set BOTICA_NO_BROWSER=1&& run_app.bat"` con backend/frontend ya activos del propio repo devolvio `Backend Django ya estaba en ejecucion ... Se reutiliza.` y `Frontend Next ya estaba en ejecucion ... Se reutiliza.` en la misma corrida.
+  5. `Invoke-WebRequest http://127.0.0.1:3000/ -UseBasicParsing` devolvio `200`, confirmando que el launcher reutilizado deja el frontend operativo tras el caso reportado.
+- **Bloqueo conocido**: ninguno para este hardening; los bloqueos externos de go-live siguen siendo `AUT-003` y `OPS-RWY-003`.
+- **Siguiente dependencia logica**: cola ejecutable vacia; volver a `AUT-003` y `OPS-RWY-003` solo si aparece evidencia externa nueva.
+
 ## C6-DOC-001 - Alinear contrato real de checkout demo y naming canonico
 - **Tipo**: `DOC`
 - **Prioridad**: `P1`
@@ -1114,7 +1165,126 @@ Uso prohibido:
 - **Bloqueo conocido**: ninguno para la paridad UI/URL; queda limitacion de datos locales por seed incompleto de metadatos de filtro.
 - **Siguiente dependencia logica**: `OPS-RWY-005`.
 
+## NAV-SHELL-001 - Reordenacion de navegacion comercial y accesos de cabecera
+- **Tipo**: `UX`
+- **Prioridad**: `P1`
+- **Estado**: `DONE`
+- **Origen**: peticion explicita del mantenedor fuera de la cola autonoma; se registra en esta misma cola sin crear un backlog paralelo.
+- **Objetivo**: alinear la cabecera comercial con la IA actual del proyecto: menu principal reducido, `Tienda` y `Guias` como hubs desplegables, marca en franja superior horizontal y accesos `Carrito` + `Login/Mi cuenta` fuera de la barra principal.
+- **Mapeo backlog residual**: peticion explicita del mantenedor; no reabre backlog historico ni reactiva `Cuenta demo`, `Acceso` o `Encargo` como opciones de navegacion principal.
+- **Evidencia o sintoma**:
+  - `frontend/contenido/shell/navegacionGlobal.ts` seguia exponiendo `Colecciones`, `La Botica`, `Encargo`, `Acceso`, `Mi cuenta` y `Cuenta demo` en el nav principal, aunque ya no responden al mapa actual pedido por el mantenedor.
+  - `frontend/componentes/shell/CabeceraComercial.tsx` situaba la marca a la izquierda de la barra en vez de elevarla a una cabecera superior horizontal.
+  - `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx` y `frontend/componentes/catalogo/cesta/IndicadorCestaRitual.tsx` seguian hablando de `Mi seleccion` y derivaban el CTA principal al flujo legado `/encargo`.
+- **Alcance permitido**: `frontend/contenido/shell/navegacionGlobal.ts`, `frontend/componentes/shell/CabeceraComercial.tsx`, `frontend/componentes/shell/NavegacionPrincipal.tsx`, `frontend/componentes/shell/AccesosCabecera.tsx`, `frontend/componentes/shell/shellComercial.module.css`, `frontend/componentes/catalogo/cesta/IndicadorCestaRitual.tsx`, `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`, `frontend/app/cesta/page.tsx`, `frontend/app/acceso/page.tsx`, `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`, `frontend/tests/shell-global.test.ts`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: redisenar el contenido interno de `Guias`, reabrir auth real o backend, tocar el dominio del calendario ritual, reintroducir `Cuenta demo`/`Encargo` en la IA publica o mezclar esta peticion con bloqueos externos de go-live.
+- **Checks obligatorios**:
+  - `npm run lint -- --file app/acceso/page.tsx --file app/cesta/page.tsx --file componentes/catalogo/cesta/IndicadorCestaRitual.tsx --file componentes/catalogo/cesta/VistaCestaRitual.tsx --file componentes/cuenta_cliente/PanelCuentaCliente.tsx --file componentes/shell/AccesosCabecera.tsx --file componentes/shell/CabeceraComercial.tsx --file componentes/shell/NavegacionPrincipal.tsx --file contenido/shell/navegacionGlobal.ts`
+  - `npm run test:shell`
+  - `npm run test:cesta`
+  - `npm run build`
+  - verificacion visual con Playwright sobre la home publica.
+- **Criterio de cierre**: la cabecera refleja la IA solicitada por el mantenedor, `Carrito` y `Login/Mi cuenta` quedan fuera del nav principal, desaparecen enlaces demo/legado de la barra y el cambio queda protegido por tests y verificacion visual.
+- **Evidencia de cierre NAV-SHELL-001**:
+  1. `frontend/contenido/shell/navegacionGlobal.ts` elimina `Colecciones`, `La Botica`, `Encargo`, `Acceso`, `Mi cuenta` y `Cuenta demo` del nav primario; introduce `Tienda` con submenu (`Botica`, `Velas e incienso`, `Minerales y energia`, `Herramientas esotericas`) y convierte `Guias` en hub editorial desplegable (`Compendio`, `Articulos`, `Glosario botanico`, `Propiedades de las plantas`, `Rituales`).
+  2. `frontend/componentes/shell/CabeceraComercial.tsx`, `frontend/componentes/shell/NavegacionPrincipal.tsx`, `frontend/componentes/shell/AccesosCabecera.tsx` y `frontend/componentes/shell/shellComercial.module.css` reordenan la cabecera para colocar la marca arriba en horizontal y sacar `Carrito`, `Login/Mi cuenta` y `Acceso admin` fuera de la barra principal.
+  3. `frontend/componentes/catalogo/cesta/IndicadorCestaRitual.tsx`, `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx` y `frontend/app/cesta/page.tsx` renombran `Mi seleccion` a `Carrito` y cambian el CTA principal a `/checkout`, eliminando el desvio visible al flujo legado `/encargo`.
+  4. `frontend/app/acceso/page.tsx` pasa a titularse `Login` y `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx` deja de exponer el acceso a `Cuenta demo`.
+  5. `frontend/tests/shell-global.test.ts` cubre la nueva IA de navegacion, submenu y accesos externos de cabecera.
+  6. `npm run lint -- --file app/acceso/page.tsx --file app/cesta/page.tsx --file componentes/catalogo/cesta/IndicadorCestaRitual.tsx --file componentes/catalogo/cesta/VistaCestaRitual.tsx --file componentes/cuenta_cliente/PanelCuentaCliente.tsx --file componentes/shell/AccesosCabecera.tsx --file componentes/shell/CabeceraComercial.tsx --file componentes/shell/NavegacionPrincipal.tsx --file contenido/shell/navegacionGlobal.ts` -> `OK`.
+  7. `npm run test:shell` -> `OK`.
+  8. `npm run test:cesta` -> `OK`.
+  9. `npm run build` -> `OK`.
+  10. Verificacion visual Playwright en `C:\Users\arcas\.codex\worktrees\d70a\botica_bruja_lore\frontend\.playwright-cli\page-2026-03-27T23-13-01-171Z.png`: la marca queda arriba, la barra principal queda limpia y los accesos externos aparecen fuera del nav.
+- **Bloqueo conocido**: ninguno para esta peticion.
+- **Siguiente dependencia logica**: cola ejecutable vacia; si no aparece una nueva peticion explicita del mantenedor, revalidar `AUT-003` y `OPS-RWY-003` como bloqueos externos sin tocar codigo de producto.
+
+## CAL-VRT-001 - Calendario virtual mensual, seed ritual real y conexion local frontend-backend
+- **Tipo**: `FEAT`
+- **Prioridad**: `P0`
+- **Estado**: `DONE`
+- **Origen**: peticion explicita del mantenedor fuera de la cola autonoma; se registra en esta misma cola sin abrir backlog paralelo.
+- **Objetivo**: completar `calendario-ritual` con una agenda mensual editable (notas por dia y rituales publicados), poblar la BBDD local con rituales reales conectados a productos reales de prueba y corregir la conexion local para que las tiendas y el calendario consuman la API operativa.
+- **Mapeo backlog residual**: peticion extraordinaria del mantenedor; no reabre checkout real ni cambia el alcance de producto fijado por `docs/02_alcance_y_fases.md`.
+- **Evidencia o sintoma**:
+  - `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx` solo ofrecia una consulta por fecha y no existia agenda mensual con persistencia local.
+  - la pantalla `/botica-natural` mostraba error HTTP y `calendario-ritual` no podia consumir `api/v1/rituales` ni `api/v1/calendario-ritual` desde navegador por desalineacion local y ausencia de cabeceras CORS.
+  - `seed_demo_publico` no era robusto sobre la base local: con datos legacy podia romper por `UNIQUE constraint failed: nucleo_producto.slug`, lo que impedia sembrar rituales/reglas reales para pruebas.
+- **Alcance permitido**: `backend/configuracion_django/settings.py`, `backend/configuracion_django/middleware_cors.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_catalogo.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_rituales.py`, `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx`, `frontend/componentes/calendario_ritual/ResumenEditorialPorFecha.tsx`, `frontend/componentes/calendario_ritual/calendarioRitualEditorial.module.css`, `frontend/contenido/calendario_ritual/calendarioVirtual.ts`, `frontend/contenido/calendario_ritual/formatoCalendarioVirtual.ts`, `frontend/infraestructura/calendario_ritual/almacenCalendarioVirtual.ts`, `frontend/package.json`, `frontend/tests/calendario-virtual.test.ts`, `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`, `tests/nucleo_herbal/test_contratos_api_publica_frontend.py`, `run_app.bat`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: checkout real, auth real, cambios de dominio ajenos al calendario/rituales, versionado de imagenes binarias y reordenaciones globales de navegacion no pedidas por esta peticion.
+- **Checks obligatorios**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command`
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_contratos_api_publica_frontend tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command`
+  - `.venv\Scripts\python.exe manage.py seed_demo_publico`
+  - `npm run test:calendario-ritual`
+  - `npm run lint -- --file componentes/calendario_ritual/CalendarioRitualEditorial.tsx --file componentes/calendario_ritual/ResumenEditorialPorFecha.tsx --file contenido/calendario_ritual/calendarioVirtual.ts --file contenido/calendario_ritual/formatoCalendarioVirtual.ts --file infraestructura/calendario_ritual/almacenCalendarioVirtual.ts`
+  - verificacion HTTP de `api/v1/herbal/secciones/botica-natural/productos/`, `api/v1/calendario-ritual/` y cabeceras CORS para `http://127.0.0.1:3000`
+  - verificacion visual Playwright sobre `/botica-natural` y `/calendario-ritual`
+- **Criterio de cierre**: el calendario mensual permite guardar nota + rituales publicados por dia en localStorage, la API local responde con seed real verificable, la tienda vuelve a listar productos y el calendario cliente deja de fallar por runtime/CORS.
+- **Evidencia de cierre CAL-VRT-001**:
+  1. `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx`, `frontend/componentes/calendario_ritual/ResumenEditorialPorFecha.tsx`, `frontend/componentes/calendario_ritual/calendarioRitualEditorial.module.css`, `frontend/contenido/calendario_ritual/calendarioVirtual.ts`, `frontend/contenido/calendario_ritual/formatoCalendarioVirtual.ts` y `frontend/infraestructura/calendario_ritual/almacenCalendarioVirtual.ts` convierten `calendario-ritual` en una agenda mensual navegable con seleccion de dia, nota editable, alta/baja de rituales publicados, marcadores visuales y persistencia en `localStorage`.
+  2. `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py` queda idempotente sobre bases locales con datos legacy y se divide el seed publico en `seed_demo_publico_catalogo.py` + `seed_demo_publico_rituales.py`, dejando 14 productos publicos, 5 rituales publicados y 5 reglas de calendario reales para pruebas.
+  3. `backend/configuracion_django/middleware_cors.py` y `backend/configuracion_django/settings.py` habilitan CORS controlado para el frontend local (`127.0.0.1:3000`/`localhost:3000` en debug), desbloqueando los fetch cliente de `api/v1/rituales/` y `api/v1/calendario-ritual/`.
+  4. `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`, `tests/nucleo_herbal/test_contratos_api_publica_frontend.py`, `frontend/tests/calendario-virtual.test.ts` y el script `frontend/package.json -> test:calendario-ritual` cubren el seed robusto, el contrato CORS y la logica pura del calendario virtual.
+  5. `.venv\Scripts\python.exe manage.py seed_demo_publico` ya no rompe en la base local y deja `intenciones: creados=2, actualizados=2`, `plantas: creados=2, actualizados=2`, `productos: creados=0, actualizados=14`, `rituales: creados=5, actualizados=0`, `reglas_calendario: creados=5, actualizados=0`.
+  6. `Invoke-WebRequest http://127.0.0.1:8010/api/v1/herbal/secciones/botica-natural/productos/` devuelve `200` con 5 productos en `botica-natural`; `Invoke-WebRequest http://127.0.0.1:8010/api/v1/calendario-ritual/?fecha=2026-03-28` devuelve `200` con 4 rituales activos; `Invoke-WebRequest ... -Headers @{ Origin = 'http://127.0.0.1:3000' }` expone `Access-Control-Allow-Origin: http://127.0.0.1:3000`.
+  7. La validacion Playwright en `http://127.0.0.1:3000/botica-natural` confirma que la tienda renderiza las 5 fichas publicas; en `http://127.0.0.1:3000/calendario-ritual` confirma selector con 6 rituales publicados, 4 sugerencias editoriales activas para `2026-03-28` y persistencia local `botica_bruja_calendario_virtual_v1={"2026-03-28":{"nota":"Prueba local de agenda para cierre de marzo","rituales":["altar-lunar-cuarzo"]}}`.
+- **Bloqueo conocido**: ninguno para esta peticion; persisten aparte `AUT-003` y `OPS-RWY-003` como bloqueos externos de go-live.
+- **Siguiente dependencia logica**: cola ejecutable vacia; si no entra una nueva peticion explicita del mantenedor, volver a revalidar `AUT-003` y `OPS-RWY-003` sin tocar codigo de producto.
+
+## CUENTA-001 - Alta escalonada de cuenta real, onboarding de envio y acceso con Google
+- **Tipo**: `FEAT`
+- **Prioridad**: `P0`
+- **Estado**: `DONE`
+- **Origen**: peticion explicita del mantenedor fuera de la cola autonoma; se registra en esta misma cola sin abrir backlog paralelo.
+- **Objetivo**: permitir alta real en dos pasos (credenciales y despues datos de envio opcionales), mantener la recuperacion de password funcional y anadir alta/login con Google sobre la misma `CuentaCliente`, exigiendo completar datos de envio/contacto cuando falten al iniciar una compra.
+- **Mapeo backlog residual**: peticion extraordinaria del mantenedor; no reabre `CuentaDemo`, no altera el roadmap autonomo `AUT-006` y no introduce SMS de terceros sin soporte/coste validado.
+- **Evidencia o sintoma**:
+  - `/registro` solo cerraba el alta por email/password sin un onboarding explicito hacia datos de envio opcionales.
+  - no existia alta/login con Google para `CuentaCliente`.
+  - el backend ya soportaba libreta de direcciones, pero el proxy Next de `/api/cuenta/[...ruta]` no reenviaba `PUT` ni `DELETE`, rompiendo actualizacion/eliminacion desde frontend.
+  - la peticion pide recuperacion funcional y pregunta por SMS; en produccion eso depende de proveedor externo con coste y no existe evidencia local de un canal gratuito/fiable equivalente.
+- **Alcance permitido**: `backend/configuracion_django/settings.py`, `backend/nucleo_herbal/aplicacion/dto.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_google_cuenta_cliente.py`, `backend/nucleo_herbal/aplicacion/puertos/repositorios_cuentas_cliente.py`, `backend/nucleo_herbal/aplicacion/puertos/verificador_google_identity.py`, `backend/nucleo_herbal/infraestructura/google_identity.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_cuentas_cliente.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0037_cuenta_cliente_google_sub.py`, `backend/nucleo_herbal/presentacion/publica/dependencias.py`, `backend/nucleo_herbal/presentacion/publica/urls_cuentas_cliente.py`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`, `frontend/.env.example`, `.env.railway.example`, `frontend/app/api/cuenta/[...ruta]/route.ts`, `frontend/app/mi-cuenta/direcciones/page.tsx`, `frontend/componentes/cuenta_cliente/FormularioCuentaCliente.tsx`, `frontend/componentes/cuenta_cliente/BotonGoogleCuentaCliente.tsx`, `frontend/componentes/cuenta_cliente/PanelDireccionesCuentaCliente.tsx`, `frontend/contenido/cuenta_cliente/rutasCuentaCliente.ts`, `frontend/infraestructura/api/cuentasCliente.ts`, `frontend/contenido/catalogo/checkoutRealDirecciones.ts`, `tests/nucleo_herbal/test_api_cuentas_cliente.py`, `tests/nucleo_herbal/test_casos_de_uso_google_cuenta_cliente.py`, `frontend/tests/cuenta-cliente.test.ts`, `frontend/tests/cuenta-cliente-proxy.test.ts`, `frontend/tests/checkout-real.test.ts`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: recuperacion por SMS con proveedor externo de pago, federacion distinta de Google, reordenaciones globales de shell ajenas a cuenta, cambios sobre backlog autonomo no relacionados y cualquier flujo de compra fuera de exigir datos pendientes en checkout real.
+- **Checks obligatorios**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_api_cuentas_cliente tests.nucleo_herbal.test_casos_de_uso_google_cuenta_cliente backend.nucleo_herbal.presentacion.tests.test_cuenta_cliente_direcciones`
+  - `.venv\Scripts\python.exe manage.py makemigrations --check --dry-run`
+  - `npm run test:cuenta-cliente`
+  - `npm run test:cuenta-proxy`
+  - `npm run test:checkout-real`
+  - `npm run lint -- --file app/mi-cuenta/direcciones/page.tsx --file app/api/cuenta/[...ruta]/route.ts --file componentes/cuenta_cliente/FormularioCuentaCliente.tsx --file componentes/cuenta_cliente/PanelDireccionesCuentaCliente.tsx --file componentes/cuenta_cliente/BotonGoogleCuentaCliente.tsx --file contenido/cuenta_cliente/rutasCuentaCliente.ts --file infraestructura/api/cuentasCliente.ts --file contenido/catalogo/checkoutRealDirecciones.ts`
+- **Criterio de cierre**: el alta real puede derivar a onboarding opcional de envio, Google crea o vincula la misma cuenta canonica con sesion real, la recuperacion por email sigue en verde y checkout real exige o precarga los datos de envio/contacto segun exista libreta.
+- **Evidencia de cierre CUENTA-001**:
+  1. `backend/nucleo_herbal/aplicacion/casos_de_uso_google_cuenta_cliente.py`, `backend/nucleo_herbal/aplicacion/puertos/verificador_google_identity.py`, `backend/nucleo_herbal/infraestructura/google_identity.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_cuentas_cliente.py` y la migracion `0037_cuenta_cliente_google_sub.py` anaden verificacion Google server-side, campo `google_sub`, enlace por email existente y creacion de cuenta nueva sin abrir un segundo sistema de identidad.
+  2. `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`, `backend/nucleo_herbal/presentacion/publica/urls_cuentas_cliente.py` y `backend/nucleo_herbal/presentacion/publica/dependencias.py` exponen `POST /api/v1/cuenta/google/`, inician sesion real y devuelven `es_nueva_cuenta`; `tests/nucleo_herbal/test_api_cuentas_cliente.py` y `tests/nucleo_herbal/test_casos_de_uso_google_cuenta_cliente.py` cubren alta nueva, vinculacion por email y rechazo de email Google no verificado.
+  3. `frontend/componentes/cuenta_cliente/FormularioCuentaCliente.tsx`, `frontend/componentes/cuenta_cliente/BotonGoogleCuentaCliente.tsx`, `frontend/contenido/cuenta_cliente/rutasCuentaCliente.ts` y `frontend/infraestructura/api/cuentasCliente.ts` anaden CTA de Google y redirigen el alta nueva al onboarding opcional `?onboarding=1`, manteniendo `/acceso` como login real y dejando la recuperacion por email intacta.
+  4. `frontend/componentes/cuenta_cliente/PanelDireccionesCuentaCliente.tsx`, `frontend/app/mi-cuenta/direcciones/page.tsx`, `frontend/contenido/catalogo/checkoutRealDirecciones.ts` y `frontend/app/api/cuenta/[...ruta]/route.ts` reutilizan la libreta como onboarding omisible, permiten actualizar/eliminar direcciones por proxy y hacen que checkout real copie telefono/nombre de contacto desde la direccion guardada cuando procede.
+  5. La decision de no implementar SMS queda cerrada en este alcance: la recuperacion funcional sigue siendo por email y no se integra SMS porque el canal fiable de produccion depende de proveedor externo con coste, fuera del perimetro aprobado de esta corrida.
+- **Bloqueo conocido**: ninguno para esta peticion; persisten aparte `AUT-003` y `OPS-RWY-003` como bloqueos externos y `AUT-006` como primera `TODO` no `BLOCKED` del roadmap autonomo.
+- **Siguiente dependencia logica**: terminada esta peticion extraordinaria, la cola autonoma vuelve a `AUT-006`; no procede tocar auth/cuenta fuera de este perimetro salvo nueva peticion explicita.
+
 ## Radar de cola actual
+- **Actualizacion radar UTC**: `2026-03-28T08:43:57Z` (`RADAR-SAN-002`); `AUT-006` sigue siendo la primera `TODO` no `BLOCKED` real porque `python scripts/check_release_gate.py` continua fallando en `C4)` con `AssertionError: 4 != 2`, mientras `python scripts/check_release_readiness.py` sigue en `OK`.
+- **Contradiccion detectada**: `docs/90_estado_implementacion.md` sigue describiendo cola autonoma agotada y siguiente paso externo (`AUT-003`/`OPS-RWY-003`), pero la evidencia ejecutada hoy mantiene una deuda local verificable en `AUT-006`; la correccion de `docs/90_estado_implementacion.md` queda fuera del perimetro permitido de esta corrida.
+- **Bloqueo externo revalidado**: `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` siguen ausentes; por tanto `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` y `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` siguen fallando por configuracion ausente y no procede tratar `AUT-003` como siguiente paso efectivo.
+- **Siguiente accion exacta actual**: ejecutar `AUT-006` y solo despues volver a revalidar `AUT-003`.
+- **Actualizacion adicional 2026-03-28T10:36:18Z**: por peticion explicita del mantenedor se ejecuta y cierra `CUENTA-001` para anadir alta/login con Google, onboarding opcional de datos de envio tras el alta real y mantener la recuperacion por email en verde, corrigiendo ademas el proxy Next de direcciones (`PUT`/`DELETE`). Terminada la peticion extraordinaria, la primera `TODO` no `BLOCKED` vuelve a ser `AUT-006`.
+- **Actualizacion adicional 2026-03-28T00:32:14Z**: por peticion explicita del mantenedor se ejecuta y cierra `CAL-VRT-001` para completar el calendario virtual mensual, sembrar rituales/productos reales de prueba y corregir la conexion local tienda/calendario con CORS controlado. Terminada la peticion extraordinaria, la cola vuelve a estado vacio / backlog totalmente bloqueado.
+- **Verificacion adicional de calendario virtual y catalogo local**:
+  1. `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_contratos_api_publica_frontend tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` devuelve `OK`.
+  2. `.venv\Scripts\python.exe manage.py seed_demo_publico` devuelve `OK` y crea/actualiza 14 productos, 5 rituales y 5 reglas del calendario en la base local.
+  3. `npm run test:calendario-ritual` devuelve `OK`.
+  4. `npm run lint -- --file componentes/calendario_ritual/CalendarioRitualEditorial.tsx --file componentes/calendario_ritual/ResumenEditorialPorFecha.tsx --file contenido/calendario_ritual/calendarioVirtual.ts --file contenido/calendario_ritual/formatoCalendarioVirtual.ts --file infraestructura/calendario_ritual/almacenCalendarioVirtual.ts` devuelve `OK`.
+  5. `Invoke-WebRequest http://127.0.0.1:8010/api/v1/herbal/secciones/botica-natural/productos/` devuelve `200` con 5 productos y `Invoke-WebRequest http://127.0.0.1:8010/api/v1/calendario-ritual/?fecha=2026-03-28` devuelve `200` con 4 rituales activos.
+  6. `Invoke-WebRequest http://127.0.0.1:8010/api/v1/rituales/ -Headers @{ Origin = 'http://127.0.0.1:3000' }` devuelve `Access-Control-Allow-Origin: http://127.0.0.1:3000`.
+  7. La verificacion Playwright confirma que `/botica-natural` ya renderiza producto publico y que `/calendario-ritual` guarda una nota local con un ritual anadido, dejando persistencia en `localStorage`.
+- **Actualizacion adicional 2026-03-27T23:19:04Z**: por peticion explicita del mantenedor se ejecuta y cierra `NAV-SHELL-001` para reordenar la cabecera publica: `Tienda` y `Guias` pasan a ser hubs desplegables, `Carrito` y `Login/Mi cuenta` salen de la barra principal, desaparecen `Colecciones`/`La Botica`/`Encargo`/`Acceso`/`Cuenta demo` del nav y la marca sube a una franja superior horizontal. Terminada la peticion extraordinaria, la cola vuelve a estado vacio / backlog totalmente bloqueado.
+- **Verificacion adicional de navegacion**:
+  1. `npm run lint -- --file app/acceso/page.tsx --file app/cesta/page.tsx --file componentes/catalogo/cesta/IndicadorCestaRitual.tsx --file componentes/catalogo/cesta/VistaCestaRitual.tsx --file componentes/cuenta_cliente/PanelCuentaCliente.tsx --file componentes/shell/AccesosCabecera.tsx --file componentes/shell/CabeceraComercial.tsx --file componentes/shell/NavegacionPrincipal.tsx --file contenido/shell/navegacionGlobal.ts` devuelve `OK`.
+  2. `npm run test:shell` devuelve `OK`.
+  3. `npm run test:cesta` devuelve `OK`.
+  4. `npm run build` devuelve `OK`.
+  5. La captura Playwright `frontend/.playwright-cli/page-2026-03-27T23-13-01-171Z.png` confirma visualmente la nueva jerarquia de cabecera.
 - **Actualizacion adicional 2026-03-27T17:15:00Z**: por peticion explicita del mantenedor se ejecuta y cierra `CAT-FILT-001` para igualar el rail de filtros publico en `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas`; terminada esa peticion extraordinaria, la primera `TODO` no `BLOCKED` vuelve a ser `OPS-RWY-005`.
 - **Verificacion adicional de filtros multiseccion**:
   1. `npm run lint -- --file app/velas-e-incienso/page.tsx --file app/minerales-y-energia/page.tsx --file app/herramientas-esotericas/page.tsx --file componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx` devuelve `OK`.
@@ -1143,3 +1313,52 @@ Uso prohibido:
   5. `AUT-003` y `OPS-RWY-003` siguen `BLOCKED`: el smoke real mantiene `404` del backend desplegado y el restore drill sigue sin `BOTICA_RESTORE_DATABASE_URL` ni entorno temporal seguro.
 - **Estado de cola actual**: cola ejecutable vacia / backlog totalmente bloqueado; ya no existe ninguna `TODO` no `BLOCKED` tras cerrar `C6-UX-001`.
 - **Siguiente accion exacta actual**: revalidar `AUT-003` comprobando si ya existen `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro para restore drill; si siguen ausentes, mantener el bloqueo exacto sin tocar codigo de producto.
+- **Actualizacion radar UTC**: `2026-03-27T23:33:34Z`; se revalida `AUT-003` y el bloqueo externo sigue intacto en este runner.
+- **Verificacion aplicada adicional**:
+  1. `python scripts/check_deployed_stack.py` devuelve `ERROR`: `La variable obligatoria BACKEND_BASE_URL no esta definida.`
+  2. La comprobacion de entorno devuelve `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  3. `python scripts/backup_restore_postgres.py backup --dry-run` devuelve `[ERROR] Debes definir --database-url o DATABASE_URL.`
+  4. `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` devuelve `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
+  5. `python scripts/check_release_readiness.py` devuelve `OK`.
+- **Diagnostico actual**: la cola ejecutable sigue vacia / backlog totalmente bloqueado. `AUT-003` no puede revalidarse contra entorno desplegado porque faltan las variables minimas para arrancar el smoke y el backup/restore; `OPS-RWY-003` sigue sin acceso externo verificable a Railway UI/logs.
+- **Estado de cola actual**: sin `TODO` no `BLOCKED`; permanecen `AUT-003` y `OPS-RWY-003` como bloqueos externos vigentes.
+- **Siguiente accion exacta actual**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+- **Actualizacion adicional 2026-03-27T23:36:48Z**: por peticion explicita del mantenedor se ejecuta y cierra `LOCAL-LAUNCH-004` para endurecer `run_app.bat` contra listeners residuales: ahora reutiliza `3000/8000` cuando pertenecen a este worktree y corta con mensaje explicito cuando el puerto lo ocupa un proceso ajeno. Terminada esta peticion extraordinaria, la cola vuelve a estado vacio / backlog totalmente bloqueado.
+- **Verificacion adicional del launcher**:
+  1. `Get-NetTCPConnection` + `Get-CimInstance Win32_Process` reprodujeron el escenario real: `3000` estaba ocupado por un `next dev` residual del propio repo y `8000` podia quedar ocupado por un `runserver` ajeno.
+  2. `cmd /c run_app.bat` con `8000` ajeno ocupado devuelve error explicito de puerto ajeno en vez de relanzar procesos a ciegas.
+  3. `cmd /c "set BOTICA_NO_BROWSER=1&& run_app.bat"` con servicios del propio repo ya activos devuelve `Se reutiliza` para backend y frontend, sin volver a disparar `EADDRINUSE`.
+  4. `Invoke-WebRequest http://127.0.0.1:3000/ -UseBasicParsing` devuelve `200` tras la reutilizacion.
+- **Actualizacion radar UTC**: `2026-03-27T23:54:36Z`; se revalida `AUT-003` sin nueva capacidad ejecutable local: el gate tecnico canonico sigue en `OK`, pero el smoke/backup-restore real continua bloqueado por entorno externo ausente.
+- **Verificacion aplicada adicional**:
+  1. La comprobacion de entorno vuelve a devolver `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  2. `python scripts/check_deployed_stack.py` devuelve `ERROR`: `La variable obligatoria BACKEND_BASE_URL no esta definida.`
+  3. `python scripts/backup_restore_postgres.py backup --dry-run` devuelve `[ERROR] Debes definir --database-url o DATABASE_URL.`
+  4. `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` devuelve `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
+  5. `python scripts/check_release_readiness.py` devuelve `OK`.
+  6. `python scripts/check_release_gate.py` devuelve `OK`.
+- **Diagnostico actual**: el repo sigue sano localmente para gate/readiness, pero la cola ejecutable permanece vacia / backlog totalmente bloqueado. `AUT-003` sigue sin poder validar smoke post-deploy ni backup/restore por ausencia de variables reales y de una base temporal segura; `OPS-RWY-003` sigue dependiendo de acceso externo verificable a Railway UI/logs.
+- **Estado de cola actual**: sin `TODO` no `BLOCKED`; permanecen `AUT-003` y `OPS-RWY-003` como bloqueos externos vigentes.
+- **Siguiente accion exacta actual**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+- **Actualizacion radar UTC**: `2026-03-28T00:13:27Z`; se revalida `AUT-003` sin evidencia nueva de desbloqueo: el gate tecnico canonico y el readiness siguen en `OK`, pero el smoke/backup-restore real continua bloqueado por entorno externo ausente.
+- **Verificacion aplicada adicional**:
+  1. La comprobacion de entorno vuelve a devolver `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  2. `python scripts/check_deployed_stack.py` devuelve `ERROR`: `La variable obligatoria BACKEND_BASE_URL no esta definida.`
+  3. `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` devuelve `[ERROR] Debes definir --database-url o DATABASE_URL.`
+  4. `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` devuelve `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
+  5. `python scripts/check_release_readiness.py` devuelve `OK`.
+  6. `python scripts/check_release_gate.py` devuelve `OK`.
+- **Diagnostico actual**: el repo sigue sano localmente para gate/readiness y no aparece deuda nueva de producto, pero `AUT-003` no puede avanzar porque el runner sigue sin `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` ni `BOTICA_RESTORE_DATABASE_URL`; `OPS-RWY-003` sigue dependiendo de acceso externo verificable a Railway UI/logs.
+- **Estado de cola actual**: sin `TODO` no `BLOCKED`; permanecen `AUT-003` y `OPS-RWY-003` como bloqueos externos vigentes.
+- **Siguiente accion exacta actual**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+- **Actualizacion radar UTC**: `2026-03-28T00:35:08Z`; la revalidacion obligatoria de `AUT-003` detecta un cambio real de prioridad: el gate canónico local ya no está en verde y deja de ser correcto describir la cola como vacía / totalmente bloqueada solo por entorno externo.
+- **Verificacion aplicada adicional**:
+  1. `python scripts/check_release_gate.py` devuelve `ERROR` en `C4) Test scripts operativos críticos` por `tests.scripts.test_check_bootstrap_demo_expected_counts.CheckBootstrapDemoExpectedCountsTests.test_calcular_conteos_esperados_desde_seed_canonico`, con `AssertionError: 4 != 2`.
+  2. `git diff -- backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py` confirma que el seed canónico vigente ya sostiene `4` intenciones públicas, `4` plantas publicadas, `14` productos, `5` rituales y `5` reglas de calendario activas.
+  3. La comprobacion de entorno sigue devolviendo `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
+  4. `python scripts/check_deployed_stack.py` sigue devolviendo `ERROR`: `La variable obligatoria BACKEND_BASE_URL no esta definida.`
+  5. `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` y `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` siguen fallando por ausencia de `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
+  6. `python scripts/check_release_readiness.py` devuelve `OK`.
+- **Diagnostico actual**: la prioridad real cambia de “solo bloqueo externo” a “regresion local del gate + bloqueos externos pendientes”. Mientras `AUT-006` no recupere `C4)` del gate, no procede seguir tratando `AUT-003` como siguiente paso efectivo.
+- **Estado de cola actual**: la primera `TODO` no `BLOCKED` pasa a ser `AUT-006`; `AUT-003` y `OPS-RWY-003` permanecen `BLOCKED` por dependencias externas.
+- **Siguiente accion exacta actual**: ejecutar `AUT-006` ajustando `scripts/check_bootstrap_demo_expected_counts.py` y/o `tests/scripts/test_check_bootstrap_demo_expected_counts.py` al seed canónico expandido, rerun de `python manage.py test tests.scripts` y `python scripts/check_release_gate.py`, y solo despues volver a revalidar `AUT-003`.

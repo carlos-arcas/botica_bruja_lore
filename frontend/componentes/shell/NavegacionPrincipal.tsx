@@ -3,13 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import {
-  construirNavegacionPrincipal,
-  construirTextoContadorCesta,
-  debeMostrarContadorCesta,
-  esRutaActiva,
-} from "@/contenido/shell/navegacionGlobal";
-import { useCarrito } from "@/componentes/catalogo/cesta/useCarrito";
+import { construirNavegacionPrincipal, esRutaActiva } from "@/contenido/shell/navegacionGlobal";
 
 import estilos from "./shellComercial.module.css";
 
@@ -19,30 +13,56 @@ type NavegacionPrincipalProps = {
 
 export function NavegacionPrincipal({ mostrarLogs }: NavegacionPrincipalProps): JSX.Element {
   const rutaActual = usePathname();
-  const { totalUnidades } = useCarrito();
   const enlaces = construirNavegacionPrincipal(mostrarLogs);
 
   return (
-    <nav aria-label="Navegación principal" className={estilos.navegacion}>
+    <nav aria-label="Navegacion principal" className={estilos.navegacion}>
       <ul>
         {enlaces.map((enlace) => {
           const activa = esRutaActiva(rutaActual, enlace);
-          const mostrarContador = enlace.href === "/cesta" && debeMostrarContadorCesta(totalUnidades);
 
           return (
-            <li key={enlace.href}>
+            <li
+              key={enlace.href}
+              className={enlace.submenu ? estilos.itemConSubmenu : undefined}
+            >
               <Link
                 href={enlace.href}
-                className={`${estilos.enlace} ${activa ? estilos.enlaceActiva : ""}`.trim()}
+                className={`${estilos.enlace} ${activa ? estilos.enlaceActiva : ""} ${
+                  enlace.submenu ? estilos.enlaceConSubmenu : ""
+                }`.trim()}
                 aria-current={activa ? "page" : undefined}
               >
                 {enlace.etiqueta}
-                {mostrarContador && (
-                  <span className={estilos.contador} aria-label={construirTextoContadorCesta(totalUnidades)}>
-                    {totalUnidades}
-                  </span>
-                )}
               </Link>
+              {enlace.submenu ? (
+                <div className={estilos.submenu} aria-label={`Secciones de ${enlace.etiqueta}`}>
+                  <ul>
+                    {enlace.submenu.map((item) => {
+                      const activaSubmenu = esRutaActiva(rutaActual, item);
+
+                      return (
+                        <li key={`${item.etiqueta}-${item.href}`}>
+                          <Link
+                            href={item.href}
+                            className={`${estilos.submenuEnlace} ${
+                              activaSubmenu ? estilos.submenuEnlaceActivo : ""
+                            }`.trim()}
+                            aria-current={activaSubmenu ? "page" : undefined}
+                          >
+                            <span>{item.etiqueta}</span>
+                            {item.descripcion ? (
+                              <span className={estilos.submenuDescripcion}>
+                                {item.descripcion}
+                              </span>
+                            ) : null}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : null}
             </li>
           );
         })}

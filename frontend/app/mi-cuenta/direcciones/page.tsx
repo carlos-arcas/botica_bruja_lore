@@ -7,6 +7,15 @@ export const metadata: Metadata = {
   description: "Libreta de direcciones real de la cuenta cliente.",
 };
 
-export default function PaginaDireccionesCuentaCliente(): JSX.Element {
-  return <main className="contenedor-home"><PanelDireccionesCuentaCliente /></main>;
+type Props = {
+  searchParams?: {
+    onboarding?: string;
+    mensaje?: string;
+  };
+};
+
+export default function PaginaDireccionesCuentaCliente({ searchParams }: Props): JSX.Element {
+  const onboarding = searchParams?.onboarding === "1";
+  const mensajeInicial = typeof searchParams?.mensaje === "string" ? searchParams.mensaje : null;
+  return <main className="contenedor-home"><PanelDireccionesCuentaCliente onboarding={onboarding} mensajeInicial={mensajeInicial} /></main>;
 }

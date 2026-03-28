@@ -60,6 +60,29 @@ export async function loginCuentaCliente(payload: { email: string; password: str
   return enviarCuenta("login", payload);
 }
 
+export async function continuarConGoogleCuentaCliente(payload: { credential: string }): Promise<
+  { estado: "ok"; cuenta: CuentaCliente; es_nueva_cuenta: boolean } | { estado: "error"; mensaje: string; codigo?: string }
+> {
+  try {
+    const respuesta = await fetch("/api/cuenta/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await respuesta.json();
+    if (!respuesta.ok) {
+      return { estado: "error", mensaje: data.detalle ?? "No se pudo continuar con Google.", codigo: data.codigo as string | undefined };
+    }
+    return {
+      estado: "ok",
+      cuenta: data.cuenta as CuentaCliente,
+      es_nueva_cuenta: Boolean(data.es_nueva_cuenta),
+    };
+  } catch {
+    return { estado: "error", mensaje: "No pudimos conectar con el acceso de Google." };
+  }
+}
+
 export async function solicitarRecuperacionPassword(payload: { email: string }) {
   return enviarRecuperacion("password/recuperacion/solicitar", payload, "No pudimos preparar la recuperación de contraseña.");
 }
