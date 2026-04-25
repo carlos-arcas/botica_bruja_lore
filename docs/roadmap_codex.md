@@ -182,7 +182,7 @@ Uso prohibido:
 - **Bloqueo conocido**: ninguno.
 
 ## V2G-001 â€” AuditorÃ­a de cierre de `V2-R10` (go-live checklist v2)
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: contrastar el alcance pendiente de `V2-R10` con scripts, tests y documentaciÃ³n reales para decidir con evidencia si puede cerrarse, quÃ© brecha exacta queda o si existe bloqueo externo.
 - **Alcance permitido**: `AGENTS.md`, `docs/roadmap_ecommerce_real_v2.md`, `docs/release_readiness_minima.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/deploy_railway.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, con lectura de `scripts/` y `tests/scripts/`.
 - **Fuera de alcance**: tocar backend/frontend funcional, ejecutar deploy real, backups reales, restores reales o cambios de negocio.
@@ -193,6 +193,10 @@ Uso prohibido:
   - contrastar `V2-R10` con `docs/90_estado_implementacion.md` para no reabrir cierres ya implementados,
   - dejar un Ãºnico resultado explÃ­cito: `DONE`, nueva tarea atÃ³mica siguiente o `BLOCKED` con causa externa verificable.
 - **Criterio de cierre**: evidencia documental suficiente para decidir el siguiente paso exacto de `V2-R10` sin implementar a ciegas.
+- **Evidencia de cierre V2G-001**:
+  - La bitacora registra `Entrada 2026-03-26-V2G-001` con estado final `DONE`, auditoria real de cierre `V2-R10`, fuentes consultadas, checks ejecutados y resultado verificable.
+  - El cierre dejo una cola operativa atomica para continuar sin implementar a ciegas y sin reabrir capacidades ya declaradas `DONE` en `docs/90_estado_implementacion.md`.
+  - Esta correccion alinea el roadmap restaurado con la bitacora vigente para que la primera tarea ejecutable vuelva a ser `V2G-016`.
 - **Bloqueo conocido**: posible dependencia de URLs/entorno desplegado real para smoke post-deploy y drill operativo final.
 
 ## V2G-015 - Proceso de devolucion demo
