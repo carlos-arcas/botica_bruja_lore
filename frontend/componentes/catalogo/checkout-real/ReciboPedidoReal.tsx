@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { resolverTrackingVisibleCliente } from "@/contenido/pedidos/trackingVisible";
+import { resolverPostventaDemoPedido } from "@/contenido/postventa/devolucionesDemo";
 import { resolverEstadoVisiblePedidoCliente } from "@/infraestructura/api/estadoPedidoCliente";
 import { construirUrlDocumentoPedido, iniciarPagoPedido, obtenerPedidoPublico, PedidoCreado, RetornoPago } from "@/infraestructura/api/pedidos";
 
@@ -34,6 +35,7 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
   const puedePagar = pedido.estado === "pendiente_pago" && pedido.estado_pago !== "pagado";
   const mensajeEstado = resolverMensajeEstado(pedido);
   const estadoVisible = resolverEstadoVisiblePedidoCliente(pedido);
+  const postventaDemo = resolverPostventaDemoPedido(pedido);
   const trackingVisible = resolverTrackingVisibleCliente(pedido.estado, pedido.expedicion);
 
   return (
@@ -68,6 +70,13 @@ export function ReciboPedidoReal({ idPedidoRuta, retornoPago = null }: Props): J
         <>
           <p><strong>{trackingVisible.titulo}.</strong></p>
           <p>{trackingVisible.descripcion}</p>
+        </>
+      )}
+      {postventaDemo.visible && (
+        <>
+          <p><strong>{postventaDemo.titulo}.</strong></p>
+          <p>{postventaDemo.descripcion}</p>
+          <p>{postventaDemo.accion}</p>
         </>
       )}
       {puedePagar && <button className="boton boton--principal" type="button" onClick={pagarAhora} disabled={procesandoPago}>{procesandoPago ? "Redirigiendo al pago..." : botonPago(pedido.estado_pago)}</button>}

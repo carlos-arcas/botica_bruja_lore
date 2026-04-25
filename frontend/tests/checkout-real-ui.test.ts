@@ -12,6 +12,7 @@ const archivoBloqueSeleccion = readFileSync(join(process.cwd(), "componentes/cat
 const archivoSelectorDireccion = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/SelectorDireccionCheckoutReal.tsx"), "utf8");
 const archivoDireccionesCheckout = readFileSync(join(process.cwd(), "contenido/catalogo/checkoutRealDirecciones.ts"), "utf8");
 const archivoNavegacion = readFileSync(join(process.cwd(), "contenido/catalogo/checkoutRealNavegacion.ts"), "utf8");
+const archivoDevolucionesDemo = readFileSync(join(process.cwd(), "contenido/postventa/devolucionesDemo.ts"), "utf8");
 
 
 test("checkout real no depende de PayloadPedidoDemo ni de CuentaDemo", () => {
@@ -153,4 +154,12 @@ test("recibo real muestra subtotal, base, impuestos, envío y total del pedido",
   assert.equal(archivoRecibo.includes("Total:"), true);
   assert.equal(archivoRecibo.includes("Descargar documento fiscal HTML"), true);
   assert.equal(archivoRecibo.includes("construirUrlDocumentoPedido"), true);
+});
+
+test("recibo real muestra postventa manual sin prometer reembolso bancario", () => {
+  assert.equal(archivoRecibo.includes("resolverPostventaDemoPedido"), true);
+  assert.equal(archivoRecibo.includes("postventaDemo.descripcion"), true);
+  assert.equal(archivoDevolucionesDemo.includes("Devolucion manual disponible"), true);
+  assert.equal(archivoDevolucionesDemo.includes("no se ejecuta ningun reembolso bancario real"), true);
+  assert.equal(archivoDevolucionesDemo.includes("Pedido cancelado por el equipo"), true);
 });
