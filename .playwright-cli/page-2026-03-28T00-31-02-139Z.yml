@@ -1,0 +1,240 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - link "Saltar al contenido principal" [ref=e3] [cursor=pointer]:
+      - /url: "#contenido-principal"
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "La Botica de la Bruja Lore Tienda editorial, compendio botanico y calendario ritual" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: La Botica de la Bruja Lore
+          - generic [ref=e9]: Tienda editorial, compendio botanico y calendario ritual
+        - generic [ref=e10]:
+          - navigation "Navegacion principal" [ref=e11]:
+            - list [ref=e12]:
+              - listitem [ref=e13]:
+                - link "Inicio" [ref=e14] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e15]:
+                - link "Tienda" [ref=e16] [cursor=pointer]:
+                  - /url: /botica-natural
+              - listitem [ref=e17]:
+                - link "Guias" [ref=e18] [cursor=pointer]:
+                  - /url: /guias
+              - listitem [ref=e19]:
+                - link "Tarot" [ref=e20] [cursor=pointer]:
+                  - /url: /tarot
+              - listitem [ref=e21]:
+                - link "Calendario ritual" [ref=e22] [cursor=pointer]:
+                  - /url: /calendario-ritual
+          - generic [ref=e23]:
+            - link "Carrito" [ref=e24] [cursor=pointer]:
+              - /url: /cesta
+            - link "Login" [ref=e25] [cursor=pointer]:
+              - /url: /acceso
+            - link "Abrir backoffice administrativo" [ref=e26] [cursor=pointer]:
+              - /url: /admin
+              - text: Acceso admin
+    - main [ref=e28]:
+      - generic [ref=e29]:
+        - paragraph [ref=e30]: Consulta editorial temporal
+        - heading "Calendario ritual por fecha" [level=1] [ref=e31]
+        - paragraph [ref=e32]: Esta entrada editorial conecta reglas temporales del calendario con rituales publicados para facilitar un descubrimiento guiado por fecha.
+        - paragraph [ref=e33]: El backend mantiene la lógica temporal oficial; aquí solo eliges una fecha para visualizar resultados activos y navegar a cada ritual.
+        - generic [ref=e34]:
+          - link "Ver todos los rituales publicados" [ref=e35] [cursor=pointer]:
+            - /url: /rituales
+          - link "Explorar hierbas relacionadas" [ref=e36] [cursor=pointer]:
+            - /url: /hierbas
+          - link "Continuar al catálogo comercial" [ref=e37] [cursor=pointer]:
+            - /url: /colecciones
+      - generic [ref=e38]:
+        - heading "Calendario virtual y agenda ritual" [level=2] [ref=e39]
+        - paragraph [ref=e40]: Explora el mes, selecciona un dia concreto y guarda notas con rituales publicados para preparar tus pruebas locales sin mezclar la agenda personal con la logica editorial oficial.
+        - generic [ref=e41]:
+          - region "Calendario mensual" [ref=e42]:
+            - generic [ref=e43]:
+              - generic [ref=e44]:
+                - heading "marzo de 2026" [level=3] [ref=e45]
+                - paragraph [ref=e46]: Selecciona un dia para editar notas y rituales.
+              - generic [ref=e47]:
+                - button "Mes anterior" [ref=e48]
+                - generic [ref=e49]: marzo de 2026
+                - button "Mes siguiente" [ref=e50]
+                - button "Ir a hoy" [ref=e51]
+            - generic [ref=e52]:
+              - generic [ref=e53]: Lun
+              - generic [ref=e54]: Mar
+              - generic [ref=e55]: Mie
+              - generic [ref=e56]: Jue
+              - generic [ref=e57]: Vie
+              - generic [ref=e58]: Sab
+              - generic [ref=e59]: Dom
+            - generic [ref=e60]:
+              - button "23" [ref=e61]:
+                - generic [ref=e62]: "23"
+              - button "24" [ref=e63]:
+                - generic [ref=e64]: "24"
+              - button "25" [ref=e65]:
+                - generic [ref=e66]: "25"
+              - button "26" [ref=e67]:
+                - generic [ref=e68]: "26"
+              - button "27" [ref=e69]:
+                - generic [ref=e70]: "27"
+              - button "28" [ref=e71]:
+                - generic [ref=e72]: "28"
+              - button "1" [ref=e73]:
+                - generic [ref=e74]: "1"
+              - button "2" [ref=e75]:
+                - generic [ref=e76]: "2"
+              - button "3" [ref=e77]:
+                - generic [ref=e78]: "3"
+              - button "4" [ref=e79]:
+                - generic [ref=e80]: "4"
+              - button "5" [ref=e81]:
+                - generic [ref=e82]: "5"
+              - button "6" [ref=e83]:
+                - generic [ref=e84]: "6"
+              - button "7" [ref=e85]:
+                - generic [ref=e86]: "7"
+              - button "8" [ref=e87]:
+                - generic [ref=e88]: "8"
+              - button "9" [ref=e89]:
+                - generic [ref=e90]: "9"
+              - button "10" [ref=e91]:
+                - generic [ref=e92]: "10"
+              - button "11" [ref=e93]:
+                - generic [ref=e94]: "11"
+              - button "12" [ref=e95]:
+                - generic [ref=e96]: "12"
+              - button "13" [ref=e97]:
+                - generic [ref=e98]: "13"
+              - button "14" [ref=e99]:
+                - generic [ref=e100]: "14"
+              - button "15" [ref=e101]:
+                - generic [ref=e102]: "15"
+              - button "16" [ref=e103]:
+                - generic [ref=e104]: "16"
+              - button "17" [ref=e105]:
+                - generic [ref=e106]: "17"
+              - button "18" [ref=e107]:
+                - generic [ref=e108]: "18"
+              - button "19" [ref=e109]:
+                - generic [ref=e110]: "19"
+              - button "20" [ref=e111]:
+                - generic [ref=e112]: "20"
+              - button "21" [ref=e113]:
+                - generic [ref=e114]: "21"
+              - button "22" [ref=e115]:
+                - generic [ref=e116]: "22"
+              - button "23" [ref=e117]:
+                - generic [ref=e118]: "23"
+              - button "24" [ref=e119]:
+                - generic [ref=e120]: "24"
+              - button "25" [ref=e121]:
+                - generic [ref=e122]: "25"
+              - button "26" [ref=e123]:
+                - generic [ref=e124]: "26"
+              - button "27" [ref=e125]:
+                - generic [ref=e126]: "27"
+              - button "28" [pressed] [ref=e127]:
+                - generic [ref=e128]: "28"
+              - button "29" [ref=e129]:
+                - generic [ref=e130]: "29"
+              - button "30" [ref=e131]:
+                - generic [ref=e132]: "30"
+              - button "31" [ref=e133]:
+                - generic [ref=e134]: "31"
+              - button "1" [ref=e135]:
+                - generic [ref=e136]: "1"
+              - button "2" [ref=e137]:
+                - generic [ref=e138]: "2"
+              - button "3" [ref=e139]:
+                - generic [ref=e140]: "3"
+              - button "4" [ref=e141]:
+                - generic [ref=e142]: "4"
+              - button "5" [ref=e143]:
+                - generic [ref=e144]: "5"
+          - region "Detalle del dia seleccionado" [ref=e145]:
+            - heading "sábado, 28 de marzo de 2026" [level=3] [ref=e146]
+            - paragraph [ref=e147]: Las notas y rituales añadidos aqui se guardan solo en este navegador para pruebas del calendario virtual.
+            - generic [ref=e148]:
+              - generic [ref=e149]:
+                - text: Nota del dia
+                - textbox "Nota del dia" [ref=e150]:
+                  - /placeholder: Escribe una nota breve para este dia.
+                  - text: Prueba local de agenda para cierre de marzo
+              - generic [ref=e151]:
+                - text: Anadir ritual publicado
+                - generic [ref=e152]:
+                  - combobox "Anadir ritual publicado Anadir" [ref=e153]:
+                    - option "Cierre sereno" [selected]
+                    - option "Claridad con amatista y pendulo"
+                    - option "Descanso con melisa y lavanda"
+                    - option "Gratitud con vela miel"
+                    - option "Limpieza del umbral con romero y ruda"
+                  - button "Anadir" [active] [ref=e154]
+              - generic [ref=e202]:
+                - text: Altar lunar con cuarzo
+                - button "Quitar Altar lunar con cuarzo" [ref=e203]: ×
+              - generic [ref=e155]:
+                - button "Guardar dia" [ref=e156]
+                - button "Limpiar dia" [ref=e157]
+            - generic [ref=e158]:
+              - heading "Sugerencias editoriales para la fecha" [level=3] [ref=e159]
+              - list [ref=e180]:
+                - listitem [ref=e181]:
+                  - strong [ref=e182]: Altar lunar con cuarzo
+                  - paragraph [ref=e183]: Composicion sencilla para noches de luna visible con luz blanca y cuarzo limpio.
+                  - paragraph [ref=e184]: "Regla activa: Ventana lunar de observacion y quietud"
+                  - link "Ver detalle ritual" [ref=e185] [cursor=pointer]:
+                    - /url: /rituales/altar-lunar-cuarzo
+                - listitem [ref=e186]:
+                  - strong [ref=e187]: Descanso con melisa y lavanda
+                  - paragraph [ref=e188]: Preparacion suave para cerrar el dia con hierba, vela blanca y aroma floral.
+                  - paragraph [ref=e189]: "Regla activa: Cierre suave de finales de marzo"
+                  - link "Ver detalle ritual" [ref=e190] [cursor=pointer]:
+                    - /url: /rituales/descanso-melisa-lavanda
+                - listitem [ref=e191]:
+                  - strong [ref=e192]: Limpieza del umbral con romero y ruda
+                  - paragraph [ref=e193]: Ritual domestico para renovar la entrada del hogar con humo suave y gesto sobrio.
+                  - paragraph [ref=e194]: "Regla activa: Limpieza del umbral en tramo de equinoccio"
+                  - link "Ver detalle ritual" [ref=e195] [cursor=pointer]:
+                    - /url: /rituales/limpieza-umbral-romero-ruda
+                - listitem [ref=e196]:
+                  - strong [ref=e197]: Claridad con amatista y pendulo
+                  - paragraph [ref=e198]: Mesa de enfoque para lectura simbolica, revision de notas y pregunta bien formulada.
+                  - paragraph [ref=e199]: "Regla activa: Revision ritual de comienzo de ciclo"
+                  - link "Ver detalle ritual" [ref=e200] [cursor=pointer]:
+                    - /url: /rituales/claridad-con-amatista-y-pendulo
+    - contentinfo [ref=e161]:
+      - generic [ref=e162]:
+        - paragraph [ref=e163]: "La Botica de la Bruja Lore une catálogo y narrativa para ayudarte a elegir con calma: hierbas, objetos rituales y combinaciones pensadas como piezas artesanales."
+        - navigation "Navegación de cierre" [ref=e164]:
+          - link "Botica" [ref=e165] [cursor=pointer]:
+            - /url: /botica-natural
+          - link "Velas e incienso" [ref=e166] [cursor=pointer]:
+            - /url: /velas-e-incienso
+          - link "Minerales y energia" [ref=e167] [cursor=pointer]:
+            - /url: /minerales-y-energia
+          - link "Herramientas esotericas" [ref=e168] [cursor=pointer]:
+            - /url: /herramientas-esotericas
+          - link "Compendio de guias" [ref=e169] [cursor=pointer]:
+            - /url: /guias
+          - link "Propiedades de las plantas" [ref=e170] [cursor=pointer]:
+            - /url: /hierbas
+          - link "Rituales conectados" [ref=e171] [cursor=pointer]:
+            - /url: /rituales
+          - link "Calendario ritual" [ref=e172] [cursor=pointer]:
+            - /url: /calendario-ritual
+          - link "Tarot editorial" [ref=e173] [cursor=pointer]:
+            - /url: /tarot
+          - link "Condiciones del encargo" [ref=e174] [cursor=pointer]:
+            - /url: /condiciones-encargo
+          - link "Envíos y preparación" [ref=e175] [cursor=pointer]:
+            - /url: /envios-y-preparacion
+          - link "Privacidad y contacto" [ref=e176] [cursor=pointer]:
+            - /url: /privacidad
+        - paragraph [ref=e177]: "Proyecto demo editorial-comercial: sin checkout activo, con asesoría y encargo artesanal como continuidad natural."
+        - link "Continuar hacia una solicitud de encargo" [ref=e178] [cursor=pointer]:
+          - /url: /encargo
+  - alert [ref=e179]

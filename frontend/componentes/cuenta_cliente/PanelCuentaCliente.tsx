@@ -86,7 +86,7 @@ export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.El
   const vistaVerificacion = resolverEstadoVistaVerificacion(estado);
   return (
     <section className="bloque-home">
-      <p>Cuenta real canónica · legado demo separado</p>
+      <p>Cuenta real canónica</p>
       <h1>{vista === "pedidos" ? "Mis pedidos" : "Mi cuenta"}</h1>
       <p>{cuenta.nombre_visible} · {cuenta.email}</p>
       <p>{describirEstadoVerificacion(estado)}.</p>
@@ -103,7 +103,6 @@ export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.El
         <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.cuenta}>Resumen</Link>
         <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.pedidos}>Mis pedidos</Link>
         <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.direcciones}>Mis direcciones</Link>
-        <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.legadoDemo}>Legado demo</Link>
         <button className="boton boton--principal" type="button" onClick={salir}>Cerrar sesión</button>
       </div>
       {vista === "resumen" ? (

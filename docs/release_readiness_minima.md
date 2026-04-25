@@ -1,11 +1,13 @@
 # CHECKLIST DE RELEASE — seguridad, privacidad y backup/restore (mínimo operativo)
 
 ## 1) Seguridad de configuración (bloqueante)
+> Fuente canónica previa al boot: esta lista bloqueante manda sobre el checklist visible de Railway UI y debe reflejarse sin divergencias en `docs/deploy_railway.md`.
+
 - `DEBUG=false`.
 - `SECRET_KEY` definida y no trivial.
 - `DATABASE_URL` PostgreSQL válida (sin SQLite en producción).
 - `PUBLIC_SITE_URL`, `PAYMENT_SUCCESS_URL` y `PAYMENT_CANCEL_URL` en **HTTPS absoluto**.
-- `EMAIL_BACKEND` de producción (no `locmem`, `console` ni `filebased`).
+- `EMAIL_BACKEND` de producción (SMTP real, no `locmem`, `console` ni `filebased`).
 - `DEFAULT_FROM_EMAIL` con dominio real (no `.local`).
 - `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET` definidas.
 
@@ -22,6 +24,7 @@
 - Tener `pg_dump` y `pg_restore` disponibles en `PATH`.
 - Definir `DATABASE_URL` (origen) y una URL separada para restore drill (`BOTICA_RESTORE_DATABASE_URL`).
 - Definir `BOTICA_BACKUP_DIR` apuntando **fuera del repositorio** (por ejemplo `/tmp/botica_backups`).
+- Si ejecutas los scripts fuera de Railway, la shell debe recibir las URLs ya resueltas; las referencias `${{...}}` solo se expanden dentro de Railway UI/runtime.
 
 ### Opción recomendada (script reutilizable V2)
 ```bash
@@ -52,16 +55,19 @@ pg_restore --no-owner --no-privileges --clean --if-exists --dbname="$BOTICA_REST
 - Para runners sin DB/CLI de PostgreSQL: `--dry-run` cuenta solo como verificación de plan (no como drill real ejecutado).
 
 ## 4) CHECKLIST DE RELEASE (pre-flight)
-1. `python scripts/check_release_gate.py`
-2. `python scripts/check_release_readiness.py`
-3. `python scripts/check_operational_reconciliation.py --fail-on blocker`
-4. `python scripts/check_operational_alerts_v2.py --fail-on blocker` (resumen operativo accionable y serializable de alertas mínimas v2).
-5. `python scripts/retry_operational_tasks_v2.py --dry-run --json` (previsualización de reintentos elegibles sin mutación antes de operar en modo real).
-6. `python scripts/backup_restore_postgres.py backup --dry-run` (validación segura de plan/comandos).
-7. Backup lógico real antes del deploy.
-8. Restore drill en base temporal cuando el entorno lo permita.
-9. Deploy.
-10. Smoke post-deploy (`python scripts/check_deployed_stack.py` con URLs reales).
+1. `python scripts/check_release_gate.py` (incluye `check_release_readiness.py`, `check_operational_reconciliation.py --fail-on blocker`, `check_operational_alerts_v2.py --fail-on blocker` y `retry_operational_tasks_v2.py --dry-run --json` además del resto del gate técnico canónico).
+2. `python scripts/backup_restore_postgres.py backup --dry-run` (validación segura de plan/comandos fuera del gate).
+3. Backup lógico real antes del deploy.
+4. Restore drill en base temporal cuando el entorno lo permita.
+5. Deploy.
+6. Smoke post-deploy (`python scripts/check_deployed_stack.py` con URLs reales).
+   - Exportar `BACKEND_BASE_URL` y `FRONTEND_BASE_URL` con URLs HTTPS completas del despliegue real.
+   - Estas dos variables son operativas del runner de verificación; no sustituyen `PUBLIC_SITE_URL` ni `NEXT_PUBLIC_SITE_URL` del contrato de boot.
+
+### Diagnóstico desglosado opcional
+- `python scripts/check_release_readiness.py`
+- `python scripts/check_operational_alerts_v2.py --fail-on blocker`
+- `python scripts/retry_operational_tasks_v2.py --dry-run --json`
 
 ## 5) Alcance explícitamente fuera de este checklist
 - No cubre SOC2/ISO, SIEM, MFA corporativo ni RBAC avanzado.

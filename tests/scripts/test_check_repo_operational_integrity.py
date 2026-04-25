@@ -96,7 +96,7 @@ class RepoOperationalIntegrityTests(unittest.TestCase):
                 DEBUG=false
                 ALLOWED_HOSTS=
                 CSRF_TRUSTED_ORIGINS=
-                DATABASE_URL=${{SERVICE_NAME.DATABASE_URL}}
+                DATABASE_URL=${{Postgres.DATABASE_URL}}
                 NEXT_PUBLIC_API_BASE_URL=
                 APP_DEBUG=
                 DJANGO_SETTINGS_MODULE=

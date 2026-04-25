@@ -25,6 +25,8 @@ export function aplicarDireccionGuardadaADatosCheckoutReal(
     ...datos,
     modo_direccion: "guardada",
     id_direccion_guardada: direccion.id_direccion,
+    nombre_contacto: datos.nombre_contacto.trim() || direccion.nombre_destinatario,
+    telefono_contacto: direccion.telefono_contacto,
     nombre_destinatario: direccion.nombre_destinatario,
     linea_1: direccion.linea_1,
     linea_2: direccion.linea_2,

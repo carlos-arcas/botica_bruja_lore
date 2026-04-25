@@ -1,20 +1,28 @@
 @echo off
-setlocal enableextensions
+setlocal enableextensions enabledelayedexpansion
+
+set "ROOT_DIR=%~dp0"
+pushd "%ROOT_DIR%" >nul
 
 echo ================================================
 echo [setup_entorno] Preparando entorno local...
 echo ================================================
 
 set "PY_CMD="
-where py >nul 2>&1
-if not errorlevel 1 set "PY_CMD=py -3"
+python -c "import sys" >nul 2>&1
+if not errorlevel 1 set "PY_CMD=python"
 if not defined PY_CMD (
-    where python >nul 2>&1
-    if not errorlevel 1 set "PY_CMD=python"
+    py -3 -c "import sys" >nul 2>&1
+    if not errorlevel 1 set "PY_CMD=py -3"
+)
+if not defined PY_CMD (
+    py -3.12 -c "import sys" >nul 2>&1
+    if not errorlevel 1 set "PY_CMD=py -3.12"
 )
 
 if not defined PY_CMD (
     echo [ERROR] No se encontro Python en PATH. Instala Python 3 y reintenta.
+    popd >nul
     exit /b 1
 )
 
@@ -25,6 +33,7 @@ if not exist ".venv\Scripts\python.exe" (
     %PY_CMD% -m venv .venv
     if errorlevel 1 (
         echo [ERROR] No se pudo crear el entorno virtual.
+        popd >nul
         exit /b 1
     )
 ) else (
@@ -35,6 +44,7 @@ echo [INFO] Actualizando pip en .venv...
 call .venv\Scripts\python.exe -m pip install --upgrade pip
 if errorlevel 1 (
     echo [ERROR] Fallo al actualizar pip.
+    popd >nul
     exit /b 1
 )
 
@@ -49,6 +59,7 @@ if defined REQ_FILE (
     call .venv\Scripts\python.exe -m pip install -r "%REQ_FILE%"
     if errorlevel 1 (
         echo [ERROR] Fallo al instalar dependencias Python.
+        popd >nul
         exit /b 1
     )
 ) else (
@@ -60,13 +71,31 @@ if exist package.json set "NPM_DIR=."
 if not defined NPM_DIR if exist frontend\package.json set "NPM_DIR=frontend"
 
 if defined NPM_DIR (
+    where npm >nul 2>&1
+    if errorlevel 1 (
+        echo [ERROR] No se encontro npm en PATH. Instala Node.js y reintenta.
+        popd >nul
+        exit /b 1
+    )
+
+    if exist "%NPM_DIR%\.env.example" if not exist "%NPM_DIR%\.env.local" (
+        echo [INFO] Creando %NPM_DIR%\.env.local desde .env.example...
+        copy /y "%NPM_DIR%\.env.example" "%NPM_DIR%\.env.local" >nul
+        if errorlevel 1 (
+            echo [ERROR] No se pudo crear %NPM_DIR%\.env.local.
+            popd >nul
+            exit /b 1
+        )
+    )
+
     echo [INFO] Instalando dependencias frontend en %NPM_DIR%...
     pushd "%NPM_DIR%"
     call npm install
     set "NPM_EXIT=%ERRORLEVEL%"
     popd
-    if not "%NPM_EXIT%"=="0" (
+    if not "!NPM_EXIT!"=="0" (
         echo [ERROR] Fallo al instalar dependencias frontend.
+        popd >nul
         exit /b 1
     )
 ) else (
@@ -74,4 +103,5 @@ if defined NPM_DIR (
 )
 
 echo [OK] Entorno preparado correctamente.
+popd >nul
 exit /b 0

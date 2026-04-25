@@ -32,6 +32,10 @@ class RepositorioCuentasCliente(ABC):
         """Obtiene cuenta real por id canónico."""
 
     @abstractmethod
+    def obtener_por_google_sub(self, google_sub: str) -> CuentaCliente | None:
+        """Obtiene cuenta real por identificador estable de Google."""
+
+    @abstractmethod
     def listar_direcciones(self, *, id_usuario: str) -> tuple[DireccionCuentaCliente, ...]:
         """Lista la libreta de direcciones de una cuenta."""
 
@@ -82,3 +86,7 @@ class RepositorioCuentasCliente(ABC):
     @abstractmethod
     def actualizar_password(self, *, id_usuario: str, password_plano: str, token_hash: str) -> CuentaCliente | None:
         """Actualiza la contraseña y marca la solicitud de recuperación como usada."""
+
+    @abstractmethod
+    def vincular_google(self, *, id_usuario: str, google_sub: str, email_verificado: bool) -> CuentaCliente | None:
+        """Vincula una identidad Google verificada a una cuenta real existente."""

@@ -18,14 +18,18 @@ import { construirFormularioDireccionVacio, descripcionEstadoVacioDirecciones, r
 import { RUTAS_CUENTA_CLIENTE } from "@/contenido/cuenta_cliente/rutasCuentaCliente";
 
 type ModoFormulario = { tipo: "crear" } | { tipo: "editar"; direccion: DireccionCuentaCliente };
+type Props = { onboarding?: boolean; mensajeInicial?: string | null };
 
-export function PanelDireccionesCuentaCliente(): JSX.Element {
+export function PanelDireccionesCuentaCliente({
+  onboarding = false,
+  mensajeInicial = null,
+}: Props): JSX.Element {
   const router = useRouter();
   const [cuenta, setCuenta] = useState<CuentaCliente | null>(null);
   const [direcciones, setDirecciones] = useState<DireccionCuentaCliente[]>([]);
   const [estado, setEstado] = useState("Cargando direcciones...");
   const [error, setError] = useState("");
-  const [exito, setExito] = useState("");
+  const [exito, setExito] = useState(mensajeInicial ?? "");
   const [guardando, setGuardando] = useState(false);
   const [modo, setModo] = useState<ModoFormulario>({ tipo: "crear" });
   const [formulario, setFormulario] = useState(construirFormularioDireccionVacio());
@@ -46,6 +50,16 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
   useEffect(() => {
     void cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    if (!cuenta || direcciones.length > 0 || formulario.nombre_destinatario.trim()) {
+      return;
+    }
+    setFormulario((actual) => ({
+      ...actual,
+      nombre_destinatario: cuenta.nombre_visible,
+    }));
+  }, [cuenta, direcciones.length, formulario.nombre_destinatario]);
 
   const onChange = (campo: keyof typeof formulario, valor: string): void => {
     setFormulario((actual) => ({ ...actual, [campo]: valor }));
@@ -87,6 +101,11 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
       setError(resultado.mensaje);
       return;
     }
+    if (onboarding && modo.tipo === "crear") {
+      router.push("/mi-cuenta?mensaje=" + encodeURIComponent("Datos de envío guardados. Ya puedes reutilizarlos en el checkout."));
+      router.refresh();
+      return;
+    }
     await cargar();
     resetFormulario();
     setExito(modo.tipo === "crear" ? "Dirección guardada." : "Dirección actualizada.");
@@ -123,13 +142,19 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
     <section className="bloque-home" style={{ display: "grid", gap: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <p>Cuenta real · libreta de direcciones v1.1</p>
-          <h1>Mis direcciones</h1>
+          <p>{onboarding ? "Alta completada · onboarding de envío opcional" : "Cuenta real · libreta de direcciones v1.1"}</p>
+          <h1>{onboarding ? "Completar datos de envío" : "Mis direcciones"}</h1>
           <p>{cuenta.nombre_visible} · {cuenta.email}</p>
+          {onboarding && (
+            <p>
+              Puedes guardar ahora una dirección y teléfono para acelerar futuras compras.
+              Si lo omites, el checkout te pedirá estos datos antes de pagar.
+            </p>
+          )}
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.cuenta}>Volver a mi cuenta</Link>
-          <button className="boton boton--secundario" type="button" onClick={resetFormulario}>Nueva dirección</button>
+          <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.cuenta}>{onboarding ? "Omitir por ahora" : "Volver a mi cuenta"}</Link>
+          {!onboarding && <button className="boton boton--secundario" type="button" onClick={resetFormulario}>Nueva dirección</button>}
         </div>
       </div>
 
@@ -138,7 +163,13 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
         <div style={{ border: "1px solid rgba(98, 74, 46, 0.18)", borderRadius: 16, padding: 16 }}>
-          <h2>{modo.tipo === "crear" ? "Añadir dirección" : "Editar dirección"}</h2>
+          <h2>
+            {modo.tipo === "crear"
+              ? onboarding
+                ? "Guardar primera dirección"
+                : "Añadir dirección"
+              : "Editar dirección"}
+          </h2>
           <form style={{ display: "grid", gap: 12 }} onSubmit={guardar}>
             {camposFormulario().map((campo) => (
               <label key={campo.campo} style={{ display: "grid", gap: 4 }}>
@@ -152,7 +183,13 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
             ))}
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <button className="boton boton--principal" type="submit" disabled={guardando}>
-                {guardando ? "Guardando..." : modo.tipo === "crear" ? "Guardar dirección" : "Actualizar dirección"}
+                {guardando
+                  ? "Guardando..."
+                  : modo.tipo === "crear"
+                    ? onboarding
+                      ? "Guardar y continuar"
+                      : "Guardar dirección"
+                    : "Actualizar dirección"}
               </button>
               {modo.tipo === "editar" && <button className="boton boton--secundario" type="button" onClick={resetFormulario}>Cancelar edición</button>}
             </div>

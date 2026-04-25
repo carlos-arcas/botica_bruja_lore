@@ -73,6 +73,16 @@ El alcance global definido para el proyecto incluye:
    - no afirmaciones sanitarias impropias.
 6. Meta de fase actual: demo comercial creíble sin compra real activa.
 
+### 5.1 Criterio mínimo de catálogo público por sección (fase demo)
+Para pasar de presencia en home/hero/backoffice a catálogo público DB-backed, una sección debe tener masa comercial real suficiente para sostener compra directa y descubrimiento guiado sin relleno sintético.
+
+1. `botica-natural` se mantiene como baseline público y exige **5 productos publicados propios** de su sección.
+2. `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` exigen **mínimo 3 productos publicados propios** antes de abrir listado/detalle público DB-backed.
+3. Tener `1` o `2` productos publicados sirve como fase de curación/seed interno, pero **no** justifica abrir una sección pública nueva.
+4. El **vacío honesto** solo vale cuando la sección ya existe públicamente y en ese momento no hay resultados por curación editorial o por filtros activos; no sustituye el mínimo de catálogo requerido para inaugurar una sección.
+5. El **fallback** entre secciones es excepcional: se conserva solo el fallback herbal legado de `botica-natural` como compatibilidad de bootstrap y queda prohibido generalizarlo a nuevas secciones porque rompe la coherencia editorial-comercial.
+6. Seeds, importaciones y QA que habiliten nuevas secciones deben verificar este umbral mínimo y que la respuesta pública no mezcle productos de otra `seccion_publica`.
+
 ## 6. Ciclos previstos
 ### 6.1 Ciclo 0 — Base documental, arquitectura y contratos del proyecto
 **Objetivo del ciclo**

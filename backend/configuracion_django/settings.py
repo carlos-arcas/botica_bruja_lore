@@ -129,6 +129,7 @@ def _configurar_secret_key() -> str:
 
 
 SECRET_KEY = _configurar_secret_key()
+PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "").strip().rstrip("/")
 
 ALLOWED_HOSTS = _leer_lista("ALLOWED_HOSTS", ["localhost", "127.0.0.1", "testserver"])
 
@@ -155,6 +156,15 @@ if railway_public_domain:
         [f"https://{railway_public_domain}", f"http://{railway_public_domain}"],
     )
 
+CORS_ALLOWED_ORIGINS = _leer_lista("CORS_ALLOWED_ORIGINS", [])
+if DEBUG:
+    _agregar_sin_duplicados(
+        CORS_ALLOWED_ORIGINS,
+        ["http://127.0.0.1:3000", "http://localhost:3000"],
+    )
+if PUBLIC_SITE_URL:
+    _agregar_sin_duplicados(CORS_ALLOWED_ORIGINS, [PUBLIC_SITE_URL])
+
 ROOT_URLCONF = "backend.configuracion_django.urls"
 WSGI_APPLICATION = "backend.configuracion_django.wsgi.application"
 
@@ -173,6 +183,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "backend.configuracion_django.middleware_cors.FrontendCorsMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -221,12 +232,12 @@ USE_X_FORWARDED_HOST = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 
-PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "").strip().rstrip("/")
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY", "").strip()
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
 PAYMENT_SUCCESS_URL = os.getenv("PAYMENT_SUCCESS_URL", "").strip()
 PAYMENT_CANCEL_URL = os.getenv("PAYMENT_CANCEL_URL", "").strip()
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@botica-lore.local").strip()
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.locmem.EmailBackend").strip()
 

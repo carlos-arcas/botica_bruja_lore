@@ -78,6 +78,38 @@ def login_cuenta_cliente(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+def google_cuenta_cliente(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"detalle": "Método no permitido."}, status=405)
+    operation_id = _operation_id(request)
+    payload, error = _leer_payload_json(request)
+    if error is not None:
+        log_evento_cuenta(evento="cuenta_real_google", operation_id=operation_id, email=None, usuario_id=None, resultado="error", error=error.content.decode())
+        return error
+    try:
+        resultado = construir_servicios_publicos_cuenta_cliente().autenticar_google_cuenta_cliente.ejecutar(
+            credential=_texto(payload, "credential"),
+        )
+    except ErrorDominio as exc:
+        log_evento_cuenta(evento="cuenta_real_google", operation_id=operation_id, email=None, usuario_id=None, resultado="error", error=str(exc))
+        return json_validacion(str(exc))
+    login(request, User.objects.get(id=resultado.cuenta.id_usuario))
+    log_evento_cuenta(
+        evento="cuenta_real_google",
+        operation_id=operation_id,
+        email=resultado.cuenta.email,
+        usuario_id=resultado.cuenta.id_usuario,
+        resultado="ok_nueva" if resultado.es_nueva_cuenta else "ok_existente",
+    )
+    return JsonResponse(
+        {
+            "cuenta": serializar_cuenta_cliente(resultado.cuenta),
+            "es_nueva_cuenta": resultado.es_nueva_cuenta,
+        }
+    )
+
+
+@csrf_exempt
 def logout_cuenta_cliente(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"detalle": "Método no permitido."}, status=405)

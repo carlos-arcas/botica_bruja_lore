@@ -26,6 +26,13 @@ MODO_SOLO_CREAR = "solo_crear"
 MODO_UPSERT = "crear_actualizar"
 MODO_SOLO_VALIDAR = "solo_validar"
 MODOS = (MODO_SOLO_CREAR, MODO_UPSERT, MODO_SOLO_VALIDAR)
+SECCIONES_PUBLICAS_PRODUCTO_CANONICAS = (
+    "botica-natural",
+    "velas-e-incienso",
+    "minerales-y-energia",
+    "herramientas-esotericas",
+)
+SECCIONES_PUBLICAS_PRODUCTO_CANONICAS_SET = set(SECCIONES_PUBLICAS_PRODUCTO_CANONICAS)
 
 
 def procesar_importacion(
@@ -98,6 +105,14 @@ def _parse_bool(valor: str, campo: str) -> bool:
     raise ValueError(f"{campo} debe ser booleano (true/false).")
 
 
+def _normalizar_seccion_publica_producto(valor: str) -> str:
+    seccion = valor.strip().lower()
+    if seccion not in SECCIONES_PUBLICAS_PRODUCTO_CANONICAS_SET:
+        mapa = ", ".join(SECCIONES_PUBLICAS_PRODUCTO_CANONICAS)
+        raise ValueError(f"Seccion publica de producto invalida. Usa una de: {mapa}.")
+    return seccion
+
+
 def _procesar_fila(entidad, row, modo, persistir, resultado, imagenes_por_referencia):
     if entidad == "productos":
         _upsert_producto(row, modo, persistir, resultado, imagenes_por_referencia)
@@ -119,13 +134,14 @@ def _upsert_producto(row, modo, persistir, resultado, imagenes):
     nombre = row.get("nombre", "").strip()
     if not sku or not nombre:
         raise ValueError("Producto requiere sku y nombre.")
+    seccion_publica = _normalizar_seccion_publica_producto(row.get("seccion_publica", ""))
     slug_entrada = row.get("slug", "").strip()
     slug = slug_entrada or nombre
     defaults = {
         "nombre": row.get("nombre", "").strip(),
         "tipo_producto": row.get("tipo_producto", "").strip(),
         "categoria_comercial": row.get("categoria_comercial", "").strip(),
-        "seccion_publica": row.get("seccion_publica", "").strip(),
+        "seccion_publica": seccion_publica,
         "descripcion_corta": row.get("descripcion_corta", "").strip(),
         "precio_visible": row.get("precio_visible", "").strip(),
         "publicado": _parse_bool(row.get("publicado", ""), "publicado"),

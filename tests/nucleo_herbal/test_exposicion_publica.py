@@ -210,6 +210,236 @@ class TestExposicionPublicaNucleoHerbal(DjangoTestCase):
         slugs = [item["slug"] for item in data["productos"]]
         self.assertEqual(slugs, sorted(slugs))
 
+    def test_listado_productos_por_seccion_velas_devuelve_todos_publicos_propios(self) -> None:
+        for idx in range(6):
+            ProductoModelo.objects.create(
+                id=f"pro-vel-{idx}",
+                sku=f"VEL-{idx:03d}",
+                slug=f"vela-publica-demo-{idx}",
+                nombre=f"Vela pública {idx}",
+                tipo_producto="inciensos-y-sahumerios",
+                categoria_comercial="velas-e-incienso",
+                seccion_publica="velas-e-incienso",
+                descripcion_corta="demo",
+                precio_visible="8,00 €",
+                imagen_url="",
+                publicado=True,
+            )
+        ProductoModelo.objects.create(
+            id="pro-vel-oculto",
+            sku="VEL-900",
+            slug="vela-oculta",
+            nombre="Vela oculta",
+            tipo_producto="inciensos-y-sahumerios",
+            categoria_comercial="velas-e-incienso",
+            seccion_publica="velas-e-incienso",
+            descripcion_corta="demo",
+            precio_visible="8,00 €",
+            imagen_url="",
+            publicado=False,
+        )
+        ProductoModelo.objects.create(
+            id="pro-bn-visible",
+            sku="BN-901",
+            slug="botica-visible",
+            nombre="Botica visible",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 €",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/velas-e-incienso/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seccion_slug"], "velas-e-incienso")
+        self.assertEqual(len(data["productos"]), 6)
+        self.assertTrue(all(item["seccion_publica"] == "velas-e-incienso" for item in data["productos"]))
+        self.assertTrue(all(item["slug"].startswith("vela-publica-demo-") for item in data["productos"]))
+        slugs = [item["slug"] for item in data["productos"]]
+        self.assertEqual(slugs, sorted(slugs))
+
+    def test_listado_productos_por_seccion_velas_vacio_no_aplica_fallback_herbal(self) -> None:
+        ProductoModelo.objects.create(
+            id="pro-bn-fallback",
+            sku="BN-FALL-001",
+            slug="botica-fallback",
+            nombre="Botica fallback",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="botica",
+            planta=self.planta_melisa,
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 €",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/velas-e-incienso/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seccion_slug"], "velas-e-incienso")
+        self.assertEqual(data["productos"], [])
+
+    def test_listado_productos_por_seccion_minerales_devuelve_todos_publicos_propios(self) -> None:
+        for idx in range(6):
+            ProductoModelo.objects.create(
+                id=f"pro-min-{idx}",
+                sku=f"MIN-{idx:03d}",
+                slug=f"mineral-publico-demo-{idx}",
+                nombre=f"Mineral publico {idx}",
+                tipo_producto="minerales-y-piedras",
+                categoria_comercial="minerales-y-energia",
+                seccion_publica="minerales-y-energia",
+                descripcion_corta="demo",
+                precio_visible="12,00 EUR",
+                imagen_url="",
+                publicado=True,
+            )
+        ProductoModelo.objects.create(
+            id="pro-min-oculto",
+            sku="MIN-900",
+            slug="mineral-oculto",
+            nombre="Mineral oculto",
+            tipo_producto="minerales-y-piedras",
+            categoria_comercial="minerales-y-energia",
+            seccion_publica="minerales-y-energia",
+            descripcion_corta="demo",
+            precio_visible="12,00 EUR",
+            imagen_url="",
+            publicado=False,
+        )
+        ProductoModelo.objects.create(
+            id="pro-bn-visible-min",
+            sku="BN-902",
+            slug="botica-visible-minerales",
+            nombre="Botica visible minerales",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="botica",
+            planta=self.planta_melisa,
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 EUR",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/minerales-y-energia/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seccion_slug"], "minerales-y-energia")
+        self.assertEqual(len(data["productos"]), 6)
+        self.assertTrue(all(item["seccion_publica"] == "minerales-y-energia" for item in data["productos"]))
+        self.assertTrue(all(item["slug"].startswith("mineral-publico-demo-") for item in data["productos"]))
+        slugs = [item["slug"] for item in data["productos"]]
+        self.assertEqual(slugs, sorted(slugs))
+
+    def test_listado_productos_por_seccion_minerales_vacio_no_aplica_fallback_herbal(self) -> None:
+        ProductoModelo.objects.create(
+            id="pro-bn-fallback-min",
+            sku="BN-FALL-002",
+            slug="botica-fallback-minerales",
+            nombre="Botica fallback minerales",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="botica",
+            planta=self.planta_melisa,
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 EUR",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/minerales-y-energia/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seccion_slug"], "minerales-y-energia")
+        self.assertEqual(data["productos"], [])
+
+    def test_listado_productos_por_seccion_herramientas_devuelve_todos_publicos_propios(self) -> None:
+        for idx in range(3):
+            ProductoModelo.objects.create(
+                id=f"pro-her-{idx}",
+                sku=f"HER-{idx:03d}",
+                slug=f"herramienta-publica-demo-{idx}",
+                nombre=f"Herramienta publica {idx}",
+                tipo_producto="herramientas-rituales",
+                categoria_comercial="herramientas-esotericas",
+                seccion_publica="herramientas-esotericas",
+                descripcion_corta="demo",
+                precio_visible="14,00 EUR",
+                imagen_url="",
+                publicado=True,
+            )
+        ProductoModelo.objects.create(
+            id="pro-her-oculto",
+            sku="HER-900",
+            slug="herramienta-oculta",
+            nombre="Herramienta oculta",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="herramientas-esotericas",
+            seccion_publica="herramientas-esotericas",
+            descripcion_corta="demo",
+            precio_visible="14,00 EUR",
+            imagen_url="",
+            publicado=False,
+        )
+        ProductoModelo.objects.create(
+            id="pro-bn-visible-her",
+            sku="BN-903",
+            slug="botica-visible-herramientas",
+            nombre="Botica visible herramientas",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="botica",
+            planta=self.planta_melisa,
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 EUR",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/herramientas-esotericas/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seccion_slug"], "herramientas-esotericas")
+        self.assertEqual(len(data["productos"]), 3)
+        self.assertTrue(all(item["seccion_publica"] == "herramientas-esotericas" for item in data["productos"]))
+        self.assertTrue(all(item["slug"].startswith("herramienta-publica-demo-") for item in data["productos"]))
+        slugs = [item["slug"] for item in data["productos"]]
+        self.assertEqual(slugs, sorted(slugs))
+
+    def test_listado_productos_por_seccion_herramientas_vacio_no_aplica_fallback_herbal(self) -> None:
+        ProductoModelo.objects.create(
+            id="pro-bn-fallback-her",
+            sku="BN-FALL-003",
+            slug="botica-fallback-herramientas",
+            nombre="Botica fallback herramientas",
+            tipo_producto="hierbas-a-granel",
+            categoria_comercial="botica",
+            planta=self.planta_melisa,
+            seccion_publica="botica-natural",
+            descripcion_corta="demo",
+            precio_visible="10,00 EUR",
+            imagen_url="",
+            publicado=True,
+        )
+
+        response = self.client.get("/api/v1/herbal/secciones/herramientas-esotericas/productos/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seccion_slug"], "herramientas-esotericas")
+        self.assertEqual(data["productos"], [])
+
 
     def test_listado_productos_por_seccion_filtra_invalidos_legacy(self) -> None:
         for slug in (

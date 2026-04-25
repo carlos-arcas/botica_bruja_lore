@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { ETIQUETA_ENLACE_ADMIN_CABECERA } from "@/contenido/shell/navegacionGlobal";
 import { debugLogViewerHabilitado } from "@/infraestructura/configuracion/debugLogs";
 
+import { AccesosCabecera } from "./AccesosCabecera";
 import { NavegacionPrincipal } from "./NavegacionPrincipal";
 import estilos from "./shellComercial.module.css";
 
@@ -10,19 +10,17 @@ export function CabeceraComercial(): JSX.Element {
   return (
     <header className={estilos.cabecera}>
       <div className={estilos.cabeceraInterior}>
-        <Link href="/" className={estilos.marca}>
-          La Botica de la Bruja Lore
-          <span>Botica editorial · ritual artesanal</span>
-        </Link>
-        <div className={estilos.accionesCabecera}>
-          <NavegacionPrincipal mostrarLogs={debugLogViewerHabilitado()} />
-          <Link
-            href="/admin"
-            className={estilos.enlaceAdmin}
-            aria-label="Abrir backoffice administrativo"
-          >
-            {ETIQUETA_ENLACE_ADMIN_CABECERA}
+        <div className={estilos.franjaMarca}>
+          <Link href="/" className={estilos.marca}>
+            <span className={estilos.marcaTitulo}>La Botica de la Bruja Lore</span>
+            <span className={estilos.marcaSubtitulo}>
+              Tienda editorial, compendio botanico y calendario ritual
+            </span>
           </Link>
+        </div>
+        <div className={estilos.barraCabecera}>
+          <NavegacionPrincipal mostrarLogs={debugLogViewerHabilitado()} />
+          <AccesosCabecera />
         </div>
       </div>
     </header>

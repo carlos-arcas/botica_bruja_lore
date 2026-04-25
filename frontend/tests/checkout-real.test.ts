@@ -860,5 +860,34 @@ test("checkout real resuelve y aplica la dirección predeterminada de la libreta
   assert.equal(predeterminada?.id_direccion, "dir-2");
   assert.equal(datos.modo_direccion, "guardada");
   assert.equal(datos.id_direccion_guardada, "dir-2");
+  assert.equal(datos.nombre_contacto, "Lore");
+  assert.equal(datos.telefono_contacto, "600");
   assert.equal(datos.linea_1, "Calle Luna 13");
+});
+
+test("checkout real no pisa el nombre de contacto manual al aplicar la direccion guardada", () => {
+  const datos = aplicarDireccionGuardadaADatosCheckoutReal(
+    {
+      ...construirEstadoInicialCheckoutReal(),
+      nombre_contacto: "Compradora habitual",
+    },
+    {
+      id_direccion: "dir-1",
+      alias: "Casa",
+      nombre_destinatario: "Lore",
+      telefono_contacto: "611111111",
+      linea_1: "Calle Luna 13",
+      linea_2: "",
+      codigo_postal: "28013",
+      ciudad: "Madrid",
+      provincia: "Madrid",
+      pais_iso: "ES",
+      predeterminada: true,
+      fecha_creacion: "",
+      fecha_actualizacion: "",
+    },
+  );
+
+  assert.equal(datos.nombre_contacto, "Compradora habitual");
+  assert.equal(datos.telefono_contacto, "611111111");
 });
