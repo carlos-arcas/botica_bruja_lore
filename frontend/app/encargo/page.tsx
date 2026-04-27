@@ -9,8 +9,9 @@ type Props = {
 };
 
 export const metadata: Metadata = construirMetadataSeo({
-  title: "Solicitud de encargo artesanal | La Botica de la Bruja Lore",
-  description: "Prepara una solicitud de encargo clara y compártela por un canal real si está configurado.",
+  title: "Checkout demo | La Botica de la Bruja Lore",
+  description:
+    "Prepara un pedido demo sin cobro real o conserva el resumen para una consulta manual si el canal está configurado.",
   indexable: false,
 });
 
@@ -19,10 +20,10 @@ export default function PaginaEncargo({ searchParams }: Props): JSX.Element {
     <main className="contenedor-home">
       <FlujoEncargoConsulta slugPreseleccionado={searchParams?.producto} cestaPreseleccionada={searchParams?.cesta} origenPreseleccionado={searchParams?.origen} />
       <section className="bloque-home">
-        <h2>Antes de enviar tu solicitud</h2>
+        <h2>Antes de confirmar tu pedido demo</h2>
         <p>
-          Consulta estas páginas para entender cómo confirmamos encargos, cómo tratamos tiempos e incidencias y qué uso damos
-          a tus datos de contacto dentro de esta demo.
+          Consulta estas páginas para entender cómo revisamos el pedido demo, cómo tratamos tiempos e incidencias y qué
+          uso damos a tus datos de contacto dentro de esta demo.
         </p>
         <div className="hero-portada__acciones">
           <Link href="/condiciones-encargo" className="boton boton--secundario">Condiciones del encargo</Link>

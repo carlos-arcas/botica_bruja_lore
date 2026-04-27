@@ -4,8 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { BotonGoogleCuentaCliente } from "@/componentes/cuenta_cliente/BotonGoogleCuentaCliente";
 import { resolverMensajePostRegistro } from "@/contenido/cuenta_cliente/verificacionEmail";
-import { RUTAS_CUENTA_CLIENTE } from "@/contenido/cuenta_cliente/rutasCuentaCliente";
+import {
+  construirRutaOnboardingEnvioCuenta,
+  RUTAS_CUENTA_CLIENTE,
+} from "@/contenido/cuenta_cliente/rutasCuentaCliente";
 import { loginCuentaCliente, registrarCuentaCliente } from "@/infraestructura/api/cuentasCliente";
 
 type Props = { modo: "registro" | "acceso" };
@@ -26,17 +30,40 @@ export function FormularioCuentaCliente({ modo }: Props): JSX.Element {
       setMensaje(resultado.mensaje);
       return;
     }
-    const destino = modo === "registro"
-      ? `${RUTAS_CUENTA_CLIENTE.cuenta}?alta=ok&mensaje=${encodeURIComponent(resolverMensajePostRegistro())}`
-      : RUTAS_CUENTA_CLIENTE.cuenta;
-    router.push(destino);
+    irADestinoPostAutenticacion({
+      modo,
+      router,
+      esNuevaCuentaGoogle: false,
+      origenGoogle: false,
+    });
     router.refresh();
   };
 
   return (
     <section className="bloque-home">
-      <p>{modo === "registro" ? "Cuenta real v1.1" : "Acceso cliente real"}</p>
+      <p>{modo === "registro" ? "Cuenta real v1.2" : "Acceso cliente real v1.2"}</p>
       <h1>{modo === "registro" ? "Crear cuenta real" : "Entrar en mi cuenta"}</h1>
+      <p>
+        {modo === "registro"
+          ? "Empiezas con nombre, email y contraseña. Justo después puedes completar tus datos de envío o dejarlo para más tarde."
+          : "Puedes entrar con tu contraseña o continuar con Google sobre la misma cuenta real."}
+      </p>
+      <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
+        <BotonGoogleCuentaCliente
+          modo={modo}
+          onError={setMensaje}
+          onExito={({ es_nueva_cuenta }) => {
+            irADestinoPostAutenticacion({
+              modo,
+              router,
+              esNuevaCuentaGoogle: es_nueva_cuenta,
+              origenGoogle: true,
+            });
+            router.refresh();
+          }}
+        />
+        <p>o usa tu email</p>
+      </div>
       <form onSubmit={enviar} style={{ display: "grid", gap: 12, maxWidth: 480 }}>
         {modo === "registro" && (
           <label>
@@ -58,4 +85,29 @@ export function FormularioCuentaCliente({ modo }: Props): JSX.Element {
       </form>
     </section>
   );
+}
+
+function irADestinoPostAutenticacion({
+  modo,
+  router,
+  esNuevaCuentaGoogle,
+  origenGoogle,
+}: {
+  modo: "registro" | "acceso";
+  router: ReturnType<typeof useRouter>;
+  esNuevaCuentaGoogle: boolean;
+  origenGoogle: boolean;
+}): void {
+  if (modo !== "registro") {
+    router.push(RUTAS_CUENTA_CLIENTE.cuenta);
+    return;
+  }
+  if (origenGoogle && !esNuevaCuentaGoogle) {
+    router.push(RUTAS_CUENTA_CLIENTE.cuenta);
+    return;
+  }
+  const mensaje = origenGoogle
+    ? "Cuenta preparada con Google. Completa ahora tus datos de envío si quieres."
+    : resolverMensajePostRegistro();
+  router.push(construirRutaOnboardingEnvioCuenta(mensaje));
 }

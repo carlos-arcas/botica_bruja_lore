@@ -13,86 +13,129 @@ import {
   esRutaActiva,
 } from "../contenido/shell/navegacionGlobal";
 
-test("navegación principal expone accesos comerciales clave", () => {
+test("navegacion principal expone la nueva arquitectura de informacion", () => {
   const rutas = NAVEGACION_PRINCIPAL.map((enlace) => enlace.href);
 
-  assert.equal(rutas.includes("/"), true);
-  assert.equal(rutas.includes("/colecciones"), true);
-  assert.equal(rutas.includes("/la-botica"), true);
-  assert.equal(rutas.includes("/guias"), true);
-  assert.equal(rutas.includes("/tarot"), true);
-  assert.equal(rutas.includes("/encargo"), true);
-  assert.equal(NAVEGACION_PRINCIPAL.some((enlace) => enlace.etiqueta === "Mi selección"), true);
+  assert.deepEqual(rutas, ["/", "/botica-natural", "/guias", "/tarot", "/calendario-ritual"]);
+  assert.equal(rutas.includes("/colecciones"), false);
+  assert.equal(rutas.includes("/la-botica"), false);
+  assert.equal(rutas.includes("/encargo"), false);
+  assert.equal(rutas.includes("/acceso"), false);
+  assert.equal(rutas.includes("/mi-cuenta"), false);
+  assert.equal(rutas.includes("/cuenta-demo"), false);
+  assert.equal(rutas.includes("/cesta"), false);
 });
 
-test("esRutaActiva resuelve coincidencia exacta y por prefijo", () => {
-  const colecciones = NAVEGACION_PRINCIPAL[1]!;
+test("tienda y guias exponen submenu con destinos reales del repo", () => {
+  const tienda = NAVEGACION_PRINCIPAL.find((enlace) => enlace.etiqueta === "Tienda");
+  const guias = NAVEGACION_PRINCIPAL.find((enlace) => enlace.etiqueta === "Guias");
+
+  assert.deepEqual(tienda?.submenu?.map((item) => item.href), [
+    "/botica-natural",
+    "/velas-e-incienso",
+    "/minerales-y-energia",
+    "/herramientas-esotericas",
+  ]);
+  assert.equal(guias?.submenu?.some((item) => item.href.startsWith("/guias")), true);
+  assert.equal(guias?.submenu?.some((item) => item.href === "/hierbas"), true);
+  assert.equal(guias?.submenu?.some((item) => item.href === "/rituales"), true);
+});
+
+test("esRutaActiva resuelve coincidencia exacta, prefijo y submenus", () => {
   const inicio = NAVEGACION_PRINCIPAL[0]!;
-  const laBotica = NAVEGACION_PRINCIPAL[2]!;
+  const tienda = NAVEGACION_PRINCIPAL[1]!;
+  const guias = NAVEGACION_PRINCIPAL[2]!;
+  const tarot = NAVEGACION_PRINCIPAL[3]!;
 
-  assert.equal(esRutaActiva("/colecciones", colecciones), true);
-  assert.equal(esRutaActiva("/colecciones/kit-luna", colecciones), true);
   assert.equal(esRutaActiva("/", inicio), true);
-  assert.equal(esRutaActiva("/rituales", inicio), false);
-  assert.equal(esRutaActiva("/la-botica", laBotica), true);
-  assert.equal(esRutaActiva("/la-botica/historia", laBotica), false);
+  assert.equal(esRutaActiva("/velas-e-incienso", tienda), true);
+  assert.equal(esRutaActiva("/herramientas-esotericas/cuenco-laton-ritual", tienda), true);
+  assert.equal(esRutaActiva("/hierbas/romero", guias), true);
+  assert.equal(esRutaActiva("/rituales", guias), true);
+  assert.equal(esRutaActiva("/tarot", tarot), true);
+  assert.equal(esRutaActiva("/calendario-ritual", tarot), false);
 });
 
-test("contador de selección muestra fallback correcto", () => {
+test("contador de carrito usa wording visible coherente", () => {
   assert.equal(debeMostrarContadorCesta(0), false);
   assert.equal(debeMostrarContadorCesta(3), true);
-  assert.equal(construirTextoContadorCesta(1), "1 unidad en mi selección");
-  assert.equal(construirTextoContadorCesta(2), "2 unidades en mi selección");
+  assert.equal(construirTextoContadorCesta(1), "1 unidad en el carrito");
+  assert.equal(construirTextoContadorCesta(2), "2 unidades en el carrito");
 });
 
-test("footer mantiene enlaces de continuidad editorial-comercial", () => {
-  assert.equal(ENLACES_FOOTER.length >= 8, true);
-  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/la-botica"), true);
-  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/tarot"), true);
+test("footer mantiene continuidad editorial-comercial sin enlaces descartados del header", () => {
+  assert.equal(ENLACES_FOOTER.length >= 9, true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/botica-natural"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/velas-e-incienso"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/minerales-y-energia"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/herramientas-esotericas"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/guias"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/calendario-ritual"), true);
-  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/encargo"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/la-botica"), false);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/encargo"), false);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/condiciones-encargo"), true);
-  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/envios-y-preparacion"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/privacidad"), true);
 });
 
-test("cabecera comercial apunta al backoffice interno /admin", () => {
+test("cabecera comercial organiza marca superior, nav y accesos externos", () => {
   const cabecera = readFileSync("componentes/shell/CabeceraComercial.tsx", "utf-8");
 
-  assert.match(cabecera, /href="\/admin"/);
+  assert.match(cabecera, /franjaMarca/);
+  assert.match(cabecera, /barraCabecera/);
+  assert.match(cabecera, /NavegacionPrincipal/);
+  assert.match(cabecera, /AccesosCabecera/);
+  assert.match(cabecera, /La Botica de la Bruja Lore/);
+});
+
+test("accesos externos resuelven carrito, login dinamico y admin", () => {
+  const accesos = readFileSync("componentes/shell/AccesosCabecera.tsx", "utf-8");
+
+  assert.match(accesos, /href="\/cesta"/);
+  assert.match(accesos, /Carrito/);
+  assert.match(accesos, /Login/);
+  assert.match(accesos, /Mi cuenta/);
+  assert.match(accesos, /NOMBRE_COOKIE_CUENTA_CLIENTE/);
+  assert.match(accesos, /obtenerSesionCuentaCliente/);
+  assert.match(accesos, /href="\/admin"/);
   assert.equal(ETIQUETA_ENLACE_ADMIN_CABECERA.length > 0, true);
 });
 
-
-test("navbar comercial define estado activo visible y patrón editorial", () => {
+test("navbar comercial define estado activo visible y patron con submenu", () => {
   const componente = readFileSync("componentes/shell/NavegacionPrincipal.tsx", "utf-8");
   const estilos = readFileSync("componentes/shell/shellComercial.module.css", "utf-8");
 
   assert.match(componente, /aria-current=\{activa \? "page" : undefined\}/);
+  assert.match(componente, /itemConSubmenu/);
+  assert.match(estilos, /\.submenu/);
   assert.match(estilos, /\.enlaceActiva/);
   assert.match(estilos, /\.navegacion ul/);
   assert.match(estilos, /repeating-linear-gradient/);
   assert.match(estilos, /\.enlaceActiva::after/);
 });
 
-test("navbar comercial mantiene estados hover y focus visibles", () => {
+test("navbar comercial mantiene estados hover, focus y responsive", () => {
   const estilos = readFileSync("componentes/shell/shellComercial.module.css", "utf-8");
 
   assert.match(estilos, /\.enlace:hover/);
   assert.match(estilos, /\.enlace:focus-visible/);
   assert.match(estilos, /outline: 2px solid/);
-});
-
-test("navbar comercial conserva estructura responsive para móvil", () => {
-  const estilos = readFileSync("componentes/shell/shellComercial.module.css", "utf-8");
-
   assert.match(estilos, /@media \(max-width: 780px\)/);
-  assert.match(estilos, /\.navegacion ul \{[\s\S]*width: 100%/);
-  assert.match(estilos, /\.enlace \{[\s\S]*font-size: 0\.9rem/);
+  assert.match(estilos, /\.barraCabecera \{/);
+  assert.match(estilos, /\.accionesExternas \{/);
 });
 
+test("carrito visible continua al checkout real y deja fuera encargo como CTA principal", () => {
+  const vistaCesta = readFileSync("componentes/catalogo/cesta/VistaCestaRitual.tsx", "utf-8");
+  const indicador = readFileSync("componentes/catalogo/cesta/IndicadorCestaRitual.tsx", "utf-8");
 
-test("enlace Logs solo aparece cuando la flag está activa", () => {
+  assert.match(vistaCesta, /Continuar al checkout/);
+  assert.match(vistaCesta, /\/checkout\?cesta=/);
+  assert.doesNotMatch(vistaCesta, /\/encargo/);
+  assert.match(indicador, /Carrito/);
+  assert.match(indicador, /unidades en el carrito/);
+});
+
+test("enlace Logs solo aparece cuando la flag esta activa", () => {
   const sinLogs = construirNavegacionPrincipal(false).map((enlace) => enlace.href);
   const conLogs = construirNavegacionPrincipal(true);
   const rutasConLogs = conLogs.map((enlace) => enlace.href);

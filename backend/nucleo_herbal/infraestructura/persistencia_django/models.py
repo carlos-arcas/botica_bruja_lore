@@ -306,6 +306,7 @@ class CuentaClienteModelo(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.PROTECT, related_name="cuenta_cliente")
     email = models.EmailField(max_length=254, unique=True)
     nombre_visible = models.CharField(max_length=120)
+    google_sub = models.CharField(max_length=191, unique=True, null=True, blank=True)
     email_verificado = models.BooleanField(default=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)

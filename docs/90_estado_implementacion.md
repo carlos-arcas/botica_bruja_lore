@@ -29,16 +29,18 @@ Los estados oficiales de proyecto y capacidad son:
 
 ## 4. Estado global actual del proyecto
 - Estado de definición estratégica/documental: **alto y consistente**.
-- Estado de implementación funcional de producto: **Ciclos 1, 2, 3, 4 y 5 implementados en alcance comprometido**.
-- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado hasta capacidades de cuenta demo con historial de pedidos (Ciclo 4)**.
-- Frontend (home + herbal + rituales + flujo ecommerce demo + cuenta demo): **implementado y navegable hasta cierre de Ciclo 4**.
-- Backoffice/admin mínimo: **implementado para operación base herbal/ritual + pedidos demo + cuenta demo**.
-- Checkout demo y confirmación/recibo: **implementados (Ciclo 3)**.
-- Cuenta demo con valor (registro/auth demo, perfil, historial): **implementada (Ciclo 4)**.
+- Estado de implementación funcional de producto: **Ciclos demo 1, 2, 3, 4 y 5 implementados en alcance comprometido; evolución ecommerce real/V2 cerrada hasta `V2-R09`; `V2-R10` pendiente de validación externa**.
+- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado para recorrido demo completo, checkout/pedido real, cuenta real y endurecimientos operativos V2 ya cerrados**.
+- Frontend (home + herbal + rituales + calendario + flujo ecommerce demo legado + checkout real + área privada cliente): **implementado y navegable**.
+- Backoffice/admin mínimo: **implementado para operación demo y real mínima, incluyendo inventario, incidencias/postventa básica y ACL v2 dentro del alcance ya cerrado**.
+- Naming factual vigente para herramientas: la sección/ruta pública y de backoffice permanece en `herramientas-esotericas`, mientras el `tipo_producto` canónico de dominio, importación y seed permanece en `herramientas-rituales`.
+- Checkout demo legado (`/encargo`) + confirmación/recibo/email demo: **DONE (Ciclo 3)**.
+- Cuenta demo con valor (registro/auth demo, perfil, historial): **DONE como legado controlado (Ciclo 4)**.
+- Checkout/pago real + operación mínima post-pago: **DONE en coexistencia controlada con el legado demo**.
 - Calendario ritual: **Prompts 1–3 implementados (dominio/aplicación + persistencia/API + frontend editorial mínimo con gate)**.
 - Quality gate y CI canónica: **activos** con workflow `Quality Gate` en GitHub Actions (`push` + `pull_request`).
 
-Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta checkout/pago reales, operación física mínima y ahora cuenta real v1 con área privada y pedidos asociados, manteniendo `CuentaDemo` como legado explícito y compatible.
+Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta checkout demo legado (`/encargo`) y checkout/pago real en coexistencia controlada, con cuenta real v1/v1.1 y bloques `V2-R01`–`V2-R09` cerrados; el único frente externo pendiente es el cierre de go-live `V2-R10`.
 
 ## 5. Estado por capacidades
 | Capacidad | Estado actual | Ciclo asociado | Evidencia / referencia | Notas operativas |
@@ -60,9 +62,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 | Ficha ritual conectada | DONE | Ciclo 2 | `frontend/app/rituales/[slug]/page.tsx`, `frontend/componentes/rituales/detalle/` | Ficha con bloques editoriales y resolución comercial mínima enlazando a herbal/producto. |
 | Integración bidireccional herbal ↔ ritual | DONE | Ciclo 2 | `frontend/componentes/herbal/detalle/BloqueRitualesRelacionados.tsx`, `frontend/componentes/rituales/detalle/BloquePlantasRelacionadas.tsx`, `tests/nucleo_herbal/test_exposicion_publica.py` | Recorridos de ida y vuelta implementados sin romper prioridad herbal en navegación. |
 | Quality gate mínimo operativo de ciclo | DONE | Ciclo 2 (cierre) | `python manage.py check`, `python manage.py test`, `pytest -q tests/nucleo_herbal/test_entidades.py tests/nucleo_herbal/test_casos_de_uso.py tests/nucleo_herbal/test_entidades_rituales.py tests/nucleo_herbal/test_casos_de_uso_rituales.py`, `npm run lint`, `npm run build` | Gate mínimo de cierre ejecutado en entorno local con resultados favorables. |
-| Checkout demo | PLANIFICADO | Ciclo 3 | `docs/02_alcance_y_fases.md` | Sin cambios, fuera de alcance. |
-| Login / invitado | PLANIFICADO | Ciclo 3–4 | `docs/02_alcance_y_fases.md` | Sin cambios, fuera de alcance. |
-| Historial de pedidos demo | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
+| Checkout demo legado (`/encargo`) | DONE | Ciclo 3 | `frontend/app/pedido-demo/[id_pedido]/page.tsx`, `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`, `tests/nucleo_herbal/test_api_pedidos_demo.py`, `frontend/tests/checkout-demo.test.ts` | Flujo demo completo (`/encargo` → `PedidoDemo` → recibo/email demo) cerrado con contrato mínimo de `lineas` + `email` + `canal` (+ `id_usuario` opcional). |
+| Login / invitado en `/encargo` | DONE | Ciclo 3–4 | `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `backend/nucleo_herbal/aplicacion/casos_de_uso_cuentas_demo.py`, `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx` | El checkout demo legado soporta canal invitado y canal autenticado con `cuenta-demo`; la continuidad sigue siendo mínima y sin sesión real compartida. |
+| Historial de pedidos demo | DONE | Ciclo 4 | `backend/nucleo_herbal/aplicacion/puertos/proveedores_historial_pedidos_demo.py`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_demo.py`, `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx` | Historial demo asociado por `id_usuario` y/o `email_contacto`, visible en API y frontend de cuenta demo. |
 | Favoritos | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Recordatorios | PLANIFICADO | Ciclo 4–5 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Cuenta real v1 (`CuentaCliente`) | DONE | Evolución ecommerce real | `backend/nucleo_herbal/dominio/cuentas_cliente.py`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`, `frontend/app/mi-cuenta/page.tsx`, `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`, `tests/nucleo_herbal/test_api_cuentas_cliente.py` | Registro/login/logout reales con sesión backend, pedidos asociados y coexistencia explícita con `CuentaDemo` legacy. |
@@ -70,27 +72,37 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 | Recuperación de contraseña cuenta real v1.1 | DONE | Evolución ecommerce real | `backend/nucleo_herbal/aplicacion/casos_de_uso_cuentas_cliente.py`, `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_cuentas_cliente.py`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`, `frontend/app/recuperar-password/page.tsx`, `frontend/componentes/cuenta_cliente/FormularioRecuperacionPassword.tsx`, `frontend/infraestructura/api/cuentasCliente.ts`, `tests/nucleo_herbal/test_casos_de_uso_recuperacion_password_cuenta_cliente.py`, `tests/nucleo_herbal/test_api_cuentas_cliente.py`, `frontend/tests/cuenta-cliente-recuperacion.test.ts` | Flujo real por email con respuesta genérica, token seguro con expiración, invalidación tras uso y UI mínima para solicitud y reset sin reabrir alcance ajeno. |
 | Calendario ritual | DONE | Ciclo 5 | `backend/nucleo_herbal/dominio/calendario_ritual.py`, `backend/nucleo_herbal/aplicacion/casos_de_uso_calendario_ritual.py`, `backend/nucleo_herbal/presentacion/publica/views.py`, `frontend/app/calendario-ritual/page.tsx`, `frontend/infraestructura/api/calendarioRitual.ts`, `frontend/tests/calendario-ritual.test.ts`, `docs/ciclos/ciclo_05_calendario_editorial.md` | Prompts 1–3 oficiales cubiertos (dominio/aplicación + persistencia/API + frontend/gate mínimo). |
 
-## 6. Último ciclo cerrado
-- **Ciclo cerrado formalmente**: Ciclo 2 (rituales conectados).
-- **Estado de Ciclo 2**: **DONE técnico** para su contrato de alcance.
-- **Evidencia de cierre de Ciclo 2**:
-  - recorrido directo validado: home → rituales → ficha ritual conectada → plantas/productos,
-  - recorrido inverso validado: home → hierbas → ficha herbal → rituales relacionados,
-  - separación editorial/comercial mantenida en backend y frontend,
-  - backoffice mínimo ritual y exposición pública mínima ritual operativos,
-  - quality gate mínimo ejecutado con checks backend/frontend en verde.
+## 6. Último hito operativo cerrado
+- **Frente demo documental/funcional**: ciclos 1–5 implementados en el alcance comprometido.
+- **Último hito incremental cerrado con evidencia verificable**: `V2-R09` (seguridad y ACL v2).
+- **Evidencia de cierre vigente**: `docs/roadmap_ecommerce_real_v2.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/roadmap_codex.md`.
 
-## 7. Ciclo actual
-- **Ciclo operativo vigente**: Ciclo 5 (Prompts 1–3 ejecutados).
-- **Estado**: **EN_PROGRESO**.
+## 6.1 Contrato activo de catálogo público por sección
+- **Estado factual vigente**:
+  1. `botica-natural` mantiene el baseline público DB-backed completo; `seed_demo_publico.py`, `docs/deploy_railway.md` y `scripts/validate_botica_natural_postgres_e2e.py` la anclan en **5 productos publicados**.
+  2. `velas-e-incienso` ya está publicada como sección DB-backed con listado y detalle propios; `seed_demo_publico.py` la sostiene con **3 productos publicados propios**, el frontend expone `/velas-e-incienso` + `/velas-e-incienso/[slug]` y la regresión mínima pública cubre listado, detalle y vacío honesto.
+  3. `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py` conserva un fallback herbal especial solo para `botica-natural` cuando la sección no devuelve productos propios.
+  4. `minerales-y-energia` ya está publicada como sección DB-backed con listado y detalle propios; `seed_demo_publico.py` la sostiene con **3 productos publicados propios**, el frontend expone `/minerales-y-energia` + `/minerales-y-energia/[slug]` y la regresión mínima pública ya cubre visibilidad, detalle, listado visible de 6 registros y vacío honesto en frontend/backend.
+  5. `herramientas-esotericas` ya está publicada como sección DB-backed con listado y detalle propios; `seed_demo_publico.py` la sostiene con **3 productos publicados propios**, el frontend expone `/herramientas-esotericas` + `/herramientas-esotericas/[slug]` y la regresión mínima pública ya cubre visibilidad, detalle y vacío honesto.
+  6. `CAT-QA-001` ya protege el recorrido transversal entre `home`, rutas públicas de sección, helper `obtenerProductosPublicosPorSeccion(...)` y resincronización contextual de importación/backoffice para las cuatro secciones comerciales.
+- **Regla operativa definida**:
+  1. ninguna sección nueva debe abrir catálogo público DB-backed con menos de **3 productos publicados propios**; `botica-natural` mantiene su baseline de **5**.
+  2. el vacío honesto es válido como estado runtime posterior a la apertura de la sección o bajo filtros, no como atajo para inaugurar una sección sin catálogo suficiente.
+  3. el fallback cruzado entre secciones no se generaliza: solo sobrevive la compatibilidad legado de `botica-natural`.
+
+## 7. Ruta operativa vigente
+- **Ruta vigente**: cierre externo de `V2-R10` por desbloqueo de `AUT-003` y `OPS-RWY-003`; la cola autónoma local ya no tiene tareas ejecutables.
+- **Estado**: **BLOQUEADO** por dependencia externa de URLs/credenciales reales y entorno temporal seguro de restore drill.
 - **Condición de continuidad aplicada**:
-  1. Prompts 1–3 de Ciclo 5 implementados con separación limpia de capas;
-  2. Ciclos 3 y 4 permanecen cerrados sin reapertura de alcance;
-  3. ciclo técnicamente cerrable sin adelantar capacidades de ciclo siguiente.
+  1. la coexistencia demo ↔ real sigue activa sin reabrir capacidades ya cerradas;
+  2. tras cerrar `CAT-QA-001`, `docs/roadmap_codex.md` ya no contiene ninguna `TODO` no `BLOCKED`; el estado correcto pasa a backlog totalmente bloqueado;
+  3. `AUT-003` y `OPS-RWY-003` siguen exigiendo `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro de restore drill para el cierre externo;
+  4. el siguiente paso exacto es desbloquear `AUT-003` con URLs reales desplegadas, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y un dump permitido en un entorno temporal seguro.
 
 ## 8. Deuda y bloqueos conocidos
-1. No se detectan bloqueos técnicos/documentales para declarar Ciclo 5 cerrable tras Prompt 3.
-2. La activación de nuevas capacidades debe entrar exclusivamente por roadmap oficial siguiente, evitando frentes paralelos.
+1. El cierre externo de `V2-R10` sigue bloqueado por ausencia de URLs/credenciales reales y entorno temporal seguro de restore drill en el runner actual.
+2. La cola autónoma local ya quedó agotada; no corresponde inventar trabajo fuera de `docs/roadmap_codex.md` mientras `AUT-003` y `OPS-RWY-003` sigan bloqueadas.
+3. `CAT-QA-001` ya deja la expansión comercial protegida por regresión transversal: `frontend/tests/comercial-multiseccion-regresion.test.ts` enlaza `home` + rutas públicas + helper de catálogo + mapa canónico de backoffice, `frontend/tests/home-raiz-secciones.test.ts` mantiene la entrada principal sin falsos negativos sobre `botica-natural`, `frontend/tests/backoffice-flujos.test.ts` conserva la resincronización A+B+C+D y `tests/nucleo_herbal/test_exposicion_publica.py` mantiene listado y vacío honesto en backend para las secciones comerciales; el siguiente paso exacto pasa a ser el desbloqueo externo de `AUT-003`.
 
 ## 8.1 Transición formal demo → real
 - Capacidad: **Base arquitectónica de migración ecommerce real**.
@@ -143,20 +155,21 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Estado oficial tras reencauce:
   - Ciclo 1: **DONE**.
   - Ciclo 2: **DONE**.
-  - Ciclo 3 (ecommerce demo completo): **EN_PROGRESO**, sin cierre válido todavía.
+  - Ciclo 3 (ecommerce demo completo): **DONE** en el estado actual; el reencauce que sigue debajo se conserva solo como traza histórica previa al cierre oficial documentado en las secciones 24–25.
   - Microciclo de reencauce documental: **DONE** con trazabilidad en `docs/ciclos/ciclo_03_reencauce_control.md`.
 - Regla activa de continuidad: todo incremento nuevo debe mapearse explícitamente a un prompt del roadmap oficial de Ciclo 3 o bloquearse por sobrealcance.
 
 ---
 
 **Regla de lectura rápida del estado actual:**
-- Ciclo 2 está técnicamente cerrado con evidencia de recorrido y quality gate mínimo operativo.
-- No se detectan bloqueos externos que impidan declarar DONE dentro del contrato de este ciclo.
-- El siguiente paso correcto es abrir Ciclo 3 respetando el alcance ya definido.
+- Para decisión factual vigente mandan el apartado 4, la tabla del apartado 5 y la ruta operativa del apartado 7.
+- Las secciones incrementales posteriores conservan trazabilidad histórica de cada entrega; cuando el cierre oficial del ciclo ya absorbió ese incremento, el estado se normaliza como **DONE (histórico normalizado)** para evitar falsos `EN_PROGRESO`.
+- El siguiente paso ejecutable del repositorio se decide en `docs/roadmap_codex.md`, no por búsqueda aislada de estados históricos dentro de este archivo.
+- La matriz compacta de recorridos críticos frontend ↔ backend ↔ tests vive en `docs/13_testing_ci_y_quality_gate.md`.
 
-## 11. Actualización incremental de home (Ciclo 3 en progreso)
+## 11. Histórico Ciclo 3 — actualización incremental de home
 - Capacidad: **Home comercial + narrativa + UX ligera**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Evidencia implementada:
   - estructura de contenido mantenible centralizada en `frontend/contenido/home/contenidoHome.ts`;
   - secciones nuevas en home: hero refinado, Alquimia del Deseo, intenciones con selector, cómo elegir ritual, confianza comercial, FAQ accesible y CTA final;
@@ -164,9 +177,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 - Tests añadidos para lógica de interacción de tabs/FAQ en `frontend/tests/home-interacciones.test.ts`.
 - Nota operativa: la ampliación de contenido futuro debe hacerse sobre el módulo de contenido, evitando hardcodear bloques largos dentro de componentes de presentación.
 
-## 12. Catálogo/colecciones navegables (Ciclo 3 en progreso)
+## 12. Histórico Ciclo 3 — catálogo/colecciones navegables
 - Capacidad: **Catálogo ritual navegable con filtros y ordenación**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - ruta pública `frontend/app/colecciones/page.tsx` como entrada de colecciones;
   - fuente de datos tipada en `frontend/contenido/catalogo/catalogo.ts`;
@@ -193,9 +206,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   3. Para ampliar campos indexables, extender `construirIndiceBusqueda` sin mover lógica al componente `CatalogoColecciones`.
   4. Cualquier cambio en filtros/orden debe seguir resolviéndose en `resolverCatalogo` para mantener compatibilidad con tarjeta, cesta ritual y flujo `/encargo`.
 
-## 13. Flujo ligero de encargo/consulta desde ficha (Ciclo 3 en progreso)
+## 13. Histórico Ciclo 3 — flujo ligero de encargo/consulta desde ficha
 - Capacidad: **Conversión de ficha de colección a acción comercial sin checkout**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - ruta `frontend/app/encargo/page.tsx` para iniciar consultas ligeras con metadata propia;
   - CTA principal de ficha en `frontend/componentes/catalogo/detalle/FichaProductoCatalogo.tsx` enlazado a `/encargo?producto=<slug>`;
@@ -282,9 +295,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. no se introducen conversiones entre unidades diferentes en R05: la unidad de línea debe coincidir exactamente con la unidad base;
   2. no se abren reservas previas, devoluciones automáticas ni ledger completo de inventario (queda para R06).
 
-## 15. Página editorial de marca / La Botica (Ciclo 3 en progreso)
+## 15. Histórico Ciclo 3 — página editorial de marca / La Botica
 - Capacidad: **Capa de marca sólida conectada al flujo comercial**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - nueva ruta pública `frontend/app/la-botica/page.tsx` con metadata SEO específica centralizada en contenido de marca;
   - composición en `frontend/componentes/marca/PaginaEditorialBotica.tsx` + estilos encapsulados;
@@ -299,9 +312,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   2. Mantener composición declarativa en `PaginaEditorialBotica.tsx` evitando hardcodear texto largo en componentes de shell.
   3. Conservar CTA principales a `/colecciones` y `/encargo` para sostener continuidad narrativa → acción comercial.
 
-## 16. Páginas legales/comerciales mínimas de confianza (Ciclo 3 en progreso)
+## 16. Histórico Ciclo 3 — páginas legales/comerciales mínimas de confianza
 - Capacidad: **Capa mínima de confianza operativa/legal en frontend**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - nuevas rutas públicas: `frontend/app/condiciones-encargo/page.tsx`, `frontend/app/envios-y-preparacion/page.tsx`, `frontend/app/privacidad/page.tsx`;
   - composición compartida en `frontend/componentes/legal/PaginaLegalComercial.tsx` con estilos encapsulados;
@@ -317,10 +330,10 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - `frontend/tests/legal-comercial.test.ts` (estructura mínima, metadata, rutas y fallback de contacto);
   - `frontend/tests/shell-global.test.ts` actualizado para comprobar enlaces legales en footer.
 
-## 17. Base transaccional demo de pedidos (Prompt 1 oficial Ciclo 3)
+## 17. Histórico Ciclo 3 — base transaccional demo de pedidos (Prompt 1 oficial)
 - Capacidad: **Núcleo dominio/aplicación para `PedidoDemo` y `LineaPedido`**.
 
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - agregado y reglas de dominio en `backend/nucleo_herbal/dominio/pedidos_demo.py`;
   - casos de uso mínimos en `backend/nucleo_herbal/aplicacion/casos_de_uso_pedidos_demo.py`;
@@ -345,9 +358,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. Se evita versionar binarios (sin PDFs estáticos en repo).
   2. La aritmética del documento no se recalcula en frontend ni en un modelo paralelo.
 
-## 18. Persistencia e infraestructura de pedidos demo (Prompt 2 oficial Ciclo 3)
+## 18. Histórico Ciclo 3 — persistencia e infraestructura de pedidos demo (Prompt 2 oficial)
 - Capacidad: **Persistencia mínima de `PedidoDemo` y `LineaPedido` con repositorio ORM y mapeo dominio↔persistencia**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - puerto de repositorio transaccional en `backend/nucleo_herbal/aplicacion/puertos/repositorios_pedidos_demo.py`;
   - modelos ORM y migración de esquema para pedido demo y líneas en `backend/nucleo_herbal/infraestructura/persistencia_django/models.py` y `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0003_pedidodemomodelo_lineapedidomodelo.py`;
@@ -366,9 +379,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - este cambio cubre el alcance oficial del **Prompt 2** (persistencia/infraestructura);
   - sigue pendiente Prompt 3 (API del flujo), sin adelantar endpoints ni UI checkout.
 
-## 19. API del flujo de pedido demo (Prompt 3 oficial Ciclo 3)
+## 19. Histórico Ciclo 3 — API del flujo de pedido demo (Prompt 3 oficial)
 - Capacidad: **Exposición API mínima para crear y consultar `PedidoDemo`**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - endpoints en `backend/nucleo_herbal/presentacion/publica/urls_pedidos_demo.py` y `backend/nucleo_herbal/presentacion/publica/views_pedidos_demo.py`;
   - serialización HTTP de pedido demo en `backend/nucleo_herbal/presentacion/publica/pedidos_demo_serializadores.py`;
@@ -394,9 +407,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. la restitución **no** se automatiza en cancelación ni en reembolso;
   2. solo aplica sobre pedidos cancelados operativamente que sí descontaron inventario y no fueron restituidos antes;
   3. cualquier intento no elegible se rechaza de forma auditable y sin efectos parciales sobre stock/ledger.
-## 20. Backoffice mínimo de pedidos demo (Prompt 4 oficial Ciclo 3)
+## 20. Histórico Ciclo 3 — backoffice mínimo de pedidos demo (Prompt 4 oficial)
 - Capacidad: **Backoffice/admin mínimo para consulta y gestión operativa básica de `PedidoDemo`**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - registro de `PedidoDemoModelo` en Django Admin con listado operativo en `backend/nucleo_herbal/infraestructura/persistencia_django/admin.py`;
   - inline de `LineaPedidoModelo` en detalle de pedido demo para visualizar snapshot de líneas;
@@ -411,9 +424,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - este cambio cubre el alcance oficial del **Prompt 4** (backoffice mínimo de pedidos demo);
   - sigue pendiente Prompt 5 (frontend de carrito), sin adelantar checkout público, confirmación/email ni pagos reales.
 
-## 21. Checkout público demo conectado a API (Prompt 5 oficial Ciclo 3)
+## 21. Histórico Ciclo 3 — checkout público demo conectado a API (Prompt 5 oficial)
 - Capacidad: **Conexión mínima del flujo público `/encargo` con la API de `PedidoDemo` para envío real de pedido demo**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - helper de checkout demo para construir payload y validación mínima en `frontend/contenido/catalogo/checkoutDemo.ts`;
   - cliente API desacoplado para creación de pedido demo en `frontend/infraestructura/api/pedidosDemo.ts`;
@@ -428,9 +441,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - este cambio cubre el alcance funcional solicitado para **checkout público demo mínimo conectado a API**;
   - sigue pendiente la fase de confirmación final/recibo/email demo del siguiente hito del ciclo.
 
-## 22. Confirmación/recibo post-checkout demo (siguiente hito oficial)
+## 22. Histórico Ciclo 3 — confirmación/recibo post-checkout demo
 - Capacidad: **Salida pública de confirmación/recibo demo recuperable por URL tras crear `PedidoDemo`**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - nueva ruta pública de recibo en `frontend/app/pedido-demo/[id_pedido]/page.tsx` y fallback de navegación rota en `frontend/app/pedido-demo/page.tsx`;
   - componente de confirmación con estados de carga/error/vacío/éxito en `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`;
@@ -449,9 +462,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - queda pendiente la **emisión de email/recibo demo** si se exige de forma ejecutable en el siguiente incremento operativo de ciclo.
 
 
-## 23. Emisión de email demo post-pedido (hito oficial siguiente)
+## 23. Histórico Ciclo 3 — emisión de email demo post-pedido
 - Capacidad: **Composición y consulta de email demo asociado a `PedidoDemo` sin integración externa de correo**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - caso de uso de composición/consulta en `backend/nucleo_herbal/aplicacion/casos_de_uso_email_demo.py`;
   - endpoint público mínimo `GET /api/v1/pedidos-demo/{id_pedido}/email-demo/` en `backend/nucleo_herbal/presentacion/publica/views_pedidos_demo.py` + `urls_pedidos_demo.py`;
@@ -713,9 +726,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - `frontend/tests/editorial-seo.test.ts` cubre filtros por tema/hub, exclusión de no indexables, combinación vacía y conteos de opciones;
   - actualización de script `frontend/package.json` (`test:editorial-seo`) para compilar el nuevo helper `contenido/editorial/indiceGuias.ts`.
 
-## 19. Página pública Tarot editorial (Feature 33)
+## 19. Histórico incremental — página pública Tarot editorial (Feature 33)
 - Capacidad: **Sección pública `/tarot` con exploración visual de arcanos mayores**.
-- Estado: **EN_PROGRESO**.
+- Estado: **DONE (histórico normalizado)**.
 - Implementación activa:
   - nueva ruta `frontend/app/tarot/page.tsx` con metadata SEO mínima;
   - contenido reusable tipado en `frontend/contenido/tarot/arcanosTarot.ts`;

@@ -24,6 +24,8 @@ type FiltrosActivos = {
 
 type Props = {
   filtrosActivos: FiltrosActivos;
+  rutaSeccion?: string;
+  textoAyuda?: string;
 };
 
 type EstadoAcordeones = Record<"beneficio" | "formato" | "modo_uso" | "precio", boolean>;
@@ -37,7 +39,11 @@ type SeleccionFiltros = {
 
 const OPCION_TODOS = { valor: "", etiqueta: "Todos" };
 
-export function PanelFiltrosBoticaNatural({ filtrosActivos }: Props): JSX.Element {
+export function PanelFiltrosBoticaNatural({
+  filtrosActivos,
+  rutaSeccion = "/botica-natural",
+  textoAyuda = "Ajusta los filtros para encontrar tu mezcla ideal.",
+}: Props): JSX.Element {
   const [seleccion, setSeleccion] = useState<SeleccionFiltros>({
     beneficio: filtrosActivos.beneficio,
     formato: filtrosActivos.formato,
@@ -59,12 +65,12 @@ export function PanelFiltrosBoticaNatural({ filtrosActivos }: Props): JSX.Elemen
     precio: false,
   });
 
-  const hrefLimpiar = construirHrefLimpiar();
-  const hrefAplicar = construirHrefAplicar(seleccion);
+  const hrefLimpiar = construirHrefLimpiar(rutaSeccion);
+  const hrefAplicar = construirHrefAplicar(seleccion, rutaSeccion);
 
   return (
-    <form action="/botica-natural" method="get" className="botica-natural__filtros-formulario">
-      <p className="botica-natural__filtros-ayuda">Ajusta los filtros para encontrar tu mezcla ideal.</p>
+    <form action={rutaSeccion} method="get" className="botica-natural__filtros-formulario">
+      <p className="botica-natural__filtros-ayuda">{textoAyuda}</p>
 
       <AcordeonFiltro
         id="filtro-beneficio"
@@ -142,18 +148,18 @@ export function PanelFiltrosBoticaNatural({ filtrosActivos }: Props): JSX.Elemen
   );
 }
 
-function construirHrefAplicar(seleccion: SeleccionFiltros): string {
+function construirHrefAplicar(seleccion: SeleccionFiltros, rutaSeccion: string): string {
   const query = construirQueryFiltrosBotica(seleccionAFiltrosBotica(seleccion));
   const queryString = query.toString();
-  return queryString ? `/botica-natural?${queryString}` : "/botica-natural";
+  return queryString ? `${rutaSeccion}?${queryString}` : rutaSeccion;
 }
 
-function construirHrefLimpiar(): string {
+function construirHrefLimpiar(rutaSeccion: string): string {
   const query = construirQueryFiltrosBotica(
     resolverFiltrosBoticaDesdeSearchParams({ beneficio: "todos", formato: "todos", modo_uso: "todos", precio_rango: "todos" }),
   );
   const queryString = query.toString();
-  return queryString ? `/botica-natural?${queryString}` : "/botica-natural";
+  return queryString ? `${rutaSeccion}?${queryString}` : rutaSeccion;
 }
 
 function seleccionAFiltrosBotica(seleccion: SeleccionFiltros): FiltrosBotica {

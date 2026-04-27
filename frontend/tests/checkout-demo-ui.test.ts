@@ -49,6 +49,10 @@ test("checkout demo mantiene continuidad con retorno seguro y sin recuperar cons
     archivoFlujo,
     /router\.push\(\s*construirRutaCuentaDemoConRetornoSeguro/,
   );
+  assert.match(
+    archivoFlujo,
+    /guardarBorradorCheckoutDemo\(datos,\s*false\);/,
+  );
 });
 
 test("el recibo demo muestra CTA contextual hacia cuenta demo con sesión activa", () => {

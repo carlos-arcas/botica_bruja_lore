@@ -29,6 +29,8 @@ import {
   iniciarPagoPedido,
   obtenerTarifaEnvioEstandar,
 } from "../infraestructura/api/pedidos";
+import type { PedidoCreado } from "../infraestructura/api/pedidos";
+import { resolverPostventaDemoPedido } from "../contenido/postventa/devolucionesDemo";
 
 function construirDatosBaseCheckoutReal() {
   return {
@@ -41,6 +43,33 @@ function construirDatosBaseCheckoutReal() {
     codigo_postal: "28001",
     ciudad: "Madrid",
     provincia: "Madrid",
+  };
+}
+
+function construirPedidoBasePostventa(overrides: Partial<PedidoCreado> = {}): PedidoCreado {
+  return {
+    id_pedido: "PED-POSTVENTA-1",
+    estado: "entregado",
+    estado_pago: "pagado",
+    canal_checkout: "web_invitado",
+    moneda: "EUR",
+    metodo_envio: "envio_estandar",
+    subtotal: "9.90",
+    importe_envio: "4.90",
+    base_imponible: "14.80",
+    tipo_impositivo: "0.21",
+    importe_impuestos: "3.10",
+    total: "17.90",
+    requiere_revision_manual: false,
+    email_post_pago_enviado: true,
+    cliente: { email_contacto: "real@test.dev", nombre_contacto: "Lore", telefono_contacto: "600", es_invitado: true },
+    direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle Luna 1", linea_2: "", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", observaciones: "" },
+    resumen: { cantidad_total_items: 1, subtotal: "9.90", importe_envio: "4.90", base_imponible: "14.80", tipo_impositivo: "0.21", importe_impuestos: "3.10", total: "17.90" },
+    lineas: [],
+    notas_cliente: "",
+    pago: { proveedor_pago: "simulado", id_externo_pago: "sim_1" },
+    expedicion: { transportista: "", codigo_seguimiento: "", envio_sin_seguimiento: false, fecha_preparacion: null, fecha_envio: null, fecha_entrega: null, observaciones_operativas: "", email_envio_enviado: false },
+    ...overrides,
   };
 }
 
@@ -66,6 +95,32 @@ test("checkout real usa un payload propio y separado del demo", () => {
   assert.equal("canal" in payload, false);
   assert.equal(payload.canal_checkout, "web_invitado");
   assert.equal(payload.direccion_entrega.ciudad, "Madrid");
+});
+
+test("postventa demo permite solicitar devolucion solo sobre pedido pagado y enviado o entregado", () => {
+  const estado = resolverPostventaDemoPedido(construirPedidoBasePostventa());
+
+  assert.equal(estado.visible, true);
+  assert.equal(estado.titulo, "Devolucion manual disponible");
+  assert.match(estado.descripcion, /no se ejecuta ningun reembolso bancario real/i);
+  assert.match(estado.accion, /PED-POSTVENTA-1/);
+});
+
+test("postventa demo evita prometer devolucion antes de pago confirmado", () => {
+  const estado = resolverPostventaDemoPedido(construirPedidoBasePostventa({ estado: "pendiente_pago", estado_pago: "pendiente" }));
+
+  assert.equal(estado.titulo, "Devolucion no disponible todavia");
+  assert.match(estado.descripcion, /no hay nada que devolver/i);
+});
+
+test("postventa demo separa cancelacion operativa de devolucion voluntaria", () => {
+  const estado = resolverPostventaDemoPedido(construirPedidoBasePostventa({
+    estado: "cancelado",
+    estado_cliente: { cancelado_operativamente: true, estado_reembolso: "no_iniciado", fecha_reembolso: null },
+  }));
+
+  assert.equal(estado.titulo, "Pedido cancelado por el equipo");
+  assert.match(estado.descripcion, /sin ejecutar movimientos bancarios reales/i);
 });
 
 test("checkout real calcula desglose fiscal visible con redondeo estable", () => {
@@ -805,5 +860,34 @@ test("checkout real resuelve y aplica la dirección predeterminada de la libreta
   assert.equal(predeterminada?.id_direccion, "dir-2");
   assert.equal(datos.modo_direccion, "guardada");
   assert.equal(datos.id_direccion_guardada, "dir-2");
+  assert.equal(datos.nombre_contacto, "Lore");
+  assert.equal(datos.telefono_contacto, "600");
   assert.equal(datos.linea_1, "Calle Luna 13");
+});
+
+test("checkout real no pisa el nombre de contacto manual al aplicar la direccion guardada", () => {
+  const datos = aplicarDireccionGuardadaADatosCheckoutReal(
+    {
+      ...construirEstadoInicialCheckoutReal(),
+      nombre_contacto: "Compradora habitual",
+    },
+    {
+      id_direccion: "dir-1",
+      alias: "Casa",
+      nombre_destinatario: "Lore",
+      telefono_contacto: "611111111",
+      linea_1: "Calle Luna 13",
+      linea_2: "",
+      codigo_postal: "28013",
+      ciudad: "Madrid",
+      provincia: "Madrid",
+      pais_iso: "ES",
+      predeterminada: true,
+      fecha_creacion: "",
+      fecha_actualizacion: "",
+    },
+  );
+
+  assert.equal(datos.nombre_contacto, "Compradora habitual");
+  assert.equal(datos.telefono_contacto, "611111111");
 });

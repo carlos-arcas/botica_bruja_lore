@@ -137,7 +137,7 @@ def _check_railway_env_example() -> None:
         "DEBUG=false",
         "ALLOWED_HOSTS=",
         "CSRF_TRUSTED_ORIGINS=",
-        "DATABASE_URL=${{SERVICE_NAME.DATABASE_URL}}",
+        "DATABASE_URL=${{Postgres.DATABASE_URL}}",
         "NEXT_PUBLIC_API_BASE_URL=",
     ]
 
@@ -145,8 +145,8 @@ def _check_railway_env_example() -> None:
         _require(entry in content, f".env.railway.example debe contener '{entry}'.")
 
     _require(
-        "Postgres.DATABASE_URL" not in content,
-        ".env.railway.example no debe contener 'Postgres.DATABASE_URL'; usar SERVICE_NAME.",
+        "SERVICE_NAME.DATABASE_URL" not in content,
+        ".env.railway.example no debe contener 'SERVICE_NAME.DATABASE_URL'; usar Postgres.",
     )
 
     for legacy_var in ("APP_DEBUG", "DJANGO_SETTINGS_MODULE", "WSGI_APPLICATION"):

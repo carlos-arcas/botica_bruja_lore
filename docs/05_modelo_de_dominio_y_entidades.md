@@ -82,6 +82,7 @@ Este documento distingue explícitamente:
 - Nombre comercial y slug público.
 - Descripción corta orientada a compra.
 - Tipo de producto (hierba granel, incienso/sahumerio, herramienta ritual, tarot/oráculo, mineral/piedra, pack/cesta).
+- `seccion_publica` para navegación/composición comercial (por ejemplo, `botica-natural`, `velas-e-incienso`, `minerales-y-energia`, `herramientas-esotericas`).
 - Marca referenciada.
 - Estado de disponibilidad demo/publicación.
 - Precio de referencia demo y metadatos de presentación.
@@ -100,6 +101,7 @@ Este documento distingue explícitamente:
 - Debe poder existir producto no herbal sin vínculo a planta.
 - No requiere stock real ni pago real en esta fase.
 - Debe permitir activación/desactivación para demo sin eliminar historial.
+- `tipo_producto` y `seccion_publica` no son sinónimos: el primero clasifica la familia comercial de dominio y la segunda nombra la superficie pública. Para herramientas, la convención canónica vigente es `tipo_producto="herramientas-rituales"` + `seccion_publica="herramientas-esotericas"`.
 
 **Riesgos de mal modelado**
 - Forzar que todo producto derive de planta bloquea categorías no herbales.
