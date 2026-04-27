@@ -61,6 +61,19 @@ set "LOCAL_SQLITE=%ROOT_DIR%var\dev.sqlite3"
 set "BOOTSTRAP_LOCAL=0"
 if not defined DATABASE_URL if not exist "%LOCAL_SQLITE%" set "BOOTSTRAP_LOCAL=1"
 
+if not defined BACKEND_DIR if not defined FRONTEND_DIR (
+    echo [ADVERTENCIA] No se detectaron componentes ejecutables aun.
+    echo [ADVERTENCIA] El repositorio esta preparado para crecer por ciclos.
+    exit /b 0
+)
+
+if "%CHECK_ONLY%"=="1" (
+    if defined BACKEND_DIR echo [OK] Backend Django detectable en "%BACKEND_DIR%".
+    if defined FRONTEND_DIR echo [OK] Frontend Next detectable en "%FRONTEND_DIR%".
+    echo [OK] Comprobacion de arranque local completada sin iniciar servidores.
+    exit /b 0
+)
+
 if defined BACKEND_DIR (
     echo [INFO] Aplicando migraciones locales en %BACKEND_DIR%...
     pushd "%BACKEND_DIR%" >nul

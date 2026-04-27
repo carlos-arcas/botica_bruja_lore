@@ -1,4 +1,4 @@
-# 90 — Estado de implementación del proyecto
+﻿# 90 — Estado de implementación del proyecto
 
 ## 1. Propósito del documento
 Este documento es el tablero vivo de estado de **La Botica de la Bruja Lore**.
@@ -1039,3 +1039,30 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   - tests backend de API/documento de pedido real;
   - tests frontend de visibilidad de enlace;
   - `python manage.py check`, `python manage.py makemigrations --check --dry-run`, lint/build frontend y gate.
+
+## 51. Auditoria V2-R10: go-live checklist v2
+- Capacidad: **cierre operativo de go-live real v2**.
+- Estado: **BLOCKED externo**.
+- Evidencia verificada en V2G-001:
+  - `scripts/check_release_readiness.py` pasa en local;
+  - `scripts/check_release_gate.py` pasa y cubre readiness backend, Django check, tests criticos, `tests.scripts`, contratos API/frontend-demo, snapshot publico, SEO, integridad y conciliacion operativa;
+  - `scripts/check_operational_alerts_v2.py --fail-on none --json` pasa sin alertas;
+  - `scripts/retry_operational_tasks_v2.py --dry-run --json` pasa sin candidatos ni mutaciones;
+  - `scripts/backup_restore_postgres.py` valida backup y restore drill en modo `--dry-run` sin generar artefactos versionables;
+  - `scripts/check_deployed_stack.py` no puede ejecutarse sin `BACKEND_BASE_URL`/`FRONTEND_BASE_URL` reales.
+- Regla activa:
+  1. el go-live real no se declara `DONE` solo con validacion local/demo;
+  2. smoke post-deploy y restore drill real requieren entorno externo seguro;
+  3. no se activan pagos reales ni banco/PSP real en esta fase.
+
+## 52. Operacion local: check no destructivo de setup/run_app (RUN-001)
+- Capacidad: **validacion local de entorno y deteccion de componentes sin arrancar servidores**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `setup_entorno.bat` acepta `--check` y `/check` para validar Python, `.venv`, archivo de dependencias Python, `npm` y `frontend\node_modules` sin instalar nada;
+  - `run_app.bat` acepta `--check` y `/check`, delega en el check de setup, detecta backend Django y frontend Next, y termina antes de ejecutar `start`;
+  - el modo check permite a la automatizacion verificar preparacion local sin dejar procesos persistentes.
+- Regla activa:
+  1. `run_app.bat --check` no arranca backend ni frontend;
+  2. `setup_entorno.bat --check` no instala dependencias ni modifica el entorno;
+  3. el smoke real de servidores queda separado para una tarea posterior con control de PID.

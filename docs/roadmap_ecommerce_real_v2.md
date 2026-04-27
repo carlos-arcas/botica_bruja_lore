@@ -1,4 +1,4 @@
-# Roadmap de madurez ecommerce real V2
+﻿# Roadmap de madurez ecommerce real V2
 
 ## 0. Contexto heredado desde V1
 - Este documento abre una nueva fase de madurez **V2** posterior al cierre incremental V1 (`docs/roadmap_cierre_ecommerce_real_incremental.md`).
@@ -119,10 +119,11 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Dependencias**: mapa de operaciones v2 y roles reales.
 - **Resultado real**: ACL mínima endurecida en backend para pedidos/documentos/pago de cuenta real (owner-only), proxy privado de backoffice Next con sesión obligatoria y cobertura de tests de acceso denegado/permitido.
 
-### V2-R10 — Go-live checklist v2
-- **Estado**: `PLANNED`.
-- **Dependencias**: consolidación de R01–R09.
-
+### V2-R10 - Go-live checklist v2
+- **Estado**: `BLOCKED`.
+- **Dependencias**: consolidacion de R01-R09 completada; quedan dependencias externas para cierre real.
+- **Diagnostico V2G-001**: la auditoria local confirma que readiness, release gate, alertas operativas, reintentos dry-run y backup/restore dry-run pasan. El cierre como go-live real queda bloqueado hasta disponer de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_BACKUP_DIR` fuera del repo y `BOTICA_RESTORE_DATABASE_URL` contra una base PostgreSQL temporal segura. No se ejecuta deploy real, backup real ni restore real en local/demo.
+- **Criterio de desbloqueo**: entorno desplegado/staging y base temporal autorizados, sin activar pagos reales ni banco/PSP real.
 ## 5. Riesgos transversales V2
 1. Reabrir capacidades V1 cerradas sin bug real → deriva y retrabajo.
 2. Endurecer controles sin observabilidad útil → falsos bloqueos operativos.

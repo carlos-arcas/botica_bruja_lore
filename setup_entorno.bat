@@ -8,6 +8,10 @@ echo ================================================
 echo [setup_entorno] Preparando entorno local...
 echo ================================================
 
+set "CHECK_ONLY=0"
+if /I "%~1"=="--check" set "CHECK_ONLY=1"
+if /I "%~1"=="/check" set "CHECK_ONLY=1"
+
 set "PY_CMD="
 python -c "import sys" >nul 2>&1
 if not errorlevel 1 set "PY_CMD=python"
@@ -27,6 +31,15 @@ if not defined PY_CMD (
 )
 
 echo [INFO] Python detectado: %PY_CMD%
+
+if "%CHECK_ONLY%"=="1" (
+    if not exist ".venv\Scripts\python.exe" (
+        echo [ERROR] No se encontro .venv\Scripts\python.exe. Ejecuta setup_entorno.bat para crear el entorno.
+        exit /b 1
+    )
+    echo [OK] Entorno virtual .venv detectable.
+    goto detect_requirements
+)
 
 if not exist ".venv\Scripts\python.exe" (
     echo [INFO] Creando entorno virtual .venv...
@@ -48,11 +61,21 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:detect_requirements
 set "REQ_FILE="
 if exist requirements-dev.txt set "REQ_FILE=requirements-dev.txt"
 if not defined REQ_FILE if exist requirements.txt set "REQ_FILE=requirements.txt"
 if not defined REQ_FILE if exist backend\requirements-dev.txt set "REQ_FILE=backend\requirements-dev.txt"
 if not defined REQ_FILE if exist backend\requirements.txt set "REQ_FILE=backend\requirements.txt"
+
+if "%CHECK_ONLY%"=="1" (
+    if defined REQ_FILE (
+        echo [OK] Archivo de dependencias Python detectable: %REQ_FILE%.
+    ) else (
+        echo [INFO] No se encontro requirements*.txt. Se omite validacion Python adicional.
+    )
+    goto detect_frontend
+)
 
 if defined REQ_FILE (
     echo [INFO] Instalando dependencias Python desde %REQ_FILE%...
@@ -66,9 +89,29 @@ if defined REQ_FILE (
     echo [INFO] No se encontro requirements*.txt. Se omite instalacion Python.
 )
 
+:detect_frontend
 set "NPM_DIR="
 if exist package.json set "NPM_DIR=."
 if not defined NPM_DIR if exist frontend\package.json set "NPM_DIR=frontend"
+
+if "%CHECK_ONLY%"=="1" (
+    if defined NPM_DIR (
+        where npm >nul 2>&1
+        if errorlevel 1 (
+            echo [ERROR] Se detecto package.json en %NPM_DIR%, pero npm no esta disponible en PATH.
+            exit /b 1
+        )
+        if not exist "%NPM_DIR%\node_modules" (
+            echo [ERROR] No se encontro %NPM_DIR%\node_modules. Ejecuta setup_entorno.bat para instalar dependencias frontend.
+            exit /b 1
+        )
+        echo [OK] Frontend detectable en %NPM_DIR% con npm y node_modules disponibles.
+    ) else (
+        echo [INFO] No se encontro package.json. Se omite validacion frontend.
+    )
+    echo [OK] Comprobacion de entorno completada sin instalar dependencias.
+    exit /b 0
+)
 
 if defined NPM_DIR (
     where npm >nul 2>&1
