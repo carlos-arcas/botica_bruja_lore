@@ -1,4 +1,4 @@
-# Roadmap operativo Codex (fuente de ejecución atómica)
+﻿# Roadmap operativo Codex (fuente de ejecución atómica)
 
 ## Reglas de uso obligatorias
 1. Este archivo gobierna la ejecución autónoma diaria de Codex en este repo.
@@ -38,6 +38,8 @@ Uso prohibido:
 | `CRX-005` | Checklist de cierre | `AGENTS.md` | `docs/08_decisiones_tecnicas_no_negociables.md`, `docs/99_fuente_de_verdad.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md` | checklist de salida por ejecución (selección, evidencia, checks, estado final) | `AGENTS.md` fija checks mínimos por corrida y actualización obligatoria de roadmap/bitácora; `08` y `99` acotan calidad y precedencia. | Debe incluir verificación explícita de “definido vs implementado” usando `90`. |
 | `CRX-006` | Reencuadre V2-R10 | `docs/roadmap_ecommerce_real_v2.md` | `AGENTS.md`, `docs/90_estado_implementacion.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/release_readiness_minima.md`, `docs/deploy_railway.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md` | reactivación del roadmap atómico y alineación con el siguiente incremento vivo | `docs/roadmap_codex.md` quedó sin tareas `TODO` mientras `V2-R10` sigue `PLANNED`; antes de implementar hace falta restaurar una fuente de ejecución atómica vigente. | Cierre válido solo si queda una primera `TODO` no `BLOCKED` con perímetro claro y trazado en bitácora. |
 | `V2G-001` | Auditoría cierre go-live v2 | `docs/roadmap_ecommerce_real_v2.md` | `docs/release_readiness_minima.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/deploy_railway.md`, `docs/90_estado_implementacion.md`, `scripts/check_release_gate.py`, `scripts/check_release_readiness.py`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`, `tests/scripts/` | auditoría de cierre y brecha real del incremento `V2-R10` | `V2-R10` está `PLANNED`, pero no desglosado a nivel atómico; primero hay que decidir con evidencia qué parte ya existe y qué falta realmente. | Si el cierre depende de entorno desplegado real, documentar `BLOCKED` con criterio de desbloqueo externo y sin improvisar cambios de producto. |
+| `RUN-001` | Check no destructivo de arranque local | `AGENTS.md` | `docs/90_estado_implementacion.md`, `docs/07_arquitectura_tecnica.md`, `run_app.bat`, `setup_entorno.bat` | funcionamiento real de setup/run_app sin abrir procesos persistentes | El alcance permanente exige priorizar `run_app/setup` cuando no haya `TODO` ejecutable; el check no destructivo permite validar entorno sin activar servidores. | Cierre válido solo si `setup_entorno.bat --check` y `run_app.bat --check` pasan sin dejar procesos vivos. |
+| `RUN-002` | Smoke controlado de servidores locales | `AGENTS.md` | `docs/90_estado_implementacion.md`, `run_app.bat`, `setup_entorno.bat`, `manage.py`, `frontend/package.json` | validación de arranque real local con control de PID y limpieza | Tras `RUN-001`, queda comprobar que backend/frontend arrancan y responden en puertos libres sin depender de ventanas manuales. | Debe registrar PIDs, cerrar solo procesos del repo y no activar pagos reales. |
 
 ## CRX-001 — Bootstrap de gobernanza Codex
 - **Estado**: `DONE`
@@ -182,7 +184,7 @@ Uso prohibido:
 - **Bloqueo conocido**: ninguno.
 
 ## V2G-001 — Auditoría de cierre de `V2-R10` (go-live checklist v2)
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: contrastar el alcance pendiente de `V2-R10` con scripts, tests y documentación reales para decidir con evidencia si puede cerrarse, qué brecha exacta queda o si existe bloqueo externo.
 - **Alcance permitido**: `AGENTS.md`, `docs/roadmap_ecommerce_real_v2.md`, `docs/release_readiness_minima.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/deploy_railway.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, con lectura de `scripts/` y `tests/scripts/`.
 - **Fuera de alcance**: tocar backend/frontend funcional, ejecutar deploy real, backups reales, restores reales o cambios de negocio.
@@ -193,4 +195,55 @@ Uso prohibido:
   - contrastar `V2-R10` con `docs/90_estado_implementacion.md` para no reabrir cierres ya implementados,
   - dejar un único resultado explícito: `DONE`, nueva tarea atómica siguiente o `BLOCKED` con causa externa verificable.
 - **Criterio de cierre**: evidencia documental suficiente para decidir el siguiente paso exacto de `V2-R10` sin implementar a ciegas.
-- **Bloqueo conocido**: posible dependencia de URLs/entorno desplegado real para smoke post-deploy y drill operativo final.
+- **Evidencia de cierre V2G-001**:
+  - `scripts/check_release_readiness.py` pasa en local y valida `.env.railway.example`, marcadores de readiness y ausencia de secretos debiles evidentes.
+  - `scripts/check_release_gate.py` pasa completo: readiness backend, `manage.py check`, tests criticos, `tests.scripts` (44 tests), contratos API frontend/demo, snapshot publico, SEO, integridad operativa y conciliacion operativa.
+  - `scripts/check_operational_alerts_v2.py --fail-on none --json` pasa sin alertas.
+  - `scripts/retry_operational_tasks_v2.py --dry-run --json` pasa sin candidatos ni mutaciones.
+  - `scripts/backup_restore_postgres.py backup --dry-run` y `restore-drill --dry-run` pasan con URLs PostgreSQL ficticias y sin generar dumps versionables.
+  - `scripts/check_deployed_stack.py` queda bloqueado correctamente sin `BACKEND_BASE_URL`; por tanto `V2-R10` no puede cerrarse como go-live real sin entorno desplegado.
+- **Resultado de auditoria**: `V2-R10` queda bloqueado por dependencias externas verificables: URLs reales de backend/frontend desplegados y base PostgreSQL temporal segura para restore drill real.
+- **Bloqueo conocido**: smoke post-deploy real y restore drill real fuera del alcance local/demo de esta corrida.
+
+## V2G-002 - Desbloqueo externo de go-live real `V2-R10`
+- **Estado**: `BLOCKED`
+- **Objetivo**: ejecutar la validacion final de go-live real cuando existan endpoints desplegados y base PostgreSQL temporal segura.
+- **Alcance permitido**: `docs/deploy_railway.md`, `docs/release_readiness_minima.md`, `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: activar pagos reales, conectar banco/PSP real, usar datos reales de cliente o ejecutar restores contra base productiva.
+- **Dependencias que bloquean**:
+  - `BACKEND_BASE_URL` y `FRONTEND_BASE_URL` de un despliegue real o staging controlado.
+  - base PostgreSQL temporal segura y aislada para `BOTICA_RESTORE_DATABASE_URL`.
+  - `DATABASE_URL` y `BOTICA_BACKUP_DIR` fuera del repositorio para backup real.
+- **Criterio de desbloqueo**: las variables anteriores existen en entorno seguro y el usuario autoriza una corrida operacional no dry-run sobre staging/temporal, sin pagos reales.
+- **Siguiente accion exacta al desbloquear**: ejecutar `scripts/check_deployed_stack.py`, `scripts/backup_restore_postgres.py backup` y `scripts/backup_restore_postgres.py restore-drill` contra entorno seguro; registrar evidencias y decidir cierre de `V2-R10`.
+- **Bloqueo conocido**: dependencia externa de infraestructura/credenciales operativas.
+
+## RUN-001 - Modo check no destructivo para `setup_entorno` y `run_app`
+- **Estado**: `DONE`
+- **Objetivo**: permitir validar el entorno local y la deteccion de backend/frontend sin instalar dependencias ni arrancar servidores persistentes.
+- **Alcance permitido**: `run_app.bat`, `setup_entorno.bat`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`, `docs/90_estado_implementacion.md`.
+- **Fuera de alcance**: arrancar servidores como smoke real, ejecutar deploy, instalar dependencias, modificar backend/frontend funcional o activar pagos reales.
+- **Capas permitidas/prohibidas**: scripts operativos de desarrollo; prohibido tocar dominio/aplicacion/infraestructura/presentacion del producto.
+- **Evidencia de cierre RUN-001**:
+  - `setup_entorno.bat --check` valida Python, `.venv`, `requirements.txt`, `npm` y `frontend\node_modules` sin instalar dependencias.
+  - `run_app.bat --check` delega en `setup_entorno.bat --check`, detecta backend Django y frontend Next, y termina antes de cualquier `start`.
+  - Se corrigio la primera version del check para que no ejecute bloques de arranque; los procesos lanzados accidentalmente durante la validacion se cerraron por PID y pertenecian inequivocamente a este repo.
+- **Checks ejecutados**:
+  - `cmd /c setup_entorno.bat --check` -> OK.
+  - `cmd /c run_app.bat --check` -> OK, sin iniciar servidores.
+  - consulta de procesos por ruta absoluta del repo -> sin procesos vivos tras limpieza.
+- **Bloqueo conocido**: ninguno para el modo check.
+
+## RUN-002 - Smoke controlado de arranque local backend/frontend
+- **Estado**: `TODO`
+- **Objetivo**: comprobar que backend Django y frontend Next arrancan realmente en local/demo, responden a una peticion basica y se cierran por PID registrado.
+- **Alcance permitido**: `run_app.bat`, `setup_entorno.bat`, scripts auxiliares temporales en `.codex_runtime/tmp/`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
+- **Fuera de alcance**: deploy real, pagos reales, banco/PSP real, cambios funcionales de ecommerce, uso de puertos ocupados por procesos ajenos.
+- **Capas permitidas/prohibidas**: operacion local; prohibido modificar dominio/aplicacion/infraestructura/presentacion salvo bug minimo demostrado en scripts de arranque.
+- **Checks obligatorios**:
+  - comprobar puertos libres antes de arrancar;
+  - registrar PIDs en `.codex_runtime/pids.txt`;
+  - validar respuesta basica de backend y frontend;
+  - cerrar PIDs registrados y confirmar que no quedan procesos vivos del repo.
+- **Criterio de cierre**: smoke local reproducible con procesos cerrados y evidencias en bitacora.
+- **Bloqueo conocido**: ninguno.

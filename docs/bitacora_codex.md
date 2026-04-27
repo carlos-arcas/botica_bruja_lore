@@ -1,4 +1,4 @@
-# Bitácora operativa Codex
+﻿# Bitácora operativa Codex
 
 ## Propósito
 Registro trazable de cada ejecución autónoma: tarea, archivos tocados, decisiones, checks, resultado, bloqueos y siguiente paso exacto.
@@ -352,3 +352,112 @@ PY`
   - el diff se mantiene en el perímetro documental permitido.
 - **Bloqueos (si aplica)**: ninguno.
 - **Siguiente paso exacto**: ejecutar `V2G-001` para auditar el cierre real de `V2-R10`, decidir si ya está cerrable o dejar la brecha exacta siguiente con evidencia.
+
+## Entrada 2026-04-26-V2G-001 (auditoria cierre go-live v2)
+- **Fecha (UTC)**: 2026-04-26
+- **ID de tarea**: `V2G-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: contrastar el alcance pendiente de `V2-R10` con scripts, tests y documentacion reales para decidir con evidencia si puede cerrarse o queda bloqueado por dependencias externas.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/roadmap_codex.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/release_readiness_minima.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/deploy_railway.md`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Cerrar `V2G-001` como auditoria `DONE`, porque la evidencia local permite decidir el estado real de `V2-R10`.
+  2. Marcar `V2-R10` como `BLOCKED` externo, no como `DONE`, porque falta smoke post-deploy real y restore drill real contra entorno seguro.
+  3. Crear `V2G-002` en `BLOCKED` para que el siguiente desbloqueo no improvise alcance ni active pagos reales.
+- **Checklist de cierre aplicada (V2G-001)**:
+  1. Tarea correcta confirmada: **Si** (`V2G-001` era la primera `TODO` no `BLOCKED`).
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se tocaron backend, frontend, negocio, deploy real, backup real ni restore real.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90`: **Si**; capacidades R01-R09 permanecen cerradas y `V2-R10` queda como bloqueo externo.
+  10. Siguiente paso exacto definido: **Si** (`V2G-002`, bloqueado hasta disponer de URLs desplegadas y PostgreSQL temporal seguro).
+- **Checks ejecutados**:
+  - `git status --short` -> sin cambios iniciales.
+  - consulta de procesos del repo con `Get-CimInstance Win32_Process ... Contains($RepoRoot)` -> sin ejecucion activa del repo.
+  - `.venv\Scripts\python.exe scripts\check_release_readiness.py` -> OK.
+  - `.venv\Scripts\python.exe scripts\check_operational_alerts_v2.py --fail-on none --json` -> OK, sin alertas.
+  - `.venv\Scripts\python.exe scripts\retry_operational_tasks_v2.py --dry-run --json` -> OK, sin candidatos ni mutaciones.
+  - `.venv\Scripts\python.exe scripts\backup_restore_postgres.py backup --dry-run --backup-dir <temp> --database-url postgresql://user:secret@localhost:5432/botica` -> OK, sin dump real.
+  - `.venv\Scripts\python.exe scripts\backup_restore_postgres.py restore-drill --dry-run --restore-database-url postgresql://user:secret@localhost:5432/botica_restore --dump-file <temp-sample>` -> OK; archivo temporal eliminado.
+  - `.venv\Scripts\python.exe scripts\check_deployed_stack.py` -> esperado BLOCKED por configuracion: falta `BACKEND_BASE_URL`.
+  - `.venv\Scripts\python.exe scripts\check_release_gate.py` -> OK; incluye `tests.scripts` con 44 tests y conciliacion operativa sin inconsistencias. Los pasos frontend quedan en `SKIP` informativo porque `npm` no esta disponible en el entorno del gate.
+- **Resultado verificable**:
+  - `V2G-001` queda `DONE` con evidencia en `docs/roadmap_codex.md`.
+  - `V2-R10` queda `BLOCKED` en `docs/roadmap_ecommerce_real_v2.md` por dependencias externas concretas.
+  - `docs/90_estado_implementacion.md` refleja el estado real: go-live v2 bloqueado externamente, no cerrado.
+  - `V2G-002` queda creado como tarea bloqueada para el desbloqueo operacional futuro.
+- **Bloqueos (si aplica)**: smoke post-deploy real requiere `BACKEND_BASE_URL` y `FRONTEND_BASE_URL`; backup/restore real requiere `DATABASE_URL`, `BOTICA_BACKUP_DIR` fuera del repo y `BOTICA_RESTORE_DATABASE_URL` contra base temporal segura.
+- **Siguiente paso exacto**: desbloquear `V2G-002` cuando existan entorno desplegado/staging y PostgreSQL temporal autorizados, sin pagos reales ni banco/PSP real.
+
+## Entrada 2026-04-27-RUN-001 (check no destructivo de setup/run_app)
+- **Fecha (UTC)**: 2026-04-27
+- **ID de tarea**: `RUN-001`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: crear y validar un modo no destructivo para comprobar `setup_entorno.bat` y `run_app.bat` sin instalar dependencias ni arrancar servidores persistentes.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Archivos tocados**:
+  - `run_app.bat`
+  - `setup_entorno.bat`
+  - `docs/roadmap_codex.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Al no existir tarea `TODO` ejecutable (`V2G-002` esta `BLOCKED` por infraestructura externa), se crea `RUN-001` por el alcance permanente de funcionamiento real de `run_app/setup`.
+  2. Se implementa `--check`/`/check` en ambos `.bat` para validar entorno sin instalar ni arrancar servidores.
+  3. Se separa el smoke real de servidores en `RUN-002`, porque requiere arrancar procesos, controlar puertos y cerrar PIDs en una iteracion propia.
+- **Incidencia durante validacion**:
+  - La primera version de `run_app.bat --check` ejecutaba los bloques `start` antes de salir. Se corrigio dentro de la misma tarea moviendo la salida `--check` antes de cualquier arranque.
+  - Los procesos abiertos por esa validacion pertenecian inequivocamente al repo actual y fueron cerrados por PID: `16040`, `1528`, `34316`, `10460`, `10516`, `26684`, `35460`, `33828`, `14488`, `13620`, `12152`, `13012`, `19572`, `31700`, `30392`, `16660`, `18376`, `25828`.
+- **Checklist de cierre aplicada (RUN-001)**:
+  1. Tarea correcta confirmada: **Si**; no habia `TODO` ejecutable y se creo tarea atomica por alcance operativo permanente.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se modifico producto ni se activo pago real.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90`: **Si**; la capacidad queda registrada como operacion local, no como go-live real.
+  10. Siguiente paso exacto definido: **Si** (`RUN-002`).
+- **Checks ejecutados**:
+  - preflight de lock/procesos/git status -> sin lock ni procesos iniciales; habia cambios documentales pendientes aceptados como contexto por instruccion del usuario.
+  - `cmd /c setup_entorno.bat --check` -> OK; valida `.venv`, `requirements.txt`, `npm` y `frontend\node_modules` sin instalar.
+  - `cmd /c run_app.bat --check` -> OK; valida setup, backend y frontend sin iniciar servidores tras la correccion.
+  - consulta de procesos por ruta absoluta del repo -> sin procesos vivos al cierre de la validacion.
+- **Resultado verificable**:
+  - `setup_entorno.bat --check` funciona como check no destructivo.
+  - `run_app.bat --check` funciona como check no destructivo y no deja procesos vivos.
+  - `RUN-001` queda `DONE` y `RUN-002` queda como primera tarea `TODO` para smoke real controlado.
+- **Bloqueos (si aplica)**: ninguno.
+- **Siguiente paso exacto**: ejecutar `RUN-002` para arrancar backend/frontend en puertos libres, validar respuesta basica y cerrar PIDs registrados.
