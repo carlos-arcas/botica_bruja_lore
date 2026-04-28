@@ -5,148 +5,16 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
     IntencionModelo,
     PlantaModelo,
     ProductoModelo,
+    ReglaCalendarioModelo,
     RitualModelo,
 )
 
-INTENCIONES_DEMO = (
-    {
-        "id": "int-demo-calma",
-        "slug": "calma-nocturna",
-        "nombre": "Calma nocturna",
-        "descripcion": "Intención editorial para rituales de cierre suave al final del día.",
-        "es_publica": True,
-    },
-    {
-        "id": "int-demo-limpieza",
-        "slug": "limpieza-energetica",
-        "nombre": "Limpieza energética",
-        "descripcion": "Intención editorial para prácticas de limpieza y renovación del espacio.",
-        "es_publica": True,
-    },
-)
-
-PLANTAS_DEMO = (
-    {
-        "id": "pla-demo-melisa",
-        "slug": "melisa",
-        "nombre": "Melisa",
-        "descripcion_breve": "Planta aromática tradicional asociada a calma y descanso.",
-        "publicada": True,
-        "intenciones": ("calma-nocturna",),
-    },
-    {
-        "id": "pla-demo-romero",
-        "slug": "romero",
-        "nombre": "Romero",
-        "descripcion_breve": "Planta de tradición mediterránea conectada a claridad y limpieza.",
-        "publicada": True,
-        "intenciones": ("limpieza-energetica",),
-    },
-)
-
-PRODUCTOS_DEMO = (
-    {
-        "id": "pro-demo-melisa",
-        "sku": "HERB-DEMO-001",
-        "slug": "melisa-a-granel-50g",
-        "nombre": "Melisa a granel 50g",
-        "tipo_producto": "hierbas-a-granel",
-        "categoria_comercial": "hierbas-a-granel",
-        "seccion_publica": "botica-natural",
-        "descripcion_corta": "Hoja cortada para infusión suave de tarde y descanso ritual.",
-        "precio_visible": "9,90 €",
-        "imagen_url": "/imagenes/productos/melisa-a-granel.webp",
-        "planta_slug": "melisa",
-        "publicado": True,
-    },
-    {
-        "id": "pro-demo-romero",
-        "sku": "HERB-DEMO-002",
-        "slug": "romero-a-granel-50g",
-        "nombre": "Romero a granel 50g",
-        "tipo_producto": "hierbas-a-granel",
-        "categoria_comercial": "hierbas-a-granel",
-        "seccion_publica": "botica-natural",
-        "descripcion_corta": "Romero de corte fino para baños herbales y limpieza del hogar.",
-        "precio_visible": "8,50 €",
-        "imagen_url": "/imagenes/productos/romero-a-granel.webp",
-        "planta_slug": "romero",
-        "publicado": True,
-    },
-    {
-        "id": "pro-demo-lavanda",
-        "sku": "HERB-DEMO-003",
-        "slug": "lavanda-flores-40g",
-        "nombre": "Lavanda flores 40g",
-        "tipo_producto": "inciensos-y-sahumerios",
-        "categoria_comercial": "flores-herbales",
-        "seccion_publica": "botica-natural",
-        "descripcion_corta": "Flores secas de lavanda para sahumo suave y bolsitas aromáticas.",
-        "precio_visible": "7,20 €",
-        "imagen_url": "/imagenes/productos/lavanda-flores.webp",
-        "planta_slug": None,
-        "publicado": True,
-    },
-    {
-        "id": "pro-demo-manazanilla",
-        "sku": "HERB-DEMO-004",
-        "slug": "manzanilla-dulce-60g",
-        "nombre": "Manzanilla dulce 60g",
-        "tipo_producto": "hierbas-a-granel",
-        "categoria_comercial": "hierbas-a-granel",
-        "seccion_publica": "botica-natural",
-        "descripcion_corta": "Capítulos florales seleccionados para infusión y baños de vapor.",
-        "precio_visible": "8,90 €",
-        "imagen_url": "",
-        "planta_slug": "melisa",
-        "publicado": True,
-    },
-    {
-        "id": "pro-demo-ruda",
-        "sku": "HERB-DEMO-005",
-        "slug": "ruda-rama-seca-30g",
-        "nombre": "Ruda rama seca 30g",
-        "tipo_producto": "herramientas-rituales",
-        "categoria_comercial": "proteccion-del-hogar",
-        "seccion_publica": "botica-natural",
-        "descripcion_corta": "Atado ritual para limpieza del umbral y protección simbólica.",
-        "precio_visible": "6,40 €",
-        "imagen_url": "/imagenes/productos/ruda-rama-seca.webp",
-        "planta_slug": None,
-        "publicado": True,
-    },
-    {
-        "id": "pro-demo-vela",
-        "sku": "HERB-DEMO-900",
-        "slug": "vela-lunar-blanca",
-        "nombre": "Vela lunar blanca",
-        "tipo_producto": "herramientas-rituales",
-        "categoria_comercial": "velas",
-        "seccion_publica": "velas-e-incienso",
-        "descripcion_corta": "Pieza de apoyo para altar lunar.",
-        "precio_visible": "5,00 €",
-        "imagen_url": "/imagenes/productos/vela-lunar-blanca.webp",
-        "planta_slug": None,
-        "publicado": True,
-    },
-)
-
-RITUALES_DEMO = (
-    {
-        "id": "rit-demo-cierre",
-        "slug": "cierre-sereno",
-        "nombre": "Cierre sereno",
-        "contexto_breve": "Ritual breve para cerrar el día con melisa y foco de calma nocturna.",
-        "publicado": True,
-        "intenciones": ("calma-nocturna",),
-        "plantas_relacionadas": ("melisa",),
-        "productos_relacionados": ("melisa-a-granel-50g",),
-    },
-)
+from .seed_demo_publico_catalogo import INTENCIONES_DEMO, PLANTAS_DEMO, PRODUCTOS_DEMO
+from .seed_demo_publico_rituales import REGLAS_CALENDARIO_DEMO, RITUALES_DEMO
 
 
 class Command(BaseCommand):
-    help = "Carga una base mínima de datos demo públicos para entorno local/staging."
+    help = "Carga una base minima de datos demo publicos para entorno local/staging."
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -155,9 +23,10 @@ class Command(BaseCommand):
             "plantas": self._seed_plantas(),
             "productos": self._seed_productos(),
             "rituales": self._seed_rituales(),
+            "reglas_calendario": self._seed_reglas_calendario(),
         }
 
-        self.stdout.write(self.style.SUCCESS("Seed demo pública aplicada correctamente."))
+        self.stdout.write(self.style.SUCCESS("Seed demo publica aplicada correctamente."))
         for entidad, estado in resumen.items():
             self.stdout.write(
                 f"- {entidad}: creados={estado['creados']}, actualizados={estado['actualizados']}"
@@ -181,7 +50,6 @@ class Command(BaseCommand):
             if item["planta_slug"]:
                 planta = PlantaModelo.objects.get(slug=item["planta_slug"])
             defaults = {
-                "id": item["id"],
                 "sku": item["sku"],
                 "nombre": item["nombre"],
                 "tipo_producto": item["tipo_producto"],
@@ -193,11 +61,15 @@ class Command(BaseCommand):
                 "planta": planta,
                 "publicado": item["publicado"],
             }
-            _, creado = ProductoModelo.objects.update_or_create(
-                slug=item["slug"], defaults=defaults
-            )
-            clave = "creados" if creado else "actualizados"
-            estado[clave] += 1
+            producto = ProductoModelo.objects.filter(slug=item["slug"]).first()
+            creado = producto is None
+            if creado:
+                ProductoModelo.objects.create(id=item["id"], slug=item["slug"], **defaults)
+            else:
+                for campo, valor in defaults.items():
+                    setattr(producto, campo, valor)
+                producto.save()
+            estado["creados" if creado else "actualizados"] += 1
         return estado
 
     def _seed_rituales(self):
@@ -218,13 +90,38 @@ class Command(BaseCommand):
             )
         return estado
 
+    def _seed_reglas_calendario(self):
+        estado = {"creados": 0, "actualizados": 0}
+        for item in REGLAS_CALENDARIO_DEMO:
+            ritual = RitualModelo.objects.get(slug=item["ritual_slug"])
+            defaults = {
+                "ritual": ritual,
+                "nombre": item["nombre"],
+                "fecha_inicio": item["fecha_inicio"],
+                "fecha_fin": item["fecha_fin"],
+                "prioridad": item["prioridad"],
+                "activa": item["activa"],
+            }
+            _, creado = ReglaCalendarioModelo.objects.update_or_create(
+                id=item["id"], defaults=defaults
+            )
+            estado["creados" if creado else "actualizados"] += 1
+        return estado
+
     def _upsert(self, modelo, items, clave, excluir=()):
         estado = {"creados": 0, "actualizados": 0}
         for item in items:
             defaults = {k: v for k, v in item.items() if k != clave and k not in excluir}
-            _, creado = modelo.objects.update_or_create(
-                **{clave: item[clave]},
-                defaults=defaults,
-            )
+            objeto = modelo.objects.filter(**{clave: item[clave]}).first()
+            creado = objeto is None
+            if creado:
+                modelo.objects.create(**{clave: item[clave], **defaults})
+            else:
+                # Si la identidad operativa es el slug, no intentamos reescribir la PK.
+                for campo, valor in defaults.items():
+                    if campo == "id" and clave != "id":
+                        continue
+                    setattr(objeto, campo, valor)
+                objeto.save()
             estado["creados" if creado else "actualizados"] += 1
         return estado

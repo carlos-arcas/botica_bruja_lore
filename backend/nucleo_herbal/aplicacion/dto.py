@@ -203,6 +203,12 @@ class ResultadoSesionClienteDTO:
     cuenta: CuentaClienteDTO | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class ResultadoAutenticacionGoogleCuentaClienteDTO:
+    cuenta: CuentaClienteDTO
+    es_nueva_cuenta: bool
+
+
 
 @dataclass(frozen=True, slots=True)
 class RitualCalendarioDTO:

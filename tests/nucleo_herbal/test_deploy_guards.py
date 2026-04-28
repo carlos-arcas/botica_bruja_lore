@@ -13,6 +13,12 @@ EXPECTED_SECRET_ERROR = (
     "SECRET_KEY es obligatoria cuando DEBUG=false o en Railway/producción."
 )
 EXPECTED_PUBLIC_URL_ERROR = "PUBLIC_SITE_URL es obligatoria cuando DEBUG=false."
+EXPECTED_PAYMENT_SUCCESS_ERROR = "PAYMENT_SUCCESS_URL es obligatoria cuando DEBUG=false."
+EXPECTED_PAYMENT_CANCEL_ERROR = "PAYMENT_CANCEL_URL es obligatoria cuando DEBUG=false."
+EXPECTED_DEFAULT_FROM_EMAIL_ERROR = "DEFAULT_FROM_EMAIL es obligatoria cuando DEBUG=false."
+EXPECTED_DEFAULT_FROM_EMAIL_LOCAL_ERROR = (
+    "DEFAULT_FROM_EMAIL no puede usar dominio .local cuando DEBUG=false."
+)
 EXPECTED_EMAIL_BACKEND_ERROR = (
     "EMAIL_BACKEND de desarrollo no permitida cuando DEBUG=false. Configura backend SMTP real."
 )
@@ -169,6 +175,78 @@ class TestDeployGuards(SimpleTestCase):
         result = self._run([PYTHON, "-c", code], env)
 
         self._assert_failed_with(result, EXPECTED_PUBLIC_URL_ERROR)
+
+    def test_produccion_requiere_payment_success_url(self) -> None:
+        env = self._base_env()
+        env.update({
+            "DEBUG": "false",
+            "SECRET_KEY": "prod-secret",
+            "DATABASE_URL": "sqlite:///var/dev.sqlite3",
+            "PUBLIC_SITE_URL": "https://frontend.example.com",
+            "PAYMENT_CANCEL_URL": "https://frontend.example.com/checkout?estado_pago=cancelado",
+            "DEFAULT_FROM_EMAIL": "ops@example.com",
+            "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        })
+        env.pop("PAYMENT_SUCCESS_URL", None)
+
+        code = f"import {SETTINGS_MODULE}"
+        result = self._run([PYTHON, "-c", code], env)
+
+        self._assert_failed_with(result, EXPECTED_PAYMENT_SUCCESS_ERROR)
+
+    def test_produccion_requiere_payment_cancel_url(self) -> None:
+        env = self._base_env()
+        env.update({
+            "DEBUG": "false",
+            "SECRET_KEY": "prod-secret",
+            "DATABASE_URL": "sqlite:///var/dev.sqlite3",
+            "PUBLIC_SITE_URL": "https://frontend.example.com",
+            "PAYMENT_SUCCESS_URL": "https://frontend.example.com/pedido/{CHECKOUT_SESSION_ID}",
+            "DEFAULT_FROM_EMAIL": "ops@example.com",
+            "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        })
+        env.pop("PAYMENT_CANCEL_URL", None)
+
+        code = f"import {SETTINGS_MODULE}"
+        result = self._run([PYTHON, "-c", code], env)
+
+        self._assert_failed_with(result, EXPECTED_PAYMENT_CANCEL_ERROR)
+
+    def test_produccion_requiere_default_from_email(self) -> None:
+        env = self._base_env()
+        env.update({
+            "DEBUG": "false",
+            "SECRET_KEY": "prod-secret",
+            "DATABASE_URL": "sqlite:///var/dev.sqlite3",
+            "PUBLIC_SITE_URL": "https://frontend.example.com",
+            "PAYMENT_SUCCESS_URL": "https://frontend.example.com/pedido/{CHECKOUT_SESSION_ID}",
+            "PAYMENT_CANCEL_URL": "https://frontend.example.com/checkout?estado_pago=cancelado",
+            "DEFAULT_FROM_EMAIL": "",
+            "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        })
+
+        code = f"import {SETTINGS_MODULE}"
+        result = self._run([PYTHON, "-c", code], env)
+
+        self._assert_failed_with(result, EXPECTED_DEFAULT_FROM_EMAIL_ERROR)
+
+    def test_produccion_rechaza_default_from_email_local(self) -> None:
+        env = self._base_env()
+        env.update({
+            "DEBUG": "false",
+            "SECRET_KEY": "prod-secret",
+            "DATABASE_URL": "sqlite:///var/dev.sqlite3",
+            "PUBLIC_SITE_URL": "https://frontend.example.com",
+            "PAYMENT_SUCCESS_URL": "https://frontend.example.com/pedido/{CHECKOUT_SESSION_ID}",
+            "PAYMENT_CANCEL_URL": "https://frontend.example.com/checkout?estado_pago=cancelado",
+            "DEFAULT_FROM_EMAIL": "ops@example.local",
+            "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        })
+
+        code = f"import {SETTINGS_MODULE}"
+        result = self._run([PYTHON, "-c", code], env)
+
+        self._assert_failed_with(result, EXPECTED_DEFAULT_FROM_EMAIL_LOCAL_ERROR)
 
     def test_produccion_rechaza_email_backend_de_desarrollo(self) -> None:
         env = self._base_env()

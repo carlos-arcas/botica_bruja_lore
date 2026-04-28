@@ -512,3 +512,154 @@ test("flujo post-checkout consume contratos mínimos de pedido y email demo", as
 
   global.fetch = originalFetch;
 });
+
+test("checkout demo cubre el recorrido integrado cesta -> payload -> recibo -> email demo", async () => {
+  const originalFetch = global.fetch;
+  const endpoints: string[] = [];
+
+  global.fetch = (async (input: RequestInfo | URL) => {
+    const url = typeof input === "string" ? input : input.toString();
+    endpoints.push(url);
+
+    if (url.endsWith("/api/v1/pedidos-demo/")) {
+      return {
+        ok: true,
+        json: async () => ({
+          pedido: {
+            id_pedido: "PD-610",
+            estado: "creado",
+            canal: "invitado",
+            email: "demo@botica.test",
+            resumen: { cantidad_total_items: 3, subtotal_demo: "33.70" },
+          },
+        }),
+      } as Response;
+    }
+
+    if (url.endsWith("/api/v1/pedidos-demo/PD-610/")) {
+      return {
+        ok: true,
+        json: async () => ({
+          pedido: {
+            id_pedido: "PD-610",
+            estado: "creado",
+            canal: "invitado",
+            email: "demo@botica.test",
+            resumen: { cantidad_total_items: 3, subtotal_demo: "33.70" },
+            lineas: [
+              {
+                id_producto: "rit-001",
+                slug_producto: "infusion-bruma-lavanda",
+                nombre_producto: "Bruma de Lavanda Serena",
+                cantidad: 2,
+                precio_unitario_demo: "14.90",
+                subtotal_demo: "29.80",
+              },
+              {
+                id_producto: "rit-002",
+                slug_producto: "vela-intencion-clara",
+                nombre_producto: "Vela de Intención Clara",
+                cantidad: 1,
+                precio_unitario_demo: "3.90",
+                subtotal_demo: "3.90",
+              },
+            ],
+          },
+        }),
+      } as Response;
+    }
+
+    return {
+      ok: true,
+      json: async () => ({
+        email_demo: {
+          id_pedido: "PD-610",
+          estado: "creado",
+          canal: "invitado",
+          email_destino: "demo@botica.test",
+          asunto: "[DEMO] Confirmación de pedido PD-610",
+          cuerpo_texto: "Aviso: entorno demo sin envío real de correo",
+          subtotal_demo: "33.70",
+          lineas: [
+            {
+              nombre_producto: "Bruma de Lavanda Serena",
+              cantidad: 2,
+              subtotal_demo: "29.80",
+            },
+            {
+              nombre_producto: "Vela de Intención Clara",
+              cantidad: 1,
+              subtotal_demo: "3.90",
+            },
+          ],
+          es_simulacion: true,
+        },
+      }),
+    } as Response;
+  }) as typeof fetch;
+
+  const estado = resolverEstadoIdentificacionCheckoutDemo(null, true);
+  const resultadoLineas = construirResultadoLineasPedidoDemo(
+    [
+      crearItemSeleccionado("infusion-bruma-lavanda", 2),
+      crearItemSeleccionado("vela-intencion-clara", 1),
+    ],
+    "",
+    "1 unidad",
+  );
+
+  assert.deepEqual(
+    validarCheckoutDemo(
+      estado.canalActivo,
+      estado.cuentaActiva,
+      resultadoLineas,
+    ),
+    {},
+  );
+
+  const payload = construirPayloadPedidoDemo(
+    "demo@botica.test",
+    estado.canalActivo,
+    resultadoLineas.lineasConvertibles,
+    estado.cuentaActiva,
+  );
+  assert.equal(payload.canal, "invitado");
+  assert.equal(payload.lineas.length, 2);
+  assert.equal(payload.lineas[0]?.slug_producto, "infusion-bruma-lavanda");
+  assert.equal(payload.lineas[1]?.slug_producto, "vela-intencion-clara");
+
+  const crear = await crearPedidoDemoPublico(payload);
+  assert.equal(crear.estado, "ok");
+  if (crear.estado !== "ok") {
+    throw new Error("El pedido demo debía crearse para validar el recorrido integrado.");
+  }
+
+  const rutaRecibo = construirRutaReciboPedidoDemo(crear.pedido.id_pedido);
+  const idPedido = resolverIdPedidoDesdeRuta(
+    rutaRecibo.replace("/pedido-demo/", ""),
+  );
+
+  assert.equal(rutaRecibo, "/pedido-demo/PD-610");
+  assert.equal(idPedido, "PD-610");
+
+  const detalle = await obtenerPedidoDemoPublico(idPedido ?? "");
+  const email = await obtenerEmailDemoPedidoPublico(idPedido ?? "");
+
+  assert.equal(detalle.estado, "ok");
+  assert.equal(email.estado, "ok");
+  if (detalle.estado !== "ok" || email.estado !== "ok") {
+    throw new Error("El recibo y el email demo deben quedar disponibles tras crear el pedido.");
+  }
+
+  assert.equal(detalle.pedido.resumen.cantidad_total_items, 3);
+  assert.equal(detalle.pedido.lineas?.length, 2);
+  assert.equal(email.emailDemo.subtotal_demo, detalle.pedido.resumen.subtotal_demo);
+  assert.equal(email.emailDemo.email_destino, detalle.pedido.email);
+  assert.deepEqual(endpoints, [
+    "http://127.0.0.1:8000/api/v1/pedidos-demo/",
+    "http://127.0.0.1:8000/api/v1/pedidos-demo/PD-610/",
+    "http://127.0.0.1:8000/api/v1/pedidos-demo/PD-610/email-demo/",
+  ]);
+
+  global.fetch = originalFetch;
+});

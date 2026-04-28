@@ -158,7 +158,7 @@ export function FlujoEncargoConsulta({
                 tono: "bloqueada",
               }
             : {
-                etiqueta: "Lista para revisión de encargo",
+                etiqueta: "Lista para revisión del pedido demo",
                 descripcion:
                   "La línea conserva contexto rico y se revisará antes de confirmar el pedido demo.",
                 tono: "convertible",
@@ -274,6 +274,11 @@ export function FlujoEncargoConsulta({
     valor: string | boolean,
   ): void => setDatos((previo) => ({ ...previo, [campo]: valor }));
 
+  const irCuentaDemoConRetornoAutenticado = (): void => {
+    guardarBorradorCheckoutDemo(datos, false);
+    router.push(construirRutaCuentaDemoConRetornoSeguro(RUTA_CUENTA_DEMO_RETORNO));
+  };
+
   const enviarConsulta = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
@@ -362,7 +367,7 @@ export function FlujoEncargoConsulta({
     }
     await navigator.clipboard.writeText(resumen);
     setMensajeCopia(
-      "Solicitud copiada. Ya puedes compartirla por tu canal habitual.",
+      "Resumen del pedido demo copiado. Ya puedes compartirlo por tu canal habitual.",
     );
   };
 
@@ -375,19 +380,23 @@ export function FlujoEncargoConsulta({
 
   return (
     <section className="bloque-home" aria-labelledby="titulo-encargo">
-      <p className={estilos.eyebrow}>Encargo ligero · consulta comercial</p>
-      <h1 id="titulo-encargo">Preparar una solicitud artesanal</h1>
+      <p className={estilos.eyebrow}>Checkout demo · sin cobro real</p>
+      <h1 id="titulo-encargo">Preparar pedido demo</h1>
       <p>
         {contexto.modo === "seleccion"
-          ? "Has llegado desde tu selección. Revisamos las líneas elegidas y tú editas solo tu intención real, sin arrastrar parches ni textos técnicos."
-          : "Cuéntanos qué pieza te interesa y en qué contexto deseas usarla. Al final tendrás un texto listo para copiar o enviar por un canal real, si está configurado."}
+          ? "Has llegado desde tu selección. Revisamos las líneas elegidas y tú ajustas solo la intención final del pedido demo, sin arrastrar parches ni textos técnicos."
+          : "Cuéntanos qué pieza te interesa y en qué contexto deseas usarla. Al final tendrás un resumen claro para crear el pedido demo o pasarlo a consulta manual por un canal real, si está configurado."}
+      </p>
+      <p className={estilos.estado}>
+        Este checkout demo crea un pedido demo sin cobro real y mantiene una salida manual honesta cuando alguna línea no
+        entra en contrato.
       </p>
 
       {contexto.modo === "seleccion" ? (
         <article className={estilos.resumenProducto} aria-live="polite">
-          <h2>Selección para encargo</h2>
+          <h2>Selección lista para pedido demo</h2>
           <p>
-            Mantienes la revisión rica de cada línea antes de enviar el encargo,
+            Mantienes la revisión rica de cada línea antes de confirmar el pedido demo,
             con imagen, formato, referencia orientativa y notas de origen.
           </p>
           <ListaLineasSeleccion items={itemsSeleccionVisual} />
@@ -413,7 +422,7 @@ export function FlujoEncargoConsulta({
         </article>
       ) : (
         <article className={estilos.resumenProducto} aria-live="polite">
-          <h2>Producto seleccionado</h2>
+          <h2>Producto listo para pedido demo</h2>
           {productoSeleccionado ? (
             <>
               <p>
@@ -435,12 +444,7 @@ export function FlujoEncargoConsulta({
         canalActivo={canalCheckout}
         cuentaDemo={cuentaDemoActiva}
         onContinuarComoInvitado={() => setContinuarComoInvitado(true)}
-        onIrCuentaDemo={() => {
-          guardarBorradorCheckoutDemo(datos, continuarComoInvitado);
-          router.push(
-            construirRutaCuentaDemoConRetornoSeguro(RUTA_CUENTA_DEMO_RETORNO),
-          );
-        }}
+        onIrCuentaDemo={irCuentaDemoConRetornoAutenticado}
         onUsarCuentaDemo={() =>
           activarCuentaDemo(
             cuentaDemoActiva,
@@ -568,8 +572,8 @@ export function FlujoEncargoConsulta({
           disabled={estadoEnvio === "enviando"}
         >
           {estadoEnvio === "enviando"
-            ? "Enviando pedido demo..."
-            : "Enviar pedido demo"}
+            ? "Creando pedido demo..."
+            : "Crear pedido demo"}
         </button>
       </form>
 

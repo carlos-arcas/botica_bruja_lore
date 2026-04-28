@@ -84,7 +84,7 @@ class TestImportacionMasivaBackoffice(TestCase):
     def test_detalle_serializa_resumen_y_filas(self):
         lote_id = self._crear_lote(
             "productos",
-            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-1,prod-1,Producto,herbal,hierbas,botica,desc,10.00,true\n",
+            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-1,prod-1,Producto,herbal,hierbas,botica-natural,desc,10.00,true\n",
         )
         response = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote_id}/", **self.auth)
         data = response.json()
@@ -96,7 +96,7 @@ class TestImportacionMasivaBackoffice(TestCase):
     def test_confirmar_seleccionadas_y_validas_mantiene_staging(self):
         lote_id = self._crear_lote(
             "productos",
-            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-2,prod-2,Producto 2,herbal,hierbas,botica,desc,10.00,true\nSKU-3,prod-3,Producto 3,herbal,hierbas,botica,desc,10.00,true\n",
+            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-2,prod-2,Producto 2,herbal,hierbas,botica-natural,desc,10.00,true\nSKU-3,prod-3,Producto 3,herbal,hierbas,botica-natural,desc,10.00,true\n",
         )
         detalle = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote_id}/", **self.auth).json()
         fila_id = detalle["filas"][0]["id"]
@@ -116,10 +116,52 @@ class TestImportacionMasivaBackoffice(TestCase):
         self.assertEqual(response.json()["confirmadas"], 1)
         self.assertTrue(ProductoModelo.objects.filter(slug="prod-3").exists())
 
+    def test_importacion_productos_rechaza_seccion_publica_fuera_del_mapa_canonico(self):
+        lote_id = self._crear_lote(
+            "productos",
+            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-2B,prod-2b,Producto 2B,herramientas-rituales,herramientas,amuletos-y-talismenes,desc,10.00,true\n",
+        )
+        detalle = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote_id}/", **self.auth).json()
+        fila = detalle["filas"][0]
+
+        self.assertEqual(fila["estado"], "invalida")
+        self.assertIn("Seccion publica de producto invalida.", fila["errores"][0])
+
+        response = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote_id}/confirmar-validas/",
+            data=json.dumps({}),
+            content_type="application/json",
+            **self.auth,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["confirmadas"], 0)
+        self.assertFalse(ProductoModelo.objects.filter(slug="prod-2b").exists())
+
+    def test_confirmar_validas_importa_producto_en_herramientas_esotericas(self):
+        lote_id = self._crear_lote(
+            "productos",
+            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-HER-1,pendulo-prueba,Pendulo prueba,herramientas-rituales,herramientas,herramientas-esotericas,desc,12.00,true\n",
+        )
+        detalle = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote_id}/", **self.auth).json()
+        self.assertEqual(detalle["filas"][0]["estado"], "valida")
+
+        response = self.client.post(
+            f"/api/v1/backoffice/importacion/lotes/{lote_id}/confirmar-validas/",
+            data=json.dumps({}),
+            content_type="application/json",
+            **self.auth,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["confirmadas"], 1)
+        producto = ProductoModelo.objects.get(slug="pendulo-prueba")
+        self.assertEqual(producto.seccion_publica, "herramientas-esotericas")
+
     def test_imagenes_revalidacion_y_cancelacion_siguen_operativas(self):
         lote_id = self._crear_lote(
             "productos",
-            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-4,prod-4,Producto 4,herbal,hierbas,botica,desc,10.00,true\n",
+            "sku,slug,nombre,tipo_producto,categoria_comercial,seccion_publica,descripcion_corta,precio_visible,publicado\nSKU-4,prod-4,Producto 4,herbal,hierbas,botica-natural,desc,10.00,true\n",
         )
         fila_id = self.client.get(f"/api/v1/backoffice/importacion/lotes/{lote_id}/", **self.auth).json()["filas"][0]["id"]
         subir = self.client.post(f"/api/v1/backoffice/importacion/lotes/{lote_id}/filas/{fila_id}/imagen/", data={"imagen": self._imagen_png_valida()}, **self.auth)

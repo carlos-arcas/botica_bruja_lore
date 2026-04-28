@@ -175,6 +175,28 @@ class TestContratosApiPublicaConsumidaFrontend(DjangoTestCase):
                 "estado_disponibilidad",
             }.issubset(producto.keys())
         )
+
+    def test_contrato_publico_expone_cors_para_frontend_local(self) -> None:
+        response = self.client.get(
+            "/api/v1/rituales/",
+            HTTP_ORIGIN="http://127.0.0.1:3000",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Access-Control-Allow-Origin"], "http://127.0.0.1:3000")
+        self.assertIn("Origin", response["Vary"])
+
+    def test_preflight_publico_responde_para_frontend_local(self) -> None:
+        response = self.client.options(
+            "/api/v1/calendario-ritual/",
+            HTTP_ORIGIN="http://127.0.0.1:3000",
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD="GET",
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response["Access-Control-Allow-Origin"], "http://127.0.0.1:3000")
+        self.assertIn("GET", response["Access-Control-Allow-Methods"])
+
     def test_contrato_errores_404_publicos_shape_y_content_type(self) -> None:
         endpoints = [
             "/api/v1/herbal/plantas/no-existe/",

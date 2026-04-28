@@ -61,6 +61,14 @@ class RepositorioCuentasClienteORM(RepositorioCuentasCliente):
         modelo = self._obtener_cuenta_modelo_opcional(id_usuario)
         return None if modelo is None else a_cuenta_cliente(modelo)
 
+    def obtener_por_google_sub(self, google_sub: str) -> CuentaCliente | None:
+        modelo = (
+            CuentaClienteModelo.objects.select_related("usuario")
+            .filter(google_sub=google_sub.strip())
+            .first()
+        )
+        return None if modelo is None else a_cuenta_cliente(modelo)
+
     def listar_direcciones(self, *, id_usuario: str) -> tuple[DireccionCuentaCliente, ...]:
         return tuple(
             a_direccion_cuenta_cliente(modelo)
@@ -206,6 +214,16 @@ class RepositorioCuentasClienteORM(RepositorioCuentasCliente):
         cuenta.usuario.save(update_fields=["password"])
         solicitud.fecha_uso = timezone.now()
         solicitud.save(update_fields=["fecha_uso", "fecha_envio"])
+        return a_cuenta_cliente(cuenta)
+
+    @transaction.atomic
+    def vincular_google(self, *, id_usuario: str, google_sub: str, email_verificado: bool) -> CuentaCliente | None:
+        cuenta = self._obtener_cuenta_modelo_opcional(id_usuario)
+        if cuenta is None:
+            return None
+        cuenta.google_sub = google_sub.strip()
+        cuenta.email_verificado = email_verificado or cuenta.email_verificado
+        cuenta.save(update_fields=["google_sub", "email_verificado", "fecha_actualizacion"])
         return a_cuenta_cliente(cuenta)
 
     def _obtener_modelo_por_email(self, email: str) -> CuentaClienteModelo | None:

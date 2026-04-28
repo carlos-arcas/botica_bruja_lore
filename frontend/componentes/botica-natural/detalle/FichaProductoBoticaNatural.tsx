@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import {
+  construirHrefSeccionPublicaVisible,
+  construirNombreSeccionPublica,
+} from "@/componentes/botica-natural/contratoSeccionPublica";
 import { ImagenProductoBoticaNatural } from "@/componentes/botica-natural/ImagenProductoBoticaNatural";
 import { BotonAgregarCarrito } from "@/componentes/catalogo/cesta/BotonAgregarCarrito";
 import { EstadoDisponibilidadProducto } from "@/componentes/catalogo/disponibilidad/EstadoDisponibilidadProducto";
@@ -9,18 +13,9 @@ type Props = {
   producto: ProductoSeccionPublica;
 };
 
-function construirNombreSeccion(slugSeccion: string): string {
-  if (slugSeccion === "botica-natural") return "Botica Natural";
-  return slugSeccion
-    .split("-")
-    .filter(Boolean)
-    .map((parte) => `${parte[0]?.toUpperCase() ?? ""}${parte.slice(1)}`)
-    .join(" ");
-}
-
 export function FichaProductoBoticaNatural({ producto }: Props): JSX.Element {
-  const nombreSeccion = construirNombreSeccion(producto.seccion_publica);
-  const urlSeccion = `/${producto.seccion_publica}`;
+  const nombreSeccion = construirNombreSeccionPublica(producto.seccion_publica);
+  const urlSeccion = construirHrefSeccionPublicaVisible(producto.seccion_publica);
 
   return (
     <>
@@ -47,12 +42,18 @@ export function FichaProductoBoticaNatural({ producto }: Props): JSX.Element {
         <section className="botica-natural__ficha-contenido">
           <p className="botica-natural__eyebrow">{nombreSeccion}</p>
           <h1>{producto.nombre}</h1>
-          <p>{producto.descripcion_corta || "Producto publicado en catálogo con información comercial mínima."}</p>
+          <p>{producto.descripcion_corta || "Producto publicado en catalogo con informacion comercial minima."}</p>
           <p className="botica-natural__precio">{producto.precio_visible || "Precio no disponible"}</p>
           <EstadoDisponibilidadProducto producto={producto} />
-          <p>La disponibilidad pública es informativa: no reserva unidades y el backend vuelve a validar el stock al crear el pedido.</p>
+          <p>La disponibilidad publica es informativa: no reserva unidades y el backend vuelve a validar el stock al crear el pedido.</p>
           <div className="botica-natural__acciones">
-            {producto.disponible ? <BotonAgregarCarrito slugProducto={producto.slug} /> : <button type="button" className="boton boton--principal" disabled aria-disabled="true">No disponible para compra</button>}
+            {producto.disponible ? (
+              <BotonAgregarCarrito slugProducto={producto.slug} />
+            ) : (
+              <button type="button" className="boton boton--principal" disabled aria-disabled="true">
+                No disponible para compra
+              </button>
+            )}
             <Link href={urlSeccion} className="boton boton--secundario">
               Volver a {nombreSeccion}
             </Link>

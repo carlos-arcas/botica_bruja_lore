@@ -14,7 +14,9 @@ No sustituye `docs/`; operacionaliza su uso diario.
 - Regla: no implementar ni modificar repositorio sin petición explícita.
 
 ## 3) Fuente de verdad y precedencia documental (obligatoria)
-La fuente de verdad está en `docs/`, con precedencia operativa:
+La fuente de verdad está en `docs/`, con precedencia operativa.
+
+`docs/99_fuente_de_verdad.md` gobierna la regla meta de precedencia; la lista siguiente es su resumen operativo aplicado por el agente:
 1. `docs/90_estado_implementacion.md` (estado real implementado).
 2. `docs/08_decisiones_tecnicas_no_negociables.md` (norma técnica obligatoria).
 3. `docs/05_modelo_de_dominio_y_entidades.md` (verdad de dominio).
@@ -68,6 +70,11 @@ Protocolo obligatorio:
    - fecha/punto de revisión.
 3. No improvisar soluciones fuera del alcance aprobado ni usar `BLOCKED` como justificación vaga.
 4. En la siguiente ejecución aplicable, revisar primero si el criterio de desbloqueo ya se cumple antes de retomar implementación.
+
+### 5.4 Regla de cola vacía o backlog totalmente bloqueado
+1. Si no existe ninguna tarea `TODO` no `BLOCKED`, el estado correcto es **cola vacía** o **backlog totalmente bloqueado**; debe declararse así, sin ambigüedad.
+2. En ese estado, queda prohibido inventar trabajo, abrir un roadmap paralelo o rebajar un bloqueo externo sin evidencia.
+3. Si existe una petición explícita del mantenedor fuera de la cola autónoma, se registra en este mismo `docs/roadmap_codex.md` y en `docs/bitacora_codex.md`, manteniendo una sola cola operativa.
 
 ## 6) Reglas de ingeniería no negociables
 - Clean Architecture estricta.

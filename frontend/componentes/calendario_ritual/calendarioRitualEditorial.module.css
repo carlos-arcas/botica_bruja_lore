@@ -1,0 +1,247 @@
+.layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.panelCalendario,
+.panelDetalle {
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: #fff;
+  padding: 1rem;
+}
+
+.cabeceraCalendario {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.cabeceraCalendario h3,
+.panelDetalle h3 {
+  margin: 0;
+}
+
+.controlesMes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.botonMes {
+  border: 1px solid #ccb89f;
+  border-radius: 999px;
+  background: #fff;
+  color: #4b3e31;
+  padding: 0.45rem 0.8rem;
+  font-weight: 700;
+}
+
+.etiquetaMes {
+  min-width: 10rem;
+  text-align: center;
+  font-weight: 700;
+  color: #473a2f;
+}
+
+.diasSemana,
+.rejillaDias {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.diasSemana {
+  margin-top: 0.9rem;
+}
+
+.diasSemana span {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.76rem;
+  color: #6c604f;
+}
+
+.dia {
+  min-height: 7.4rem;
+  border: 1px solid #ddcfbd;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fffdf9, #f8f1e6);
+  padding: 0.55rem;
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  text-align: left;
+}
+
+.dia:hover {
+  border-color: #b99775;
+}
+
+.diaFueraMes {
+  opacity: 0.5;
+}
+
+.diaSeleccionado {
+  border-color: #8c5a3c;
+  box-shadow: 0 0 0 2px rgba(140, 90, 60, 0.12);
+}
+
+.diaHoy {
+  background: linear-gradient(180deg, #fff6e8, #f5ead8);
+}
+
+.diaConContenido {
+  border-color: #8f7457;
+}
+
+.numeroDia {
+  font-weight: 700;
+  color: #3f3226;
+}
+
+.marcadoresDia {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.marcador {
+  font-size: 0.78rem;
+  color: #5f5143;
+}
+
+.fechaDetalle {
+  margin: 0.25rem 0 0;
+  color: #5f5143;
+  font-size: 0.95rem;
+}
+
+.ayudaDetalle {
+  margin: 0.75rem 0 0;
+  color: #65584a;
+  font-size: 0.92rem;
+}
+
+.editorDia {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.editorDia label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #473a2f;
+}
+
+.editorDia textarea,
+.editorDia select {
+  border: 1px solid #ccb89f;
+  border-radius: 12px;
+  padding: 0.65rem 0.7rem;
+  font: inherit;
+  background: #fff;
+}
+
+.filaAgregarRitual {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
+}
+
+.seleccionados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid #ccb89f;
+  background: #f5ebdf;
+  color: #4b3e31;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.9rem;
+}
+
+.chip button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 0.95rem;
+}
+
+.accionesEditor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.estadoLocal {
+  margin: 0;
+  color: #36563c;
+  font-weight: 600;
+}
+
+.bloqueEditorial {
+  margin-top: 1rem;
+  border-top: 1px solid #e3d7c7;
+  padding-top: 1rem;
+}
+
+.listaEditorial {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.listaEditorial li {
+  border: 1px solid #e0d4c4;
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: #fffdf9;
+}
+
+.regla {
+  margin: 0.35rem 0 0;
+  color: #63574a;
+  font-size: 0.88rem;
+}
+
+.estadoEditorial {
+  margin: 0.75rem 0 0;
+  color: #5f5143;
+}
+
+@media (min-width: 980px) {
+  .layout {
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .diasSemana,
+  .rejillaDias {
+    gap: 0.3rem;
+  }
+
+  .dia {
+    min-height: 6.6rem;
+    padding: 0.45rem;
+  }
+
+  .filaAgregarRitual {
+    grid-template-columns: 1fr;
+  }
+}

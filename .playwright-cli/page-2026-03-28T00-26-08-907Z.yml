@@ -1,0 +1,210 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Saltar al contenido principal" [ref=e3] [cursor=pointer]:
+      - /url: "#contenido-principal"
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "La Botica de la Bruja Lore Tienda editorial, compendio botanico y calendario ritual" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: La Botica de la Bruja Lore
+          - generic [ref=e9]: Tienda editorial, compendio botanico y calendario ritual
+        - generic [ref=e10]:
+          - navigation "Navegacion principal" [ref=e11]:
+            - list [ref=e12]:
+              - listitem [ref=e13]:
+                - link "Inicio" [ref=e14] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e15]:
+                - link "Tienda" [ref=e16] [cursor=pointer]:
+                  - /url: /botica-natural
+              - listitem [ref=e17]:
+                - link "Guias" [ref=e18] [cursor=pointer]:
+                  - /url: /guias
+              - listitem [ref=e19]:
+                - link "Tarot" [ref=e20] [cursor=pointer]:
+                  - /url: /tarot
+              - listitem [ref=e21]:
+                - link "Calendario ritual" [ref=e22] [cursor=pointer]:
+                  - /url: /calendario-ritual
+          - generic [ref=e23]:
+            - link "Carrito" [ref=e24] [cursor=pointer]:
+              - /url: /cesta
+            - link "Login" [ref=e25] [cursor=pointer]:
+              - /url: /acceso
+            - link "Abrir backoffice administrativo" [ref=e26] [cursor=pointer]:
+              - /url: /admin
+              - text: Acceso admin
+    - main [ref=e28]:
+      - region "Catalogo Botica Natural" [ref=e29]:
+        - complementary "Filtros de Botica Natural" [ref=e30]:
+          - heading "Filtrar catalogo" [level=2] [ref=e31]
+          - generic [ref=e32]:
+            - paragraph [ref=e33]: Ajusta los filtros para encontrar tu mezcla ideal.
+            - heading "Beneficio" [level=3] [ref=e35]:
+              - button "Beneficio" [ref=e36]:
+                - generic [ref=e37]: Beneficio
+                - generic [ref=e39]: +
+            - heading "Formato" [level=3] [ref=e41]:
+              - button "Formato" [ref=e42]:
+                - generic [ref=e43]: Formato
+                - generic [ref=e45]: +
+            - heading "Modo de uso" [level=3] [ref=e47]:
+              - button "Modo de uso" [ref=e48]:
+                - generic [ref=e49]: Modo de uso
+                - generic [ref=e51]: +
+            - heading "Precio" [level=3] [ref=e53]:
+              - button "Precio" [ref=e54]:
+                - generic [ref=e55]: Precio
+                - generic [ref=e57]: +
+            - generic [ref=e58]:
+              - button "Aplicar" [ref=e59]
+              - link "Limpiar" [ref=e60] [cursor=pointer]:
+                - /url: /botica-natural
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - heading "Botica Natural" [level=1] [ref=e63]
+            - paragraph [ref=e64]: Seleccion herbal publica conectada con catalogo real en produccion.
+          - region "Productos de Botica Natural" [ref=e65]:
+            - generic [ref=e66]:
+              - article [ref=e67]:
+                - link "Abrir ficha de Lavanda flores 40g" [ref=e68] [cursor=pointer]:
+                  - /url: /botica-natural/lavanda-flores-40g
+                  - img "Lavanda flores 40g" [ref=e69]
+                - generic [ref=e70]:
+                  - heading "Lavanda flores 40g" [level=2] [ref=e71]
+                  - paragraph [ref=e72]: Flores secas de lavanda para sahumo suave y bolsitas aromaticas.
+                  - paragraph [ref=e73]: 7,20 EUR
+                  - paragraph [ref=e75]:
+                    - strong [ref=e76]: "Disponibilidad:"
+                    - text: No disponible
+                  - generic [ref=e77]:
+                    - generic "Control de unidades" [ref=e78]:
+                      - generic [ref=e79]: Unidades
+                      - generic [ref=e80]:
+                        - button "Disminuir unidades" [ref=e81]: "-"
+                        - spinbutton "Unidades" [ref=e82]: "1"
+                        - button "Aumentar unidades" [ref=e83]: +
+                    - generic [ref=e84]:
+                      - link "Ver detalle" [ref=e85] [cursor=pointer]:
+                        - /url: /botica-natural/lavanda-flores-40g
+                      - button "No disponible" [disabled] [ref=e86]
+              - article [ref=e87]:
+                - link "Abrir ficha de Manzanilla dulce 60g" [ref=e88] [cursor=pointer]:
+                  - /url: /botica-natural/manzanilla-dulce-60g
+                  - generic [ref=e89]: Sin imagen
+                - generic [ref=e90]:
+                  - heading "Manzanilla dulce 60g" [level=2] [ref=e91]
+                  - paragraph [ref=e92]: Capitulos florales seleccionados para infusion, vapor suave y pausa domestica.
+                  - paragraph [ref=e93]: 8,90 EUR
+                  - paragraph [ref=e95]:
+                    - strong [ref=e96]: "Disponibilidad:"
+                    - text: No disponible
+                  - generic [ref=e97]:
+                    - generic "Control de unidades" [ref=e98]:
+                      - generic [ref=e99]: Unidades
+                      - generic [ref=e100]:
+                        - button "Disminuir unidades" [ref=e101]: "-"
+                        - spinbutton "Unidades" [ref=e102]: "1"
+                        - button "Aumentar unidades" [ref=e103]: +
+                    - generic [ref=e104]:
+                      - link "Ver detalle" [ref=e105] [cursor=pointer]:
+                        - /url: /botica-natural/manzanilla-dulce-60g
+                      - button "No disponible" [disabled] [ref=e106]
+              - article [ref=e107]:
+                - link "Abrir ficha de Melisa a granel 50g" [ref=e108] [cursor=pointer]:
+                  - /url: /botica-natural/melisa-a-granel-50g
+                  - img "Melisa a granel 50g" [ref=e109]
+                - generic [ref=e110]:
+                  - heading "Melisa a granel 50g" [level=2] [ref=e111]
+                  - paragraph [ref=e112]: Hoja cortada para infusion suave de tarde y descanso ritual.
+                  - paragraph [ref=e113]: 9,90 EUR
+                  - paragraph [ref=e115]:
+                    - strong [ref=e116]: "Disponibilidad:"
+                    - text: No disponible
+                  - generic [ref=e117]:
+                    - generic "Control de unidades" [ref=e118]:
+                      - generic [ref=e119]: Unidades
+                      - generic [ref=e120]:
+                        - button "Disminuir unidades" [ref=e121]: "-"
+                        - spinbutton "Unidades" [ref=e122]: "1"
+                        - button "Aumentar unidades" [ref=e123]: +
+                    - generic [ref=e124]:
+                      - link "Ver detalle" [ref=e125] [cursor=pointer]:
+                        - /url: /botica-natural/melisa-a-granel-50g
+                      - button "No disponible" [disabled] [ref=e126]
+              - article [ref=e127]:
+                - link "Abrir ficha de Romero a granel 50g" [ref=e128] [cursor=pointer]:
+                  - /url: /botica-natural/romero-a-granel-50g
+                  - img "Romero a granel 50g" [ref=e129]
+                - generic [ref=e130]:
+                  - heading "Romero a granel 50g" [level=2] [ref=e131]
+                  - paragraph [ref=e132]: Romero de corte fino para banos herbales y limpieza simbolica del hogar.
+                  - paragraph [ref=e133]: 8,50 EUR
+                  - paragraph [ref=e135]:
+                    - strong [ref=e136]: "Disponibilidad:"
+                    - text: No disponible
+                  - generic [ref=e137]:
+                    - generic "Control de unidades" [ref=e138]:
+                      - generic [ref=e139]: Unidades
+                      - generic [ref=e140]:
+                        - button "Disminuir unidades" [ref=e141]: "-"
+                        - spinbutton "Unidades" [ref=e142]: "1"
+                        - button "Aumentar unidades" [ref=e143]: +
+                    - generic [ref=e144]:
+                      - link "Ver detalle" [ref=e145] [cursor=pointer]:
+                        - /url: /botica-natural/romero-a-granel-50g
+                      - button "No disponible" [disabled] [ref=e146]
+              - article [ref=e147]:
+                - link "Abrir ficha de Ruda rama seca 30g" [ref=e148] [cursor=pointer]:
+                  - /url: /botica-natural/ruda-rama-seca-30g
+                  - img "Ruda rama seca 30g" [ref=e149]
+                - generic [ref=e150]:
+                  - heading "Ruda rama seca 30g" [level=2] [ref=e151]
+                  - paragraph [ref=e152]: Atado ritual para limpieza del umbral y proteccion simbolica.
+                  - paragraph [ref=e153]: 6,40 EUR
+                  - paragraph [ref=e155]:
+                    - strong [ref=e156]: "Disponibilidad:"
+                    - text: No disponible
+                  - generic [ref=e157]:
+                    - generic "Control de unidades" [ref=e158]:
+                      - generic [ref=e159]: Unidades
+                      - generic [ref=e160]:
+                        - button "Disminuir unidades" [ref=e161]: "-"
+                        - spinbutton "Unidades" [ref=e162]: "1"
+                        - button "Aumentar unidades" [ref=e163]: +
+                    - generic [ref=e164]:
+                      - link "Ver detalle" [ref=e165] [cursor=pointer]:
+                        - /url: /botica-natural/ruda-rama-seca-30g
+                      - button "No disponible" [disabled] [ref=e166]
+    - contentinfo [ref=e167]:
+      - generic [ref=e168]:
+        - paragraph [ref=e169]: "La Botica de la Bruja Lore une catálogo y narrativa para ayudarte a elegir con calma: hierbas, objetos rituales y combinaciones pensadas como piezas artesanales."
+        - navigation "Navegación de cierre" [ref=e170]:
+          - link "Botica" [ref=e171] [cursor=pointer]:
+            - /url: /botica-natural
+          - link "Velas e incienso" [ref=e172] [cursor=pointer]:
+            - /url: /velas-e-incienso
+          - link "Minerales y energia" [ref=e173] [cursor=pointer]:
+            - /url: /minerales-y-energia
+          - link "Herramientas esotericas" [ref=e174] [cursor=pointer]:
+            - /url: /herramientas-esotericas
+          - link "Compendio de guias" [ref=e175] [cursor=pointer]:
+            - /url: /guias
+          - link "Propiedades de las plantas" [ref=e176] [cursor=pointer]:
+            - /url: /hierbas
+          - link "Rituales conectados" [ref=e177] [cursor=pointer]:
+            - /url: /rituales
+          - link "Calendario ritual" [ref=e178] [cursor=pointer]:
+            - /url: /calendario-ritual
+          - link "Tarot editorial" [ref=e179] [cursor=pointer]:
+            - /url: /tarot
+          - link "Condiciones del encargo" [ref=e180] [cursor=pointer]:
+            - /url: /condiciones-encargo
+          - link "Envíos y preparación" [ref=e181] [cursor=pointer]:
+            - /url: /envios-y-preparacion
+          - link "Privacidad y contacto" [ref=e182] [cursor=pointer]:
+            - /url: /privacidad
+        - paragraph [ref=e183]: "Proyecto demo editorial-comercial: sin checkout activo, con asesoría y encargo artesanal como continuidad natural."
+        - link "Continuar hacia una solicitud de encargo" [ref=e184] [cursor=pointer]:
+          - /url: /encargo
+  - alert [ref=e185]

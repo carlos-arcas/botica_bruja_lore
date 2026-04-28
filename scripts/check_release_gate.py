@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import locale
 import logging
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -46,12 +48,11 @@ def _run(
     cmd: list[str],
     *,
     cwd: Path | None = None,
-) -> subprocess.CompletedProcess[str] | None:
+) -> subprocess.CompletedProcess[bytes] | None:
     try:
         return subprocess.run(
             cmd,
             cwd=cwd or ROOT_DIR,
-            text=True,
             capture_output=True,
             check=False,
         )
@@ -59,13 +60,57 @@ def _run(
         return None
 
 
-def _print_process_output(result: subprocess.CompletedProcess[str]) -> None:
-    if result.stdout.strip():
+def _decode_process_stream(stream: bytes | str | None) -> str:
+    if stream is None:
+        return ""
+    if isinstance(stream, str):
+        return stream
+
+    candidate_encodings: list[str] = []
+    for encoding in ("utf-8", locale.getpreferredencoding(False), "cp1252"):
+        normalized = (encoding or "").strip()
+        if normalized and normalized not in candidate_encodings:
+            candidate_encodings.append(normalized)
+
+    for encoding in candidate_encodings:
+        try:
+            return stream.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+
+    fallback_encoding = candidate_encodings[0] if candidate_encodings else "utf-8"
+    return stream.decode(fallback_encoding, errors="replace")
+
+
+def _safe_console_text(text: str) -> str:
+    if not text:
+        return ""
+
+    console_encoding = (sys.stdout.encoding or locale.getpreferredencoding(False) or "utf-8").strip() or "utf-8"
+    try:
+        text.encode(console_encoding)
+        return text
+    except UnicodeEncodeError:
+        return text.encode(console_encoding, errors="replace").decode(console_encoding, errors="replace")
+
+
+def _print_process_output(result: subprocess.CompletedProcess[bytes]) -> None:
+    stdout = _decode_process_stream(result.stdout)
+    stderr = _decode_process_stream(result.stderr)
+    if stdout.strip():
         print("--- stdout ---")
-        print(result.stdout.strip())
-    if result.stderr.strip():
+        print(_safe_console_text(stdout.strip()))
+    if stderr.strip():
         print("--- stderr ---")
-        print(result.stderr.strip())
+        print(_safe_console_text(stderr.strip()))
+
+
+def _extract_skip_detail(result: subprocess.CompletedProcess[bytes]) -> str | None:
+    for stream in (_decode_process_stream(result.stdout), _decode_process_stream(result.stderr)):
+        normalized_lines = [raw_line.strip() for raw_line in stream.splitlines() if raw_line.strip()]
+        if len(normalized_lines) == 1 and normalized_lines[0].startswith("SKIP:"):
+            return normalized_lines[0].removeprefix("SKIP:").strip()
+    return None
 
 
 def _run_block(name: str, cmd: list[str], *, blocking: bool = True, cwd: Path | None = None) -> BlockResult:
@@ -79,12 +124,24 @@ def _run_block(name: str, cmd: list[str], *, blocking: bool = True, cwd: Path | 
 
     _print_process_output(result)
     if result.returncode == 0:
+        skip_detail = _extract_skip_detail(result)
+        if skip_detail is not None:
+            print(f"[SKIP] {skip_detail}")
+            return BlockResult(name=name, status="SKIP", blocking=False, detail=skip_detail)
         print("[OK] bloque completado")
         return BlockResult(name=name, status="OK", blocking=blocking)
 
     LOGGER.error("release_gate_block_failed name=%s exit=%s", name, result.returncode)
     print("[ERROR] bloque fallido")
     return BlockResult(name=name, status="ERROR", blocking=blocking, detail=f"exit={result.returncode}")
+
+
+def _resolve_npm_executable() -> str | None:
+    candidates = ("npm.cmd", "npm") if platform.system() == "Windows" else ("npm", "npm.cmd")
+    for candidate in candidates:
+        if shutil.which(candidate):
+            return candidate
+    return None
 
 
 def _data_snapshot_block() -> BlockResult:
@@ -112,8 +169,10 @@ def _data_snapshot_block() -> BlockResult:
         print("[SKIP] no se pudieron consultar conteos (python no disponible)")
         return BlockResult(name=name, status="SKIP", blocking=False, detail="conteos no disponibles")
 
+    counts_stdout = _decode_process_stream(counts.stdout)
+    counts_stderr = _decode_process_stream(counts.stderr)
     if counts.returncode == 0:
-        skip_match = re.search(r"SNAPSHOT_SKIP:\s*(.+)", counts.stdout)
+        skip_match = re.search(r"SNAPSHOT_SKIP:\s*(.+)", counts_stdout)
         if skip_match:
             reason = skip_match.group(1).strip()
             print(f"[SKIP] snapshot no aplicable en este entorno: {reason}")
@@ -123,7 +182,7 @@ def _data_snapshot_block() -> BlockResult:
         print("[OK] snapshot de conteos obtenido")
         return BlockResult(name=name, status="OK", blocking=False)
 
-    short_error = counts.stderr.strip().splitlines()[-1] if counts.stderr.strip() else f"exit={counts.returncode}"
+    short_error = counts_stderr.strip().splitlines()[-1] if counts_stderr.strip() else f"exit={counts.returncode}"
     print(f"[SKIP] no se pudieron consultar conteos en este entorno: {short_error}")
     return BlockResult(name=name, status="SKIP", blocking=False, detail=short_error)
 
@@ -145,9 +204,9 @@ def _frontend_block() -> list[BlockResult]:
             )
         ]
 
-    npm_path = shutil.which("npm")
+    npm_cmd = _resolve_npm_executable()
     node_path = shutil.which("node")
-    if not npm_path or not node_path:
+    if not npm_cmd or not node_path:
         _print_header(base_name)
         print("[SKIP] Node/npm no disponibles en el entorno")
         return [
@@ -159,26 +218,26 @@ def _frontend_block() -> list[BlockResult]:
             )
         ]
 
-    lint = _run_block(f"{base_name} - lint", ["npm", "run", "lint"], blocking=True, cwd=frontend_dir)
+    lint = _run_block(f"{base_name} - lint", [npm_cmd, "run", "lint"], blocking=True, cwd=frontend_dir)
     checkout_demo = _run_block(
         f"{base_name} - test checkout demo",
-        ["npm", "run", "test:checkout-demo"],
+        [npm_cmd, "run", "test:checkout-demo"],
         blocking=True,
         cwd=frontend_dir,
     )
     cuenta_demo = _run_block(
         f"{base_name} - test cuenta demo",
-        ["npm", "run", "test:cuenta-demo"],
+        [npm_cmd, "run", "test:cuenta-demo"],
         blocking=True,
         cwd=frontend_dir,
     )
     calendario_ritual = _run_block(
         f"{base_name} - test calendario ritual",
-        ["npm", "run", "test:calendario-ritual"],
+        [npm_cmd, "run", "test:calendario-ritual"],
         blocking=True,
         cwd=frontend_dir,
     )
-    build = _run_block(f"{base_name} - build", ["npm", "run", "build"], blocking=True, cwd=frontend_dir)
+    build = _run_block(f"{base_name} - build", [npm_cmd, "run", "build"], blocking=True, cwd=frontend_dir)
     return [lint, checkout_demo, cuenta_demo, calendario_ritual, build]
 
 
@@ -186,6 +245,30 @@ def _operational_reconciliation_block() -> BlockResult:
     return _run_block(
         "H) Conciliación operativa (BLOCKER/WARNING/INFO, solo lectura)",
         [PYTHON, "scripts/check_operational_reconciliation.py", "--fail-on", "blocker"],
+        blocking=True,
+    )
+
+
+def _release_readiness_block() -> BlockResult:
+    return _run_block(
+        "I) Release readiness mínimo (seguridad/privacidad/backups)",
+        [PYTHON, "scripts/check_release_readiness.py"],
+        blocking=True,
+    )
+
+
+def _operational_alerts_block() -> BlockResult:
+    return _run_block(
+        "J) Alertas operativas V2 (solo lectura)",
+        [PYTHON, "scripts/check_operational_alerts_v2.py", "--fail-on", "blocker"],
+        blocking=True,
+    )
+
+
+def _retry_operational_tasks_dry_run_block() -> BlockResult:
+    return _run_block(
+        "K) Reintentos operativos V2 (dry-run, solo lectura)",
+        [PYTHON, "scripts/retry_operational_tasks_v2.py", "--dry-run", "--json"],
         blocking=True,
     )
 
@@ -272,6 +355,13 @@ def main() -> int:
             blocking=True,
         )
     )
+    results.append(
+        _run_block(
+            "C7) Test crítico recorrido pedido demo integrado",
+            [PYTHON, "manage.py", "test", "tests.nucleo_herbal.test_api_pedidos_demo"],
+            blocking=True,
+        )
+    )
     results.append(_data_snapshot_block())
     results.append(
         _run_block(
@@ -287,8 +377,11 @@ def main() -> int:
             blocking=True,
         )
     )
-    results.append(_operational_reconciliation_block())
     results.extend(_frontend_block())
+    results.append(_operational_reconciliation_block())
+    results.append(_release_readiness_block())
+    results.append(_operational_alerts_block())
+    results.append(_retry_operational_tasks_dry_run_block())
 
     code = _print_summary(results)
     if code == 0:

@@ -81,8 +81,8 @@ export function ReciboPedidoDemo({ idPedidoRuta }: Props): JSX.Element {
 
   return (
     <section className="bloque-home" aria-labelledby="titulo-recibo-demo">
-      <p className={estilos.eyebrow}>Checkout demo · confirmación final</p>
-      <h1 id="titulo-recibo-demo">Recibo de pedido demo</h1>
+      <p className={estilos.eyebrow}>Pedido demo · sin cobro real</p>
+      <h1 id="titulo-recibo-demo">Confirmación de pedido demo</h1>
 
       {estado === "vacio" && <EstadoVacio />}
       {estado === "cargando" && <EstadoCarga />}
@@ -98,14 +98,14 @@ export function ReciboPedidoDemo({ idPedidoRuta }: Props): JSX.Element {
 
       {!mostrarCtaCuenta && haySesionDemo && (
         <article className={estilos.resumenFinal}>
-          <p className={estilos.estado}>Tu sesión demo sigue activa para revisar otros pedidos y continuidad de compra.</p>
+          <p className={estilos.estado}>Tu sesión demo sigue activa para revisar otros pedidos y continuidad del flujo demo.</p>
           <Link href="/cuenta-demo" className="boton boton--secundario">Ir a mi cuenta demo</Link>
         </article>
       )}
 
       <div className={estilos.accionesSecundarias}>
         <Link href="/colecciones" className="boton boton--secundario">Volver al catálogo</Link>
-        <Link href="/encargo" className="boton boton--secundario">Crear otro encargo demo</Link>
+        <Link href="/encargo" className="boton boton--secundario">Crear otro pedido demo</Link>
       </div>
     </section>
   );
@@ -115,7 +115,7 @@ function EstadoVacio(): JSX.Element {
   return (
     <article className={estilos.resumenFinal}>
       <p>No encontramos un id de pedido demo válido en la URL.</p>
-      <p>Vuelve a <Link href="/encargo">/encargo</Link> para enviar un pedido demo nuevo.</p>
+      <p>Vuelve a <Link href="/encargo">/encargo</Link> para iniciar otro checkout demo y crear un pedido demo nuevo.</p>
     </article>
   );
 }
@@ -134,7 +134,7 @@ function EstadoError({ mensaje }: EstadoErrorProps): JSX.Element {
   return (
     <article className={estilos.resumenFinal} aria-live="polite">
       <p className={estilos.error}>{mensaje}</p>
-      <p>Esta compra no realizó cobro real. Puedes reintentar o crear otro pedido demo.</p>
+      <p>No hubo cobro real en este pedido demo. Puedes volver al checkout demo o crear otro pedido demo.</p>
     </article>
   );
 }
@@ -147,13 +147,13 @@ type DetallePedidoProps = {
 function DetallePedido({ pedido, emailDemo }: DetallePedidoProps): JSX.Element {
   return (
     <article className={estilos.resumenFinal} aria-live="polite">
-      <p className={estilos.estado}>Pedido demo confirmado</p>
+      <p className={estilos.estado}>Pedido demo confirmado · sin cobro real</p>
       <p><strong>ID:</strong> {pedido.id_pedido}</p>
       <p><strong>Estado:</strong> {pedido.estado}</p>
       <p><strong>Email:</strong> {pedido.email}</p>
       <p><strong>Canal:</strong> {pedido.canal}</p>
       <p>
-        <strong>Resumen:</strong> {pedido.resumen.cantidad_total_items} unidades · Subtotal demo {pedido.resumen.subtotal_demo} €.
+        <strong>Resumen demo:</strong> {pedido.resumen.cantidad_total_items} unidades · Subtotal demo {pedido.resumen.subtotal_demo} €.
       </p>
       {pedido.lineas && pedido.lineas.length > 0 && (
         <ul>
@@ -164,12 +164,12 @@ function DetallePedido({ pedido, emailDemo }: DetallePedidoProps): JSX.Element {
           ))}
         </ul>
       )}
-      <p>Entorno demo: no se ha procesado ningún pago real.</p>
+      <p>Entorno demo: este pedido no ha procesado ningún cobro real.</p>
 
       {emailDemo && (
         <div>
-          <p><strong>Email demo:</strong> {emailDemo.asunto}</p>
-          <p>Simulación de email activa (sin envío real).</p>
+          <p><strong>Email demo del pedido:</strong> {emailDemo.asunto}</p>
+          <p>Simulación visible en UI (sin envío real).</p>
           <pre>{emailDemo.cuerpo_texto}</pre>
         </div>
       )}
