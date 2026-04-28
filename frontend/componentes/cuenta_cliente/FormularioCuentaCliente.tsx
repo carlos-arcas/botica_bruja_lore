@@ -35,7 +35,7 @@ export function FormularioCuentaCliente({ modo }: Props): JSX.Element {
 
   return (
     <section className="bloque-home">
-      <p>{modo === "registro" ? "Cuenta real v1.1" : "Acceso cliente real"}</p>
+      <p>{modo === "registro" ? "Crear cuenta" : "Acceso cliente"}</p>
       <h1>{modo === "registro" ? "Crear cuenta real" : "Entrar en mi cuenta"}</h1>
       <form onSubmit={enviar} style={{ display: "grid", gap: 12, maxWidth: 480 }}>
         {modo === "registro" && (

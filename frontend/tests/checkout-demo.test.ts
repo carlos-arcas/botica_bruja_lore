@@ -69,7 +69,7 @@ test("construirLineasPedidoDemo cae a producto individual y normaliza cantidad",
 });
 
 
-test("checkout demo bloquea selección mixta cuando una línea visible queda fuera del contrato final", () => {
+test("checkout demo bloquea selección mixta cuando una línea visible queda fuera del consulta personalizada", () => {
   const resultado = construirResultadoLineasPedidoDemo(
     [
       crearItemSeleccionado("infusion-bruma-lavanda", 1),
@@ -97,7 +97,7 @@ test("checkout demo bloquea selección mixta cuando una línea visible queda fue
   assert.equal(resultado.lineasNoConvertibles.length, 1);
   assert.match(
     validarCheckoutDemo("invitado", null, resultado).lineas ?? "",
-    /No podemos enviar este pedido demo/,
+    /No podemos enviar este pedido/,
   );
 });
 

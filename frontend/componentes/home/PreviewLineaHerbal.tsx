@@ -15,7 +15,7 @@ export function PreviewLineaHerbal({ plantas }: Props): JSX.Element {
       </div>
       <p>
         Primer acceso real al núcleo herbal público. Esta vista muestra una selección navegable de
-        plantas ya publicadas en backend.
+        plantas disponibles en el catalogo.
       </p>
       <ul className="rejilla-plantas">
         {plantas.map((planta) => (

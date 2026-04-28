@@ -11,6 +11,7 @@ import {
   CuentaCliente,
   EstadoVerificacionEmail,
   PedidoCuentaCliente,
+  obtenerDireccionesCuentaCliente,
   obtenerEstadoVerificacionEmail,
   obtenerPedidosCuentaCliente,
   obtenerSesionCuentaCliente,
@@ -33,7 +34,8 @@ export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.El
   const [cuenta, setCuenta] = useState<CuentaCliente | null>(null);
   const [verificacion, setVerificacion] = useState<EstadoVerificacionEmail | null>(null);
   const [pedidos, setPedidos] = useState<PedidoCuentaCliente[]>([]);
-  const [mensaje, setMensaje] = useState("Cargando cuenta real...");
+  const [totalDirecciones, setTotalDirecciones] = useState(0);
+  const [mensaje, setMensaje] = useState("Cargando mi cuenta...");
   const [mensajeVerificacion, setMensajeVerificacion] = useState(mensajeAlta ?? "");
   const [reenviando, setReenviando] = useState(false);
   const router = useRouter();
@@ -49,12 +51,14 @@ export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.El
       return;
     }
     setCuenta(sesion.cuenta);
-    const [estadoVerificacion, listado] = await Promise.all([
+    const [estadoVerificacion, listado, libreta] = await Promise.all([
       obtenerEstadoVerificacionEmail(),
       obtenerPedidosCuentaCliente(),
+      obtenerDireccionesCuentaCliente(),
     ]);
     setVerificacion(estadoVerificacion.estado);
     setPedidos(listado.pedidos);
+    setTotalDirecciones(libreta.direcciones.length);
     setMensaje("");
   }, [router]);
 
@@ -86,7 +90,7 @@ export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.El
   const vistaVerificacion = resolverEstadoVistaVerificacion(estado);
   return (
     <section className="bloque-home">
-      <p>Cuenta real canónica · legado demo separado</p>
+      <p>Área privada de cliente</p>
       <h1>{vista === "pedidos" ? "Mis pedidos" : "Mi cuenta"}</h1>
       <p>{cuenta.nombre_visible} · {cuenta.email}</p>
       <p>{describirEstadoVerificacion(estado)}.</p>
@@ -103,16 +107,15 @@ export function PanelCuentaCliente({ vista, mensajeAlta = null }: Props): JSX.El
         <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.cuenta}>Resumen</Link>
         <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.pedidos}>Mis pedidos</Link>
         <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.direcciones}>Mis direcciones</Link>
-        <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.legadoDemo}>Legado demo</Link>
         <button className="boton boton--principal" type="button" onClick={salir}>Cerrar sesión</button>
       </div>
       {vista === "resumen" ? (
         <ul>
-          <li>ID usuario: {cuenta.id_usuario}</li>
+          <li>Referencia de cuenta: {cuenta.id_usuario}</li>
           <li>Cuenta activa: {cuenta.activo ? "sí" : "no"}</li>
           <li>Estado email: {vistaVerificacion}</li>
-          <li>Pedidos reales asociados: {pedidos.length}</li>
-          <li>Libreta de direcciones: disponible desde una vista dedicada</li>
+          <li>Pedidos asociados: {pedidos.length}</li>
+          <li>Mis direcciones guardadas: {totalDirecciones}</li>
         </ul>
       ) : (
         <ul>

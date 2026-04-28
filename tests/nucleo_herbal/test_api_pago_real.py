@@ -9,7 +9,7 @@ from django.core import mail
 from django.test import TestCase, override_settings
 
 from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo
-from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models_inventario import InventarioProductoModelo, MovimientoInventarioModelo
 from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos import EventoWebhookPagoModelo, PedidoRealModelo
 
 
@@ -17,6 +17,7 @@ from backend.nucleo_herbal.infraestructura.persistencia_django.models_pedidos im
     STRIPE_PUBLIC_KEY="pk_test_123",
     STRIPE_SECRET_KEY="sk_test_123",
     STRIPE_WEBHOOK_SECRET="whsec_123",
+    BOTICA_PAYMENT_PROVIDER="stripe",
     PAYMENT_SUCCESS_URL="https://frontend.test/pedido/{ID_PEDIDO}?retorno_pago=success&session_id={CHECKOUT_SESSION_ID}",
     PAYMENT_CANCEL_URL="https://frontend.test/pedido/{ID_PEDIDO}?retorno_pago=cancel",
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
@@ -133,6 +134,156 @@ class TestApiPagoReal(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json()["codigo"], "pedido_no_permitido")
+
+
+@override_settings(
+    BOTICA_PAYMENT_PROVIDER="simulado_local",
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+)
+class TestApiPagoSimuladoLocal(TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        ProductoModelo.objects.create(
+            id="prod-1",
+            sku="SKU-PROD-1",
+            slug="tarot-bosque-interior",
+            nombre="Tarot bosque interior",
+            tipo_producto="tarot",
+            categoria_comercial="oraculos",
+        )
+        InventarioProductoModelo.objects.create(producto_id="prod-1", cantidad_disponible=5)
+
+    def test_confirmar_pago_simulado_marca_pagado_y_descuenta_stock(self) -> None:
+        id_pedido = _crear_pedido(self.client)
+        self.client.post(f"/api/v1/pedidos/{id_pedido}/iniciar-pago/", HTTP_X_OPERATION_ID="op-sim-1")
+
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/", HTTP_X_OPERATION_ID="op-sim-2")
+
+        self.assertEqual(response.status_code, 200)
+        pedido = response.json()["pedido"]
+        self.assertEqual(pedido["estado"], "pagado")
+        self.assertEqual(pedido["estado_pago"], "pagado")
+        self.assertTrue(pedido["inventario_descontado"])
+        self.assertEqual(InventarioProductoModelo.objects.get(producto_id="prod-1").cantidad_disponible, 4)
+        self.assertEqual(MovimientoInventarioModelo.objects.filter(tipo_movimiento="descuento_pago").count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_iniciar_pago_simulado_rechaza_stock_insuficiente_sin_crear_intencion(self) -> None:
+        id_pedido = _crear_pedido(self.client)
+        inventario = InventarioProductoModelo.objects.get(producto_id="prod-1")
+        inventario.cantidad_disponible = 0
+        inventario.save(update_fields=["cantidad_disponible"])
+
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/iniciar-pago/")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()["codigo"], "stock_no_disponible")
+        self.assertEqual(response.json()["lineas"][0]["codigo"], "stock_insuficiente")
+        modelo = PedidoRealModelo.objects.get(id_pedido=id_pedido)
+        self.assertFalse(modelo.id_externo_pago)
+        self.assertEqual(modelo.estado_pago, "pendiente")
+
+    def test_iniciar_pago_simulado_rechaza_unidad_incompatible(self) -> None:
+        id_pedido = _crear_pedido(self.client)
+        inventario = InventarioProductoModelo.objects.get(producto_id="prod-1")
+        inventario.unidad_base = "g"
+        inventario.save(update_fields=["unidad_base"])
+
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/iniciar-pago/")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()["lineas"][0]["codigo"], "unidad_incompatible")
+        self.assertFalse(PedidoRealModelo.objects.get(id_pedido=id_pedido).id_externo_pago)
+
+    def test_confirmar_pago_simulado_revalida_stock_y_no_marca_pagado(self) -> None:
+        id_pedido = _crear_pedido(self.client)
+        self.client.post(f"/api/v1/pedidos/{id_pedido}/iniciar-pago/")
+        inventario = InventarioProductoModelo.objects.get(producto_id="prod-1")
+        inventario.cantidad_disponible = 0
+        inventario.save(update_fields=["cantidad_disponible"])
+
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()["lineas"][0]["codigo"], "stock_insuficiente")
+        modelo = PedidoRealModelo.objects.get(id_pedido=id_pedido)
+        self.assertEqual(modelo.estado, "pendiente_pago")
+        self.assertEqual(modelo.estado_pago, "requiere_accion")
+        self.assertFalse(modelo.inventario_descontado)
+        self.assertEqual(MovimientoInventarioModelo.objects.filter(tipo_movimiento="descuento_pago").count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_confirmar_pago_simulado_rechaza_pedido_inexistente(self) -> None:
+        response = self.client.post("/api/v1/pedidos/PED-NO-EXISTE/confirmar-pago-simulado/")
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_confirmar_pago_simulado_requiere_intencion_simulada(self) -> None:
+        id_pedido = _crear_pedido(self.client)
+
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("intencion de pago simulada", response.json()["detalle"])
+
+    def test_confirmar_pago_simulado_rechaza_pedido_cancelado(self) -> None:
+        id_pedido = _crear_pedido(self.client)
+        self.client.post(f"/api/v1/pedidos/{id_pedido}/iniciar-pago/")
+        PedidoRealModelo.objects.filter(id_pedido=id_pedido).update(estado="cancelado")
+
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("pedido cancelado", response.json()["detalle"])
+
+    def test_confirmar_pago_simulado_es_idempotente(self) -> None:
+        id_pedido = _crear_pedido(self.client)
+        self.client.post(f"/api/v1/pedidos/{id_pedido}/iniciar-pago/")
+
+        primera = self.client.post(f"/api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/")
+        segunda = self.client.post(f"/api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/")
+
+        self.assertEqual(primera.status_code, 200)
+        self.assertEqual(segunda.status_code, 200)
+        self.assertEqual(InventarioProductoModelo.objects.get(producto_id="prod-1").cantidad_disponible, 4)
+        self.assertEqual(MovimientoInventarioModelo.objects.filter(tipo_movimiento="descuento_pago").count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+
+    @override_settings(
+        BOTICA_PAYMENT_PROVIDER="stripe",
+        STRIPE_PUBLIC_KEY="pk_test_123",
+        STRIPE_SECRET_KEY="sk_test_123",
+        STRIPE_WEBHOOK_SECRET="whsec_123",
+        PAYMENT_SUCCESS_URL="https://frontend.test/pedido/{ID_PEDIDO}",
+        PAYMENT_CANCEL_URL="https://frontend.test/pedido/{ID_PEDIDO}/cancel",
+    )
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe._post")
+    def test_confirmar_pago_simulado_rechaza_proveedor_stripe(self, post_stripe) -> None:
+        post_stripe.return_value = {"id": "cs_test_123", "url": "https://checkout.stripe.test/cs_test_123"}
+        id_pedido = _crear_pedido(self.client)
+        self.client.post(f"/api/v1/pedidos/{id_pedido}/iniciar-pago/")
+
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("pago simulada local", response.json()["detalle"])
+
+    def test_confirmar_pago_simulado_no_filtra_claves_en_error_stripe(self) -> None:
+        id_pedido = _crear_pedido(self.client)
+        PedidoRealModelo.objects.filter(id_pedido=id_pedido).update(
+            proveedor_pago="stripe",
+            id_externo_pago="cs_test_123",
+            url_pago="https://checkout.stripe.test/cs_test_123",
+            estado_pago="requiere_accion",
+        )
+
+        response = self.client.post(f"/api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/")
+        cuerpo = response.content.decode("utf-8")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("pago simulada local", cuerpo)
+        self.assertNotIn("sk_test_123", cuerpo)
+        self.assertNotIn("whsec_123", cuerpo)
 
 
 def _crear_pedido(cliente, id_usuario: str | None = None) -> str:

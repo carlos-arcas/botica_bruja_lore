@@ -330,3 +330,115 @@ Notas operativas:
 - `LOG_LEVEL` permite ajustar verbosidad por entorno sin cambiar código; default: `INFO`.
 - Se añaden trazas explícitas para errores de readiness (`/healthz`) y fallos de bloques en checks/bootstraps.
 - Esta mejora aumenta auditabilidad técnica post-deploy, pero **no sustituye** healthcheck, CI ni smoke checks manuales.
+
+## 16. Gate local ecommerce simulado
+
+Para validar la fase de ecommerce local real con pago simulado existe un gate especifico, estatico y de solo lectura:
+
+```bash
+python scripts/check_ecommerce_local_simulado.py
+```
+
+Tambien puede emitirse JSON para uso por tooling local:
+
+```bash
+python scripts/check_ecommerce_local_simulado.py --json
+python scripts/check_ecommerce_local_simulado.py --fail-on warning
+```
+
+Este gate valida presencia y coherencia minima de:
+
+- roadmap local simulado;
+- rutas `/checkout`, `/pedido/[id_pedido]`, `/mi-cuenta` y legacy controlado `/encargo`;
+- adaptador `simulado_local` por puerto y configuracion `BOTICA_PAYMENT_PROVIDER`;
+- caso de uso y endpoint de confirmacion de pago simulado;
+- checkout/recibo real en frontend;
+- backoffice/admin de pedidos reales;
+- noindex contractual para checkout y pedido;
+- ausencia de CTAs publicos evidentes hacia `/pedido-demo`;
+- bloqueo vigente de `V2-R10` para go-live real.
+
+Severidades:
+
+- **OK**: contrato presente y coherente.
+- **WARNING**: senal no bloqueante que debe seguir visible, por ejemplo legacy existente pero documentado como deprecado.
+- **BLOCKER**: falta un contrato minimo o aparece una contradiccion que invalida la fase local simulada.
+
+El exit code es `0` si no hay `BLOCKER`; con `--fail-on warning`, cualquier `WARNING` tambien devuelve `1`.
+
+Este gate **no** lanza servidores, no ejecuta Playwright, no comprueba Stripe real, no requiere URLs externas y no declara go-live externo.
+
+## 17. Bootstrap local ecommerce simulado
+
+Para preparar datos locales comprables existe un bootstrap mutante explicito:
+
+```bash
+python scripts/bootstrap_ecommerce_local_simulado.py
+```
+
+Antes de aplicar cambios puede ejecutarse en modo transaccional reversible:
+
+```bash
+python scripts/bootstrap_ecommerce_local_simulado.py --dry-run
+python scripts/bootstrap_ecommerce_local_simulado.py --dry-run --json
+```
+
+El bootstrap garantiza datos minimos para validar el recorrido local:
+
+- secciones publicas de producto: `botica-natural`, `velas-e-incienso`, `minerales-y-energia`, `herramientas-esotericas`;
+- una intencion y una planta editorial local para el producto herbal;
+- un producto publicado y comprable por cada seccion;
+- SKU estable con prefijo `LOCAL-ECOM-`;
+- precio numerico, precio visible, unidad comercial, tipo fiscal y minimo de compra validos;
+- inventario compatible con la unidad comercial y suficiente para al menos una compra;
+- cuenta cliente local opcional `cliente.local@botica.test` con direccion predeterminada.
+
+El script es idempotente: usa `update_or_create` sobre slugs/SKUs/cuenta y no duplica inventario ni direcciones locales. Repetirlo actualiza el dataset minimo al contrato vigente.
+
+No crea imagenes, pedidos, pagos, documentos fiscales, datos masivos, migraciones ni integraciones externas. Para resetear, puede vaciarse la base local o eliminar los registros con prefijo `LOCAL-ECOM-` y volver a ejecutar el bootstrap.
+
+## 18. Regresion compra local simulada
+
+El recorrido ecommerce local con pago simulado queda protegido por una regresion por capas, sin Playwright ni servidor externo:
+
+```bash
+python manage.py test tests.nucleo_herbal.test_regresion_compra_local_simulada
+npm --prefix frontend run test:compra-local
+```
+
+Matriz de cobertura:
+
+| Paso | Ruta/archivo | Test |
+|---|---|---|
+| Catalogo y ficha publicos | `/api/v1/herbal/secciones/botica-natural/productos/`, `/api/v1/herbal/productos/{slug}/` | `test_compra_invitado_llega_a_pedido_pagado_y_documento` |
+| Cesta comprable | `frontend/contenido/catalogo/cestaReal.ts` | `recorrido frontend convierte cesta comprable en payload real sin contrato demo` |
+| Checkout real invitado | `/api/v1/pedidos/`, `frontend/contenido/catalogo/checkoutReal.ts` | `test_compra_invitado_llega_a_pedido_pagado_y_documento`, `recorrido frontend convierte cesta comprable...` |
+| Pago simulado | `/api/v1/pedidos/{id}/iniciar-pago/`, `/confirmar-pago-simulado/` | `test_compra_invitado_llega_a_pedido_pagado_y_documento`, `cliente frontend completa pedido real...` |
+| Stock preventivo | `/api/v1/pedidos/{id}/iniciar-pago/` | `test_stock_insuficiente_bloquea_pago_sin_crear_intencion` |
+| Documento fiscal | `/api/v1/pedidos/{id}/documento/` | `test_compra_invitado_llega_a_pedido_pagado_y_documento` |
+| Cuenta real | `/api/v1/cuenta/direcciones/`, `/api/v1/cuenta/pedidos/` | `test_compra_usuario_real_con_direccion_guardada_aparece_en_cuenta` |
+| No dependencia demo legacy | codigo frontend/API y ORM `PedidoDemoModelo` | tests backend/frontend de regresion compra local |
+| CTAs principales | navegacion, cesta, ficha, checkout, recibo | `contrato estatico protege CTAs principales hacia checkout y cuenta real` |
+
+Hueco aceptado: no hay E2E browser real en esta fase. Para cubrir interaccion visual completa haria falta servidor local, base sembrada y runner Playwright dedicado.
+
+## 19. Rendimiento frontend ecommerce
+
+La optimizacion frontend de ecommerce local se protege con checks de contrato y build, sin introducir tooling externo:
+
+```bash
+npm --prefix frontend run test:botica-natural
+npm --prefix frontend run test:checkout-real
+npm --prefix frontend run test:compra-local
+npm --prefix frontend run lint
+npm --prefix frontend run build
+```
+
+Contratos protegidos:
+
+- la tarjeta publica de producto no debe convertirse de nuevo en Client Component completo;
+- la interaccion de cantidad/carrito vive en un subcomponente cliente acotado;
+- el checkout conserva validaciones, payload real, errores de stock y pago simulado;
+- las rutas transaccionales siguen noindex y catalogo/fichas no pierden SEO.
+
+No se miden Core Web Vitals en esta fase porque no hay servidor local instrumentado ni entorno browser estable. Queda como mejora futura incorporar medicion visual/E2E ligera cuando exista runner dedicado.

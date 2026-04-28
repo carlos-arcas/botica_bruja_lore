@@ -130,9 +130,33 @@
         "canonical": false,
         "structured_data": false,
         "notas": "Página informativa pública no estratégica en este ciclo."
+      },
+      {
+        "ruta": "/devoluciones",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Página informativa pública no estratégica en este ciclo."
+      },
+      {
+        "ruta": "/contacto",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Página informativa pública no estratégica en este ciclo."
       }
     ],
     "transaccionales_noindex": [
+      {
+        "ruta": "/checkout",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Checkout transaccional real local, excluido de indexacion."
+      },
       {
         "ruta": "/encargo",
         "indexable": false,
@@ -148,6 +172,14 @@
         "canonical": false,
         "structured_data": false,
         "notas": "Ruta transaccional/técnica no estratégica."
+      },
+      {
+        "ruta": "/pedido/{id_pedido}",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Detalle privado/transaccional de pedido real."
       },
       {
         "ruta": "/pedido-demo",
@@ -172,6 +204,86 @@
         "canonical": false,
         "structured_data": false,
         "notas": "Ruta técnica para cuenta demo."
+      },
+      {
+        "ruta": "/mi-cuenta",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Area privada de cuenta real."
+      },
+      {
+        "ruta": "/mi-cuenta/pedidos",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Historial privado de pedidos reales."
+      },
+      {
+        "ruta": "/mi-cuenta/direcciones",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Libreta privada de direcciones."
+      },
+      {
+        "ruta": "/acceso",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Acceso a cuenta real de cliente."
+      },
+      {
+        "ruta": "/registro",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Registro de cuenta real de cliente."
+      },
+      {
+        "ruta": "/recuperar-password",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Recuperacion de credenciales."
+      },
+      {
+        "ruta": "/verificar-email",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Verificacion privada de email."
+      },
+      {
+        "ruta": "/login",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Acceso privado de backoffice heredado."
+      },
+      {
+        "ruta": "/admin/login",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Acceso privado de backoffice."
+      },
+      {
+        "ruta": "/admin",
+        "indexable": false,
+        "incluir_en_sitemap": false,
+        "canonical": false,
+        "structured_data": false,
+        "notas": "Backoffice privado."
       }
     ]
   },

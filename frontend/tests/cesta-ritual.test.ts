@@ -1,4 +1,5 @@
 import * as assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import {
@@ -16,6 +17,11 @@ import {
   serializarItemsEncargo,
   vaciarCesta,
 } from "../contenido/catalogo/cestaRitual";
+import {
+  convertirCestaAItemsCheckoutReal,
+  resolverResumenCestaReal,
+} from "../contenido/catalogo/cestaReal";
+import { resolverLineasBloqueadasPorStock } from "../contenido/catalogo/disponibilidadStock";
 import {
   resolverReferenciaEconomicaVisualLinea,
   resolverResumenEconomicoSeleccion,
@@ -229,4 +235,76 @@ test("regresión: mezcla catálogo y fuera de catálogo conserva identidad y con
     resolverReferenciaEconomicaVisualLinea(lineas[1]!).subtotal,
     null,
   );
+});
+
+test("cesta detecta lineas sin stock y permite bloquear checkout", () => {
+  const cesta = agregarProducto(crearCestaVacia(), "cuenco-laton-ritual", 1);
+  const bloqueadas = resolverLineasBloqueadasPorStock(cesta.lineas, [
+    { slug: "cuenco-laton-ritual", nombre: "Cuenco", disponible: false },
+  ]);
+
+  assert.equal(bloqueadas.length, 1);
+  assert.equal(bloqueadas[0]?.slug, "cuenco-laton-ritual");
+  assert.match(bloqueadas[0]?.motivo ?? "", /Sin stock/i);
+});
+
+test("cesta real con solo lineas comprables permite checkout", () => {
+  const cesta = agregarProducto(crearCestaVacia(), "infusion-bruma-lavanda", 2);
+  const resumen = resolverResumenCestaReal(cesta);
+  const itemsCheckout = convertirCestaAItemsCheckoutReal(cesta);
+
+  assert.equal(resumen.puedeFinalizarCompra, true);
+  assert.equal(resumen.lineasComprables.length, 1);
+  assert.equal(itemsCheckout[0]?.slug, "infusion-bruma-lavanda");
+});
+
+test("cesta real con linea no convertible bloquea checkout real", () => {
+  const cesta = {
+    lineas: [
+      agregarProducto(crearCestaVacia(), "infusion-bruma-lavanda", 1)
+        .lineas[0]!,
+      crearLineaLibrePersistida(),
+    ],
+  };
+  const resumen = resolverResumenCestaReal(cesta);
+  const itemsCheckout = convertirCestaAItemsCheckoutReal(cesta);
+
+  assert.equal(resumen.puedeFinalizarCompra, false);
+  assert.equal(resumen.lineasConsulta.length, 1);
+  assert.equal(resumen.lineasConsulta[0]?.estado_cesta_real, "requiere_consulta");
+  assert.equal(itemsCheckout.length, 1);
+});
+
+test("eliminar linea bloqueante desbloquea checkout real", () => {
+  const cestaMixta = {
+    lineas: [
+      agregarProducto(crearCestaVacia(), "infusion-bruma-lavanda", 1)
+        .lineas[0]!,
+      crearLineaLibrePersistida(),
+    ],
+  };
+  const desbloqueada = quitarProducto(cestaMixta, "libre-001");
+
+  assert.equal(resolverResumenCestaReal(cestaMixta).puedeFinalizarCompra, false);
+  assert.equal(resolverResumenCestaReal(desbloqueada).puedeFinalizarCompra, true);
+});
+
+test("no se genera payload real con linea fuera de contrato", () => {
+  const cesta = { lineas: [crearLineaLibrePersistida()] };
+  const resumen = resolverResumenCestaReal(cesta);
+  const itemsCheckout = convertirCestaAItemsCheckoutReal(cesta);
+
+  assert.equal(resumen.puedeFinalizarCompra, false);
+  assert.equal(itemsCheckout.length, 0);
+});
+
+test("componentes de cesta enlazan bloqueos y controles con ayudas accesibles", () => {
+  const vista = readFileSync("componentes/catalogo/cesta/VistaCestaRitual.tsx", "utf8");
+  const lista = readFileSync("componentes/catalogo/seleccion/ListaLineasSeleccion.tsx", "utf8");
+
+  assert.equal(vista.includes('id="aviso-cesta-bloqueada"'), true);
+  assert.equal(vista.includes('aria-describedby="aviso-cesta-bloqueada"'), true);
+  assert.equal(lista.includes("label htmlFor={idCantidad}"), true);
+  assert.equal(lista.includes("aria-describedby={idEstado}"), true);
+  assert.equal(lista.includes("aria-label={`Quitar ${linea.nombre} de la selección`}"), true);
 });

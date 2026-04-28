@@ -1,12 +1,14 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 import { ReciboPedidoReal } from "@/componentes/catalogo/checkout-real/ReciboPedidoReal";
 import { RetornoPago } from "@/infraestructura/api/pedidos";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
-export const metadata: Metadata = {
-  title: "Pedido real | La Botica de la Bruja Lore",
-  description: "Recibo del checkout real v1 persistido en backend.",
-};
+export const metadata: Metadata = construirMetadataSeo({
+  title: "Detalle de pedido | La Botica de la Bruja Lore",
+  description: "Consulta el estado, pago, entrega y documento fiscal de tu pedido.",
+  indexable: false,
+});
 
 type Props = {
   params: { id_pedido: string };

@@ -9,11 +9,13 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from ...aplicacion.casos_de_uso import ErrorAplicacionLookup
+from ...aplicacion.errores_pedidos import ErrorStockPedido
 from ...dominio.excepciones import ErrorDominio
 from .autorizacion_pedidos import validar_acceso_pedido
 from .dependencias import construir_servicios_publicos_pedidos
 from .dependencias import construir_servicios_publicos_pago_pedidos
-from .respuestas_json import json_no_encontrado, json_validacion
+from .pedidos_serializadores import serializar_pedido
+from .respuestas_json import json_conflicto, json_no_encontrado, json_validacion
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,9 @@ def iniciar_pago_pedido(request: HttpRequest, id_pedido: str) -> JsonResponse:
         dto = construir_servicios_publicos_pago_pedidos().iniciar_pago.ejecutar(id_pedido, operation_id)
     except ErrorAplicacionLookup as error_lookup:
         return json_no_encontrado(str(error_lookup))
+    except ErrorStockPedido as error_stock:
+        logger.warning("pago_real_inicio_stock_rechazado", extra=_extra_stock(operation_id, id_pedido, error_stock))
+        return _respuesta_stock(error_stock)
     except ErrorDominio as error_dominio:
         logger.warning("pago_real_inicio_fallido", extra={"operation_id": operation_id, "pedido_id": id_pedido, "resultado": "error", "error": str(error_dominio)})
         return json_validacion(str(error_dominio))
@@ -50,6 +55,32 @@ def iniciar_pago_pedido(request: HttpRequest, id_pedido: str) -> JsonResponse:
         },
         status=201,
     )
+
+
+def confirmar_pago_simulado_pedido(request: HttpRequest, id_pedido: str) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"detalle": "MÃ©todo no permitido."}, status=405)
+    operation_id = request.headers.get("X-Operation-Id", "").strip() or str(uuid4())
+    try:
+        pedido = construir_servicios_publicos_pedidos().obtener_pedido.ejecutar(id_pedido)
+    except ErrorAplicacionLookup as error_lookup:
+        return json_no_encontrado(str(error_lookup))
+    acceso_denegado = validar_acceso_pedido(request, pedido, recurso="confirmar_pago_simulado")
+    if acceso_denegado is not None:
+        return acceso_denegado
+    try:
+        construir_servicios_publicos_pago_pedidos().confirmar_pago_simulado.ejecutar(id_pedido, operation_id)
+        actualizado = construir_servicios_publicos_pedidos().obtener_pedido.ejecutar(id_pedido)
+    except ErrorAplicacionLookup as error_lookup:
+        return json_no_encontrado(str(error_lookup))
+    except ErrorStockPedido as error_stock:
+        logger.warning("pago_simulado_confirmacion_stock_rechazado", extra=_extra_stock(operation_id, id_pedido, error_stock))
+        return _respuesta_stock(error_stock)
+    except ErrorDominio as error_dominio:
+        logger.warning("pago_simulado_confirmacion_fallida", extra=_extra_confirmacion(operation_id, id_pedido, "error", str(error_dominio)))
+        return json_validacion(str(error_dominio))
+    logger.info("pago_simulado_confirmacion_http_ok", extra=_extra_confirmacion(operation_id, id_pedido, "ok", ""))
+    return JsonResponse({"resultado": "pagado", "pedido": serializar_pedido(actualizado)}, status=200)
 
 
 @csrf_exempt
@@ -100,3 +131,31 @@ def retorno_pago_cancel(request: HttpRequest, id_pedido: str) -> JsonResponse:
         },
     )
     return JsonResponse({"retorno": "cancel", "pedido_id": id_pedido, "session_id": request.GET.get("session_id")})
+
+
+def _extra_confirmacion(operation_id: str, id_pedido: str, resultado: str, error: str) -> dict[str, object]:
+    return {
+        "operation_id": operation_id,
+        "pedido_id": id_pedido,
+        "proveedor_pago": "simulado_local",
+        "resultado": resultado,
+        "error": error,
+    }
+
+
+def _respuesta_stock(error_stock: ErrorStockPedido) -> JsonResponse:
+    return json_conflicto(
+        error_stock.detalle,
+        codigo=error_stock.codigo,
+        lineas=[linea.a_payload() for linea in error_stock.lineas],
+    )
+
+
+def _extra_stock(operation_id: str, id_pedido: str, error_stock: ErrorStockPedido) -> dict[str, object]:
+    return {
+        "operation_id": operation_id,
+        "pedido_id": id_pedido,
+        "resultado": "error",
+        "codigo": error_stock.codigo,
+        "lineas": [linea.a_payload() for linea in error_stock.lineas],
+    }

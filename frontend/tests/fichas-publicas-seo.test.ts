@@ -82,5 +82,6 @@ test("fichas públicas mantienen h1 único y enlaces internos base", () => {
   assert.match(cabeceraRitual, /href="\/hierbas"/);
   assert.match(fichaColeccion, /href="\/colecciones"/);
   assert.match(fichaColeccion, /href="\/rituales"/);
+  assert.match(fichaColeccion, /checkout\?producto=\$\{producto.slug\}.*boton--principal/);
   assert.match(fichaColeccion, /encargo\?producto=\$\{producto.slug\}.*boton--secundario/);
 });

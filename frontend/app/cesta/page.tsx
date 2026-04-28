@@ -5,7 +5,7 @@ import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 export const metadata: Metadata = construirMetadataSeo({
   title: "Mi selección local | La Botica de la Bruja Lore",
-  description: "Revisa tu selección local, edítala como líneas reales y pásala a la solicitud artesanal sin simular checkout.",
+  description: "Revisa tu selección local, edítala como líneas reales y continúa hacia el checkout principal.",
   indexable: false,
 });
 

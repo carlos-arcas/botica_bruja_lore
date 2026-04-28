@@ -61,7 +61,7 @@ export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
     const cuenta = leerSesionCuentaDemo();
     if (cuenta) {
       setIdUsuarioActivo(cuenta.id_usuario);
-      setMensaje(`Sesión demo restaurada para ${cuenta.nombre_visible}.`);
+      setMensaje(`Sesión restaurada para ${cuenta.nombre_visible}.`);
     }
   }, []);
 
@@ -147,36 +147,36 @@ export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
     setPerfil(null);
     setHistorial([]);
     setPedidoReciente(null);
-    setMensaje("Sesión demo cerrada.");
+    setMensaje("Sesión cerrada.");
   };
 
   return (
     <section className="bloque-home" aria-labelledby="titulo-cuenta-demo">
-      <p className={estilos.eyebrow}>Área privada mínima · entorno demo</p>
-      <h1 id="titulo-cuenta-demo">Cuenta demo con continuidad post-checkout</h1>
+      <p className={estilos.eyebrow}>Área privada</p>
+      <h1 id="titulo-cuenta-demo">Mi cuenta</h1>
       <p className={estilos.aviso}>No es autenticación productiva real: no usa sesión segura, cookies ni JWT.</p>
-      {retornoSeguro && <p className={estilos.estado}>Al completar el acceso volverás automáticamente a tu checkout demo en {retornoSeguro}.</p>}
+      {retornoSeguro && <p className={estilos.estado}>Al completar el acceso volverás automáticamente a tu checkout en {retornoSeguro}.</p>}
 
       <div className={estilos.rejilla}>
         <FormularioRegistroDemo campos={campos} cargando={cargando} onActualizarCampo={actualizarCampo} onSubmit={onRegistrar} />
         <FormularioAccesoDemo campos={campos} cargando={cargando} onActualizarCampo={actualizarCampo} onSubmit={onAutenticar} />
       </div>
 
-      {cargando && <p className={estilos.estado}>Cargando área de cuenta demo…</p>}
+      {cargando && <p className={estilos.estado}>Cargando área de cuenta...</p>}
       {mensaje && <p className={estilos.exito}>{mensaje}</p>}
       {errores.map((error) => <p key={error} className={estilos.error}>{error}</p>)}
 
       {haySesion && perfil && (
         <article className={estilos.panel}>
           <div className={estilos.cabeceraPanel}>
-            <h2>Perfil demo</h2>
-            <button type="button" className="boton boton--secundario" onClick={onSalirDemo}>Salir demo</button>
+            <h2>Perfil</h2>
+            <button type="button" className="boton boton--secundario" onClick={onSalirDemo}>Salir</button>
           </div>
           <p><strong>ID usuario:</strong> {perfil.id_usuario}</p>
           <p><strong>Email:</strong> {perfil.email}</p>
           <p><strong>Nombre visible:</strong> {perfil.nombre_visible}</p>
 
-          <h3>Historial de pedidos demo</h3>
+          <h3>Historial de pedidos</h3>
           <HistorialPedidosDemo historial={historial} pedidoReciente={pedidoReciente} />
         </article>
       )}
@@ -186,9 +186,9 @@ export function AreaCuentaDemo({ returnTo }: Props): JSX.Element {
 
 function mensajeAutenticacion(retornoSeguro: string | null, esRegistro: boolean): string {
   if (retornoSeguro) {
-    return esRegistro ? "Cuenta demo creada. Volviendo a tu checkout demo." : "Acceso demo correcto. Volviendo a tu checkout demo.";
+    return esRegistro ? "Cuenta creada. Volviendo a tu checkout." : "Acceso correcto. Volviendo a tu checkout.";
   }
-  return esRegistro ? "Cuenta demo creada. Ya puedes consultar tu perfil e historial." : "Acceso demo correcto. Cargando tu área de cuenta.";
+  return esRegistro ? "Cuenta creada. Ya puedes consultar tu perfil e historial." : "Acceso correcto. Cargando tu área de cuenta.";
 }
 
 function navegarSiHayRetorno(router: ReturnType<typeof useRouter>, retornoSeguro: string | null): void {

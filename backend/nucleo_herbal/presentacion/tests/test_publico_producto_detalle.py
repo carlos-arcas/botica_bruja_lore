@@ -73,7 +73,10 @@ class PublicoProductoDetalleApiTests(TestCase):
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertTrue(respuesta.json()["producto"]["disponible"])
+        self.assertTrue(respuesta.json()["producto"]["disponible_compra"])
         self.assertEqual(respuesta.json()["producto"]["estado_disponibilidad"], "disponible")
+        self.assertEqual(respuesta.json()["producto"]["cantidad_disponible"], 5)
+        self.assertEqual(respuesta.json()["producto"]["mensaje_disponibilidad"], "Disponible para compra.")
 
     def test_detalle_producto_publicado_expone_no_disponible_con_stock_cero(self):
         producto = self._crear_producto(slug="detalle-sin-stock", publicado=True)
@@ -83,7 +86,9 @@ class PublicoProductoDetalleApiTests(TestCase):
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertFalse(respuesta.json()["producto"]["disponible"])
+        self.assertFalse(respuesta.json()["producto"]["disponible_compra"])
         self.assertEqual(respuesta.json()["producto"]["estado_disponibilidad"], "no_disponible")
+        self.assertEqual(respuesta.json()["producto"]["cantidad_disponible"], 0)
 
     def test_detalle_producto_publicado_expone_bajo_stock_cuando_aplica(self):
         producto = self._crear_producto(slug="detalle-bajo-stock", publicado=True)
@@ -94,6 +99,7 @@ class PublicoProductoDetalleApiTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertTrue(respuesta.json()["producto"]["disponible"])
         self.assertEqual(respuesta.json()["producto"]["estado_disponibilidad"], "bajo_stock")
+        self.assertEqual(respuesta.json()["producto"]["mensaje_disponibilidad"], "Pocas unidades disponibles.")
 
     def test_detalle_producto_sin_inventario_publica_no_disponible(self):
         self._crear_producto(slug="detalle-sin-inventario", publicado=True)
@@ -103,6 +109,7 @@ class PublicoProductoDetalleApiTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertFalse(respuesta.json()["producto"]["disponible"])
         self.assertEqual(respuesta.json()["producto"]["estado_disponibilidad"], "no_disponible")
+        self.assertIsNone(respuesta.json()["producto"]["cantidad_disponible"])
 
     def test_detalle_producto_serializa_unidad_e_incremento_comercial(self):
         producto = self._crear_producto(slug="detalle-granel", publicado=True)

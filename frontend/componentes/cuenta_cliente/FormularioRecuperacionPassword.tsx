@@ -51,7 +51,7 @@ export function FormularioRecuperacionPassword({ token = "" }: Props): JSX.Eleme
 
   return (
     <section className="bloque-home">
-      <p>Cuenta real v1.1 · recuperación de contraseña</p>
+      <p>Recuperación de contraseña</p>
       <h1>{tokenRecuperacion ? "Crear nueva contraseña" : "Recuperar contraseña"}</h1>
       <p>{mensaje}</p>
       {tokenRecuperacion ? (

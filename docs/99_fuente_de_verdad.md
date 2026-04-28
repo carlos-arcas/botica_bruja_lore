@@ -6,6 +6,13 @@ Fijar la constitución documental de `botica_bruja_lore`: qué documentos son of
 ## 2. Qué se considera fuente de verdad en este repositorio
 La fuente de verdad principal está en `docs/`. `AGENTS.md` es contrato operativo resumido para ejecución del agente, subordinado al marco documental base.
 
+### Estado unico vigente 2026-04-28
+Para cualquier trabajo nuevo de ecommerce, la lectura operativa vigente es:
+- `docs/90_estado_implementacion.md` manda como estado factual rapido.
+- `docs/roadmap_ecommerce_local_simulado.md` manda sobre la fase local actual.
+- `docs/roadmap_ecommerce_real_v2.md` mantiene `V2-R10` bloqueado para go-live externo.
+- `docs/10_checkout_y_flujos_ecommerce.md` y textos de demo anteriores son historicos normalizados: describen legacy, no el flujo principal.
+
 ## 3. Núcleo documental oficial del proyecto
 El núcleo oficial y vigente está formado por:
 1. `docs/00_vision_proyecto.md`
@@ -46,7 +53,9 @@ Antes de proponer cambios, prompts o planes, el agente debe leer en este orden:
 4. `docs/07_arquitectura_tecnica.md`
 5. `docs/08_decisiones_tecnicas_no_negociables.md`
 6. `docs/90_estado_implementacion.md`
-7. `AGENTS.md`
+7. Si la tarea toca ecommerce, `docs/roadmap_ecommerce_local_simulado.md`
+8. Si la tarea toca go-live/deploy, `docs/roadmap_ecommerce_real_v2.md` y `docs/preparacion_staging_ecommerce.md`
+9. `AGENTS.md`
 
 Sin esta lectura previa, cualquier propuesta queda fuera de norma.
 

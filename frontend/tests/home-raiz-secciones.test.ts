@@ -147,11 +147,16 @@ test("las páginas de sección mantienen su entrada principal sin romper la jera
 
   for (const paginaSeccion of paginasConHero) {
     const pagina = readFileSync(join(process.cwd(), paginaSeccion.ruta), "utf8");
-    assert.equal(pagina.includes(`idSeccion="${paginaSeccion.id}"`), true);
+    if (["velas-e-incienso", "minerales-y-energia", "herramientas-esotericas"].includes(paginaSeccion.id)) {
+      assert.equal(pagina.includes(`slug="${paginaSeccion.id}"`), true);
+      assert.equal(pagina.includes("SeccionComercialProductos"), true);
+    } else {
+      assert.equal(pagina.includes(`idSeccion="${paginaSeccion.id}"`), true);
+    }
   }
 
   const paginaBoticaNatural = readFileSync(join(process.cwd(), "app/botica-natural/page.tsx"), "utf8");
-  assert.equal(paginaBoticaNatural.includes("<ListadoProductosBoticaNatural"), true);
+  assert.equal(paginaBoticaNatural.includes("<SeccionComercialProductos"), true);
   assert.equal(paginaBoticaNatural.includes("<PanelFiltrosBoticaNatural"), true);
-  assert.equal(paginaBoticaNatural.includes("Botica Natural"), true);
+  assert.equal(paginaBoticaNatural.includes('slug="botica-natural"'), true);
 });

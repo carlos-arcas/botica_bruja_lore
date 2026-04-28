@@ -96,11 +96,25 @@ test("contrato SEO: páginas del app router mantienen schema solo donde aplica",
     "/envios-y-preparacion": "app/envios-y-preparacion/page.tsx",
     "/privacidad": "app/privacidad/page.tsx",
     "/condiciones-encargo": "app/condiciones-encargo/page.tsx",
+    "/devoluciones": "app/devoluciones/page.tsx",
+    "/contacto": "app/contacto/page.tsx",
+    "/checkout": "app/checkout/page.tsx",
     "/encargo": "app/encargo/page.tsx",
     "/cesta": "app/cesta/page.tsx",
+    "/pedido/{id_pedido}": "app/pedido/[id_pedido]/page.tsx",
     "/pedido-demo": "app/pedido-demo/page.tsx",
     "/pedido-demo/{id_pedido}": "app/pedido-demo/[id_pedido]/page.tsx",
     "/cuenta-demo": "app/cuenta-demo/page.tsx",
+    "/mi-cuenta": "app/mi-cuenta/page.tsx",
+    "/mi-cuenta/pedidos": "app/mi-cuenta/pedidos/page.tsx",
+    "/mi-cuenta/direcciones": "app/mi-cuenta/direcciones/page.tsx",
+    "/acceso": "app/acceso/page.tsx",
+    "/registro": "app/registro/page.tsx",
+    "/recuperar-password": "app/recuperar-password/page.tsx",
+    "/verificar-email": "app/verificar-email/page.tsx",
+    "/login": "app/login/page.tsx",
+    "/admin/login": "app/admin/login/page.tsx",
+    "/admin": "app/admin/(panel)/layout.tsx",
   };
 
   for (const regla of contrato.rutas.indexables_estrategicas) {
@@ -157,6 +171,40 @@ test("contrato SEO: Search Console y enlazado interno siguen alineados", () => {
 
   const privacidad = PAGINAS_LEGALES_COMERCIALES.find((pagina) => pagina.ruta === "/privacidad");
   const condiciones = PAGINAS_LEGALES_COMERCIALES.find((pagina) => pagina.ruta === "/condiciones-encargo");
+  const devoluciones = PAGINAS_LEGALES_COMERCIALES.find((pagina) => pagina.ruta === "/devoluciones");
+  const contacto = PAGINAS_LEGALES_COMERCIALES.find((pagina) => pagina.ruta === "/contacto");
   assert.equal(privacidad?.seo.indexable, false);
   assert.equal(condiciones?.seo.indexable, false);
+  assert.equal(devoluciones?.seo.indexable, false);
+  assert.equal(contacto?.seo.indexable, false);
+});
+
+test("contrato SEO: rutas transaccionales del app router declaran noindex", () => {
+  const contrato = cargarContratoSeo();
+  const mapas: Record<string, string> = {
+    "/checkout": "app/checkout/page.tsx",
+    "/encargo": "app/encargo/page.tsx",
+    "/cesta": "app/cesta/page.tsx",
+    "/pedido/{id_pedido}": "app/pedido/[id_pedido]/page.tsx",
+    "/pedido-demo": "app/pedido-demo/page.tsx",
+    "/pedido-demo/{id_pedido}": "app/pedido-demo/[id_pedido]/page.tsx",
+    "/cuenta-demo": "app/cuenta-demo/page.tsx",
+    "/mi-cuenta": "app/mi-cuenta/page.tsx",
+    "/mi-cuenta/pedidos": "app/mi-cuenta/pedidos/page.tsx",
+    "/mi-cuenta/direcciones": "app/mi-cuenta/direcciones/page.tsx",
+    "/acceso": "app/acceso/page.tsx",
+    "/registro": "app/registro/page.tsx",
+    "/recuperar-password": "app/recuperar-password/page.tsx",
+    "/verificar-email": "app/verificar-email/page.tsx",
+    "/login": "app/login/page.tsx",
+    "/admin/login": "app/admin/login/page.tsx",
+    "/admin": "app/admin/(panel)/layout.tsx",
+  };
+
+  for (const regla of contrato.rutas.transaccionales_noindex) {
+    const archivo = mapas[regla.ruta];
+    assert.ok(archivo, `Falta mapear la ruta transaccional ${regla.ruta}.`);
+    const source = leerArchivoRuta(archivo);
+    assert.match(source, /construirMetadataSeo\([\s\S]*indexable:\s*false/, `${regla.ruta} debe declarar noindex.`);
+  }
 });

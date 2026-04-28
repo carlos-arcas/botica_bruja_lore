@@ -71,7 +71,7 @@ export const INTRO_CALENDARIO_RITUAL: IntroduccionLandingCatalogo = {
   h1: "Calendario ritual por fecha",
   parrafos: [
     "Esta entrada editorial conecta reglas temporales del calendario con rituales publicados para facilitar un descubrimiento guiado por fecha.",
-    "El backend mantiene la lógica temporal oficial; aquí solo eliges una fecha para visualizar resultados activos y navegar a cada ritual.",
+    "El calendario mantiene la lógica temporal oficial; aquí solo eliges una fecha para visualizar resultados activos y navegar a cada ritual.",
   ],
   enlacesInternos: [
     { href: "/rituales", etiqueta: "Ver todos los rituales publicados" },

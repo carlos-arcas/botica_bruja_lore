@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { PRODUCTOS_CATALOGO } from "@/contenido/catalogo/catalogo";
+import { emitirEventoEmbudoLocal } from "@/contenido/analitica/embudoLocal";
 import {
   construirEstadoInicialCheckoutReal,
   construirPayloadPedidoReal,
@@ -25,6 +27,7 @@ import { resolverContextoPreseleccionado } from "@/contenido/catalogo/encargoCon
 import { calcularDesgloseFiscalVisible } from "@/contenido/catalogo/fiscalidadCheckout";
 import { resolverLineasSeleccionEncargo, resolverResumenEconomicoSeleccion } from "@/contenido/catalogo/seleccionEncargo";
 import { formatearMonedaEur, resolverImporteEnvioEstandarDesdeApi } from "@/contenido/catalogo/envioEstandar";
+import { traducirLineaStock } from "@/contenido/pedidos/estadosComercialesPedido";
 import { AvisoDisponibilidadCheckoutReal } from "@/componentes/catalogo/checkout-real/AvisoDisponibilidadCheckoutReal";
 import { BloquePedidoSeleccionMultiple } from "@/componentes/catalogo/checkout-real/BloquePedidoSeleccionMultiple";
 import { SelectorDireccionCheckoutReal } from "@/componentes/catalogo/checkout-real/SelectorDireccionCheckoutReal";
@@ -40,7 +43,10 @@ import estilos from "./flujoCheckoutReal.module.css";
 type Props = { slugPreseleccionado?: string; cestaPreseleccionada?: string };
 
 export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }: Props): JSX.Element {
-  const contexto = resolverContextoPreseleccionado(slugPreseleccionado ?? null, cestaPreseleccionada ?? null);
+  const contexto = useMemo(
+    () => resolverContextoPreseleccionado(slugPreseleccionado ?? null, cestaPreseleccionada ?? null),
+    [slugPreseleccionado, cestaPreseleccionada],
+  );
   const [datos, setDatos] = useState(() => construirEstadoInicialCheckoutReal(contexto.productoPreseleccionado?.slug));
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [mensaje, setMensaje] = useState("");
@@ -50,6 +56,7 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
   const [direcciones, setDirecciones] = useState<Awaited<ReturnType<typeof obtenerDireccionesCuentaCliente>>["direcciones"]>([]);
   const [importeEnvioApi, setImporteEnvioApi] = useState<number | null>(null);
   const [productoPublico, setProductoPublico] = useState<ProductoSeccionPublica | null>(null);
+  const referenciaError = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
   const modoCheckout = useMemo(() => resolverModoCheckoutReal(contexto.itemsPreseleccionados), [contexto.itemsPreseleccionados]);
@@ -86,6 +93,8 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
     return producto;
   }, [modoCheckout, productoPublico, datos.producto_slug, producto]);
   const checkoutBloqueado = resultadoLineas.lineasNoConvertibles.length > 0;
+  const checkoutSinTarifaEnvio = importeEnvioApi === null;
+  const idAyudaSubmit = checkoutBloqueado ? "ayuda-checkout-bloqueado" : checkoutSinTarifaEnvio ? "ayuda-checkout-envio" : undefined;
   const rutaConsultaManual = useMemo(() => construirRutaConsultaManualCheckoutReal(contexto.itemsPreseleccionados), [contexto.itemsPreseleccionados]);
   const rutaRevisionSeleccion = useMemo(() => construirRutaRevisionSeleccionCheckoutReal(contexto.itemsPreseleccionados), [contexto.itemsPreseleccionados]);
   const mostrarDireccionesGuardadas = datos.canal_checkout === "web_autenticado";
@@ -94,6 +103,13 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
   useEffect(() => {
     guardarPreseleccionEncargoLocal(contexto.itemsPreseleccionados);
   }, [contexto.itemsPreseleccionados]);
+
+  useEffect(() => {
+    emitirEventoEmbudoLocal("checkout_iniciado", {
+      slug_producto: contexto.productoPreseleccionado?.slug,
+      ruta: window.location.pathname,
+    });
+  }, [contexto.productoPreseleccionado?.slug]);
 
   useEffect(() => {
     let activa = true;
@@ -167,6 +183,11 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
     };
   }, []);
 
+  useEffect(() => {
+    if (!mensaje && lineasStock.length === 0) return;
+    referenciaError.current?.focus();
+  }, [mensaje, lineasStock.length]);
+
   const cambiarModoDireccion = (modo: DatosCheckoutReal["modo_direccion"]): void => {
     setDatos((previo) => ({ ...previo, modo_direccion: modo, id_direccion_guardada: modo === "manual" ? "" : previo.id_direccion_guardada }));
   };
@@ -182,7 +203,10 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
     setErrores(nuevosErrores);
     setMensaje("");
     setLineasStock([]);
-    if (Object.keys(nuevosErrores).length > 0) return;
+    if (Object.keys(nuevosErrores).length > 0) {
+      setMensaje("Revisa los campos marcados antes de preparar el pedido.");
+      return;
+    }
     setEnviando(true);
     const resultado = await crearPedidoPublico(construirPayloadPedidoReal(datos, resultadoLineas.lineasConvertibles));
     setEnviando(false);
@@ -196,23 +220,23 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
 
   return (
     <section className="bloque-home" aria-labelledby="titulo-checkout-real">
-      <p className={estilos.eyebrow}>Checkout real v1 · coexistencia controlada</p>
-      <h1 id="titulo-checkout-real">Finalizar pedido real sin tocar el flujo demo legado</h1>
-      <p>Este flujo crea un <strong>Pedido</strong> real en estado <strong>pendiente_pago</strong>. Si tu cuenta tiene direcciones guardadas, aquí puedes reutilizarlas sin convertir el pedido en una referencia viva.</p>
+      <p className={estilos.eyebrow}>Compra local</p>
+      <h1 id="titulo-checkout-real">Finalizar compra</h1>
+      <p>Revisa tus datos, confirma la entrega y deja el pedido preparado para el pago. Si tu cuenta tiene direcciones guardadas, aqui puedes reutilizarlas sin volver a escribir la entrega.</p>
       <form className={estilos.formulario} onSubmit={enviar} noValidate>
         <fieldset>
           <legend>Contacto</legend>
           <Campo nombre="nombre_contacto" etiqueta="Nombre de contacto" valor={datos.nombre_contacto} error={errores.nombre_contacto} onChange={setDatos} />
           <Campo nombre="email_contacto" etiqueta="Email" tipo="email" valor={datos.email_contacto} error={errores.email_contacto} onChange={setDatos} />
           <Campo nombre="telefono_contacto" etiqueta="Teléfono" tipo="tel" valor={datos.telefono_contacto} error={errores.telefono_contacto} onChange={setDatos} />
-          <p className={estilos.estadoCuenta}>{cargandoCuenta ? "Comprobando sesión real…" : datos.canal_checkout === "web_autenticado" ? "Checkout autenticado activo. El pedido quedará asociado a tu cuenta real." : "Checkout como invitada. La libreta de direcciones no está disponible en este modo."}</p>
+          <p className={estilos.estadoCuenta}>{cargandoCuenta ? "Comprobando tu cuenta..." : datos.canal_checkout === "web_autenticado" ? "Compra asociada a tu cuenta." : "Compra como invitada. La libreta de direcciones no esta disponible en este modo."}</p>
         </fieldset>
         <fieldset>
           <legend>Pedido</legend>
           {modoCheckout === "producto_unico" ? <BloquePedidoProductoUnico datos={datos} errores={errores} producto={productoCheckout} setDatos={setDatos} /> : <BloquePedidoSeleccionMultiple lineasConvertiblesVisuales={lineasVisualesCheckout.lineasConvertibles} lineasBloqueadasVisuales={lineasVisualesCheckout.lineasBloqueadas} resumenEconomico={resumenEconomico} resumenEconomicoBloqueado={resumenEconomicoBloqueado} resumenSeleccionVisible={resumenSeleccionVisible} rutaConsultaManual={rutaConsultaManual} rutaRevisionSeleccion={rutaRevisionSeleccion} />}
-          <p className={estilos.estadoCuenta}>La disponibilidad visible en frontend es orientativa: no reserva unidades y el backend vuelve a validar stock al crear el pedido real.</p>
-          <label>Intención y observaciones del pedido<textarea value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} /></label>
-          {errores.lineas && <p className={estilos.error}>{errores.lineas}</p>}
+          <p className={estilos.estadoCuenta}>La disponibilidad es orientativa: no reserva unidades y volveremos a comprobar el stock antes de aceptar el pedido.</p>
+          <label htmlFor="checkout-real-notas-cliente">Intención y observaciones del pedido</label><textarea id="checkout-real-notas-cliente" value={datos.notas_cliente} onChange={(event) => setDatos((previo) => ({ ...previo, notas_cliente: event.target.value }))} rows={3} />
+          {errores.lineas && <p id="checkout-real-lineas-error" className={estilos.error} role="alert">{errores.lineas}</p>}
           <p className={estilos.estadoCuenta}>Subtotal: <strong>{formatearMonedaEur(desgloseFiscalVisible.subtotal)}</strong> · Envío estándar: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.envio)}</strong> · Base imponible: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.baseImponible)}</strong> · Impuestos por línea: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.impuestos)}</strong> · Total: <strong>{importeEnvioApi === null ? "calculando…" : formatearMonedaEur(desgloseFiscalVisible.total)}</strong></p>
         </fieldset>
         <fieldset>
@@ -221,22 +245,29 @@ export function FlujoCheckoutReal({ slugPreseleccionado, cestaPreseleccionada }:
           {mostrarDireccionManual && <BloqueDireccionManual datos={datos} errores={errores} setDatos={setDatos} />}
         </fieldset>
         <div className={estilos.accionesFinales}>
-          <button className="boton boton--principal" type="submit" disabled={enviando || checkoutBloqueado || importeEnvioApi === null} aria-disabled={checkoutBloqueado || importeEnvioApi === null} aria-describedby={checkoutBloqueado ? "ayuda-checkout-bloqueado" : undefined}>{enviando ? "Creando pedido real..." : checkoutBloqueado ? "Pedido real bloqueado por líneas no convertibles" : "Crear pedido real"}</button>
+          <p className={estilos.estadoCuenta}>
+            Al preparar el pedido aceptas las <Link href="/condiciones-encargo">condiciones de compra</Link>, la <Link href="/privacidad">politica de privacidad</Link>, y puedes revisar <Link href="/envios-y-preparacion">envios</Link> y <Link href="/devoluciones">devoluciones</Link>.
+          </p>
+          <button className="boton boton--principal" type="submit" disabled={enviando || checkoutBloqueado || checkoutSinTarifaEnvio} aria-disabled={checkoutBloqueado || checkoutSinTarifaEnvio} aria-describedby={idAyudaSubmit}>{enviando ? "Preparando pedido..." : checkoutBloqueado ? "Ajusta la seleccion para continuar" : "Preparar pedido"}</button>
           {checkoutBloqueado && <p id="ayuda-checkout-bloqueado" className={estilos.ayudaBloqueoCta}>Usa la salida artesanal para mantener la selección completa sin quedarte atrapada en este checkout.</p>}
+          {checkoutSinTarifaEnvio && !checkoutBloqueado ? <p id="ayuda-checkout-envio" className={estilos.ayudaBloqueoCta}>Estamos calculando el envio antes de permitir preparar el pedido.</p> : null}
         </div>
         {mensaje && (
-          <div className={estilos.bloqueErrorStock}>
+          <div className={estilos.bloqueErrorStock} role="alert" tabIndex={-1} ref={referenciaError}>
             <p className={estilos.error}>{mensaje}</p>
             {lineasStock.length > 0 && (
               <ul className={estilos.listaErrorStock}>
                 {lineasStock.map((linea) => (
                   <li key={`${linea.id_producto}-${linea.codigo}`}>
-                    <strong>{linea.nombre_producto}</strong>: {linea.detalle}
-                    {typeof linea.cantidad_disponible === "number" ? ` Stock disponible: ${linea.cantidad_disponible}.` : ""}
+                    <strong>{linea.nombre_producto}</strong>: {traducirLineaStock(linea)}
                   </li>
                 ))}
               </ul>
             )}
+            <div className={estilos.accionesFinales}>
+              <Link href="/cesta" className="boton boton--secundario">Volver a cesta</Link>
+              <Link href="/botica-natural" className="boton boton--secundario">Revisar disponibilidad</Link>
+            </div>
           </div>
         )}
       </form>
@@ -249,7 +280,9 @@ type BloquePedidoProductoUnicoProps = { datos: { producto_slug: string; cantidad
 type BloqueDireccionManualProps = { datos: DatosCheckoutReal; errores: Record<string, string>; setDatos: React.Dispatch<React.SetStateAction<DatosCheckoutReal>> };
 
 function Campo({ nombre, etiqueta, valor, onChange, error, tipo = "text" }: CampoProps): JSX.Element {
-  return <><label>{etiqueta}<input type={tipo} value={valor} onChange={(event) => onChange((previo: DatosCheckoutReal) => ({ ...previo, [nombre]: event.target.value }))} /></label>{error && <p className={estilos.error}>{error}</p>}</>;
+  const id = `checkout-real-${nombre}`;
+  const idError = `${id}-error`;
+  return <><label htmlFor={id}>{etiqueta}</label><input id={id} type={tipo} value={valor} aria-invalid={Boolean(error)} aria-describedby={error ? idError : undefined} onChange={(event) => onChange((previo: DatosCheckoutReal) => ({ ...previo, [nombre]: event.target.value }))} />{error && <p id={idError} className={estilos.error} role="alert">{error}</p>}</>;
 }
 
 function BloquePedidoProductoUnico({ datos, errores, producto, setDatos }: BloquePedidoProductoUnicoProps): JSX.Element {
@@ -266,5 +299,5 @@ function BloquePedidoProductoUnico({ datos, errores, producto, setDatos }: Bloqu
 }
 
 function BloqueDireccionManual({ datos, errores, setDatos }: BloqueDireccionManualProps): JSX.Element {
-  return <><Campo nombre="nombre_destinatario" etiqueta="Destinatario" valor={datos.nombre_destinatario} error={errores.nombre_destinatario} onChange={setDatos} /><Campo nombre="linea_1" etiqueta="Calle y número" valor={datos.linea_1} error={errores.linea_1} onChange={setDatos} /><Campo nombre="linea_2" etiqueta="Complemento" valor={datos.linea_2} onChange={setDatos} /><Campo nombre="codigo_postal" etiqueta="Código postal" valor={datos.codigo_postal} error={errores.codigo_postal} onChange={setDatos} /><Campo nombre="ciudad" etiqueta="Localidad" valor={datos.ciudad} error={errores.ciudad} onChange={setDatos} /><Campo nombre="provincia" etiqueta="Provincia" valor={datos.provincia} error={errores.provincia} onChange={setDatos} /><Campo nombre="pais_iso" etiqueta="País" valor={datos.pais_iso} onChange={setDatos} /><label>Observaciones de entrega<textarea value={datos.observaciones} onChange={(event) => setDatos((previo) => ({ ...previo, observaciones: event.target.value }))} rows={3} /></label></>;
+  return <><Campo nombre="nombre_destinatario" etiqueta="Destinatario" valor={datos.nombre_destinatario} error={errores.nombre_destinatario} onChange={setDatos} /><Campo nombre="linea_1" etiqueta="Calle y número" valor={datos.linea_1} error={errores.linea_1} onChange={setDatos} /><Campo nombre="linea_2" etiqueta="Complemento" valor={datos.linea_2} onChange={setDatos} /><Campo nombre="codigo_postal" etiqueta="Código postal" valor={datos.codigo_postal} error={errores.codigo_postal} onChange={setDatos} /><Campo nombre="ciudad" etiqueta="Localidad" valor={datos.ciudad} error={errores.ciudad} onChange={setDatos} /><Campo nombre="provincia" etiqueta="Provincia" valor={datos.provincia} error={errores.provincia} onChange={setDatos} /><Campo nombre="pais_iso" etiqueta="País" valor={datos.pais_iso} onChange={setDatos} /><label htmlFor="checkout-real-observaciones">Observaciones de entrega</label><textarea id="checkout-real-observaciones" value={datos.observaciones} onChange={(event) => setDatos((previo) => ({ ...previo, observaciones: event.target.value }))} rows={3} /></>;
 }

@@ -4,8 +4,8 @@ import { AreaCuentaDemo } from "@/componentes/cuenta_demo/AreaCuentaDemo";
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 export const metadata: Metadata = construirMetadataSeo({
-  title: "Cuenta demo | La Botica de la Bruja Lore",
-  description: "Registro y acceso demo con perfil e historial mínimo de pedidos en entorno no productivo.",
+  title: "Mi cuenta | La Botica de la Bruja Lore",
+  description: "Acceso reservado para revisar perfil e historial de pedidos.",
   indexable: false,
 });
 

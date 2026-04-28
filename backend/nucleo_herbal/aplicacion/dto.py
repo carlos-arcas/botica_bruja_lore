@@ -32,6 +32,8 @@ class PlantaDetalleDTO:
 class DisponibilidadPublicaDTO:
     disponible: bool
     estado_disponibilidad: str
+    cantidad_disponible: int | None = None
+    mensaje_disponibilidad: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +58,9 @@ class ProductoResumenDTO:
     tipo_fiscal: str
     disponible: bool
     estado_disponibilidad: str
+    disponible_compra: bool
+    cantidad_disponible: int | None
+    mensaje_disponibilidad: str
 
 
 @dataclass(frozen=True, slots=True)

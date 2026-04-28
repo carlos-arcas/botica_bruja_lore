@@ -16,6 +16,10 @@ EXPECTED_PUBLIC_URL_ERROR = "PUBLIC_SITE_URL es obligatoria cuando DEBUG=false."
 EXPECTED_EMAIL_BACKEND_ERROR = (
     "EMAIL_BACKEND de desarrollo no permitida cuando DEBUG=false. Configura backend SMTP real."
 )
+EXPECTED_PAYMENT_PROVIDER_ERROR = "BOTICA_PAYMENT_PROVIDER debe ser simulado_local o stripe."
+EXPECTED_STRIPE_SECRET_ERROR = (
+    "STRIPE_SECRET_KEY es obligatoria cuando BOTICA_PAYMENT_PROVIDER=stripe."
+)
 
 
 class TestDeployGuards(SimpleTestCase):
@@ -187,6 +191,67 @@ class TestDeployGuards(SimpleTestCase):
         result = self._run([PYTHON, "-c", code], env)
 
         self._assert_failed_with(result, EXPECTED_EMAIL_BACKEND_ERROR)
+
+    def test_proveedor_pago_invalido_falla_temprano(self) -> None:
+        env = self._base_env()
+        env["DEBUG"] = "true"
+        env["BOTICA_PAYMENT_PROVIDER"] = "stripe-real"
+        for key in ("DATABASE_URL", "RAILWAY_PUBLIC_DOMAIN", "RAILWAY_ENVIRONMENT_ID", "RAILWAY_PROJECT_ID"):
+            env.pop(key, None)
+
+        result = self._run([PYTHON, "-c", f"import {SETTINGS_MODULE}"], env)
+
+        self._assert_failed_with(result, EXPECTED_PAYMENT_PROVIDER_ERROR)
+
+    def test_local_simulado_no_exige_claves_stripe(self) -> None:
+        env = self._base_env()
+        env["DEBUG"] = "true"
+        env["BOTICA_PAYMENT_PROVIDER"] = "simulado_local"
+        for key in (
+            "DATABASE_URL",
+            "RAILWAY_PUBLIC_DOMAIN",
+            "RAILWAY_ENVIRONMENT_ID",
+            "RAILWAY_PROJECT_ID",
+            "STRIPE_PUBLIC_KEY",
+            "STRIPE_SECRET_KEY",
+            "STRIPE_WEBHOOK_SECRET",
+            "PAYMENT_SUCCESS_URL",
+            "PAYMENT_CANCEL_URL",
+        ):
+            env.pop(key, None)
+
+        result = self._run(
+            [
+                PYTHON,
+                "-c",
+                f"import {SETTINGS_MODULE} as settings; print(settings.BOTICA_PAYMENT_PROVIDER)",
+            ],
+            env,
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("simulado_local", result.stdout)
+
+    def test_stripe_seleccionado_sin_claves_falla_sin_filtrar_secretos(self) -> None:
+        env = self._base_env()
+        env.update({
+            "DEBUG": "true",
+            "BOTICA_PAYMENT_PROVIDER": "stripe",
+            "STRIPE_PUBLIC_KEY": "pk_test_visible",
+            "STRIPE_SECRET_KEY": "",
+            "STRIPE_WEBHOOK_SECRET": "whsec_no_debe_aparecer",
+            "PAYMENT_SUCCESS_URL": "http://127.0.0.1:3000/pedido/{ID_PEDIDO}",
+            "PAYMENT_CANCEL_URL": "http://127.0.0.1:3000/pedido/{ID_PEDIDO}/cancel",
+        })
+        for key in ("DATABASE_URL", "RAILWAY_PUBLIC_DOMAIN", "RAILWAY_ENVIRONMENT_ID", "RAILWAY_PROJECT_ID"):
+            env.pop(key, None)
+
+        result = self._run([PYTHON, "-c", f"import {SETTINGS_MODULE}"], env)
+        output = f"{result.stdout}\n{result.stderr}"
+
+        self._assert_failed_with(result, EXPECTED_STRIPE_SECRET_ERROR)
+        self.assertNotIn("whsec_no_debe_aparecer", output)
+        self.assertNotIn("pk_test_visible", output)
 
     def test_manage_py_fuerza_settings_canonico(self) -> None:
         env = self._base_env()

@@ -29,16 +29,120 @@ Los estados oficiales de proyecto y capacidad son:
 
 ## 4. Estado global actual del proyecto
 - Estado de definición estratégica/documental: **alto y consistente**.
-- Estado de implementación funcional de producto: **Ciclos 1, 2, 3, 4 y 5 implementados en alcance comprometido**.
-- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado hasta capacidades de cuenta demo con historial de pedidos (Ciclo 4)**.
-- Frontend (home + herbal + rituales + flujo ecommerce demo + cuenta demo): **implementado y navegable hasta cierre de Ciclo 4**.
-- Backoffice/admin mínimo: **implementado para operación base herbal/ritual + pedidos demo + cuenta demo**.
-- Checkout demo y confirmación/recibo: **implementados (Ciclo 3)**.
-- Cuenta demo con valor (registro/auth demo, perfil, historial): **implementada (Ciclo 4)**.
+- Estado de implementación funcional de producto: **ecommerce local real con pago simulado implementado y auditable; go-live externo bloqueado**.
+- Backend (dominio/aplicación/infraestructura/presentación pública): **implementado para `Pedido` real, pago por puerto, stock, cuenta real, documento fiscal, postventa local y backoffice operativo**.
+- Frontend (home + catálogo + cesta + checkout + pedido + cuenta): **implementado y navegable como flujo local real sobre `/checkout`, `/pedido/[id_pedido]` y `/mi-cuenta`**.
+- Backoffice/admin mínimo: **implementado para operación de pedidos reales, inventario, incidencias, devoluciones/reembolsos simulados/manuales y trazabilidad**.
+- Checkout demo, pedido demo y cuenta demo: **DEPRECATED_CONTROLLED**; permanecen accesibles como legacy, no como flujo principal ni base de nuevas features.
 - Calendario ritual: **Prompts 1–3 implementados (dominio/aplicación + persistencia/API + frontend editorial mínimo con gate)**.
 - Quality gate y CI canónica: **activos** con workflow `Quality Gate` en GitHub Actions (`push` + `pull_request`).
 
 Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde exploración editorial/comercial hasta checkout/pago reales, operación física mínima y ahora cuenta real v1 con área privada y pedidos asociados, manteniendo `CuentaDemo` como legado explícito y compatible.
+
+## 4.0 Lectura rápida para agentes
+- Ruta principal de compra local: `/checkout`.
+- Pedido principal: `Pedido` real; detalle en `/pedido/[id_pedido]`.
+- Cuenta visible: `/mi-cuenta`.
+- Pago activo local: `BOTICA_PAYMENT_PROVIDER=simulado_local`.
+- Stripe: **RESERVADO_FUTURO**; no activo en local y no debe exigirse para esta fase.
+- Legacy: `/encargo`, `/pedido-demo`, `/pedido-demo/[id_pedido]`, `cuenta-demo`, `PedidoDemo` y `CuentaDemo` quedan **DEPRECATED_CONTROLLED**.
+- Go-live externo: `V2-R10` sigue **BLOCKED** por staging/URLs reales, PostgreSQL seguro, smoke post-deploy, backup/restore drill real y validación externa.
+- Siguiente paso recomendado: trabajar proximos hitos fuera del roadmap local (`staging`, Stripe sandbox futuro, E2E browser real, revision legal, backup/restore real, `V2-R10` y retirada fisica legacy), sin mezclarlo con el cierre local.
+
+## 4.1 Nueva fase: ecommerce local real con pago simulado
+- Capacidad: **Ecommerce local real con pago simulado**.
+- Estado final de fase local: **CERRADO_LOCALMENTE**.
+- Documento rector: `docs/roadmap_ecommerce_local_simulado.md`.
+- Decisión estratégica:
+  1. el flujo principal local pasa a ser ecommerce real sobre `/checkout`, `/pedido/[id_pedido]` y `/mi-cuenta`;
+  2. producto, cesta, checkout, pedido, stock, cuenta, documento fiscal y backoffice deben operar como capacidades reales;
+  3. la única pieza simulada será la pasarela de pago, siempre por puerto/adaptador;
+  4. Stripe queda **RESERVADO_FUTURO** y no se activa como flujo local principal;
+  5. la demo legacy queda **DEPRECATED_CONTROLLED**: `/encargo`, `/pedido-demo` y `cuenta-demo` permanecen accesibles, pero no gobiernan capacidades nuevas.
+- Estado de pago simulado: **CONFIRMACION_LOCAL_IMPLEMENTADA**; webhook simulado queda pendiente.
+- Regla activa: ninguna capacidad nueva debe depender de `PedidoDemo` ni de `CuentaDemo`; el legado demo se retira por sustitución progresiva, no por borrado inmediato.
+- Avance UX ELS-002: **DONE** para deprecación pública inicial de demo legacy:
+  1. navegación principal y CTA de footer apuntan al checkout real local;
+  2. cesta y fichas públicas priorizan `/checkout` para compra normal;
+  3. `/encargo` queda visible como consulta personalizada/orientación artesanal;
+  4. `/pedido-demo` y `cuenta-demo` se conservan como legacy compatible, no como CTA principal.
+- Avance backend ELS-003: **DONE** para pasarela simulada por puerto:
+  1. `simulado_local` implementa el mismo puerto que Stripe desde infraestructura;
+  2. `BOTICA_PAYMENT_PROVIDER` selecciona `simulado_local` por defecto local y conserva `stripe` como opcion futura;
+  3. `Pedido` acepta `simulado_local` como proveedor de pago valido;
+  4. no se implementan confirmacion, webhook simulado, descuento de stock ni post-pago simulado en esta fase.
+- Avance backend ELS-004: **DONE** para confirmacion local de pago simulado:
+  1. `POST /api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/` confirma una intencion `simulado_local`;
+  2. `ConfirmarPagoSimuladoPedido` valida proveedor, intencion y estado antes de confirmar;
+  3. stock, incidencia operativa y email post-pago se procesan por `ProcesarPostPagoPedido`;
+  4. Stripe y su webhook permanecen intactos y separados.
+- Avance frontend ELS-005: **DONE** para UI de pago simulado en checkout real:
+  1. el recibo real inicia pago y detecta `simulado_local` por proveedor;
+  2. la UI muestra "Pago simulado local" y "Confirmar pago de prueba" sin reactivar `/encargo`;
+  3. la confirmacion llama al endpoint real y redirige a `/pedido/[id_pedido]?retorno_pago=success`;
+  4. Stripe no se elimina y el pago externo queda disponible para proveedor no simulado.
+- Avance backend ELS-006: **DONE** para stock preventivo antes de pago:
+  1. `ValidarStockPreventivoPedido` valida inventario desde aplicacion antes de iniciar pago;
+  2. la confirmacion `simulado_local` revalida stock antes de llamar a `ProcesarPostPagoPedido`;
+  3. si falta inventario, stock o unidad compatible, no se crea intencion nueva ni se marca pagado;
+  4. la proteccion post-pago permanece activa como segunda barrera de concurrencia/cambios tardios.
+- Avance full-stack ELS-007: **DONE** para disponibilidad visible:
+  1. producto publico mantiene `disponible`/`estado_disponibilidad` y añade `disponible_compra`, `cantidad_disponible`, `mensaje_disponibilidad`;
+  2. ficha/card comercial bloquean compra directa cuando no hay stock;
+  3. cesta marca lineas sin stock y bloquea el avance a `/checkout`;
+  4. checkout/recibo muestran errores preventivos de stock con copy comercial, sin codigos tecnicos.
+- Avance frontend ELS-008: **DONE** para cesta real limpia:
+  1. la cesta clasifica lineas como `comprable`, `requiere_consulta`, `invalida` o `sin_stock`;
+  2. `/checkout` recibe solo lineas comprables con contrato real de producto;
+  3. las lineas artesanales, no catalogadas o fuera de contrato bloquean el CTA principal y se derivan como consulta secundaria a `/encargo`;
+  4. eliminar la linea bloqueante desbloquea el CTA real sin reactivar `PedidoDemo`.
+- Avance full-stack ELS-009: **DONE** para cuenta real principal:
+  1. la navegacion publica mantiene `/mi-cuenta` como unica cuenta visible y no promociona `cuenta-demo`;
+  2. `/mi-cuenta` muestra datos de cuenta, pedidos reales, enlaces a `/pedido/[id_pedido]`, documento fiscal y direcciones guardadas;
+  3. checkout real prioriza sesion y direcciones de cuenta real, manteniendo invitado como alternativa;
+  4. `cuenta-demo` se conserva como legacy compatible, sin CTA desde la cuenta real principal.
+- Avance full-stack ELS-010: **DONE** para recibo real local:
+  1. `/pedido/[id_pedido]` usa copy de detalle de pedido real, sin "pedido demo", legacy o coexistencia;
+  2. el recibo muestra fecha, estado de pedido/pago, contacto, entrega, lineas, totales, documento fiscal y seguimiento operativo;
+  3. el pago `simulado_local` se comunica como pago confirmado en entorno local simulado, no como demo de tienda;
+  4. el documento fiscal HTML incluye proveedor de pago, nota local simulada cuando aplica y mantiene la advertencia de numeracion fiscal legal avanzada pendiente.
+- Avance backend ELS-011: **DONE** para backoffice operativo minimo:
+  1. Django Admin de pedidos reales visibiliza cliente, email, total, estado, pago, proveedor, pago simulado, revision manual, inventario e incidencias;
+  2. el listado incorpora filtros operativos para estados fisicos, revision, incidencia de stock, reembolso y pago simulado local;
+  3. las acciones manuales de preparar, enviar y entregar reutilizan casos de uso de aplicacion sobre `Pedido`, no `PedidoDemo`;
+  4. el envio requiere codigo de seguimiento o marca explicita de envio sin seguimiento;
+  5. las acciones operativas registran actor, id de pedido, estado anterior/nuevo, `operation_id` y resultado.
+- Avance backend ELS-012: **DONE** para postventa local simulada/manual:
+  1. el reembolso de devolucion aceptada usa `ReembolsarPagoSimuladoManualPedido` solo para proveedor `simulado_local`;
+  2. el reembolso simulado genera `SIM-REF-{id_pedido}-{operation_id}`, registra fecha y mantiene idempotencia;
+  3. Django Admin de postventa no llama a Stripe para devoluciones aceptadas ni para reembolsos locales;
+  4. la restitucion postventa usa `RestituirInventarioManualPostventa`, evita dobles restituciones y registra ledger cuando aplica;
+  5. `DevolucionPedidoModelo` considera resuelta una devolucion aceptada cuando el reembolso esta ejecutado y la restitucion esta ejecutada o no aplica.
+- Avance frontend/SEO ELS-013: **DONE** para noindex operativo:
+  1. `/checkout`, `/pedido/[id_pedido]`, `/mi-cuenta`, auth y backoffice declaran metadata `noindex` mediante el helper SEO existente;
+  2. `/encargo`, `/pedido-demo`, `/pedido-demo/[id_pedido]` y `cuenta-demo` permanecen como legacy controlado no indexable;
+  3. `docs/seo_contrato.json` mantiene esas rutas fuera de sitemap y conserva catalogo/fichas/editorial como indexables cuando procede;
+  4. no se desbloquea `V2-R10`, no se activan pagos reales y no se elimina legacy.
+- Avance frontend ELS-014: **DONE** para limpieza de copy comercial:
+  1. home, fichas, cesta, checkout, recibo, pedido, cuenta y rutas legacy visibles eliminan lenguaje publico de demo tecnica, V1, legacy, coexistencia, contrato/API/payload;
+  2. el pago local se comunica solo donde procede como prueba en entorno local, sin presentar toda la tienda como demo;
+  3. `/encargo`, `/pedido-demo` y `cuenta-demo` conservan compatibilidad controlada con copy comercial secundario;
+  4. no se cambian URLs, logica de pagos, backend funcional ni claims de producto.
+- Avance DevEx/QA ELS-015: **DONE** para gate local ecommerce simulado:
+  1. `scripts/check_ecommerce_local_simulado.py` valida contratos minimos de ecommerce local simulado sin arrancar servidores ni depender de servicios externos;
+  2. el gate usa severidades `OK`, `WARNING` y `BLOCKER`, con exit code `1` solo ante `BLOCKER` salvo `--fail-on warning`;
+  3. la salida soporta texto humano y `--json`;
+  4. el gate reafirma que `V2-R10` sigue bloqueado y que no se activan Stripe ni pagos reales.
+- Avance backend/DevEx ELS-016: **DONE** para seed local comprable:
+  1. `scripts/bootstrap_ecommerce_local_simulado.py` prepara datos locales minimos para compra de punta a punta;
+  2. el dataset garantiza una seccion publica por familia comercial relevante, productos publicados, precio/tipo fiscal/unidad validos e inventario compatible;
+  3. la cuenta cliente local y su direccion predeterminada se crean como apoyo opcional al checkout autenticado;
+  4. el script es idempotente y ofrece `--dry-run` para validar sin persistir.
+- Avance QA/full-stack ELS-017: **DONE** para regresion compra local:
+  1. backend cubre catalogo/ficha, pedido real invitado, pago simulado, stock preventivo, documento fiscal y cuenta real con direccion guardada;
+  2. frontend cubre cesta comprable, payload de checkout real, API de pago simulado y CTAs principales hacia `/checkout`/`/mi-cuenta`;
+  3. la regresion verifica que el flujo principal no usa `PedidoDemo`, `/pedido-demo`, `cuenta-demo` ni `/encargo` para cerrar compra;
+  4. no introduce E2E browser ni dependencias externas.
 
 ## 5. Estado por capacidades
 | Capacidad | Estado actual | Ciclo asociado | Evidencia / referencia | Notas operativas |
@@ -60,9 +164,9 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 | Ficha ritual conectada | DONE | Ciclo 2 | `frontend/app/rituales/[slug]/page.tsx`, `frontend/componentes/rituales/detalle/` | Ficha con bloques editoriales y resolución comercial mínima enlazando a herbal/producto. |
 | Integración bidireccional herbal ↔ ritual | DONE | Ciclo 2 | `frontend/componentes/herbal/detalle/BloqueRitualesRelacionados.tsx`, `frontend/componentes/rituales/detalle/BloquePlantasRelacionadas.tsx`, `tests/nucleo_herbal/test_exposicion_publica.py` | Recorridos de ida y vuelta implementados sin romper prioridad herbal en navegación. |
 | Quality gate mínimo operativo de ciclo | DONE | Ciclo 2 (cierre) | `python manage.py check`, `python manage.py test`, `pytest -q tests/nucleo_herbal/test_entidades.py tests/nucleo_herbal/test_casos_de_uso.py tests/nucleo_herbal/test_entidades_rituales.py tests/nucleo_herbal/test_casos_de_uso_rituales.py`, `npm run lint`, `npm run build` | Gate mínimo de cierre ejecutado en entorno local con resultados favorables. |
-| Checkout demo | PLANIFICADO | Ciclo 3 | `docs/02_alcance_y_fases.md` | Sin cambios, fuera de alcance. |
-| Login / invitado | PLANIFICADO | Ciclo 3–4 | `docs/02_alcance_y_fases.md` | Sin cambios, fuera de alcance. |
-| Historial de pedidos demo | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
+| Checkout demo | DONE / DEPRECATED_CONTROLLED | Ciclo 3 legacy | `docs/10_checkout_y_flujos_ecommerce.md`, `docs/17_migracion_ecommerce_real.md` | Implementado como legacy; no usar para nuevas features. |
+| Login / invitado | DONE | Ciclo 3–4 + ecommerce real | `docs/17_migracion_ecommerce_real.md`, `/checkout`, `/mi-cuenta` | Invitado y cuenta real operan en checkout real; cuenta demo queda legacy. |
+| Historial de pedidos demo | DONE / DEPRECATED_CONTROLLED | Ciclo 4 legacy | `docs/10_checkout_y_flujos_ecommerce.md`, `docs/plan_retirada_legacy_demo.md` | Conservado como histórico/controlado; no es cuenta visible principal. |
 | Favoritos | PLANIFICADO | Ciclo 4 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Recordatorios | PLANIFICADO | Ciclo 4–5 | `docs/02_alcance_y_fases.md`, `docs/05_modelo_de_dominio_y_entidades.md` | Sin cambios, fuera de alcance. |
 | Cuenta real v1 (`CuentaCliente`) | DONE | Evolución ecommerce real | `backend/nucleo_herbal/dominio/cuentas_cliente.py`, `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`, `frontend/app/mi-cuenta/page.tsx`, `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`, `tests/nucleo_herbal/test_api_cuentas_cliente.py` | Registro/login/logout reales con sesión backend, pedidos asociados y coexistencia explícita con `CuentaDemo` legacy. |
@@ -749,7 +853,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
 
 ## Actualización post-pago operativo v1.1
 - El checkout real ya expone retornos `success` y `cancel` hacia `/pedido/[id_pedido]` con estado visible y siguiente acción recomendada.
-- Cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook: persiste transición, envía email transaccional mínimo e incrementa trazabilidad operativa.
+- Historico de proveedor real preparado: cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook. En la fase local vigente, la confirmacion activa entra por `simulado_local`.
 - El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
 - El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
 - Pendiente para el siguiente bloque: expedición real, tracking, incidencias, SLA operativos y automatización de estados posteriores.
@@ -1041,6 +1145,7 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. el go-live real no se declara `DONE` solo con validacion local/demo;
   2. smoke post-deploy y restore drill real requieren entorno externo seguro;
   3. no se activan pagos reales ni banco/PSP real en esta fase.
+  4. la nueva fase de ecommerce local real con pago simulado no desbloquea `V2-R10` ni habilita go-live externo.
 
 ## 52. Operacion local: check no destructivo de setup/run_app (RUN-001)
 - Capacidad: **validacion local de entorno y deteccion de componentes sin arrancar servidores**.
@@ -1066,3 +1171,341 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. el smoke local no activa pagos reales ni banco/PSP real;
   2. los servidores de desarrollo se arrancan solo en puertos comprobados como libres;
   3. cualquier smoke futuro debe registrar PIDs y cerrar procesos del repo antes de terminar.
+
+## 54. Ecommerce local simulado: rendimiento frontend (ELS-018)
+- Capacidad: **optimizacion de rendimiento percibido en rutas comerciales**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `TarjetaProductoBoticaNatural` deja de ser Client Component completo y mantiene imagen, textos, disponibilidad y enlaces como render estructural;
+  - `AccionesTarjetaProductoBoticaNatural` concentra la hidratacion necesaria para cantidad y carrito;
+  - `FlujoCheckoutReal` memoiza `resolverContextoPreseleccionado` para evitar reparsing de slug/cesta en cada render del formulario;
+  - tests de Botica Natural y tarjetas protegen que no se rehidrate toda la card por accidente.
+- Regla activa:
+  1. no se cambia negocio, pasarela, backend ni rutas;
+  2. catalogo/fichas conservan SEO indexable y checkout/pedido conservan noindex;
+  3. no se versionan artefactos de build ni imagenes binarias;
+  4. medicion Web Vitals/E2E browser queda como mejora futura con runner dedicado.
+
+## 55. Ecommerce local simulado: accesibilidad de compra (ELS-019)
+- Capacidad: **accesibilidad y usabilidad del flujo de compra principal**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - checkout real asocia campos con `label/htmlFor`, `id`, `aria-invalid` y errores por campo;
+  - el bloque de error del checkout usa `role="alert"`, recibe foco y comunica errores de stock o validacion;
+  - cesta enlaza el CTA bloqueado con la explicacion visible de lineas no comprables;
+  - controles de cantidad y eliminar linea en cesta tienen identificadores y etiquetas accesibles;
+  - recibo/pedido anuncia carga, mensajes de estado y pago simulado local con roles/ARIA.
+- Regla activa:
+  1. no se cambia negocio ni flujo de pago;
+  2. no se introducen librerias externas;
+  3. la mejora es semantica/usabilidad, sin rediseño global;
+  4. futuras mejoras visuales de foco/contraste deben hacerse con auditoria CSS dedicada.
+
+## 56. Ecommerce local simulado: seguridad local (ELS-020)
+- Capacidad: **guardrails de seguridad para fase local con pago simulado**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `BOTICA_PAYMENT_PROVIDER` se valida en settings y solo acepta `simulado_local` o `stripe`;
+  - `simulado_local` sigue como proveedor seguro por defecto;
+  - si `BOTICA_PAYMENT_PROVIDER=stripe`, settings exige `STRIPE_PUBLIC_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PAYMENT_SUCCESS_URL` y `PAYMENT_CANCEL_URL`;
+  - logs de pago dejan de incluir email de contacto;
+  - `.env.railway.example` documenta el modo local simulado y advierte que Stripe queda reservado para futuro.
+- Regla activa:
+  1. Stripe no se activa accidentalmente: requiere variable explicita y configuracion completa;
+  2. errores de configuracion mencionan nombres de variables, no valores secretos;
+  3. confirmacion simulada sigue limitada a pedidos `simulado_local`, no cancelados y con intencion valida;
+  4. la fase local no desbloquea `V2-R10` ni activa pagos reales.
+
+## 57. Ecommerce local simulado: analitica local privada (ELS-021)
+- Capacidad: **embudo local minimo sin terceros ni persistencia analitica**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `frontend/contenido/analitica/embudoLocal.ts` define contrato de eventos del embudo y emisor local centralizado;
+  - ficha de producto, acciones de cesta, checkout real y API frontend de pedidos emiten eventos locales del recorrido de compra;
+  - los eventos se publican en consola estructurada `botica_embudo_local` solo cuando la analitica local esta activa;
+  - `NEXT_PUBLIC_ANALITICA_LOCAL=false` queda documentado como desactivacion explicita en entorno frontend;
+  - tests cubren construccion sin PII, desactivacion, emision y eventos de pago simulado.
+- Regla activa:
+  1. no se integran Google Analytics, Meta Pixel ni servicios externos;
+  2. no se persisten eventos analiticos ni se crea endpoint nuevo;
+  3. los eventos no admiten email, telefono, nombre, direccion ni codigo postal;
+  4. `checkout_abandonado` queda fuera hasta poder inferirse sin tracking invasivo.
+
+## 58. Ecommerce local simulado: legal y confianza comercial (ELS-022)
+- Capacidad: **paginas de confianza minimas para tienda local con pago simulado**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - el contrato `PAGINAS_LEGALES_COMERCIALES` cubre condiciones de compra, envios/preparacion, devoluciones, privacidad y contacto;
+  - existen rutas frontend `/devoluciones` y `/contacto`, ademas de las paginas informativas previas;
+  - el footer enlaza condiciones, envios, devoluciones, privacidad y contacto;
+  - checkout real enlaza condiciones, privacidad, envios y devoluciones antes de preparar pedido;
+  - el copy declara que la base comercial no sustituye revision legal profesional y que no hay go-live externo;
+  - los limites de producto quedan visibles: uso tradicional, ritual, aromatico, cultural o decorativo, sin sustituir consejo medico ni garantizar resultados.
+- Regla activa:
+  1. no se presenta esta base como politica legal definitiva de produccion;
+  2. no se activan cookies publicitarias ni pasarela real;
+  3. no se hacen claims sanitarios, curativos, milagrosos ni de resultado garantizado;
+  4. contacto y consulta artesanal son secundarios respecto al checkout para productos comprables.
+
+## 59. Ecommerce local simulado: guardrail legacy demo (ELS-023)
+- Capacidad: **congelado automatizado de demo legacy para evitar regresion al flujo antiguo**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `scripts/check_ecommerce_local_simulado.py` valida que checkout real no depende de `PedidoDemo`, `PayloadPedidoDemo`, `CuentaDemo`, `pedidosDemo` ni `cuentasDemo`;
+  - el gate bloquea CTAs publicos evidentes hacia `/pedido-demo`;
+  - el gate bloquea `cuenta-demo` en navegacion principal;
+  - `/encargo` se permite como consulta secundaria y queda reportado como `WARNING`;
+  - tests del gate cubren patrones prohibidos, legacy secundario permitido y ausencia de archivos opcionales.
+- Regla activa:
+  1. legacy demo se conserva, no se borra;
+  2. ninguna capacidad nueva puede depender de `PedidoDemo` o `CuentaDemo`;
+  3. `/pedido-demo` y `cuenta-demo` no son rutas de continuidad comercial nueva;
+  4. `/encargo` solo puede actuar como consulta artesanal/manual secundaria;
+  5. la retirada definitiva requiere fase futura explicita.
+
+## 60. Ecommerce local simulado: operativa local (ELS-024)
+- Capacidad: **guia operativa local unica para trabajar sin romper el flujo ecommerce real con pago simulado**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - existe `docs/operativa_ecommerce_local_simulado.md`;
+  - la guia documenta objetivo de fase local, real vs simulado vs legacy, requisitos, variables, backend, frontend, bootstrap, cuenta real, compra local, pago simulado, pedido, documento fiscal, admin, gates, tests y troubleshooting;
+  - los comandos no destructivos `setup_entorno.bat --check`, `run_app.bat --check` y los `--help` de bootstrap/gate fueron verificados;
+  - comandos que mutan datos o arrancan procesos persistentes quedan documentados como no ejecutados durante la creacion de la guia;
+  - la guia reafirma que Stripe no se activa y que `V2-R10` sigue bloqueado.
+- Regla activa:
+  1. usar la guia local antes de ejecutar recorridos manuales de compra;
+  2. no inventar comandos operativos sin verificarlos o marcarlos como no verificados;
+  3. mantener legacy demo congelado y fuera del flujo principal;
+  4. no declarar produccion lista desde validaciones locales.
+
+## 61. Ecommerce local simulado: checklist final de presentacion (ELS-025)
+- Capacidad: **checklist final para presentar el proyecto como portfolio/ecommerce local real con pago simulado**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - existe `docs/checklist_presentacion_ecommerce_local.md`;
+  - la checklist cubre identidad, home, catalogo, ficha, cesta, checkout, pago simulado, pedido/recibo, cuenta real, backoffice, stock, documento fiscal, SEO/noindex, legal/confianza, accesibilidad, rendimiento, tests/gates y limites conocidos;
+  - cada bloque exige estado `OK / REVISAR / BLOQUEA PRESENTACION`, evidencia esperada, forma de comprobacion, archivo/ruta relacionada y nota de riesgo;
+  - incluye guion recomendado de demo, lista de promesas prohibidas y siguiente salto real hacia staging, Stripe sandbox/real, backup/restore, revision legal, E2E y `V2-R10`;
+  - no declara go-live externo ni produccion lista.
+- Regla activa:
+  1. usar esta checklist antes de mostrar el proyecto a terceros;
+  2. explicar siempre que el pago es simulado local y que Stripe queda reservado;
+  3. no presentar esta fase como cumplimiento legal/fiscal completo;
+  4. no desbloquear `V2-R10` sin entorno externo, smoke post-deploy, backup/restore real y revision legal.
+
+## 62. Ecommerce local simulado: catalogo vendible por seccion (ELS-026)
+- Capacidad: **contrato de catalogo vendible local por seccion publica abierta**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `scripts/bootstrap_ecommerce_local_simulado.py` prepara 14 productos locales comprables con SKUs `LOCAL-ECOM-*`;
+  - el dataset local garantiza 5 productos publicados propios en `botica-natural` y 3 en `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas`;
+  - `tests/nucleo_herbal/test_catalogo_vendible_local.py` valida contrato de producto vendible: SKU, slug, nombre, precio, unidad, incremento, cantidad minima, tipo fiscal, seccion, publicado, inventario compatible, fallback visual y CTA checkout/cesta;
+  - la API publica se comprueba por seccion para evitar fallback herbal en secciones abiertas ajenas;
+  - producto sin stock queda expuesto como `disponible_compra=false` y `estado_disponibilidad=no_disponible`.
+- Regla activa:
+  1. ninguna seccion publica abierta debe promocionarse sin minimo vendible propio;
+  2. ningun producto incompleto debe aparecer como comprable;
+  3. las lineas sin stock o fuera de contrato no deben avanzar a checkout real;
+  4. no se versionan imagenes ni binarios para resolver faltantes visuales: se usa fallback frontend.
+
+## 63. Ecommerce local simulado: errores y estados vacios comerciales (ELS-027)
+- Capacidad: **estados vacios, bloqueos y errores publicos controlados para el flujo comercial**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `frontend/contenido/pedidos/estadosComercialesPedido.ts` centraliza la traduccion de errores de pedido, pago y stock a copy comercial;
+  - API frontend de pedidos normaliza mensajes antes de entregarlos a checkout/recibo;
+  - checkout real muestra lineas de stock con texto humano y CTA a cesta/disponibilidad;
+  - recibo real controla pedido no cargado, errores de pago simulado y errores de stock sin exponer detalles internos;
+  - Botica Natural ofrece salidas utiles para seccion vacia, producto no encontrado y producto sin stock.
+- Regla activa:
+  1. la UI publica no debe mostrar codigos internos como `stock_no_disponible` ni detalles de intencion/pasarela;
+  2. cada bloqueo comercial debe ofrecer una siguiente accion clara;
+  3. `/encargo` se mantiene solo como consulta personalizada cuando el producto no es comprable;
+  4. no se cambia negocio ni backend para resolver estados de presentacion.
+
+## 64. Ecommerce local simulado: estabilidad visual de secciones comerciales (ELS-028)
+- Capacidad: **presentacion comercial coherente para secciones publicas de catalogo**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - `frontend/contenido/catalogo/seccionesComerciales.ts` centraliza configuracion de las secciones comerciales;
+  - `frontend/componentes/catalogo/secciones/SeccionComercialProductos.tsx` compone hero, cabecera de catalogo, filtros opcionales, error y listado compartido;
+  - `frontend/componentes/catalogo/secciones/ListadoProductosSeccionComercial.tsx` reutiliza la tarjeta comercial existente con precio, stock, ficha, cesta y estado vacio;
+  - `/botica-natural`, `/velas-e-incienso`, `/minerales-y-energia` y `/herramientas-esotericas` usan la misma composicion;
+  - Botica Natural mantiene filtros y las otras secciones muestran productos reales de su seccion cuando la API los expone.
+- Regla activa:
+  1. nuevas secciones comerciales deben usar configuracion y composicion compartida antes de crear JSX propio;
+  2. las diferencias de contenido viven en configuracion, no en componentes duplicados;
+  3. no se introducen claims sanitarios, pago real, imagenes nuevas ni cambios de backend para estabilizar presentacion.
+
+## 65. Ecommerce local simulado: plan retirada legacy demo (ELS-029)
+- Capacidad: **plan tecnico para retirar gradualmente `/encargo`, `/pedido-demo`, `PedidoDemo` y `cuenta-demo`**.
+- Estado: **DONE documental**.
+- Evidencia implementada:
+  - existe `docs/plan_retirada_legacy_demo.md`;
+  - el plan inventaria rutas frontend, componentes, endpoints, dominio/aplicacion/infraestructura backend, modelos, tablas, migraciones, tests, datos persistidos y dependencias legacy;
+  - define fases A-G para ocultar navegacion publica, congelar escritura nueva, mantener lectura historica, migrar/exportar datos si procede, retirar endpoints, retirar modelos/migraciones solo cuando sea seguro y eliminar/mover tests legacy;
+  - cada fase incluye precondiciones, cambios permitidos/prohibidos, tests obligatorios y rollback;
+  - el plan queda enlazado desde `docs/roadmap_ecommerce_local_simulado.md`.
+- Regla activa:
+  1. legacy demo no esta eliminado; permanece `DEPRECATED_CONTROLLED`;
+  2. ninguna retirada real puede ejecutarse sin seguir fases, backup/exportacion cuando aplique y rollback;
+  3. `PedidoDemo` y `CuentaDemo` no pueden contaminar checkout real, pago simulado, pedido real ni cuenta real;
+  4. esta capacidad no desbloquea `V2-R10`, no activa Stripe y no declara go-live externo.
+
+## 66. Ecommerce local simulado: auditoria final automatizable (ELS-030)
+- Capacidad: **auditoria final de estado local simulado antes de presentacion u optimizacion**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - existe `docs/auditoria_final_ecommerce_local_simulado.md`;
+  - existe `scripts/audit_ecommerce_local_simulado.py` con salida humana, `--json` y severidades `OK/WARNING/BLOCKER`;
+  - el script agrega resultados del gate local, guardrail legacy, catalogo vendible, documentacion clave, checklist de presentacion, regresion local y bloqueo `V2-R10`;
+  - tests de script validan fixture sin blockers, ausencia de roadmap local, `V2-R10` desbloqueado, falta de adaptador simulado y legacy no congelado;
+  - la documentacion diferencia presentacion local de go-live real.
+- Regla activa:
+  1. ejecutar esta auditoria antes de presentar el ecommerce local simulado como cierre de fase;
+  2. `WARNING` solo es aceptable si corresponde a legacy controlado y se explica;
+  3. cualquier `BLOCKER` impide presentar la fase como cerrada;
+  4. la auditoria no sustituye release gate externo, staging, smoke post-deploy, backup/restore real ni revision legal profesional.
+
+## 67. Ecommerce local simulado: guion de presentacion (ELS-031)
+- Capacidad: **recorrido estable de demo para portfolio/ecommerce local simulado**.
+- Estado: **DONE documental**.
+- Evidencia implementada:
+  - existe `docs/guion_demo_ecommerce_local.md`;
+  - el guion recorre `/`, `/botica-natural`, ficha comprable, `/cesta`, `/checkout`, `/pedido/[id_pedido]`, documento fiscal, `/mi-cuenta` y `/admin/`;
+  - cada paso incluye ruta, dato necesario, accion, resultado esperado, frase sugerida, riesgo y recuperacion;
+  - declara que no se debe prometer produccion, Stripe activo, cumplimiento legal final, facturacion legal definitiva ni claims medicos;
+  - destaca Clean Architecture, separacion legacy/real, pago por puerto, stock preventivo, post-pago, documento fiscal, backoffice, SEO/noindex y guardrails.
+- Regla activa:
+  1. la demo principal debe usar `/checkout`, `Pedido` y `/mi-cuenta`;
+  2. `/encargo` solo puede mostrarse como consulta secundaria;
+  3. el pago simulado se explica como prueba local, no como cobro real;
+  4. este guion no desbloquea `V2-R10` ni sustituye staging, E2E, backup/restore o revision legal.
+
+## 68. Ecommerce local simulado: Stripe reservado (ELS-032)
+- Capacidad: **preparacion segura del cambio futuro de `simulado_local` a `stripe`**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - existe `docs/pagos_modo_local_y_stripe.md`;
+  - `simulado_local` sigue siendo el proveedor por defecto local y no exige claves Stripe;
+  - `stripe` queda documentado como proveedor futuro, explicito y condicionado a claves, URLs, staging, pruebas y rollback;
+  - el gate local verifica el proveedor del entorno: `simulado_local` OK, `stripe` WARNING y proveedor desconocido BLOCKER;
+  - tests cubren que local simulado no exige claves Stripe y que el gate local advierte/bloquea proveedores de entorno.
+- Regla activa:
+  1. no activar Stripe real en esta fase;
+  2. no introducir secretos ni registrarlos en logs;
+  3. `BOTICA_PAYMENT_PROVIDER=stripe` solo puede usarse en fase futura explicita;
+  4. esta preparacion no desbloquea `V2-R10` ni sustituye staging/smoke/backup/revision legal.
+
+## 69. Ecommerce local simulado: preparacion staging futuro (ELS-033)
+- Capacidad: **guia preparatoria para staging externo futuro sin go-live**.
+- Estado: **DONE documental**.
+- Evidencia implementada:
+  - existe `docs/preparacion_staging_ecommerce.md`;
+  - la guia distingue local, staging y produccion;
+  - documenta variables, servicios, base temporal, URLs, modo de pago permitido, checks pre/post deploy y rollback;
+  - fija `BOTICA_PAYMENT_PROVIDER=simulado_local` como modo inicial de staging y reserva Stripe sandbox para una fase futura explicita;
+  - enlaza con readiness, pagos local/Stripe futuro y `V2-R10` bloqueado.
+- Regla activa:
+  1. esta guia no despliega infraestructura ni toca Railway real;
+  2. no introduce secretos ni activa servicios externos;
+  3. no activa Stripe real ni sandbox por defecto;
+  4. no desbloquea `V2-R10`, que sigue dependiendo de URLs reales, PostgreSQL seguro, smoke post-deploy, backup/restore drill real y validacion externa.
+
+## 70. Ecommerce local simulado: auditoria dependencias demo/real (ELS-034)
+- Capacidad: **auditoria arquitectonica de acoplamientos entre flujo real y legacy demo**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - existe `docs/auditoria_dependencias_demo_real.md`;
+  - `frontend/contenido/catalogo/checkoutReal.ts` deja de importar `LineaNoConvertiblePedido` desde `checkoutDemo`;
+  - `scripts/check_ecommerce_local_simulado.py` bloquea imports demo desde modulos reales de checkout, pedido, cuenta y APIs frontend;
+  - el gate marca como `WARNING` el uso transitorio de `encargoConsulta` en checkout real;
+  - tests del gate cubren el bloqueo de `checkoutDemo` y el warning controlado de `encargoConsulta`.
+- Regla activa:
+  1. `PedidoDemo`, `CuentaDemo`, `pedidosDemo`, `cuentasDemo` y `checkoutDemo` no pueden entrar en modulos reales;
+  2. `/encargo` y helpers de consulta solo pueden permanecer como legacy/adaptadores transitorios documentados;
+  3. cualquier nuevo acoplamiento demo -> real debe corregirse o registrarse como blocker antes de optimizar.
+
+## 71. Ecommerce local simulado: barrido de deuda menor (ELS-036)
+- Capacidad: **auditoria de marcadores de deuda menor y lenguaje historico demo/legacy**.
+- Estado: **DONE documental**.
+- Evidencia implementada:
+  - existe `docs/deuda_residual_ecommerce_local.md`;
+  - se auditaron marcadores `TODO`, `FIXME`, `HACK`, `temporal`, `demo`, `legacy`, `v1`, `coexistencia`, `pendiente` y `simulado`;
+  - `docs/roadmap_ecommerce_local_simulado.md` corrige titulos duplicados de ELS-23 y ELS-24;
+  - la deuda residual queda clasificada entre documental valido, legacy permitido, deuda mayor documentada y blockers;
+  - no se toca codigo funcional ni se elimina legacy.
+- Regla activa:
+  1. los marcadores `demo`/`legacy` restantes son aceptables solo si pertenecen a historico normalizado, legacy controlado, tests legacy o documentacion de retirada;
+  2. `TODO`/`FIXME`/`HACK` nuevos en flujo real deben justificarse o eliminarse antes de cierre;
+  3. `encargoConsulta` en checkout real sigue como warning transitorio hasta una microfase de helper neutral;
+  4. este barrido no desbloquea `V2-R10`, no activa Stripe y no convierte legacy en flujo principal.
+
+## 72. Ecommerce local simulado: entorno local reproducible (ELS-037)
+- Capacidad: **contrato verificable para levantar ecommerce local simulado**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - existe `.env.example` raiz con variables locales seguras y sin secretos reales;
+  - existe `docs/checklist_entorno_local_ecommerce.md`;
+  - existe `scripts/check_entorno_local_ecommerce.py` con salida humana, `--json` y `--fail-on`;
+  - existe `tests/scripts/test_check_entorno_local_ecommerce.py`;
+  - `docs/operativa_ecommerce_local_simulado.md` enlaza el contrato reproducible.
+- Regla activa:
+  1. el proveedor local recomendado es `BOTICA_PAYMENT_PROVIDER=simulado_local`;
+  2. Stripe no se activa ni se exige para desarrollo local;
+  3. el contrato local no debe conectarse a servicios externos ni crear datos por si mismo;
+  4. `var/dev.sqlite3` y cualquier base local siguen fuera de versionado;
+  5. `V2-R10` sigue bloqueado y no se reinterpreta por tener entorno local reproducible.
+
+## 73. Ecommerce local simulado: mapa final de rutas (ELS-038)
+- Capacidad: **clasificacion final de rutas publicas, privadas, transaccionales, API, backoffice y legacy**.
+- Estado: **DONE documental + guardrail**.
+- Evidencia implementada:
+  - existe `docs/mapa_rutas_ecommerce_local.md`;
+  - el mapa clasifica cada familia de ruta por proposito, estado, indexacion, flujo, tests/gate y CTA principal;
+  - `scripts/check_ecommerce_local_simulado.py` valida la presencia del mapa de rutas;
+  - los tests del gate cubren ausencia de mapa como `BLOCKER`;
+  - no se modifican rutas ni metadata porque el contrato SEO vigente ya cubre noindex transaccional.
+- Regla activa:
+  1. `/checkout`, `/pedido/[id_pedido]` y `/mi-cuenta` son rutas principales del flujo real local;
+  2. `/encargo`, `/pedido-demo` y `/cuenta-demo` permanecen `LEGACY_DEPRECATED`;
+  3. rutas transaccionales, cuenta, auth y admin deben mantenerse `NOINDEX`;
+  4. APIs y backoffice son `INTERNA`/`NO_APLICA` para indexacion;
+  5. ningun CTA principal nuevo puede apuntar a legacy.
+
+## 74. Ecommerce local simulado: cierre del roadmap local (ELS-039)
+- Capacidad: **cierre documental del roadmap ecommerce local real con pago simulado**.
+- Estado: **DONE documental**.
+- Estado final del roadmap local: **CERRADO_LOCALMENTE**.
+- Evidencia implementada:
+  - `docs/roadmap_ecommerce_local_simulado.md` incorpora estado final, matriz de hitos y proximos hitos fuera de alcance;
+  - los hitos `ELS-01` a `ELS-38` quedan clasificados como `DONE` o `DONE documental`;
+  - `scripts/check_ecommerce_local_simulado.py` y `scripts/audit_ecommerce_local_simulado.py` se mantienen como evidencia automatizable sin `BLOCKER`;
+  - `docs/auditoria_final_ecommerce_local_simulado.md`, `docs/checklist_presentacion_ecommerce_local.md`, `docs/deuda_residual_ecommerce_local.md`, `docs/mapa_rutas_ecommerce_local.md` y `docs/operativa_ecommerce_local_simulado.md` sostienen el cierre.
+- Flujo principal vigente:
+  1. catalogo/ficha/cesta -> `/checkout`;
+  2. pedido real `Pedido`;
+  3. pago activo local `simulado_local`;
+  4. detalle/recibo en `/pedido/[id_pedido]`;
+  5. cuenta real visible en `/mi-cuenta`;
+  6. backoffice/admin opera pedidos reales.
+- Legacy demo:
+  - `/encargo`, `/pedido-demo`, `/pedido-demo/[id_pedido]`, `cuenta-demo`, `PedidoDemo` y `CuentaDemo` siguen **DEPRECATED_CONTROLLED**;
+  - no son base de nuevas capacidades;
+  - su retirada fisica queda fuera de este cierre y debe seguir `docs/plan_retirada_legacy_demo.md`.
+- Pago:
+  - `simulado_local` es el modo activo local;
+  - Stripe queda **RESERVADO_FUTURO**;
+  - no se activan pagos reales ni Stripe sandbox en este cierre.
+- Limites:
+  1. no se declara produccion lista;
+  2. no se cierra `V2-R10`;
+  3. no sustituye staging, E2E browser real, backup/restore real ni revision legal profesional.
+- Proximos hitos fuera del roadmap local:
+  1. staging futuro;
+  2. Stripe sandbox en fase explicita;
+  3. E2E browser real;
+  4. revision legal profesional;
+  5. backup/restore real;
+  6. go-live `V2-R10` cuando deje de estar bloqueado;
+  7. retirada fisica de legacy demo.

@@ -21,7 +21,9 @@ test("navegación principal expone accesos comerciales clave", () => {
   assert.equal(rutas.includes("/la-botica"), true);
   assert.equal(rutas.includes("/guias"), true);
   assert.equal(rutas.includes("/tarot"), true);
-  assert.equal(rutas.includes("/encargo"), true);
+  assert.equal(rutas.includes("/checkout"), true);
+  assert.equal(rutas.includes("/encargo"), false);
+  assert.equal(rutas.includes("/cuenta-demo"), false);
   assert.equal(NAVEGACION_PRINCIPAL.some((enlace) => enlace.etiqueta === "Mi selección"), true);
 });
 
@@ -51,9 +53,29 @@ test("footer mantiene enlaces de continuidad editorial-comercial", () => {
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/tarot"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/calendario-ritual"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/encargo"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.etiqueta === "Consulta personalizada"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/condiciones-encargo"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/envios-y-preparacion"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/devoluciones"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/privacidad"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/contacto"), true);
+});
+
+test("footer enlaza las paginas de confianza minimas", () => {
+  const etiquetas = ENLACES_FOOTER.map((enlace) => enlace.etiqueta);
+
+  assert.equal(etiquetas.includes("Condiciones de compra"), true);
+  assert.equal(etiquetas.includes("Envios y preparacion"), true);
+  assert.equal(etiquetas.includes("Devoluciones"), true);
+  assert.equal(etiquetas.includes("Privacidad"), true);
+  assert.equal(etiquetas.includes("Contacto"), true);
+});
+
+test("footer convierte el CTA comercial principal en checkout", () => {
+  const footer = readFileSync("componentes/shell/FooterComercial.tsx", "utf-8");
+
+  assert.match(footer, /href="\/checkout"/);
+  assert.doesNotMatch(footer, /className=\{estilos\.ctaFooter\}>\s*Continuar hacia una solicitud de encargo/);
 });
 
 test("cabecera comercial apunta al backoffice interno /admin", () => {

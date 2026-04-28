@@ -28,10 +28,9 @@ export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
   { etiqueta: "Tarot", href: "/tarot", coincidencia: "exacta" },
   { etiqueta: "Calendario ritual", href: "/calendario-ritual", coincidencia: "exacta" },
   { etiqueta: "Mi selección", href: "/cesta", coincidencia: "exacta" },
-  { etiqueta: "Encargo", href: "/encargo", coincidencia: "exacta" },
+  { etiqueta: "Checkout", href: "/checkout", coincidencia: "exacta" },
   { etiqueta: "Acceso", href: "/acceso", coincidencia: "exacta" },
   { etiqueta: "Mi cuenta", href: "/mi-cuenta", coincidencia: "prefijo" },
-  { etiqueta: "Cuenta demo", href: "/cuenta-demo", coincidencia: "exacta" },
 ];
 
 const ENLACES_BASE_FOOTER: EnlaceFooter[] = [
@@ -42,7 +41,7 @@ const ENLACES_BASE_FOOTER: EnlaceFooter[] = [
   { etiqueta: "La Botica", href: "/la-botica" },
   { etiqueta: "Guías editoriales", href: "/guias" },
   { etiqueta: "Tarot editorial", href: "/tarot" },
-  { etiqueta: "Preparar encargo", href: "/encargo" },
+  { etiqueta: "Consulta personalizada", href: "/encargo" },
 ];
 
 const ENLACES_LEGALES_SECUNDARIOS: EnlaceFooter[] = ENLACES_LEGALES_FOOTER.map((enlace) => ({

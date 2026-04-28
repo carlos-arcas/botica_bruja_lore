@@ -1,9 +1,13 @@
-import { HeroSeccionPrincipal } from "@/componentes/secciones/HeroSeccionPrincipal";
+import { SeccionComercialProductos } from "@/componentes/catalogo/secciones/SeccionComercialProductos";
+import { ContenedorPaginaComercial } from "@/componentes/shell/ContenedorPaginaComercial";
+import { obtenerProductosPublicosPorSeccion } from "@/infraestructura/api/herbal";
 
-export default function PaginaMineralesYEnergia(): JSX.Element {
+export default async function PaginaMineralesYEnergia(): Promise<JSX.Element> {
+  const resultado = await obtenerProductosPublicosPorSeccion("minerales-y-energia");
+
   return (
-    <main className="contenedor-home">
-      <HeroSeccionPrincipal idSeccion="minerales-y-energia" />
-    </main>
+    <ContenedorPaginaComercial>
+      <SeccionComercialProductos slug="minerales-y-energia" resultado={resultado} />
+    </ContenedorPaginaComercial>
   );
 }

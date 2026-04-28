@@ -1,5 +1,7 @@
 # 17 — Migración ecommerce demo → ecommerce real
 
+> **Historico normalizado 2026-04-28**: este documento registra la migracion demo -> real y la etapa en la que Stripe quedo preparado por puerto/adaptador. La fase vigente local no usa Stripe como proveedor activo: `BOTICA_PAYMENT_PROVIDER=simulado_local` es el modo local y Stripe queda reservado para fase futura. Para estado actual manda `docs/90_estado_implementacion.md` y para la fase local manda `docs/roadmap_ecommerce_local_simulado.md`.
+
 ## 1. Propósito
 Cerrar formalmente la etapa en la que `PedidoDemo` actuaba como único núcleo transaccional evolutivo y abrir un contrato canónico de ecommerce real sin romper el flujo demo existente ni ejecutar un reemplazo big bang.
 
@@ -138,7 +140,7 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 
 ## 9. Implementación activa — pago real v1
 - Estado técnico: **DONE** para primera capa operativa de pago real.
-- PSP real v1 activo: **Stripe** mediante puerto desacoplado `PuertoPasarelaPago`.
+- PSP real v1 preparado historicamente: **Stripe** mediante puerto desacoplado `PuertoPasarelaPago`; en la fase local vigente no es proveedor activo.
 - Rutas nuevas activas: `POST /api/v1/pedidos/{id_pedido}/iniciar-pago/` y `POST /api/v1/pedidos/webhooks/stripe/`.
 - Persistencia activa: referencia externa `id_externo_pago`, `proveedor_pago`, `estado_pago`, `url_pago`, `fecha_pago_confirmado` y tabla de idempotencia de webhooks.
 - Frontend activo: botón **Pagar ahora** en `/pedido/[id_pedido]` para redirigir al checkout hospedado del PSP.
@@ -148,7 +150,7 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 
 ## Actualización post-pago operativo v1.1
 - El checkout real ya expone retornos `success` y `cancel` hacia `/pedido/[id_pedido]` con estado visible y siguiente acción recomendada.
-- Cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook: persiste transición, envía email transaccional mínimo e incrementa trazabilidad operativa.
+- Historico de proveedor real preparado: cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook. En la fase local vigente, la confirmacion activa entra por `simulado_local`.
 - El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
 - El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
 - Pendiente para el siguiente bloque: expedición real, tracking, SLA operativos y automatización de estados posteriores.
@@ -206,7 +208,7 @@ El siguiente bloque debe implementar el **checkout real v1** sobre el nuevo cont
 - Punto de verdad activo: el descuento ocurre dentro del caso de uso post-pago desacoplado del webhook, nunca en checkout previo.
 - Persistencia activa: `Pedido` añade `inventario_descontado` e `incidencia_stock_confirmacion` como marcas explícitas de auditoría mínima.
 - Regla operativa activa:
-  - si Stripe confirma `pagado` y hay stock suficiente, el sistema descuenta todas las líneas en una transacción atómica y marca el pedido como descontado una sola vez;
+  - si un proveedor de pago confirma `pagado` y hay stock suficiente, el sistema descuenta todas las líneas en una transacción atómica y marca el pedido como descontado una sola vez;
   - si el webhook se repite o el caso de uso se reejecuta, la idempotencia evita dobles descuentos;
   - si falta stock en ese momento, no se descuenta nada, no se permite stock negativo, el pedido queda `pagado` con incidencia operativa y `requiere_revision_manual=True`;
   - si la `unidad_comercial` de una línea no coincide con la `unidad_base` del inventario, no se descuenta inventario, se registra incidencia operativa auditable y el pedido queda en revisión manual;

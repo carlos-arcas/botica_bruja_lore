@@ -14,6 +14,7 @@ import {
   resolverRangoPrecioBotica,
 } from "../contenido/catalogo/precioRangosBoticaNatural";
 import { debeMostrarControlMostrarMas, obtenerOpcionesVisibles, restaurarVisibilidadReducida } from "../componentes/botica-natural/filtros/estadoVisualFiltros";
+import { obtenerConfiguracionSeccionComercial } from "../contenido/catalogo/seccionesComerciales";
 
 const leer = (ruta: string): string => readFileSync(join(process.cwd(), ruta), "utf8");
 
@@ -105,14 +106,16 @@ test("accesibilidad del acordeón se mantiene estable tras re-render", () => {
 
 test("desktop renderiza rail de filtros fuera del contenedor principal del listado", () => {
   const pagina = leer("app/botica-natural/page.tsx");
+  const seccion = leer("componentes/catalogo/secciones/SeccionComercialProductos.tsx");
 
-  assert.equal(pagina.includes('className="botica-natural__layout-catalogo"'), true);
-  assert.equal(pagina.includes('className="botica-natural__rail-filtros"'), true);
-  assert.equal(pagina.includes('className="botica-natural__bloque botica-natural__bloque--catalogo"'), true);
+  assert.equal(pagina.includes("filtros={("), true);
+  assert.equal(seccion.includes('className="botica-natural__layout-catalogo"'), true);
+  assert.equal(seccion.includes('className="botica-natural__rail-filtros"'), true);
+  assert.equal(seccion.includes('className="botica-natural__bloque botica-natural__bloque--catalogo"'), true);
 });
 
 test("listado no incluye estructuralmente el rail de filtros", () => {
-  const listado = leer("componentes/botica-natural/ListadoProductosBoticaNatural.tsx");
+  const listado = leer("componentes/catalogo/secciones/ListadoProductosSeccionComercial.tsx");
 
   assert.equal(listado.includes("PanelFiltrosBoticaNatural"), false);
   assert.equal(listado.includes("botica-natural__rail-filtros"), false);
@@ -128,13 +131,24 @@ test("grid aplica configuración compacta para mayor densidad", () => {
 
 test("card mantiene render compacto y orden de acciones con CTA principal a la derecha", () => {
   const tarjeta = leer("componentes/botica-natural/TarjetaProductoBoticaNatural.tsx");
-  const ordenDetalle = tarjeta.indexOf("Ver detalle");
-  const ordenCarrito = tarjeta.indexOf("Agregar al carrito");
+  const acciones = leer("componentes/botica-natural/AccionesTarjetaProductoBoticaNatural.tsx");
+  const ordenDetalle = acciones.indexOf("Ver detalle");
+  const ordenCarrito = acciones.indexOf("Agregar al carrito");
 
-  assert.equal(tarjeta.includes('className="botica-natural__acciones-cta"'), true);
+  assert.equal(tarjeta.includes("AccionesTarjetaProductoBoticaNatural"), true);
+  assert.equal(acciones.includes('className="botica-natural__acciones-cta"'), true);
   assert.equal(ordenDetalle >= 0, true);
   assert.equal(ordenCarrito > ordenDetalle, true);
-  assert.equal(tarjeta.includes('className="boton boton--principal"'), true);
+  assert.equal(acciones.includes('className="boton boton--principal"'), true);
+});
+
+test("card de producto deja solo la accion de carrito como componente cliente", () => {
+  const tarjeta = leer("componentes/botica-natural/TarjetaProductoBoticaNatural.tsx");
+  const acciones = leer("componentes/botica-natural/AccionesTarjetaProductoBoticaNatural.tsx");
+
+  assert.equal(tarjeta.includes('"use client"'), false);
+  assert.equal(acciones.startsWith('"use client";'), true);
+  assert.equal(acciones.includes("useCarrito"), true);
 });
 
 test("en móvil se mantiene flujo de filtros sin rail sticky", () => {
@@ -163,14 +177,44 @@ test("cards y ficha reutilizan next/image con fallback visual sin romper el layo
 
 test("botica natural refleja disponibilidad mínima en card y ficha sin sobreprometer reserva", () => {
   const tarjeta = leer("componentes/botica-natural/TarjetaProductoBoticaNatural.tsx");
+  const acciones = leer("componentes/botica-natural/AccionesTarjetaProductoBoticaNatural.tsx");
   const ficha = leer("componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx");
   const estado = leer("componentes/catalogo/disponibilidad/EstadoDisponibilidadProducto.tsx");
 
   assert.equal(tarjeta.includes("EstadoDisponibilidadProducto"), true);
-  assert.equal(tarjeta.includes('disabled={!producto.disponible}'), true);
-  assert.equal(ficha.includes("La disponibilidad pública es informativa"), true);
+  assert.equal(acciones.includes('disabled={!producto.disponible}'), true);
+  assert.equal(ficha.includes("La disponibilidad es orientativa"), true);
   assert.equal(ficha.includes("No disponible para compra"), true);
+  assert.equal(ficha.includes("Consulta personalizada"), true);
   assert.equal(estado.includes('"bajo_stock"'), true);
+});
+
+test("estados vacios y producto no encontrado ofrecen salidas comerciales", () => {
+  const listado = leer("componentes/catalogo/secciones/ListadoProductosSeccionComercial.tsx");
+  const noEncontrado = leer("app/botica-natural/[slug]/not-found.tsx");
+
+  assert.equal(listado.includes("Seguir explorando"), true);
+  assert.equal(listado.includes("Consulta personalizada"), true);
+  assert.equal(noEncontrado.includes("Volver a Botica Natural"), true);
+  assert.equal(noEncontrado.includes("Consulta personalizada"), true);
+});
+
+test("secciones comerciales comparten bloque, grid y tarjetas de producto", () => {
+  const componente = leer("componentes/catalogo/secciones/SeccionComercialProductos.tsx");
+  const listado = leer("componentes/catalogo/secciones/ListadoProductosSeccionComercial.tsx");
+  const paginas = [
+    leer("app/botica-natural/page.tsx"),
+    leer("app/velas-e-incienso/page.tsx"),
+    leer("app/minerales-y-energia/page.tsx"),
+    leer("app/herramientas-esotericas/page.tsx"),
+  ].join("\n");
+
+  assert.equal(componente.includes("HeroSeccionPrincipal"), true);
+  assert.equal(componente.includes("ListadoProductosSeccionComercial"), true);
+  assert.equal(listado.includes("TarjetaProductoBoticaNatural"), true);
+  assert.equal((paginas.match(/<SeccionComercialProductos/g) ?? []).length, 4);
+  assert.equal(paginas.includes("HeroSeccionPrincipal"), false);
+  assert.equal(obtenerConfiguracionSeccionComercial("velas-e-incienso").tituloCatalogo, "Velas e incienso");
 });
 
 

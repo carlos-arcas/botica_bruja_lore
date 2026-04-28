@@ -4,7 +4,7 @@ import {
   ItemEncargoPreseleccionado,
 } from "./cestaRitual";
 import { PRODUCTOS_CATALOGO, ProductoCatalogo } from "./catalogo";
-import { LineaNoConvertiblePedido } from "./checkoutDemo";
+import { esProductoComprable, resolverBloqueoCantidad } from "./disponibilidadStock";
 
 export type CanalCheckoutReal = "web_invitado" | "web_autenticado";
 export type ModoCheckoutReal = "producto_unico" | "seleccion_multiple";
@@ -71,7 +71,19 @@ export type ResultadoLineasPedidoReal = {
   lineasNoConvertibles: LineaNoConvertiblePedido[];
 };
 
+export type LineaNoConvertiblePedido = {
+  id_linea: string;
+  nombre: string;
+  cantidad: number;
+  tipo_linea: ItemEncargoPreseleccionado["tipo_linea"];
+  motivo: string;
+};
+
 type ProductoConSemanticaComercial = {
+  disponible?: boolean;
+  disponible_compra?: boolean;
+  cantidad_disponible?: number;
+  mensaje_disponibilidad?: string;
   unidad_comercial?: "ud" | "g" | "ml";
   incremento_minimo_venta?: number;
   cantidad_minima_compra?: number;
@@ -136,7 +148,7 @@ export function validarCheckoutReal(
     if (!datos[campo].trim()) errores[campo] = "Campo obligatorio.";
   }
   if (modo === "producto_unico" && !datos.producto_slug.trim()) errores.producto_slug = "Campo obligatorio.";
-  if (datos.canal_checkout === "web_autenticado" && !datos.id_usuario.trim()) errores.id_usuario = "La sesión autenticada requiere un id_usuario real.";
+  if (datos.canal_checkout === "web_autenticado" && !datos.id_usuario.trim()) errores.id_usuario = "Inicia sesión o continúa como invitada.";
   if (datos.modo_direccion === "guardada") {
     if (!datos.id_direccion_guardada.trim()) errores.id_direccion_guardada = "Selecciona una dirección guardada.";
   } else {
@@ -149,11 +161,23 @@ export function validarCheckoutReal(
     const cantidad = resolverCantidadTextoEstricto(datos.cantidad);
     if (cantidad === null) errores.cantidad = "Introduce una cantidad entera positiva sin decimales.";
     else {
+      const errorStock = productoParaValidacion ? resolverBloqueoCantidad(
+        {
+          slug: datos.producto_slug,
+          nombre: String(productoParaValidacion.nombre ?? datos.producto_slug),
+          disponible: productoParaValidacion.disponible ?? false,
+          disponible_compra: productoParaValidacion.disponible_compra,
+          cantidad_disponible: productoParaValidacion.cantidad_disponible,
+          mensaje_disponibilidad: productoParaValidacion.mensaje_disponibilidad,
+        },
+        cantidad,
+      ) : null;
       const errorCantidad = validarCantidadComercial(cantidad, reglas);
-      if (errorCantidad) errores.cantidad = errorCantidad;
+      if (errorStock) errores.lineas = errorStock;
+      else if (errorCantidad) errores.cantidad = errorCantidad;
     }
   }
-  return { ...errores, ...validarLineasCheckoutReal(resultadoLineas) };
+  return { ...validarLineasCheckoutReal(resultadoLineas), ...errores };
 }
 
 export function construirEstadoInicialCheckoutReal(productoSlug?: string): DatosCheckoutReal {
@@ -195,7 +219,7 @@ function construirDireccionManual(datos: DatosCheckoutReal): DireccionEntregaPay
 function validarLineasCheckoutReal(resultado: LineaPedidoPayload[] | ResultadoLineasPedidoReal): Record<string, string> {
   const normalizado = Array.isArray(resultado) ? { lineasConvertibles: resultado, lineasNoConvertibles: [] } : resultado;
   if (normalizado.lineasNoConvertibles.length > 0) return { lineas: construirMensajeBloqueoLineasReales(normalizado.lineasNoConvertibles) };
-  if (normalizado.lineasConvertibles.length === 0) return { lineas: "Necesitas al menos una línea válida para crear el pedido real." };
+  if (normalizado.lineasConvertibles.length === 0) return { lineas: "Necesitas al menos un producto disponible para preparar el pedido." };
   return {};
 }
 
@@ -205,18 +229,19 @@ function construirLineaNoConvertibleReal(item: ItemEncargoPreseleccionado): Line
 
 function construirMensajeBloqueoLineasReales(lineas: LineaNoConvertiblePedido[]): string {
   const resumenLineas = lineas.map((linea) => `${linea.cantidad} × ${linea.nombre}`).join(", ");
-  return `No podemos crear el pedido real porque tu selección incluye líneas fuera del contrato comprable: ${resumenLineas}. Sepáralas como consulta manual antes de continuar.`;
+  return `No podemos preparar el pedido porque tu seleccion incluye piezas que requieren consulta artesanal: ${resumenLineas}. Separalas como consulta manual antes de continuar.`;
 }
 
 function resolverMotivoNoConvertibleReal(item: ItemEncargoPreseleccionado): string {
-  if (item.tipo_linea === "fuera_catalogo") return "La línea artesanal no se puede convertir en una línea pagable del pedido real.";
-  return "La línea seleccionada no forma parte del catálogo pagable del checkout real.";
+  if (item.tipo_linea === "fuera_catalogo") return "Esta pieza artesanal requiere consulta personalizada.";
+  return "Esta selección no está disponible para compra directa.";
 }
 
 function construirLineaReal(slug: string | null, cantidad: number, productos: ProductoCatalogo[]): LineaPedidoPayload | null {
   if (!slug) return null;
   const producto = productos.find((item) => item.slug === slug);
   if (!producto || !producto.id) return null;
+  if (!esProductoComprable(producto)) return null;
   return {
     id_producto: producto.id,
     slug_producto: producto.slug,

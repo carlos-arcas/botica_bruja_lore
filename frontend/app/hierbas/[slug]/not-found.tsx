@@ -6,7 +6,7 @@ export default function NoEncontradoPlanta(): JSX.Element {
       <section className="bloque-home bloque-home--vacio">
         <h1>Ficha herbal no encontrada</h1>
         <p>
-          La planta solicitada no está publicada o no existe en la API pública del núcleo herbal.
+          La planta solicitada no está disponible en el catálogo público.
         </p>
         <Link href="/hierbas" className="boton boton--secundario">
           Volver al listado herbal

@@ -36,10 +36,10 @@ export function ResumenEnvioEncargoDemo(props: Props): JSX.Element {
     <>
       {estadoEnvio === "ok" && pedidoCreado && (
         <article className={estilos.resumenFinal} aria-live="polite">
-          <h2>Pedido demo creado</h2>
+          <h2>Solicitud creada</h2>
           <p className={estilos.estado}>ID: {pedidoCreado.id_pedido}</p>
           <p>Estado inicial: {pedidoCreado.estado}</p>
-          <p>Resumen inmediato: {pedidoCreado.resumen.cantidad_total_items} unidades · Subtotal demo {pedidoCreado.resumen.subtotal_demo} €.</p>
+          <p>Resumen inmediato: {pedidoCreado.resumen.cantidad_total_items} unidades · Subtotal orientativo {pedidoCreado.resumen.subtotal_demo} €.</p>
         </article>
       )}
 

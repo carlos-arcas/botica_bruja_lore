@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from django.conf import settings
+
 from ...aplicacion.casos_de_uso import (
     ObtenerDetallePlanta,
     ObtenerDetallePublicoProductoPorSlug,
@@ -47,13 +49,16 @@ from ...aplicacion.casos_de_uso_email_demo import (
     ComponerEmailDemoPedido,
     ObtenerEmailDemoPedidoPorId,
 )
-from ...aplicacion.casos_de_uso_pago_pedidos import IniciarPagoPedido, ProcesarWebhookPagoPedido
+from ...aplicacion.casos_de_uso_pago_pedidos import ConfirmarPagoSimuladoPedido, IniciarPagoPedido, ProcesarWebhookPagoPedido
 from ...aplicacion.casos_de_uso_pedidos import ObtenerPedidoPorId, RegistrarPedido
 from ...aplicacion.casos_de_uso_post_pago_pedidos import ProcesarPostPagoPedido
+from ...aplicacion.stock_preventivo_pedidos import ValidarStockPreventivoPedido
 from ...aplicacion.casos_de_uso_pedidos_demo import (
     ObtenerPedidoDemoPorId,
     RegistrarPedidoDemo,
 )
+from ...aplicacion.puertos.pasarela_pago import PuertoPasarelaPago
+from ...dominio.excepciones import ErrorDominio
 from ...aplicacion.casos_de_uso_rituales import (
     ObtenerDetalleRitual,
     ObtenerListadoRitualNavegable,
@@ -67,6 +72,7 @@ from ...infraestructura.notificaciones_email_recuperacion_password import Notifi
 from ...infraestructura.notificaciones_email_verificacion import NotificadorEmailVerificacionCuenta
 from ...infraestructura.validacion_password_cuenta import ValidadorPasswordCuentaClienteDjango
 from ...infraestructura.proveedor_envio_estandar import ProveedorEnvioEstandarFijo
+from ...infraestructura.pagos_simulados import construir_pasarela_pago_simulada_local
 from ...infraestructura.pagos_stripe import construir_pasarela_pago_stripe
 from ...infraestructura.persistencia_django.repositorios import (
     ProveedorHistorialPedidosDemoORM,
@@ -118,6 +124,7 @@ class ServiciosPublicosPedidos:
 @dataclass(frozen=True, slots=True)
 class ServiciosPublicosPagoPedidos:
     iniciar_pago: IniciarPagoPedido
+    confirmar_pago_simulado: ConfirmarPagoSimuladoPedido
     procesar_webhook: ProcesarWebhookPagoPedido
 
 
@@ -227,22 +234,45 @@ def construir_servicios_publicos_pedidos() -> ServiciosPublicosPedidos:
 
 def construir_servicios_publicos_pago_pedidos() -> ServiciosPublicosPagoPedidos:
     repositorio = RepositorioPedidosORM()
-    pasarela = construir_pasarela_pago_stripe()
-    procesador_post_pago = ProcesarPostPagoPedido(
-        repositorio_pedidos=repositorio,
-        repositorio_inventario=RepositorioInventarioORM(),
-        repositorio_movimientos=RepositorioMovimientosInventarioORM(),
-        transacciones=TransaccionesDjango(),
-        notificador=NotificadorEmailPostPago(),
-    )
+    pasarela = resolver_pasarela_pago_configurada()
+    validador_stock = ValidarStockPreventivoPedido(RepositorioInventarioORM())
+    procesador_post_pago = _construir_procesador_post_pago(repositorio)
     return ServiciosPublicosPagoPedidos(
-        iniciar_pago=IniciarPagoPedido(repositorio_pedidos=repositorio, pasarela_pago=pasarela),
+        iniciar_pago=IniciarPagoPedido(
+            repositorio_pedidos=repositorio,
+            pasarela_pago=pasarela,
+            validador_stock_preventivo=validador_stock,
+        ),
+        confirmar_pago_simulado=ConfirmarPagoSimuladoPedido(
+            repositorio_pedidos=repositorio,
+            procesador_post_pago=procesador_post_pago,
+            validador_stock_preventivo=validador_stock,
+        ),
         procesar_webhook=ProcesarWebhookPagoPedido(
             repositorio_pedidos=repositorio,
             pasarela_pago=pasarela,
             procesador_post_pago=procesador_post_pago,
         ),
     )
+
+
+def _construir_procesador_post_pago(repositorio: RepositorioPedidosORM) -> ProcesarPostPagoPedido:
+    return ProcesarPostPagoPedido(
+        repositorio_pedidos=repositorio,
+        repositorio_inventario=RepositorioInventarioORM(),
+        repositorio_movimientos=RepositorioMovimientosInventarioORM(),
+        transacciones=TransaccionesDjango(),
+        notificador=NotificadorEmailPostPago(),
+    )
+
+
+def resolver_pasarela_pago_configurada() -> PuertoPasarelaPago:
+    proveedor = getattr(settings, "BOTICA_PAYMENT_PROVIDER", "simulado_local").strip().lower()
+    if proveedor == "simulado_local":
+        return construir_pasarela_pago_simulada_local()
+    if proveedor == "stripe":
+        return construir_pasarela_pago_stripe()
+    raise ErrorDominio("Proveedor de pago no soportado. Usa simulado_local o stripe.")
 
 
 def construir_servicios_publicos_pedidos_demo() -> ServiciosPublicosPedidosDemo:

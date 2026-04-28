@@ -58,10 +58,12 @@ test("las páginas no comerciales no reciben el shell comercial", () => {
 });
 
 test("la accesibilidad estructural base se conserva en catálogo y ficha", () => {
-  const listado = leer("componentes/botica-natural/ListadoProductosBoticaNatural.tsx");
+  const seccion = leer("componentes/catalogo/secciones/SeccionComercialProductos.tsx");
+  const listado = leer("componentes/catalogo/secciones/ListadoProductosSeccionComercial.tsx");
   const ficha = leer("componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx");
 
-  assert.match(listado, /aria-label="Productos de Botica Natural"/);
+  assert.match(seccion, /aria-label=\{configuracion\.tituloCatalogo\}/);
+  assert.match(listado, /aria-label="Productos de la seccion"/);
   assert.match(ficha, /aria-label="Breadcrumb"/);
   assert.match(ficha, /<h1>/);
 });

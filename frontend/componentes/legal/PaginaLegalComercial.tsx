@@ -17,6 +17,9 @@ export function PaginaLegalComercialVista({ contenido, notaCanal }: Props): JSX.
         <h1>{contenido.titulo}</h1>
         <p>{contenido.introduccion}</p>
         <p className={estilos.aviso}>{contenido.aviso}</p>
+        <p className={estilos.notaCanal}>
+          Esta informacion es una base comercial minima y no sustituye una revision legal profesional.
+        </p>
         {notaCanal && <p className={estilos.notaCanal}>{notaCanal}</p>}
       </article>
 
@@ -38,7 +41,7 @@ export function PaginaLegalComercialVista({ contenido, notaCanal }: Props): JSX.
 
       <section className="bloque-home" aria-label="Siguiente paso">
         <h2>Siguiente paso</h2>
-        <p>Si te encaja esta forma de trabajo, puedes seguir por catálogo o abrir tu solicitud de encargo.</p>
+        <p>Si te encaja esta forma de trabajo, puedes seguir por el flujo principal o abrir una consulta personalizada.</p>
         <div className="hero-portada__acciones">
           <Link href={contenido.ctaPrincipal.href} className="boton boton--principal">{contenido.ctaPrincipal.texto}</Link>
           <Link href={contenido.ctaSecundaria.href} className="boton boton--secundario">{contenido.ctaSecundaria.texto}</Link>

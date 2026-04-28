@@ -20,9 +20,9 @@ const componenteCompartido = readFileSync(
 );
 
 test("la página de selección usa naming coherente y empty state real", () => {
-  assert.match(vistaSeleccion, /<h1[^>]*>Mi selección<\/h1>/);
-  assert.match(vistaSeleccion, /No has guardado piezas todavía/);
-  assert.match(vistaSeleccion, /Vaciar selección/);
+  assert.match(vistaSeleccion, /<h1[^>]*>Mi seleccion<\/h1>/);
+  assert.match(vistaSeleccion, /No has guardado piezas todavia/);
+  assert.match(vistaSeleccion, /Vaciar seleccion/);
 });
 
 test("la UI reutiliza un componente compartido para las líneas ricas", () => {
@@ -40,7 +40,7 @@ test("el modo múltiple de encargo conserva una revisión rica en lugar de una l
     flujoEncargo,
     /Mantienes la revisión rica de cada línea antes de enviar el encargo/,
   );
-  assert.match(flujoEncargo, /Línea bloqueada para pedido demo/);
+  assert.match(flujoEncargo, /Linea para consulta artesanal/);
   assert.match(flujoEncargo, /Lista para revisión de encargo/);
   assert.doesNotMatch(flujoEncargo, /<li key=\{linea\.id_linea\}>\s*\{linea\.cantidad\} ·/);
 });

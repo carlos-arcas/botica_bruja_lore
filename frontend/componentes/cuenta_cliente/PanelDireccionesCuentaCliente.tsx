@@ -89,7 +89,7 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
     }
     await cargar();
     resetFormulario();
-    setExito(modo.tipo === "crear" ? "Dirección guardada." : "Dirección actualizada.");
+    setExito(modo.tipo === "crear" ? "DirecciÃ³n guardada." : "DirecciÃ³n actualizada.");
   };
 
   const eliminar = async (idDireccion: string): Promise<void> => {
@@ -102,7 +102,7 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
     }
     await cargar();
     if (modo.tipo === "editar" && modo.direccion.id_direccion === idDireccion) resetFormulario();
-    setExito("Dirección eliminada.");
+    setExito("DirecciÃ³n eliminada.");
   };
 
   const marcarPredeterminada = async (idDireccion: string): Promise<void> => {
@@ -114,7 +114,7 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
       return;
     }
     await cargar();
-    setExito("Dirección predeterminada actualizada.");
+    setExito("DirecciÃ³n predeterminada actualizada.");
   };
 
   if (!cuenta) return <section className="bloque-home"><p>{estado}</p></section>;
@@ -123,13 +123,13 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
     <section className="bloque-home" style={{ display: "grid", gap: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <p>Cuenta real · libreta de direcciones v1.1</p>
+          <p>Mi cuenta · libreta de direcciones</p>
           <h1>Mis direcciones</h1>
-          <p>{cuenta.nombre_visible} · {cuenta.email}</p>
+          <p>{cuenta.nombre_visible} Â· {cuenta.email}</p>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
           <Link className="boton boton--secundario" href={RUTAS_CUENTA_CLIENTE.cuenta}>Volver a mi cuenta</Link>
-          <button className="boton boton--secundario" type="button" onClick={resetFormulario}>Nueva dirección</button>
+          <button className="boton boton--secundario" type="button" onClick={resetFormulario}>Nueva direcciÃ³n</button>
         </div>
       </div>
 
@@ -138,7 +138,7 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
         <div style={{ border: "1px solid rgba(98, 74, 46, 0.18)", borderRadius: 16, padding: 16 }}>
-          <h2>{modo.tipo === "crear" ? "Añadir dirección" : "Editar dirección"}</h2>
+          <h2>{modo.tipo === "crear" ? "AÃ±adir direcciÃ³n" : "Editar direcciÃ³n"}</h2>
           <form style={{ display: "grid", gap: 12 }} onSubmit={guardar}>
             {camposFormulario().map((campo) => (
               <label key={campo.campo} style={{ display: "grid", gap: 4 }}>
@@ -152,9 +152,9 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
             ))}
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <button className="boton boton--principal" type="submit" disabled={guardando}>
-                {guardando ? "Guardando..." : modo.tipo === "crear" ? "Guardar dirección" : "Actualizar dirección"}
+                {guardando ? "Guardando..." : modo.tipo === "crear" ? "Guardar direcciÃ³n" : "Actualizar direcciÃ³n"}
               </button>
-              {modo.tipo === "editar" && <button className="boton boton--secundario" type="button" onClick={resetFormulario}>Cancelar edición</button>}
+              {modo.tipo === "editar" && <button className="boton boton--secundario" type="button" onClick={resetFormulario}>Cancelar ediciÃ³n</button>}
             </div>
           </form>
         </div>
@@ -172,7 +172,7 @@ export function PanelDireccionesCuentaCliente(): JSX.Element {
                   <strong>{direccion.alias || direccion.nombre_destinatario}</strong>
                   {direccion.predeterminada && <span>Predeterminada</span>}
                 </div>
-                <p>{direccion.nombre_destinatario} · {direccion.telefono_contacto}</p>
+                <p>{direccion.nombre_destinatario} Â· {direccion.telefono_contacto}</p>
                 <p>{resumenDireccion(direccion)}</p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <button className="boton boton--secundario" type="button" onClick={() => prepararEdicion(direccion)}>Editar</button>
@@ -192,12 +192,12 @@ function camposFormulario(): Array<{ campo: keyof ReturnType<typeof construirFor
   return [
     { campo: "alias", etiqueta: "Alias", placeholder: "Casa, trabajo..." },
     { campo: "nombre_destinatario", etiqueta: "Destinatario", placeholder: "Nombre y apellidos" },
-    { campo: "telefono_contacto", etiqueta: "Teléfono", placeholder: "+34 600 000 000" },
-    { campo: "linea_1", etiqueta: "Línea principal", placeholder: "Calle, número, piso" },
-    { campo: "linea_2", etiqueta: "Línea secundaria", placeholder: "Escalera, puerta, referencias" },
-    { campo: "codigo_postal", etiqueta: "Código postal", placeholder: "28013" },
+    { campo: "telefono_contacto", etiqueta: "TelÃ©fono", placeholder: "+34 600 000 000" },
+    { campo: "linea_1", etiqueta: "LÃ­nea principal", placeholder: "Calle, nÃºmero, piso" },
+    { campo: "linea_2", etiqueta: "LÃ­nea secundaria", placeholder: "Escalera, puerta, referencias" },
+    { campo: "codigo_postal", etiqueta: "CÃ³digo postal", placeholder: "28013" },
     { campo: "ciudad", etiqueta: "Ciudad", placeholder: "Madrid" },
     { campo: "provincia", etiqueta: "Provincia", placeholder: "Madrid" },
-    { campo: "pais_iso", etiqueta: "País ISO", placeholder: "ES" },
+    { campo: "pais_iso", etiqueta: "PaÃ­s ISO", placeholder: "ES" },
   ];
 }

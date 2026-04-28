@@ -11,10 +11,10 @@ export const RUTAS_CUENTA_CLIENTE = {
 
 export function resumenCuentaRealV1(): string[] {
   return [
-    "Registro y login reales con sesión segura basada en backend.",
-    "Mis pedidos reales asociados automáticamente al usuario autenticado.",
-    "Verificación de email real con confirmación por token y reenvío controlado.",
-    "Libreta de direcciones real con una única predeterminada por cuenta.",
-    "CuentaDemo permanece congelada como flujo legado explícito.",
+    "Registro y acceso a tu cuenta de cliente.",
+    "Pedidos asociados automaticamente a tu usuario.",
+    "Verificacion de email y reenvio controlado cuando lo necesites.",
+    "Libreta de direcciones con una direccion predeterminada por cuenta.",
+    "La experiencia principal se centraliza en Mi cuenta.",
   ];
 }

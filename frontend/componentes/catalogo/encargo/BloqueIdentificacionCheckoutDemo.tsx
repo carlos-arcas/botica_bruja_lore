@@ -23,16 +23,16 @@ export function BloqueIdentificacionCheckoutDemo({
   if (cuentaDemo && canalActivo === "autenticado") {
     return (
       <article className={estilos.resumenProducto} aria-live="polite">
-        <h2>Identificación del pedido demo</h2>
-        <p><strong>Estás comprando como {cuentaDemo.nombre_visible}</strong>.</p>
+        <h2>Datos de contacto</h2>
+        <p><strong>Continuaras como {cuentaDemo.nombre_visible}</strong>.</p>
         <p>{cuentaDemo.email}</p>
-        <p>Asociaremos el pedido demo a esta cuenta sin pedirte el ID manualmente.</p>
+        <p>Asociaremos la solicitud a esta cuenta para que puedas retomarla.</p>
         <div className={estilos.ctasResumen}>
           <button type="button" className="boton boton--secundario" onClick={onContinuarComoInvitado}>
             Continuar como invitado
           </button>
           <button type="button" className="boton boton--secundario" onClick={onIrCuentaDemo}>
-            Gestionar cuenta demo
+            Gestionar cuenta
           </button>
         </div>
       </article>
@@ -41,19 +41,19 @@ export function BloqueIdentificacionCheckoutDemo({
 
   return (
     <article className={estilos.resumenProducto} aria-live="polite">
-      <h2>Identificación del pedido demo</h2>
-      <p>Ahora mismo estás en modo invitado. Puedes seguir así o entrar/crear una cuenta demo para reducir fricción.</p>
+      <h2>Datos de contacto</h2>
+      <p>Ahora mismo estas en modo invitado. Puedes seguir asi o entrar en tu cuenta para completar datos con menos friccion.</p>
       <div className={estilos.ctasResumen}>
         <button type="button" className="boton boton--principal" onClick={onContinuarComoInvitado}>
           Continuar como invitado
         </button>
         {cuentaDemo ? (
           <button type="button" className="boton boton--secundario" onClick={onUsarCuentaDemo}>
-            Usar cuenta demo activa
+            Usar cuenta activa
           </button>
         ) : (
           <button type="button" className="boton boton--secundario" onClick={onIrCuentaDemo}>
-            Entrar / crear cuenta demo
+            Entrar / crear cuenta
           </button>
         )}
       </div>

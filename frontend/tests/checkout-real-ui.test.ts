@@ -6,12 +6,15 @@ import { join } from "node:path";
 const archivoFlujo = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx"), "utf8");
 const archivoPagina = readFileSync(join(process.cwd(), "app/checkout/page.tsx"), "utf8");
 const archivoRecibo = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/ReciboPedidoReal.tsx"), "utf8");
+const archivoReciboHelper = readFileSync(join(process.cwd(), "contenido/pedidos/reciboPedidoReal.ts"), "utf8");
 const archivoCompartido = readFileSync(join(process.cwd(), "componentes/catalogo/seleccion/ListaLineasSeleccion.tsx"), "utf8");
 const archivoAdaptador = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal.ts"), "utf8");
 const archivoBloqueSeleccion = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/BloquePedidoSeleccionMultiple.tsx"), "utf8");
 const archivoSelectorDireccion = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/SelectorDireccionCheckoutReal.tsx"), "utf8");
 const archivoDireccionesCheckout = readFileSync(join(process.cwd(), "contenido/catalogo/checkoutRealDirecciones.ts"), "utf8");
 const archivoNavegacion = readFileSync(join(process.cwd(), "contenido/catalogo/checkoutRealNavegacion.ts"), "utf8");
+const archivoCesta = readFileSync(join(process.cwd(), "componentes/catalogo/cesta/VistaCestaRitual.tsx"), "utf8");
+const paginaEncargo = readFileSync(join(process.cwd(), "app/encargo/page.tsx"), "utf8");
 
 
 test("checkout real no depende de PayloadPedidoDemo ni de CuentaDemo", () => {
@@ -26,9 +29,32 @@ test("checkout real expone una ruta dedicada y recibo real propio", () => {
 });
 
 test("recibo real permite iniciar o continuar el pago real sin tocar el flujo demo", () => {
-  assert.equal(archivoRecibo.includes("Pagar ahora"), true);
+  assert.equal(archivoReciboHelper.includes("Pagar ahora"), true);
   assert.equal(archivoRecibo.includes("iniciarPagoPedido"), true);
-  assert.equal(archivoRecibo.includes("Stripe preparado para iniciar"), true);
+  assert.equal(archivoReciboHelper.includes("Pendiente de iniciar"), true);
+});
+
+test("recibo real permite confirmar pago de prueba local sin mostrarlo para Stripe", () => {
+  assert.equal(archivoRecibo.includes("confirmarPagoSimuladoPedido"), true);
+  assert.equal(archivoRecibo.includes("resolverEsPagoSimuladoLocal"), true);
+  assert.equal(archivoRecibo.includes("Pago de prueba en entorno local"), true);
+  assert.equal(archivoRecibo.includes("Confirmar pago de prueba"), true);
+  assert.equal(archivoRecibo.includes("pasarela real"), true);
+  assert.equal(archivoRecibo.includes("!pagoSimuladoLocal"), true);
+});
+
+test("recibo real no usa lenguaje de pedido demo y expone CTAs comerciales", () => {
+  assert.equal(archivoRecibo.toLowerCase().includes("pedido demo"), false);
+  assert.equal(archivoRecibo.toLowerCase().includes("legacy"), false);
+  assert.equal(archivoRecibo.includes("Ver mi cuenta"), true);
+  assert.equal(archivoRecibo.includes("Seguir comprando"), true);
+  assert.equal(archivoRecibo.includes("Descargar documento fiscal"), true);
+});
+
+test("recibo real redirige tras confirmar pago de prueba al retorno success del pedido", () => {
+  assert.equal(archivoRecibo.includes("confirmarPagoLocal"), true);
+  assert.equal(archivoRecibo.includes("construirUrlRetornoPedido(resultado.pedido.id_pedido, \"success\")"), true);
+  assert.equal(archivoRecibo.includes("setPedido(resultado.pedido)"), true);
 });
 
 test("checkout real muestra bloqueo explícito cuando hay líneas visibles no comprables", () => {
@@ -48,11 +74,42 @@ test("checkout real deriva a /encargo preservando la selección rica cuando est�
   assert.equal(archivoNavegacion.includes('return `/encargo?${params.toString()}`;'), true);
 });
 
+test("cesta dirige la compra normal al checkout y conserva encargo como orientación secundaria", () => {
+  assert.equal(archivoCesta.includes("href={hrefCheckout}"), true);
+  assert.equal(archivoCesta.includes("convertirCestaAItemsCheckoutReal(cesta)"), true);
+  assert.equal(archivoCesta.includes("resumenCestaReal.puedeFinalizarCompra"), true);
+  assert.equal(archivoCesta.includes("Finalizar compra"), true);
+  assert.equal(archivoCesta.includes('href="/encargo?origen=seleccion"'), true);
+  assert.equal(archivoCesta.includes("Pedir orientacion artesanal"), true);
+});
+
+test("cesta separa lineas de consulta y no las envia al checkout real", () => {
+  assert.equal(archivoCesta.includes("resolverResumenCestaReal(cesta)"), true);
+  assert.equal(archivoCesta.includes("hayLineasNoComprables(resumenCestaReal)"), true);
+  assert.equal(archivoCesta.includes("Consulta personalizada"), true);
+  assert.equal(archivoCesta.includes("Revisa la seleccion para continuar"), true);
+});
+
+test("/encargo se presenta como consulta personalizada y enlaza al checkout principal", () => {
+  assert.equal(paginaEncargo.includes("Canal de consulta personalizada"), true);
+  assert.equal(paginaEncargo.includes('href="/checkout"'), true);
+  assert.equal(paginaEncargo.includes("Para una compra normal"), true);
+});
+
 test("checkout real desactiva el CTA engañoso de pedido real cuando el flujo está bloqueado", () => {
-  assert.equal(archivoFlujo.includes("disabled={enviando || checkoutBloqueado || importeEnvioApi === null}"), true);
-  assert.equal(archivoFlujo.includes("Pedido real bloqueado por líneas no convertibles"), true);
+  assert.equal(archivoFlujo.includes("disabled={enviando || checkoutBloqueado || checkoutSinTarifaEnvio}"), true);
+  assert.equal(archivoFlujo.includes("Ajusta la seleccion para continuar"), true);
   assert.equal(archivoFlujo.includes("ayuda-checkout-bloqueado"), true);
+  assert.equal(archivoFlujo.includes("ayuda-checkout-envio"), true);
   assert.equal(archivoFlujo.includes("obtenerTarifaEnvioEstandar"), true);
+});
+
+test("checkout real asocia labels, errores y foco de error principal", () => {
+  assert.equal(archivoFlujo.includes("label htmlFor={id}"), true);
+  assert.equal(archivoFlujo.includes("aria-invalid={Boolean(error)}"), true);
+  assert.equal(archivoFlujo.includes("aria-describedby={error ? idError : undefined}"), true);
+  assert.equal(archivoFlujo.includes('role="alert" tabIndex={-1} ref={referenciaError}'), true);
+  assert.equal(archivoFlujo.includes("referenciaError.current?.focus()"), true);
 });
 
 test("checkout real separa el modo múltiple del selector único heredado", () => {
@@ -110,24 +167,34 @@ test("checkout real precarga la dirección predeterminada cuando existe", () => 
 test("checkout real no expone bloque de libreta al invitado y mantiene modo manual", () => {
   assert.equal(archivoFlujo.includes('datos.canal_checkout === "web_autenticado"'), true);
   assert.equal(archivoFlujo.includes('modo_direccion: "manual"'), true);
-  assert.equal(archivoFlujo.includes("Checkout como invitada"), true);
+  assert.equal(archivoFlujo.includes("Compra como invitada"), true);
 });
 
 test("checkout real muestra detalle limpio cuando la API rechaza por stock", () => {
   assert.equal(archivoFlujo.includes('resultado.codigo === "stock_no_disponible" ? resultado.lineas ?? [] : []'), true);
-  assert.equal(archivoFlujo.includes("Stock disponible:"), true);
-  assert.equal(archivoFlujo.includes("linea.detalle"), true);
+  assert.equal(archivoFlujo.includes("traducirLineaStock(linea)"), true);
+  assert.equal(archivoFlujo.includes("Revisar disponibilidad"), true);
+  assert.equal(archivoFlujo.includes("Volver a cesta"), true);
+  assert.equal(archivoFlujo.includes("linea.detalle"), false);
+});
+
+test("recibo real no muestra codigos tecnicos y ofrece salidas cuando el pedido no carga", () => {
+  assert.equal(archivoRecibo.includes("resolverEstadoPedidoNoCargado"), true);
+  assert.equal(archivoRecibo.includes("traducirMensajeErrorPedido"), true);
+  assert.equal(archivoRecibo.includes("traducirLineaStock(linea)"), true);
+  assert.equal(archivoRecibo.includes("Pedido no encontrado"), false);
+  assert.equal(archivoRecibo.includes("linea.detalle"), false);
 });
 
 
 test("checkout real deja claro que la disponibilidad frontend es informativa y no reserva stock", () => {
   const archivoAviso = readFileSync(join(process.cwd(), "componentes/catalogo/checkout-real/AvisoDisponibilidadCheckoutReal.tsx"), "utf8");
 
-  assert.equal(archivoFlujo.includes("La disponibilidad visible en frontend es orientativa"), true);
+  assert.equal(archivoFlujo.includes("La disponibilidad es orientativa"), true);
   assert.equal(archivoFlujo.includes("AvisoDisponibilidadCheckoutReal"), true);
-  assert.equal(archivoAviso.includes("backend sigue siendo la última línea de defensa"), true);
-  assert.equal(archivoAviso.includes("no existe reserva temporal"), true);
-  assert.equal(archivoAviso.includes("Comprobando disponibilidad pública mínima"), true);
+  assert.equal(archivoAviso.includes("Este aviso es informativo y no reserva unidades"), true);
+  assert.equal(archivoAviso.includes("La confirmaremos al preparar el pedido"), true);
+  assert.equal(archivoAviso.includes("Comprobando disponibilidad"), true);
   assert.equal(archivoAviso.includes("sin_cobertura"), true);
 });
 
@@ -139,6 +206,13 @@ test("checkout real muestra subtotal, envío estándar, impuestos y total antes 
   assert.equal(archivoFlujo.includes("Total:"), true);
 });
 
+test("checkout real enlaza condiciones, privacidad, envios y devoluciones", () => {
+  assert.equal(archivoFlujo.includes('href="/condiciones-encargo"'), true);
+  assert.equal(archivoFlujo.includes('href="/privacidad"'), true);
+  assert.equal(archivoFlujo.includes('href="/envios-y-preparacion"'), true);
+  assert.equal(archivoFlujo.includes('href="/devoluciones"'), true);
+});
+
 test("checkout real expone cantidad comercial y unidad cuando prepara compra a granel", () => {
   assert.equal(archivoFlujo.includes("Cantidad comercial ("), true);
   assert.equal(archivoFlujo.includes("Mínimo de compra:"), true);
@@ -147,10 +221,17 @@ test("checkout real expone cantidad comercial y unidad cuando prepara compra a g
 
 test("recibo real muestra subtotal, base, impuestos, envío y total del pedido", () => {
   assert.equal(archivoRecibo.includes("Subtotal:"), true);
-  assert.equal(archivoRecibo.includes("Envío ("), true);
+  assert.equal(archivoRecibo.includes("Envio ("), true);
   assert.equal(archivoRecibo.includes("Base imponible:"), true);
   assert.equal(archivoRecibo.includes("Impuestos (tipo"), true);
   assert.equal(archivoRecibo.includes("Total:"), true);
-  assert.equal(archivoRecibo.includes("Descargar documento fiscal HTML"), true);
+  assert.equal(archivoRecibo.includes("Descargar documento fiscal"), true);
   assert.equal(archivoRecibo.includes("construirUrlDocumentoPedido"), true);
+});
+
+test("recibo real anuncia carga, mensajes y pago simulado de forma accesible", () => {
+  assert.equal(archivoRecibo.includes('role="status"'), true);
+  assert.equal(archivoRecibo.includes('aria-live="polite"'), true);
+  assert.equal(archivoRecibo.includes('role="region" aria-labelledby="titulo-pago-simulado-local"'), true);
+  assert.equal(archivoRecibo.includes("aria-busy={confirmando}"), true);
 });

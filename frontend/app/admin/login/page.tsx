@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { FormularioLoginBackoffice } from "@/componentes/admin/FormularioLoginBackoffice";
 import { obtenerUsuarioBackofficeSesionActual } from "@/infraestructura/auth/sesionBackoffice";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 type Props = { searchParams?: { next?: string } };
+
+export const metadata: Metadata = construirMetadataSeo({
+  title: "Acceso admin | La Botica de la Bruja Lore",
+  description: "Acceso privado al backoffice.",
+  indexable: false,
+});
 
 export default async function AdminLoginPage({ searchParams }: Props): Promise<JSX.Element> {
   const usuario = await obtenerUsuarioBackofficeSesionActual();

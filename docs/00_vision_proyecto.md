@@ -12,6 +12,9 @@ La experiencia de usuario debe recorrer un arco claro: de lo natural (botica her
 
 El proyecto no vende medicina, no promete milagros y no debe incluir afirmaciones sanitarias impropias.
 
+### Nota de vigencia 2026-04-28
+Este documento conserva la vision fundacional. La frase historica sobre "compra real no operativa" queda normalizada por `docs/90_estado_implementacion.md` y `docs/roadmap_ecommerce_local_simulado.md`: la fase vigente es **ecommerce local real con pago simulado**, con `/checkout`, `Pedido`, `/pedido/[id_pedido]` y `/mi-cuenta` como flujo principal local. No implica produccion real ni go-live externo.
+
 ## 3. Descripción del proyecto
 La Botica de la Bruja Lore es una propuesta digital de ecommerce editorial con identidad híbrida entre:
 - botica herbal;
@@ -21,7 +24,7 @@ La Botica de la Bruja Lore es una propuesta digital de ecommerce editorial con i
 
 El producto debe articular, de forma navegable y creíble, relaciones entre productos, usos rituales, sinergias y contexto cultural/editorial para facilitar tanto la compra directa como el descubrimiento guiado.
 
-En su fase actual, la compra real no está operativa. El objetivo de producto es una demo sólida, consistente y convincente, capaz de representar una experiencia comercial plausible sin necesidad de transacción final.
+En su fase fundacional, la compra real no estaba operativa y el objetivo de producto era una demo sólida, consistente y convincente. Esa lectura queda normalizada por la fase vigente de ecommerce local real con pago simulado, sin go-live externo.
 
 ## 4. Problema que resuelve
 El proyecto responde a una brecha común en ecommerce temáticos:
@@ -87,7 +90,7 @@ Mantener una base conceptual y operativa que permita evolucionar el producto hac
 3. **Identidad diferenciada**: preservar la mezcla botica herbal + tradición + mística + estética femenina sabia del bosque.
 4. **Progresión narrativa de experiencia**: conducir al usuario desde lo natural hacia lo místico sin saltos arbitrarios.
 5. **Rigor comunicativo**: no vender medicina, no prometer milagros, no emitir afirmaciones sanitarias impropias.
-6. **Credibilidad de demo**: aunque la compra real no esté activa, la experiencia debe percibirse sólida y verosímil.
+6. **Credibilidad local/portfolio**: aunque no haya producción ni cobro real activo, la experiencia debe percibirse sólida, verosímil y defendible.
 7. **Escalabilidad conceptual**: decisiones actuales deben permitir crecimiento futuro sin rehacer la visión.
 
 ## 10. Riesgos a evitar

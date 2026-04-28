@@ -1,9 +1,13 @@
-import { HeroSeccionPrincipal } from "@/componentes/secciones/HeroSeccionPrincipal";
+import { SeccionComercialProductos } from "@/componentes/catalogo/secciones/SeccionComercialProductos";
+import { ContenedorPaginaComercial } from "@/componentes/shell/ContenedorPaginaComercial";
+import { obtenerProductosPublicosPorSeccion } from "@/infraestructura/api/herbal";
 
-export default function PaginaHerramientasEsotericas(): JSX.Element {
+export default async function PaginaHerramientasEsotericas(): Promise<JSX.Element> {
+  const resultado = await obtenerProductosPublicosPorSeccion("herramientas-esotericas");
+
   return (
-    <main className="contenedor-home">
-      <HeroSeccionPrincipal idSeccion="herramientas-esotericas" />
-    </main>
+    <ContenedorPaginaComercial>
+      <SeccionComercialProductos slug="herramientas-esotericas" resultado={resultado} />
+    </ContenedorPaginaComercial>
   );
 }
