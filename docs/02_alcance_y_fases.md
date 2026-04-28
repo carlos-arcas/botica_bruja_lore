@@ -3,6 +3,9 @@
 ## 1. Propósito del documento
 Definir el alcance global de **La Botica de la Bruja Lore** y establecer el marco operativo de implementación por ciclos para construir una demo sólida, creíble y navegable sin perder el enfoque **portfolio-first, business-ready**. Este documento fija cómo se gobierna el avance real del producto y cómo se separa lo decidido en documentación de lo efectivamente construido.
 
+### Nota de vigencia 2026-04-28
+Este documento mantiene el marco historico de ciclos. La fase operativa vigente queda normalizada por `docs/90_estado_implementacion.md`: ecommerce local real con pago simulado. Las referencias a "demo comercial sin compra real activa" describen el origen del proyecto y ciclos anteriores, no el flujo principal actual. Local simulado no significa produccion ni desbloquea `V2-R10`.
+
 ## 2. Filosofía de trabajo por ciclos
 El proyecto se rige por una estrategia de **definición amplia + implementación incremental**:
 
@@ -71,7 +74,7 @@ El alcance global definido para el proyecto incluye:
    - no venta de medicina;
    - no promesas de milagros;
    - no afirmaciones sanitarias impropias.
-6. Meta de fase actual: demo comercial creíble sin compra real activa.
+6. Meta histórica de fase temprana: demo comercial creíble sin compra real activa. Meta vigente normalizada: ecommerce local real con pago simulado, sin producción ni cobro real externo.
 
 ### 5.1 Criterio mínimo de catálogo público por sección (fase demo)
 Para pasar de presencia en home/hero/backoffice a catálogo público DB-backed, una sección debe tener masa comercial real suficiente para sostener compra directa y descubrimiento guiado sin relleno sintético.

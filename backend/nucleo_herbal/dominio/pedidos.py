@@ -14,7 +14,7 @@ EstadoPedido = Literal["pendiente_pago", "pagado", "preparando", "enviado", "ent
 EstadoPago = Literal["pendiente", "requiere_accion", "pagado", "fallido", "cancelado"]
 EstadoReembolso = Literal["no_iniciado", "fallido", "ejecutado"]
 CanalCheckout = Literal["web_invitado", "web_autenticado", "backoffice"]
-ProveedorPago = Literal["stripe"]
+ProveedorPago = Literal["stripe", "simulado_local"]
 MetodoEnvio = Literal["envio_estandar"]
 
 ESTADOS_PEDIDO_VALIDOS: tuple[EstadoPedido, ...] = (
@@ -28,6 +28,7 @@ ESTADOS_PEDIDO_VALIDOS: tuple[EstadoPedido, ...] = (
 ESTADOS_PAGO_VALIDOS: tuple[EstadoPago, ...] = ("pendiente", "requiere_accion", "pagado", "fallido", "cancelado")
 ESTADOS_REEMBOLSO_VALIDOS: tuple[EstadoReembolso, ...] = ("no_iniciado", "fallido", "ejecutado")
 CANALES_CHECKOUT_VALIDOS: tuple[CanalCheckout, ...] = ("web_invitado", "web_autenticado", "backoffice")
+PROVEEDORES_PAGO_VALIDOS: tuple[ProveedorPago, ...] = ("stripe", "simulado_local")
 METODOS_ENVIO_VALIDOS: tuple[MetodoEnvio, ...] = ("envio_estandar",)
 RUTA_API_PEDIDOS = "/api/v1/pedidos/"
 TIPO_IMPOSITIVO_IVA_GENERAL = Decimal("0.21")
@@ -181,6 +182,8 @@ class Pedido:
             raise ErrorDominio("El pedido requiere estado de reembolso válido.")
         if self.canal_checkout not in CANALES_CHECKOUT_VALIDOS:
             raise ErrorDominio("El pedido requiere canal de checkout válido.")
+        if self.proveedor_pago is not None and self.proveedor_pago not in PROVEEDORES_PAGO_VALIDOS:
+            raise ErrorDominio("El pedido requiere proveedor de pago valido.")
         if not self.lineas:
             raise ErrorDominio("El pedido requiere al menos una línea.")
         if not self.moneda.strip():
@@ -383,6 +386,30 @@ class Pedido:
             motivo_fallo_reembolso="",
         )
 
+    def validar_reembolso_simulado_manual(self) -> None:
+        if self.estado_reembolso == "ejecutado":
+            raise ErrorDominio("El pedido ya tiene un reembolso ejecutado.")
+        if self.proveedor_pago != "simulado_local":
+            raise ErrorDominio("El reembolso simulado manual requiere proveedor simulado_local.")
+        if self.estado_pago != "pagado":
+            raise ErrorDominio("Solo un pedido con pago confirmado puede reembolsarse.")
+        if self.estado not in {"enviado", "entregado", "cancelado"}:
+            raise ErrorDominio("Solo un pedido enviado, entregado o cancelado puede reembolsarse manualmente.")
+        if not _hay_texto(self.id_externo_pago):
+            raise ErrorDominio("El pedido no tiene referencia externa de pago para ejecutar el reembolso.")
+
+    def registrar_reembolso_simulado_manual(self, *, fecha_reembolso: datetime, id_externo_reembolso: str) -> "Pedido":
+        self.validar_reembolso_simulado_manual()
+        if not _hay_texto(id_externo_reembolso):
+            raise ErrorDominio("El reembolso simulado ejecutado requiere referencia externa valida.")
+        return replace(
+            self,
+            estado_reembolso="ejecutado",
+            fecha_reembolso=fecha_reembolso,
+            id_externo_reembolso=id_externo_reembolso.strip(),
+            motivo_fallo_reembolso="",
+        )
+
     def marcar_email_reembolso_enviado(self, fecha_envio: datetime) -> "Pedido":
         if self.email_reembolso_enviado:
             return self
@@ -409,6 +436,20 @@ class Pedido:
 
     def marcar_inventario_restituido(self, fecha_restitucion: datetime) -> "Pedido":
         self.validar_restitucion_manual_inventario()
+        if self.inventario_restituido:
+            return self
+        return replace(self, inventario_restituido=True, fecha_restitucion_inventario=fecha_restitucion)
+
+    def validar_restitucion_manual_postventa(self) -> None:
+        if self.inventario_restituido:
+            return
+        if not self.inventario_descontado:
+            raise ErrorDominio("No se puede restituir inventario de un pedido sin descuento previo.")
+        if self.estado not in {"enviado", "entregado", "cancelado"}:
+            raise ErrorDominio("Solo se puede restituir inventario de pedidos enviados, entregados o cancelados.")
+
+    def marcar_inventario_restituido_postventa(self, fecha_restitucion: datetime) -> "Pedido":
+        self.validar_restitucion_manual_postventa()
         if self.inventario_restituido:
             return self
         return replace(self, inventario_restituido=True, fecha_restitucion_inventario=fecha_restitucion)

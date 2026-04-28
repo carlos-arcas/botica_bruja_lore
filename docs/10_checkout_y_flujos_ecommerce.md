@@ -1,5 +1,7 @@
 # 10 — Checkout demo legado (`/encargo`) y flujos ecommerce demo
 
+> **Historico normalizado 2026-04-28**: este documento describe el contrato del flujo demo legacy. La fuente vigente para compra local es `docs/roadmap_ecommerce_local_simulado.md`: `/checkout` crea `Pedido` real, `/pedido/[id_pedido]` muestra el pedido real, `/mi-cuenta` es la cuenta visible y la unica simulacion activa es la pasarela `simulado_local`. `/encargo`, `/pedido-demo` y `cuenta-demo` permanecen como legacy controlado.
+
 ## 1. Propósito del documento
 Definir la norma funcional oficial del flujo ecommerce demo de **La Botica de la Bruja Lore** para guiar implementación incremental de carrito, checkout, pedido demo, confirmación y trazabilidad operativa, sin confundir capacidades simuladas con capacidades reales no implementadas.
 
@@ -226,7 +228,7 @@ Estos aspectos pueden evolucionar por ciclo sin romper la base, siempre que no c
 
 ## Actualización post-pago operativo v1.1
 - El checkout real ya expone retornos `success` y `cancel` hacia `/pedido/[id_pedido]` con estado visible y siguiente acción recomendada.
-- Cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook: persiste transición, envía email transaccional mínimo e incrementa trazabilidad operativa.
+- Historico de pago real preparado: cuando Stripe confirma `pagado`, el backend ejecuta un caso de uso post-pago desacoplado del webhook. En la fase local vigente, el proveedor activo es `simulado_local`.
 - El pedido real añade `requiere_revision_manual` y `email_post_pago_enviado` para conciliación mínima y seguimiento administrativo.
 - El backoffice Next/Django ya puede listar pedidos reales y marcar el primer avance operativo `preparando` sin abrir todavía logística avanzada, fraude o devoluciones.
 - Pendiente para el siguiente bloque: expedición real, tracking, incidencias, SLA operativos y automatización de estados posteriores.

@@ -9,7 +9,9 @@
 - `PUBLIC_SITE_URL`, `PAYMENT_SUCCESS_URL` y `PAYMENT_CANCEL_URL` en **HTTPS absoluto**.
 - `EMAIL_BACKEND` de producción (SMTP real, no `locmem`, `console` ni `filebased`).
 - `DEFAULT_FROM_EMAIL` con dominio real (no `.local`).
-- `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET` definidas.
+- Para go-live con Stripe: `BOTICA_PAYMENT_PROVIDER=stripe` y `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` definidas.
+
+Nota: la fase ecommerce local simulado usa `BOTICA_PAYMENT_PROVIDER=simulado_local` y no exige claves Stripe. Ver `docs/pagos_modo_local_y_stripe.md`.
 
 ## 2) PRIVACIDAD OPERATIVA (mínimo)
 - No exponer secretos en logs.

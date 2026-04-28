@@ -10,6 +10,10 @@ from backend.nucleo_herbal.aplicacion.casos_de_uso_backoffice_pedidos import (
     ReembolsarPedidoCanceladoPorIncidenciaStock,
     RestituirInventarioManualPedidoCancelado,
 )
+from backend.nucleo_herbal.aplicacion.casos_de_uso_postventa_local import (
+    ReembolsarPagoSimuladoManualPedido,
+    RestituirInventarioManualPostventa,
+)
 from backend.nucleo_herbal.dominio.excepciones import ErrorDominio
 from backend.nucleo_herbal.dominio.inventario import InventarioProducto
 from backend.nucleo_herbal.dominio.pedidos import ClientePedido, DireccionEntrega, LineaPedido, Pedido
@@ -352,6 +356,51 @@ class OperacionPedidosRealTests(TestCase):
 
         self.assertTrue(resultado.inventario_restituido)
         repo_movimientos.registrar.assert_not_called()
+
+    def test_reembolso_simulado_manual_ejecuta_sin_pasarela(self) -> None:
+        pedido = replace(
+            _pedido_enviado(),
+            proveedor_pago="simulado_local",
+            id_externo_pago="SIM-PED-1",
+        )
+        repositorio = Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido), guardar=Mock(side_effect=lambda actual: actual))
+        caso = ReembolsarPagoSimuladoManualPedido(
+            repositorio_pedidos=repositorio,
+            transacciones=Mock(atomic=Mock(return_value=_ContextoNulo())),
+        )
+
+        resultado = caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-ref-sim", actor="staff")
+
+        self.assertEqual(resultado.estado_reembolso, "ejecutado")
+        self.assertEqual(resultado.id_externo_reembolso, "SIM-REF-PED-1-op-ref-sim")
+
+    def test_reembolso_simulado_manual_rechaza_proveedor_no_simulado(self) -> None:
+        pedido = replace(_pedido_enviado(), proveedor_pago="stripe", id_externo_pago="cs_test")
+        caso = ReembolsarPagoSimuladoManualPedido(
+            repositorio_pedidos=Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido)),
+            transacciones=Mock(atomic=Mock(return_value=_ContextoNulo())),
+        )
+
+        with self.assertRaisesRegex(ErrorDominio, "simulado_local"):
+            caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-ref-no-sim", actor="staff")
+
+    def test_restitucion_postventa_valida_incrementa_stock(self) -> None:
+        pedido = replace(_pedido_enviado().marcar_inventario_descontado(), proveedor_pago="simulado_local")
+        inventario = InventarioProducto(id_producto="PRO-1", cantidad_disponible=3, unidad_base="ud", umbral_bajo_stock=1)
+        repo_inventario = Mock(obtener_por_id_producto=Mock(return_value=inventario), guardar=Mock(side_effect=lambda actual: actual))
+        repo_movimientos = Mock(registrar=Mock())
+        caso = RestituirInventarioManualPostventa(
+            repositorio_pedidos=Mock(obtener_por_id_para_actualizar=Mock(return_value=pedido), guardar=Mock(side_effect=lambda actual: actual)),
+            repositorio_inventario=repo_inventario,
+            repositorio_movimientos=repo_movimientos,
+            transacciones=Mock(atomic=Mock(return_value=_ContextoNulo())),
+        )
+
+        resultado = caso.ejecutar(id_pedido=pedido.id_pedido, operation_id="op-rest-post", actor="staff")
+
+        self.assertTrue(resultado.inventario_restituido)
+        self.assertEqual(repo_inventario.guardar.call_args.args[0].cantidad_disponible, 4)
+        repo_movimientos.registrar.assert_called_once()
 
 
 

@@ -1,5 +1,4 @@
 import { ConfiguracionContactoPublico } from "../catalogo/canalContactoPublico";
-
 export type EnlaceLegalComercial = {
   texto: string;
   href: string;
@@ -37,54 +36,56 @@ export type PaginaLegalComercial = {
 };
 
 export const ENLACES_LEGALES_FOOTER: EnlaceLegalComercial[] = [
-  { texto: "Condiciones del encargo", href: "/condiciones-encargo" },
-  { texto: "Envíos y preparación", href: "/envios-y-preparacion" },
-  { texto: "Privacidad y contacto", href: "/privacidad" },
+  { texto: "Condiciones de compra", href: "/condiciones-encargo" },
+  { texto: "Envios y preparacion", href: "/envios-y-preparacion" },
+  { texto: "Devoluciones", href: "/devoluciones" },
+  { texto: "Privacidad", href: "/privacidad" },
+  { texto: "Contacto", href: "/contacto" },
 ];
 
 export const PAGINAS_LEGALES_COMERCIALES: PaginaLegalComercial[] = [
   {
     ruta: "/condiciones-encargo",
-    etiquetaFooter: "Condiciones del encargo",
-    titulo: "Condiciones mínimas del encargo artesanal",
+    etiquetaFooter: "Condiciones de compra",
+    titulo: "Condiciones de compra y consulta artesanal",
     introduccion:
-      "Estas condiciones explican cómo funciona la solicitud de encargo en esta demo: qué podemos preparar, cómo se confirma y qué límites existen hoy.",
+      "Estas condiciones resumen como funciona la compra local, que limites tienen los productos y cuando una seleccion debe pasar a consulta personalizada.",
     aviso:
-      "La web canaliza solicitudes y consultas. No hay compra ni pago automático integrado en este ciclo.",
+      "Contenido informativo para entorno local con pago de prueba. No sustituye una revision legal profesional ni declara la tienda lista para go-live externo.",
     secciones: [
       {
-        titulo: "Qué es un encargo en La Botica",
+        titulo: "Compra local y pago de prueba",
         parrafos: [
-          "El catálogo orienta y muestra piezas base, pero algunas combinaciones requieren revisión manual para confirmar disponibilidad, formato y encaje con tu intención.",
-          "Un encargo es una solicitud artesanal: recibimos tu contexto, proponemos una opción y cerramos por contacto directo si ambas partes están de acuerdo.",
+          "El checkout principal crea pedidos reales dentro del sistema local y usa una confirmacion de pago de prueba, sin conexion a pasarela bancaria real.",
+          "La conexion con pasarela real queda reservada para una fase posterior y no se activa desde estas condiciones.",
         ],
       },
       {
-        titulo: "Cómo se confirma",
+        titulo: "Consulta personalizada",
         parrafos: [
-          "Después de completar el flujo de /encargo, se genera un resumen listo para compartir por canal de contacto real cuando esté configurado.",
-          "La confirmación final no ocurre dentro del sitio. Depende del intercambio posterior y de una validación humana del encargo.",
+          "Las piezas artesanales, combinaciones fuera de catalogo o solicitudes con contexto especial pueden requerir orientacion humana antes de convertirse en compra.",
+          "La ruta de consulta no sustituye al checkout: funciona como canal secundario para casos que no encajan en el pedido catalogado.",
         ],
         lista: [
           "La solicitud puede ajustarse antes de cerrar una propuesta.",
-          "Sin confirmación por canal real, el encargo no se considera aceptado.",
-          "No usamos el formulario como pago ni como reserva automática.",
+          "Sin confirmacion clara, una consulta no se considera pedido aceptado.",
+          "No usamos la consulta como reserva automatica de stock.",
         ],
       },
       {
-        titulo: "Alcance y uso responsable",
+        titulo: "Limites de producto",
         parrafos: [
-          "Los contenidos de producto y ritual son editoriales/comerciales. No sustituyen asesoramiento profesional ni constituyen promesas de resultado.",
-          "La botica mantiene una comunicación prudente: sin claims médicos, sin promesas milagrosas y con expectativas realistas.",
+          "Los productos herbales y esotericos se presentan para uso tradicional, aromatico, ritual, cultural, decorativo o de acompanamiento simbolico segun proceda.",
+          "No son medicamentos, no sustituyen consejo medico o sanitario y no garantizan resultados fisicos, emocionales, espirituales ni terapeuticos.",
         ],
       },
     ],
-    ctaPrincipal: { texto: "Preparar solicitud de encargo", href: "/encargo" },
-    ctaSecundaria: { texto: "Volver al catálogo", href: "/colecciones" },
+    ctaPrincipal: { texto: "Ir al checkout", href: "/checkout" },
+    ctaSecundaria: { texto: "Pedir orientacion artesanal", href: "/encargo" },
     metadata: {
-      title: "Condiciones del encargo artesanal | La Botica de la Bruja Lore",
+      title: "Condiciones de compra | La Botica de la Bruja Lore",
       description:
-        "Guía mínima y honesta de cómo se gestiona un encargo artesanal: solicitud, confirmación manual y límites de esta demo comercial.",
+        "Resumen comercial responsable sobre compra local, consulta artesanal, pago de prueba y limites de productos herbales/esotericos.",
     },
     seo: {
       indexable: false,
@@ -94,45 +95,41 @@ export const PAGINAS_LEGALES_COMERCIALES: PaginaLegalComercial[] = [
   },
   {
     ruta: "/envios-y-preparacion",
-    etiquetaFooter: "Envíos y preparación",
-    titulo: "Envíos y preparación de piezas",
+    etiquetaFooter: "Envios y preparacion",
+    titulo: "Envios y preparacion",
     introduccion:
-      "Te contamos cómo trabajamos tiempos y revisiones en una operativa artesanal, sin prometer plazos cerrados que hoy no podemos sostener desde la web.",
+      "La preparacion se plantea como operativa artesanal: lotes pequenos, revision de disponibilidad y comunicacion honesta sobre plazos.",
     aviso:
-      "Los tiempos son orientativos y se confirman de forma individual durante el contacto real posterior a la solicitud.",
+      "Los tiempos son orientativos en esta fase local. No se prometen ventanas cerradas ni entregas garantizadas desde el entorno simulado.",
     secciones: [
       {
-        titulo: "Ritmo de preparación artesanal",
+        titulo: "Preparacion del pedido",
         parrafos: [
-          "La selección y armado de piezas se hace en lotes pequeños. Esto cuida coherencia y calidad, pero implica tiempos variables según el tipo de encargo.",
-          "El sitio no calcula plazos automáticos ni ventanas de entrega garantizadas en tiempo real.",
+          "El pedido queda registrado con lineas, direccion, totales y estado operativo para que pueda revisarse desde backoffice.",
+          "Antes de preparar el envio se comprueba stock, coherencia de las lineas y cualquier incidencia pendiente.",
         ],
       },
       {
-        titulo: "Qué puede influir en los tiempos",
+        titulo: "Envio",
         parrafos: [
-          "Antes de confirmar un encargo revisamos disponibilidad de materiales, complejidad de la combinación y prioridad de solicitudes activas.",
-        ],
-        lista: [
-          "Si pides una adaptación personalizada, puede requerir una revisión adicional.",
-          "Las piezas con varios componentes suelen necesitar más preparación.",
-          "La confirmación por canal real marca el inicio del proceso operativo.",
+          "El coste de envio se muestra antes de preparar el pedido y queda reflejado en el recibo.",
+          "El seguimiento se informa cuando exista transportista y codigo de seguimiento; si no aplica, el backoffice puede marcar envio sin seguimiento.",
         ],
       },
       {
-        titulo: "Incidencias y devoluciones",
+        titulo: "Incidencias de entrega",
         parrafos: [
-          "Si detectas una incidencia en una pieza confirmada, compártela por el mismo canal de contacto para revisar el caso con contexto y evidencia.",
-          "No publicamos una política cerrada de devoluciones automáticas en esta demo. Cada situación se estudia con criterio artesanal y comunicación transparente.",
+          "Si hay una incidencia, se revisa el pedido y el estado operativo antes de proponer una solucion.",
+          "No se prometen compensaciones automaticas fuera de una revision manual y trazable.",
         ],
       },
     ],
-    ctaPrincipal: { texto: "Solicitar encargo con contexto", href: "/encargo" },
-    ctaSecundaria: { texto: "Explorar ruta herbal", href: "/hierbas" },
+    ctaPrincipal: { texto: "Finalizar compra", href: "/checkout" },
+    ctaSecundaria: { texto: "Ver condiciones", href: "/condiciones-encargo" },
     metadata: {
-      title: "Envíos y preparación | La Botica de la Bruja Lore",
+      title: "Envios y preparacion | La Botica de la Bruja Lore",
       description:
-        "Explicación honesta sobre tiempos de preparación, confirmación manual e incidencias en una operativa artesanal sin checkout automático.",
+        "Informacion comercial sobre preparacion artesanal, envio, seguimiento e incidencias sin prometer plazos imposibles.",
     },
     seo: {
       indexable: true,
@@ -141,42 +138,130 @@ export const PAGINAS_LEGALES_COMERCIALES: PaginaLegalComercial[] = [
     },
   },
   {
-    ruta: "/privacidad",
-    etiquetaFooter: "Privacidad y contacto",
-    titulo: "Privacidad y contacto básico",
+    ruta: "/devoluciones",
+    etiquetaFooter: "Devoluciones",
+    titulo: "Devoluciones y reembolsos",
     introduccion:
-      "Esta página resume cómo tratamos la información compartida en solicitudes y qué canales públicos existen realmente en cada momento.",
+      "Esta pagina resume el criterio minimo para incidencias, devoluciones y reembolsos manuales dentro del entorno local.",
     aviso:
-      "Solo usamos los datos del formulario para responder consultas o preparar encargos. No afirmamos procesos técnicos que esta demo no implementa.",
+      "La politica definitiva para produccion requiere revision legal profesional. En local no se ejecutan reembolsos bancarios ni Stripe real.",
     secciones: [
       {
-        titulo: "Datos que pedimos y para qué",
+        titulo: "Revision de incidencias",
         parrafos: [
-          "En /encargo solicitamos nombre, canal de contacto y contexto de intención para poder entender la consulta y dar continuidad comercial.",
-          "La información se utiliza de forma acotada para gestionar la solicitud. No se presenta como sistema de alta de cuenta ni de compra automática.",
+          "Cualquier incidencia debe revisarse con el numero de pedido, estado operativo y contexto suficiente para entender lo ocurrido.",
+          "La aceptacion o rechazo de una devolucion se trata como decision manual, no como automatismo.",
         ],
       },
       {
-        titulo: "Canal de contacto disponible",
+        titulo: "Reembolso local",
         parrafos: [
-          "El resumen del encargo puede compartirse por email o WhatsApp si existe configuración pública válida.",
-          "Cuando no hay configuración pública, la web lo indica y ofrece una salida honesta: copiar el resumen para usar tu canal habitual.",
+          "En esta fase el reembolso se registra como operacion simulada/manual sobre un pedido real local.",
+          "No se llama a Stripe ni a banco real; la trazabilidad queda en el pedido y en el backoffice.",
         ],
       },
       {
-        titulo: "Límites actuales",
+        titulo: "Restitucion de stock",
         parrafos: [
-          "No ofrecemos en esta fase un panel de gestión de consentimientos, autenticación avanzada ni flujos jurídicos exhaustivos.",
-          "Si necesitas aclaraciones sobre tu solicitud, utiliza el canal real que se haya habilitado en el momento del contacto.",
+          "Si procede recuperar inventario, la restitucion se hace de forma controlada para evitar duplicados.",
+          "No se garantiza restitucion automatica en productos personalizados, usados o fuera de condiciones comerciales razonables.",
         ],
       },
     ],
-    ctaPrincipal: { texto: "Ir al flujo de encargo", href: "/encargo" },
-    ctaSecundaria: { texto: "Conocer La Botica", href: "/la-botica" },
+    ctaPrincipal: { texto: "Ver mi pedido", href: "/mi-cuenta/pedidos" },
+    ctaSecundaria: { texto: "Contactar", href: "/contacto" },
     metadata: {
-      title: "Privacidad y contacto | La Botica de la Bruja Lore",
+      title: "Devoluciones y reembolsos | La Botica de la Bruja Lore",
       description:
-        "Resumen claro sobre uso básico de datos en solicitudes de encargo y disponibilidad real de canales de contacto públicos.",
+        "Criterio minimo para devoluciones, incidencias, reembolsos simulados y restitucion manual de stock en entorno local.",
+    },
+    seo: {
+      indexable: false,
+      incluirEnSitemap: false,
+      esEstrategica: false,
+    },
+  },
+  {
+    ruta: "/privacidad",
+    etiquetaFooter: "Privacidad",
+    titulo: "Privacidad basica",
+    introduccion:
+      "Esta pagina resume que datos se solicitan para compra, cuenta o consulta, y que no se hace con ellos en esta fase.",
+    aviso:
+      "No usamos cookies publicitarias ni herramientas de analitica externas en la fase local. Esta informacion no sustituye una politica legal definitiva.",
+    secciones: [
+      {
+        titulo: "Datos necesarios",
+        parrafos: [
+          "El checkout puede pedir datos de contacto, direccion de entrega y observaciones necesarias para preparar el pedido.",
+          "La cuenta real puede guardar direcciones y mostrar pedidos asociados cuando el usuario inicia sesion.",
+        ],
+      },
+      {
+        titulo: "Datos que no usamos para analitica",
+        parrafos: [
+          "La analitica local del embudo no registra email, telefono, nombre, direccion ni codigo postal.",
+          "No se envian eventos a Google Analytics, Meta Pixel ni herramientas externas.",
+        ],
+      },
+      {
+        titulo: "Cookies y sesion",
+        parrafos: [
+          "La web puede usar almacenamiento local o cookies funcionales para sesion, carrito, backoffice o continuidad de la experiencia.",
+          "No se activan cookies publicitarias de terceros en esta fase.",
+        ],
+      },
+    ],
+    ctaPrincipal: { texto: "Conocer La Botica", href: "/la-botica" },
+    ctaSecundaria: { texto: "Contactar", href: "/contacto" },
+    metadata: {
+      title: "Privacidad | La Botica de la Bruja Lore",
+      description:
+        "Resumen de privacidad basica para compra local, cuenta, consulta y analitica local sin terceros.",
+    },
+    seo: {
+      indexable: false,
+      incluirEnSitemap: false,
+      esEstrategica: false,
+    },
+  },
+  {
+    ruta: "/contacto",
+    etiquetaFooter: "Contacto",
+    titulo: "Contacto y orientacion",
+    introduccion:
+      "Usa esta pagina para entender que canales publicos estan configurados y cuando conviene abrir una consulta personalizada.",
+    aviso:
+      "El contacto sirve para dudas comerciales y orientacion artesanal. No atiende consultas medicas ni sustituye consejo profesional.",
+    secciones: [
+      {
+        titulo: "Canales disponibles",
+        parrafos: [
+          "Cuando existe email o WhatsApp publico configurado, la web lo indica de forma explicita.",
+          "Si no hay canal publico activo, puedes preparar el resumen de una consulta y usar tu canal habitual fuera de la web.",
+        ],
+      },
+      {
+        titulo: "Cuando escribir",
+        parrafos: [
+          "Contacta si una pieza requiere personalizacion, si tienes una duda de disponibilidad o si necesitas aclarar una incidencia de pedido.",
+          "Para productos comprables y con stock, el recorrido normal debe seguir por checkout.",
+        ],
+      },
+      {
+        titulo: "Limite sanitario",
+        parrafos: [
+          "No respondemos consultas de diagnostico, tratamiento, dosis medicinales ni sustitucion de pautas sanitarias.",
+          "Ante dudas de salud, consulta con un profesional cualificado.",
+        ],
+      },
+    ],
+    ctaPrincipal: { texto: "Ir al checkout", href: "/checkout" },
+    ctaSecundaria: { texto: "Abrir consulta personalizada", href: "/encargo" },
+    metadata: {
+      title: "Contacto | La Botica de la Bruja Lore",
+      description:
+        "Canales de contacto y orientacion artesanal con limites claros para productos herbales y esotericos.",
     },
     seo: {
       indexable: false,
@@ -190,7 +275,7 @@ export function obtenerPaginaLegalComercial(ruta: string): PaginaLegalComercial 
   const pagina = PAGINAS_LEGALES_COMERCIALES.find((item) => item.ruta === ruta);
 
   if (!pagina) {
-    throw new Error(`Página legal/comercial no encontrada para la ruta: ${ruta}`);
+    throw new Error(`Pagina legal/comercial no encontrada para la ruta: ${ruta}`);
   }
 
   return pagina;
@@ -208,8 +293,7 @@ export function describirCanalPublico(configuracion: ConfiguracionContactoPublic
   }
 
   if (canales.length === 0) {
-    return "Actualmente no hay un canal público configurado en la web; usa el resumen del encargo como base para continuar por tu canal habitual.";
+    return "Actualmente no hay un canal publico configurado en la web; usa el resumen de consulta como base para continuar por tu canal habitual.";
   }
-
-  return `Canal público activo en esta demo: ${canales.join(" y ")}.`;
+  return `Canal publico activo: ${canales.join(" y ")}.`;
 }

@@ -318,6 +318,80 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertContains(response, "PR-ADMIN-0001")
         self.assertContains(response, "Lore Real")
 
+    def test_changelist_pedidos_reales_visibiliza_operativa_local(self) -> None:
+        self.client.force_login(self.superusuario)
+        self.pedido_real_sin_incidencia.proveedor_pago = "simulado_local"
+        self.pedido_real_sin_incidencia.inventario_descontado = True
+        self.pedido_real_sin_incidencia.save(update_fields=["proveedor_pago", "inventario_descontado"])
+
+        response = self.client.get(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {"estado_operativo": "pagado", "pago_simulado_local": "si", "q": "PR-ADMIN-0002"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "PR-ADMIN-0002")
+        self.assertContains(response, "sin-incidencia@lore.test")
+        self.assertContains(response, "simulado_local")
+        self.assertContains(response, "icon-yes.svg")
+
+    def test_acciones_admin_operan_pedido_hasta_entregado(self) -> None:
+        pedido = self._crear_pedido_real_operativo("PR-ADMIN-OP-1", estado="pagado")
+        self.client.force_login(self.superusuario)
+
+        with self.assertLogs("backend.nucleo_herbal.aplicacion.casos_de_uso_backoffice_pedidos", level="INFO") as logs:
+            self._ejecutar_accion_admin("marcar_pedido_preparando", pedido.id_pedido)
+            pedido.refresh_from_db()
+            pedido.transportista = "Correos"
+            pedido.codigo_seguimiento = "TRK-ADMIN-1"
+            pedido.observaciones_operativas = "Salida manual desde admin"
+            pedido.save(update_fields=["transportista", "codigo_seguimiento", "observaciones_operativas"])
+            self._ejecutar_accion_admin("marcar_pedido_enviado", pedido.id_pedido)
+            self._ejecutar_accion_admin("marcar_pedido_entregado", pedido.id_pedido)
+
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, "entregado")
+        self.assertEqual(pedido.transportista, "Correos")
+        self.assertEqual(pedido.codigo_seguimiento, "TRK-ADMIN-1")
+        self.assertIsNotNone(pedido.fecha_preparacion)
+        self.assertIsNotNone(pedido.fecha_envio)
+        self.assertIsNotNone(pedido.fecha_entrega)
+        self.assertIn("backoffice_pedido_marcar_preparando", "\n".join(logs.output))
+        self.assertIn("backoffice_pedido_marcar_enviado", "\n".join(logs.output))
+        self.assertIn("backoffice_pedido_marcar_entregado", "\n".join(logs.output))
+
+    def test_accion_admin_envio_requiere_tracking_o_marca_sin_seguimiento(self) -> None:
+        pedido = self._crear_pedido_real_operativo(
+            "PR-ADMIN-OP-2",
+            estado="preparando",
+            fecha_preparacion=datetime(2026, 1, 4, tzinfo=UTC),
+            transportista="Correos",
+        )
+        self.client.force_login(self.superusuario)
+
+        response = self._ejecutar_accion_admin("marcar_pedido_enviado", pedido.id_pedido)
+
+        pedido.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(pedido.estado, "preparando")
+        self.assertContains(response, "omitido")
+
+    def test_accion_admin_permite_envio_sin_seguimiento_explicito(self) -> None:
+        pedido = self._crear_pedido_real_operativo(
+            "PR-ADMIN-OP-3",
+            estado="preparando",
+            fecha_preparacion=datetime(2026, 1, 4, tzinfo=UTC),
+            transportista="Mensajeria local",
+            envio_sin_seguimiento=True,
+        )
+        self.client.force_login(self.superusuario)
+
+        self._ejecutar_accion_admin("marcar_pedido_enviado", pedido.id_pedido)
+
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, "enviado")
+        self.assertTrue(pedido.envio_sin_seguimiento)
+
     def test_accion_admin_marca_incidencia_stock_como_revisada(self) -> None:
         self.client.force_login(self.superusuario)
 
@@ -378,11 +452,9 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertEqual(self.pedido_real_sin_incidencia.estado, "pagado")
         self.assertFalse(self.pedido_real_sin_incidencia.cancelado_operativa_incidencia_stock)
 
-    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe._obligatoria")
-    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe.ejecutar_reembolso_total")
-    def test_accion_admin_ejecuta_reembolso_manual_y_muestra_resultado(self, mock_reembolso, obligatoria) -> None:
-        obligatoria.return_value = "ok"
-        mock_reembolso.return_value = {"resultado": "ejecutado", "id_externo_reembolso": "re_admin_123", "detalle": ""}
+    def test_accion_admin_ejecuta_reembolso_simulado_manual_y_muestra_resultado(self) -> None:
+        self.pedido_real_cancelado_reembolsable.proveedor_pago = "simulado_local"
+        self.pedido_real_cancelado_reembolsable.save(update_fields=["proveedor_pago"])
         self.client.force_login(self.superusuario)
 
         response = self.client.post(
@@ -397,14 +469,11 @@ class TestAdminNucleoHerbal(TestCase):
         self.assertEqual(response.status_code, 200)
         self.pedido_real_cancelado_reembolsable.refresh_from_db()
         self.assertEqual(self.pedido_real_cancelado_reembolsable.estado_reembolso, "ejecutado")
-        self.assertEqual(self.pedido_real_cancelado_reembolsable.id_externo_reembolso, "re_admin_123")
-        self.assertContains(response, "reembolsado")
+        self.assertTrue(self.pedido_real_cancelado_reembolsable.id_externo_reembolso.startswith("SIM-REF-PR-ADMIN-0003-"))
+        self.assertContains(response, "reembolso simulado/manual ejecutado")
 
-    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe._obligatoria")
     @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe.ejecutar_reembolso_total")
-    def test_accion_admin_reembolso_manual_fallido_no_maquilla_exito(self, mock_reembolso, obligatoria) -> None:
-        obligatoria.return_value = "ok"
-        mock_reembolso.return_value = {"resultado": "fallido", "id_externo_reembolso": "re_admin_fail", "detalle": "bank_error"}
+    def test_accion_admin_reembolso_no_simulado_omite_sin_stripe(self, mock_reembolso) -> None:
         self.client.force_login(self.superusuario)
 
         response = self.client.post(
@@ -418,9 +487,9 @@ class TestAdminNucleoHerbal(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.pedido_real_cancelado_reembolsable.refresh_from_db()
-        self.assertEqual(self.pedido_real_cancelado_reembolsable.estado_reembolso, "fallido")
-        self.assertEqual(self.pedido_real_cancelado_reembolsable.motivo_fallo_reembolso, "bank_error")
-        self.assertContains(response, "rechazo o fallo de reembolso")
+        self.assertEqual(self.pedido_real_cancelado_reembolsable.estado_reembolso, "no_iniciado")
+        self.assertContains(response, "omitido")
+        mock_reembolso.assert_not_called()
 
     def test_accion_admin_restituye_inventario_manual_y_registra_ledger(self) -> None:
         self.client.force_login(self.superusuario)
@@ -466,3 +535,51 @@ class TestAdminNucleoHerbal(TestCase):
         self.pedido_real_sin_incidencia.refresh_from_db()
         self.assertFalse(self.pedido_real_sin_incidencia.inventario_restituido)
         self.assertContains(response, "omitido")
+
+    def _ejecutar_accion_admin(self, accion: str, id_pedido: str):
+        return self.client.post(
+            reverse("admin:persistencia_django_pedidorealmodelo_changelist"),
+            {"action": accion, "_selected_action": [id_pedido]},
+            follow=True,
+        )
+
+    def _crear_pedido_real_operativo(self, id_pedido: str, estado: str, **campos_extra) -> PedidoRealModelo:
+        pedido = PedidoRealModelo.objects.create(
+            id_pedido=id_pedido,
+            estado=estado,
+            estado_pago="pagado",
+            proveedor_pago="simulado_local",
+            id_externo_pago=f"SIM-{id_pedido}",
+            canal_checkout="web_invitado",
+            email_contacto=f"{id_pedido.lower()}@lore.test",
+            nombre_contacto="Pedido Operativo",
+            telefono_contacto="600333499",
+            es_invitado=True,
+            moneda="EUR",
+            subtotal=Decimal("12.00"),
+            direccion_entrega={
+                "nombre_destinatario": "Pedido Operativo",
+                "linea_1": "Calle Admin 1",
+                "codigo_postal": "28005",
+                "ciudad": "Madrid",
+                "provincia": "Madrid",
+                "pais_iso": "ES",
+            },
+            fecha_creacion=datetime(2026, 1, 4, tzinfo=UTC),
+            fecha_pago_confirmado=datetime(2026, 1, 4, 1, tzinfo=UTC),
+            inventario_descontado=True,
+            requiere_revision_manual=estado == "pagado",
+            **campos_extra,
+        )
+        LineaPedidoRealModelo.objects.create(
+            pedido=pedido,
+            id_producto="prod-admin-1",
+            slug_producto="producto-inventario-admin",
+            nombre_producto="Producto inventario admin",
+            cantidad=1,
+            cantidad_comercial=1,
+            unidad_comercial="ud",
+            precio_unitario=Decimal("12.00"),
+            moneda="EUR",
+        )
+        return pedido

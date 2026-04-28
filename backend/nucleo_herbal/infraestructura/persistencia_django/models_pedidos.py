@@ -171,13 +171,15 @@ class DevolucionPedidoModelo(models.Model):
     def restitucion_operativa(self) -> str:
         if self.estado != self.ESTADO_ACEPTADA:
             return "no_aplica"
+        if not self.pedido.inventario_descontado:
+            return "no_aplica"
         return "ejecutada" if self.pedido.inventario_restituido else "pendiente"
 
     @property
     def esta_resuelta_operativamente(self) -> bool:
         if self.estado != self.ESTADO_ACEPTADA:
             return False
-        return self.reembolso_operativo == "ejecutado" and self.restitucion_operativa == "ejecutada"
+        return self.reembolso_operativo == "ejecutado" and self.restitucion_operativa in {"ejecutada", "no_aplica"}
 
     def clean(self) -> None:
         self.motivo = self.motivo.strip()

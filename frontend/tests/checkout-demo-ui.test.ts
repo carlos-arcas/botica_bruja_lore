@@ -32,7 +32,7 @@ test("checkout demo elimina el input manual de id_usuario", () => {
 });
 
 test("checkout demo muestra estado claro de cuenta autenticada y mantiene CTA invitado", () => {
-  assert.equal(archivoBloque.includes("Estás comprando como"), true);
+  assert.equal(archivoBloque.includes("Continuaras como"), true);
   assert.equal(archivoBloque.includes("Continuar como invitado"), true);
   assert.equal(archivoFlujo.includes("guardarBorradorCheckoutDemo"), true);
   assert.equal(archivoFlujo.includes("limpiarBorradorCheckoutDemo"), true);
@@ -57,7 +57,7 @@ test("checkout demo mantiene continuidad con retorno seguro y sin recuperar cons
 
 test("el recibo demo muestra CTA contextual hacia cuenta demo con sesión activa", () => {
   assert.equal(
-    archivoRecibo.includes("Ver este pedido en mi cuenta demo"),
+    archivoRecibo.includes("Ver este pedido en mi cuenta"),
     true,
   );
   assert.equal(archivoRecibo.includes("pedidoRecientePerteneceASesion"), true);
@@ -83,7 +83,7 @@ test("el recibo público sigue contemplando uso sin sesión demo", () => {
 
 
 test("checkout demo hace visible el bloqueo honesto de líneas no convertibles", () => {
-  assert.equal(archivoFlujo.includes("Esta selección no se enviará como pedido demo completo"), true);
+  assert.equal(archivoFlujo.includes("Esta seleccion se mantendra como consulta artesanal"), true);
   assert.equal(archivoFlujo.includes("Mantén estas piezas como consulta artesanal"), true);
 });
 
@@ -98,7 +98,7 @@ test("checkout demo desacopla el resumen manual del bloqueo de líneas no conver
   );
   assert.equal(
     archivoFlujo.includes(
-      "No podemos crear el pedido demo con esta selección, pero sí puedes enviarla como consulta artesanal usando el resumen y los canales disponibles aquí mismo.",
+      "No podemos convertir toda la seleccion en compra directa, pero puedes enviarla como consulta artesanal usando el resumen y los canales disponibles aqui mismo.",
     ),
     true,
   );

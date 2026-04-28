@@ -1,12 +1,20 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
-from backend.nucleo_herbal.infraestructura.persistencia_django.models import DevolucionPedidoModelo, PedidoRealModelo
+from backend.nucleo_herbal.infraestructura.persistencia_django.models import (
+    DevolucionPedidoModelo,
+    InventarioProductoModelo,
+    LineaPedidoRealModelo,
+    MovimientoInventarioModelo,
+    PedidoRealModelo,
+    ProductoModelo,
+)
 
 
 class TestDevolucionesPostventaManual(TestCase):
@@ -176,7 +184,7 @@ class TestDevolucionesPostventaManual(TestCase):
             estado=DevolucionPedidoModelo.ESTADO_ACEPTADA,
         )
         self.assertEqual(devolucion.reembolso_operativo, "pendiente")
-        self.assertEqual(devolucion.restitucion_operativa, "pendiente")
+        self.assertEqual(devolucion.restitucion_operativa, "no_aplica")
         self.assertFalse(devolucion.esta_resuelta_operativamente)
 
     def test_aceptada_con_reembolso_y_sin_restitucion_no_resuelta(self) -> None:
@@ -192,14 +200,15 @@ class TestDevolucionesPostventaManual(TestCase):
             estado=DevolucionPedidoModelo.ESTADO_ACEPTADA,
         )
         self.assertEqual(devolucion.reembolso_operativo, "ejecutado")
-        self.assertEqual(devolucion.restitucion_operativa, "pendiente")
-        self.assertFalse(devolucion.esta_resuelta_operativamente)
+        self.assertEqual(devolucion.restitucion_operativa, "no_aplica")
+        self.assertTrue(devolucion.esta_resuelta_operativamente)
 
     def test_aceptada_con_restitucion_y_sin_reembolso_no_resuelta(self) -> None:
         pedido = self._crear_pedido_entregado_pagado("PR-DEV-0103")
+        pedido.inventario_descontado = True
         pedido.inventario_restituido = True
         pedido.fecha_restitucion_inventario = datetime(2026, 1, 4, tzinfo=UTC)
-        pedido.save(update_fields=["inventario_restituido", "fecha_restitucion_inventario"])
+        pedido.save(update_fields=["inventario_descontado", "inventario_restituido", "fecha_restitucion_inventario"])
         devolucion = DevolucionPedidoModelo.objects.create(
             pedido=pedido,
             motivo="Solo restitución",
@@ -215,6 +224,7 @@ class TestDevolucionesPostventaManual(TestCase):
         pedido.estado_reembolso = "ejecutado"
         pedido.fecha_reembolso = datetime(2026, 1, 4, tzinfo=UTC)
         pedido.id_externo_reembolso = "re_ok_2"
+        pedido.inventario_descontado = True
         pedido.inventario_restituido = True
         pedido.fecha_restitucion_inventario = datetime(2026, 1, 4, tzinfo=UTC)
         pedido.save(
@@ -222,6 +232,7 @@ class TestDevolucionesPostventaManual(TestCase):
                 "estado_reembolso",
                 "fecha_reembolso",
                 "id_externo_reembolso",
+                "inventario_descontado",
                 "inventario_restituido",
                 "fecha_restitucion_inventario",
             ]
@@ -252,3 +263,141 @@ class TestDevolucionesPostventaManual(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.pedido_entregado.refresh_from_db()
         self.assertEqual(self.pedido_entregado.estado_reembolso, "no_iniciado")
+
+    @patch("backend.nucleo_herbal.infraestructura.pagos_stripe.PasarelaPagoStripe.ejecutar_reembolso_total")
+    def test_admin_reembolso_simulado_no_llama_stripe(self, stripe_reembolso) -> None:
+        pedido = self._crear_pedido_simulado_postventa("PR-DEV-SIM-1")
+        devolucion = DevolucionPedidoModelo.objects.create(
+            pedido=pedido,
+            motivo="Devolucion aceptada local",
+            abierta_por="operador-1",
+            estado=DevolucionPedidoModelo.ESTADO_ACEPTADA,
+        )
+        self.client.force_login(self.admin)
+
+        respuesta = self.client.post(
+            reverse("admin:persistencia_django_devolucionpedidomodelo_changelist"),
+            {"action": "ejecutar_reembolso_manual_desde_devolucion", "_selected_action": [str(devolucion.pk)]},
+            follow=True,
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado_reembolso, "ejecutado")
+        self.assertTrue(pedido.id_externo_reembolso.startswith("SIM-REF-PR-DEV-SIM-1-"))
+        self.assertIsNotNone(pedido.fecha_reembolso)
+        stripe_reembolso.assert_not_called()
+
+    def test_admin_reembolso_simulado_no_se_duplica(self) -> None:
+        pedido = self._crear_pedido_simulado_postventa("PR-DEV-SIM-2")
+        devolucion = DevolucionPedidoModelo.objects.create(
+            pedido=pedido,
+            motivo="Reembolso una sola vez",
+            abierta_por="operador-1",
+            estado=DevolucionPedidoModelo.ESTADO_ACEPTADA,
+        )
+        self.client.force_login(self.admin)
+
+        self._accion_devolucion("ejecutar_reembolso_manual_desde_devolucion", devolucion.pk)
+        pedido.refresh_from_db()
+        id_reembolso = pedido.id_externo_reembolso
+        fecha_reembolso = pedido.fecha_reembolso
+        self._accion_devolucion("ejecutar_reembolso_manual_desde_devolucion", devolucion.pk)
+
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.id_externo_reembolso, id_reembolso)
+        self.assertEqual(pedido.fecha_reembolso, fecha_reembolso)
+
+    def test_admin_restitucion_postventa_no_duplica_stock_ni_ledger(self) -> None:
+        pedido = self._crear_pedido_simulado_postventa("PR-DEV-SIM-3", cantidad=2, stock=5)
+        devolucion = DevolucionPedidoModelo.objects.create(
+            pedido=pedido,
+            motivo="Restitucion local",
+            abierta_por="operador-1",
+            estado=DevolucionPedidoModelo.ESTADO_ACEPTADA,
+        )
+        self.client.force_login(self.admin)
+
+        self._accion_devolucion("restituir_inventario_desde_devolucion", devolucion.pk)
+        self._accion_devolucion("restituir_inventario_desde_devolucion", devolucion.pk)
+
+        pedido.refresh_from_db()
+        inventario = InventarioProductoModelo.objects.get(producto_id="prod-pr-dev-sim-3")
+        self.assertTrue(pedido.inventario_restituido)
+        self.assertEqual(inventario.cantidad_disponible, 7)
+        self.assertEqual(MovimientoInventarioModelo.objects.filter(inventario=inventario, tipo_movimiento="restitucion_manual").count(), 1)
+
+    def test_admin_reembolso_no_simulado_se_omite_sin_pasarela(self) -> None:
+        pedido = self._crear_pedido_entregado_pagado("PR-DEV-NO-SIM")
+        pedido.proveedor_pago = "stripe"
+        pedido.id_externo_pago = "cs_no_sim"
+        pedido.save(update_fields=["proveedor_pago", "id_externo_pago"])
+        devolucion = DevolucionPedidoModelo.objects.create(
+            pedido=pedido,
+            motivo="No simulado",
+            abierta_por="operador-1",
+            estado=DevolucionPedidoModelo.ESTADO_ACEPTADA,
+        )
+        self.client.force_login(self.admin)
+
+        respuesta = self._accion_devolucion("ejecutar_reembolso_manual_desde_devolucion", devolucion.pk)
+
+        pedido.refresh_from_db()
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(pedido.estado_reembolso, "no_iniciado")
+        self.assertContains(respuesta, "omitida")
+
+    def _accion_devolucion(self, accion: str, id_devolucion: int):
+        return self.client.post(
+            reverse("admin:persistencia_django_devolucionpedidomodelo_changelist"),
+            {"action": accion, "_selected_action": [str(id_devolucion)]},
+            follow=True,
+        )
+
+    def _crear_pedido_simulado_postventa(self, id_pedido: str, cantidad: int = 1, stock: int = 4) -> PedidoRealModelo:
+        producto_id = f"prod-{id_pedido.lower()}"
+        producto = ProductoModelo.objects.create(
+            id=producto_id,
+            sku=f"SKU-{id_pedido}",
+            slug=producto_id,
+            nombre="Producto postventa local",
+            tipo_producto="herramientas-rituales",
+            categoria_comercial="botica",
+            publicado=True,
+        )
+        InventarioProductoModelo.objects.create(producto=producto, cantidad_disponible=stock)
+        pedido = PedidoRealModelo.objects.create(
+            id_pedido=id_pedido,
+            estado="entregado",
+            estado_pago="pagado",
+            proveedor_pago="simulado_local",
+            id_externo_pago=f"SIM-{id_pedido}",
+            canal_checkout="web_invitado",
+            email_contacto=f"{id_pedido.lower()}@lore.test",
+            nombre_contacto="Cliente Simulado",
+            telefono_contacto="600444444",
+            es_invitado=True,
+            moneda="EUR",
+            subtotal=Decimal("20.00"),
+            direccion_entrega={"nombre_destinatario": "Cliente Simulado", "linea_1": "Calle Luna 1", "codigo_postal": "28001", "ciudad": "Madrid", "provincia": "Madrid", "pais_iso": "ES"},
+            fecha_creacion=datetime(2026, 1, 1, tzinfo=UTC),
+            fecha_pago_confirmado=datetime(2026, 1, 1, 1, tzinfo=UTC),
+            inventario_descontado=True,
+            transportista="Mensajeria local",
+            codigo_seguimiento="TRK-SIM",
+            fecha_preparacion=datetime(2026, 1, 2, tzinfo=UTC),
+            fecha_envio=datetime(2026, 1, 2, 1, tzinfo=UTC),
+            fecha_entrega=datetime(2026, 1, 3, tzinfo=UTC),
+        )
+        LineaPedidoRealModelo.objects.create(
+            pedido=pedido,
+            id_producto=producto_id,
+            slug_producto=producto_id,
+            nombre_producto="Producto postventa local",
+            cantidad=cantidad,
+            cantidad_comercial=cantidad,
+            unidad_comercial="ud",
+            precio_unitario=Decimal("20.00"),
+            moneda="EUR",
+        )
+        return pedido

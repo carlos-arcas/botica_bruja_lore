@@ -105,10 +105,10 @@ export function validarCheckoutDemo(
   if (resultadoNormalizado.lineasNoConvertibles.length > 0) {
     errores.lineas = construirMensajeBloqueoLineas(
       resultadoNormalizado.lineasNoConvertibles,
-      "pedido demo",
+      "pedido",
     );
   } else if (resultadoNormalizado.lineasConvertibles.length === 0) {
-    errores.lineas = "No hay líneas válidas para crear el pedido demo.";
+    errores.lineas = "No hay líneas válidas para crear el pedido.";
   }
 
   if (canal !== "invitado" && canal !== "autenticado") {
@@ -117,7 +117,7 @@ export function validarCheckoutDemo(
 
   if (canal === "autenticado" && !cuentaDemo?.id_usuario.trim()) {
     errores.idUsuario =
-      "Necesitas una sesión activa de cuenta demo para comprar en modo autenticado.";
+      "Inicia sesión o continúa como invitada para seguir.";
   }
 
   return errores;
@@ -187,14 +187,14 @@ function resolverMotivoNoConvertible(
   item: ItemEncargoPreseleccionado,
 ): string {
   if (item.tipo_linea === "fuera_catalogo") {
-    return "Esta línea artesanal no tiene ficha pública activa y no entra en el contrato final del pedido demo.";
+    return "Esta pieza artesanal requiere consulta personalizada antes de continuar.";
   }
 
   if (item.tipo_linea === "sugerencia_editorial") {
-    return "Esta sugerencia editorial no está disponible como producto comprable en el pedido demo.";
+    return "Esta sugerencia editorial no está disponible como producto comprable en el pedido.";
   }
 
-  return "La línea visible no se puede convertir en una línea enviable del pedido demo.";
+  return "La línea visible no se puede convertir en una línea enviable del pedido.";
 }
 
 function normalizarResultadoLineas(
@@ -218,7 +218,7 @@ function construirMensajeBloqueoLineas(
     .map((linea) => `${linea.cantidad} × ${linea.nombre}`)
     .join(", ");
 
-  return `No podemos enviar este ${contexto} porque tu selección incluye líneas fuera del contrato final: ${resumenLineas}. Revísalas o pásalas a consulta manual antes de continuar.`;
+  return `No podemos enviar este ${contexto} porque tu selección incluye piezas que requieren consulta personalizada: ${resumenLineas}. Revísalas o pásalas a consulta manual antes de continuar.`;
 }
 
 function construirLineaDesdeProducto(

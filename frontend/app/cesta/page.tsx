@@ -4,8 +4,8 @@ import { VistaCestaRitual } from "@/componentes/catalogo/cesta/VistaCestaRitual"
 import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
 export const metadata: Metadata = construirMetadataSeo({
-  title: "Carrito | La Botica de la Bruja Lore",
-  description: "Revisa tu carrito, ajusta cantidades y continua al checkout real.",
+  title: "Mi selección local | La Botica de la Bruja Lore",
+  description: "Revisa tu selección local, edítala como líneas reales y continúa hacia el checkout principal.",
   indexable: false,
 });
 

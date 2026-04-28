@@ -57,6 +57,8 @@ def construir_documento_html_pedido(dto: PedidoRealDTO) -> str:
     <h2>Estado</h2>
     <p><strong>Estado pedido:</strong> {escape(dto.estado)}</p>
     <p><strong>Estado pago:</strong> {escape(dto.estado_pago)}</p>
+    <p><strong>Proveedor de pago:</strong> {escape(_proveedor_pago(dto))}</p>
+    {_nota_pago_simulado(dto)}
     <p><strong>Estado cliente:</strong> {escape(_estado_cliente(dto))}</p>
     <p><strong>Expedición:</strong> {escape(_estado_expedicion(dto))}</p>
     {_estado_reembolso_documental(dto)}
@@ -82,7 +84,7 @@ def construir_documento_html_pedido(dto: PedidoRealDTO) -> str:
     <p>Impuestos totales (incluye envío al {_tipo_impositivo(dto)}): {dto.importe_impuestos} {escape(dto.moneda)}</p>
     <p class=\"total\">Total: {dto.total} {escape(dto.moneda)}</p>
   </div>
-  <p>Documento generado en runtime desde el pedido real persistido. Sin numeración fiscal legal avanzada en esta fase.</p>
+  <p>Documento generado desde el pedido registrado. Sin numeración fiscal legal avanzada en esta fase.</p>
   <p class=\"noprint\"><button type=\"button\" onclick=\"window.print()\">Imprimir o guardar PDF</button></p>
 </body>
 </html>"""
@@ -137,6 +139,18 @@ def _fecha(dto: PedidoRealDTO) -> str:
 
 def _identificador_documental(dto: PedidoRealDTO) -> str:
     return f"DOC-{dto.id_pedido}-{dto.fecha_creacion.date().isoformat()}"
+
+
+def _proveedor_pago(dto: PedidoRealDTO) -> str:
+    if dto.proveedor_pago == "simulado_local":
+        return "pago simulado local"
+    return dto.proveedor_pago or "pendiente de iniciar"
+
+
+def _nota_pago_simulado(dto: PedidoRealDTO) -> str:
+    if dto.proveedor_pago == "simulado_local" and dto.estado_pago == "pagado":
+        return "<p><strong>Nota pago:</strong> Pago confirmado en entorno local simulado.</p>"
+    return ""
 
 
 def _email_emisor() -> str:

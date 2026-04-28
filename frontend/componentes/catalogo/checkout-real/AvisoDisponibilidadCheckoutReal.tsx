@@ -37,11 +37,11 @@ export function AvisoDisponibilidadCheckoutReal({ slugProducto }: Props): JSX.El
   }, [slugProducto]);
 
   if (estado.tipo === "cargando") return <p>Comprobando disponibilidad pública mínima…</p>;
-  if (estado.tipo === "sin_cobertura") return <p>Este checkout no tiene disponibilidad pública previa para esta referencia; el backend validará stock al crear el pedido y no existe reserva temporal.</p>;
+  if (estado.tipo === "sin_cobertura") return <p>No tenemos disponibilidad previa para esta referencia. La confirmaremos al preparar el pedido.</p>;
   return (
     <div>
       <EstadoDisponibilidadProducto producto={estado.producto} />
-      <p>Este aviso es informativo y no bloquea por sí solo la compra: el backend sigue siendo la última línea de defensa.</p>
+      <p>Este aviso es informativo y no reserva unidades.</p>
     </div>
   );
 }

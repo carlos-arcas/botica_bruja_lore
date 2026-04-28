@@ -100,6 +100,28 @@ Para la demo actual:
 4. **Resto de tipos**: representación conforme a su naturaleza comercial, sin forzar unidad única global.
 5. **Stock real**: no activo en esta fase; la representación comercial debe seguir siendo creíble y consistente.
 
+### 9.1 Criterio de producto vendible local
+En la fase ecommerce local simulado, un producto público solo puede tratarse como vendible si cumple contrato comercial completo:
+
+1. `sku`, `slug` único y `nombre` no vacíos.
+2. `precio_numerico` mayor que cero y `precio_visible` coherente.
+3. `unidad_comercial` válida: `ud`, `g` o `ml`.
+4. `incremento_minimo_venta` y `cantidad_minima_compra` positivos y compatibles.
+5. `tipo_fiscal` válido: `iva_general` o `iva_reducido`.
+6. `seccion_publica` pertenece a una sección pública abierta.
+7. `publicado=True`.
+8. inventario asociado con unidad compatible y stock suficiente para la cantidad mínima.
+9. imagen o fallback visual disponible en frontend.
+10. CTA público hacia cesta/checkout real; si no cumple stock o contrato, debe derivar a consulta personalizada o quedar bloqueado.
+
+### 9.2 Criterio de sección publicable local
+- `botica-natural` debe tener al menos 5 productos publicados propios.
+- `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` deben tener al menos 3 productos publicados propios si están abiertas.
+- Una sección abierta no debe rellenarse con fallback herbal ajeno.
+- Si una sección no alcanza mínimo, debe mostrarse vacío honesto o quedar fuera de promoción principal hasta corregir datos.
+
+Para corregir un producto incompleto, actualizar seed/importación/admin con SKU, precio, unidad, fiscalidad, sección, stock e inventario compatible antes de exponerlo como comprable.
+
 ## 10. Implicaciones para admin, frontend y SEO
 ### 10.1 Admin (backoffice)
 - Gestión separada de: tipos de producto, categorías comerciales, intenciones, correspondencias y rituales.

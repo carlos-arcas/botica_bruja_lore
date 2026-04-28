@@ -1,5 +1,7 @@
 ﻿# Roadmap de madurez ecommerce real V2
 
+> **Nota de vigencia 2026-04-28**: V2 registra madurez operativa del ecommerce real y deja `V2-R10` en `BLOCKED`. La fase local simulada actual usa `BOTICA_PAYMENT_PROVIDER=simulado_local`; las referencias historicas a Stripe en V2 significan capacidad preparada/reservada por puerto, no proveedor activo local ni go-live real.
+
 ## 0. Contexto heredado desde V1
 - Este documento abre una nueva fase de madurez **V2** posterior al cierre incremental V1 (`docs/roadmap_cierre_ecommerce_real_incremental.md`).
 - V1 se considera marco de cierre de transición demo→real y no debe reabrirse salvo bug real o incumplimiento verificable de contrato.
@@ -93,6 +95,7 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Estado**: `DONE`.
 - **Dependencias**: V2-R03 y contratos claros de estados de pedido/pago/reembolso.
 - **Resultado real**: coordinación mínima explícita entre devolución aceptada, estado de reembolso manual, estado de restitución manual y resolución operativa, visible y accionable desde Django Admin sin automatismos por defecto.
+- **Nota fase local simulada**: para `simulado_local`, la devolución aceptada ejecuta reembolso simulado/manual sin llamar a Stripe; el reembolso real PSP queda reservado para proveedor real futuro y no se activa en local.
 
 ### V2-R05 — Fiscalidad avanzada v2 por producto y cálculo por línea
 - **Estado**: `DONE`.
@@ -124,6 +127,8 @@ Se adopta esta clasificación por trazabilidad con el estado real y deudas expl�
 - **Dependencias**: consolidacion de R01-R09 completada; quedan dependencias externas para cierre real.
 - **Diagnostico V2G-001**: la auditoria local confirma que readiness, release gate, alertas operativas, reintentos dry-run y backup/restore dry-run pasan. El cierre como go-live real queda bloqueado hasta disponer de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_BACKUP_DIR` fuera del repo y `BOTICA_RESTORE_DATABASE_URL` contra una base PostgreSQL temporal segura. No se ejecuta deploy real, backup real ni restore real en local/demo.
 - **Criterio de desbloqueo**: entorno desplegado/staging y base temporal autorizados, sin activar pagos reales ni banco/PSP real.
+- **Nota de reencauce local simulado**: `docs/roadmap_ecommerce_local_simulado.md` abre una fase local donde el ecommerce real se valida con pasarela simulada. Esa fase no desbloquea `V2-R10`, no sustituye smoke post-deploy/restore drill real y no activa Stripe ni pagos reales como flujo local.
+- **Preparacion staging futura**: `docs/preparacion_staging_ecommerce.md` documenta precondiciones y checks para un staging futuro, pero no despliega infraestructura, no activa Stripe, no ejecuta backup/restore real y no cambia el estado `BLOCKED` de `V2-R10`.
 ## 5. Riesgos transversales V2
 1. Reabrir capacidades V1 cerradas sin bug real → deriva y retrabajo.
 2. Endurecer controles sin observabilidad útil → falsos bloqueos operativos.

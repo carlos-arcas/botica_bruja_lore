@@ -13,4 +13,5 @@ urlpatterns = [
     path("<str:id_pedido>/", views_pedidos.detalle_pedido, name="publico-detalle-pedido"),
     path("<str:id_pedido>/documento/", views_pedidos.documento_pedido_descargable, name="publico-documento-pedido"),
     path("<str:id_pedido>/iniciar-pago/", views_pago_pedidos.iniciar_pago_pedido, name="publico-iniciar-pago-pedido"),
+    path("<str:id_pedido>/confirmar-pago-simulado/", views_pago_pedidos.confirmar_pago_simulado_pedido, name="publico-confirmar-pago-simulado"),
 ]

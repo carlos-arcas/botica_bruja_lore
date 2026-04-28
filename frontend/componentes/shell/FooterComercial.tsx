@@ -20,10 +20,11 @@ export function FooterComercial(): JSX.Element {
           ))}
         </nav>
         <p>
-          Proyecto demo editorial-comercial: sin checkout activo, con asesoría y encargo artesanal como continuidad natural.
+          Ecommerce local con pedido real: el encargo artesanal queda como consulta personalizada para casos que necesitan revision humana.
+          Los productos herbales y esotericos se presentan con uso tradicional, ritual, aromatico, cultural o decorativo; no sustituyen consejo medico ni garantizan resultados.
         </p>
-        <Link href="/encargo" className={estilos.ctaFooter}>
-          Continuar hacia una solicitud de encargo
+        <Link href="/checkout" className={estilos.ctaFooter}>
+          Finalizar compra en checkout
         </Link>
       </div>
     </footer>

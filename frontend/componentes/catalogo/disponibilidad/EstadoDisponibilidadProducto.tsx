@@ -8,13 +8,15 @@ type Props = {
     | "unidad_comercial"
     | "incremento_minimo_venta"
     | "cantidad_minima_compra"
+    | "cantidad_disponible"
+    | "mensaje_disponibilidad"
   >;
   compacta?: boolean;
 };
 
 const COPYS = {
   disponible: { etiqueta: "Disponible", detalle: "Disponible para compra en este momento." },
-  bajo_stock: { etiqueta: "Bajo stock", detalle: "Disponibilidad limitada. El backend confirmará el stock al crear el pedido." },
+  bajo_stock: { etiqueta: "Pocas unidades", detalle: "Disponibilidad limitada. Confirmaremos las unidades al preparar el pedido." },
   no_disponible: { etiqueta: "No disponible", detalle: "Ahora mismo no está disponible para compra." },
 } as const;
 
@@ -25,11 +27,13 @@ export function EstadoDisponibilidadProducto({ producto, compacta = false }: Pro
   const incremento = producto.incremento_minimo_venta ?? 1;
   const minimo = producto.cantidad_minima_compra ?? 1;
   const esGranel = unidad !== "ud";
+  const mensaje = producto.mensaje_disponibilidad?.trim() || copy.detalle;
 
   return (
     <div className={`botica-natural__estado-disponibilidad botica-natural__estado-disponibilidad--${claseTono}`}>
       <p><strong>Disponibilidad:</strong> {copy.etiqueta}</p>
-      {!compacta && <p>{copy.detalle}</p>}
+      {!compacta && <p>{mensaje}</p>}
+      {!compacta && typeof producto.cantidad_disponible === "number" && producto.estado_disponibilidad === "bajo_stock" && <p><strong>Stock disponible:</strong> {producto.cantidad_disponible} {unidad}</p>}
       {esGranel && <p><strong>Unidad de venta:</strong> {unidad}</p>}
       {incremento > 1 && <p><strong>Incremento mínimo:</strong> {incremento} {unidad}</p>}
       {!compacta && minimo > 1 && <p><strong>Cantidad mínima:</strong> {minimo} {unidad}</p>}

@@ -118,6 +118,24 @@ class TestApiPedidosReal(DjangoTestCase):
         self.assertIn("sin cancelación operativa", contenido)
 
 
+    def test_documento_descargable_refleja_pago_simulado_local_sin_olor_demo(self) -> None:
+        crear = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
+        id_pedido = crear.json()["pedido"]["id_pedido"]
+        PedidoRealModelo.objects.filter(id_pedido=id_pedido).update(
+            estado="pagado",
+            estado_pago="pagado",
+            proveedor_pago="simulado_local",
+            id_externo_pago="SIM-PED-1-OP-1",
+        )
+
+        documento = self.client.get(f"/api/v1/pedidos/{id_pedido}/documento/")
+
+        self.assertEqual(documento.status_code, 200)
+        contenido = documento.content.decode("utf-8")
+        self.assertIn("Proveedor de pago:</strong> pago simulado local", contenido)
+        self.assertIn("Pago confirmado en entorno local simulado.", contenido)
+        self.assertNotIn("pedido demo", contenido.lower())
+
     def test_documento_descargable_refleja_tracking_disponible(self) -> None:
         crear = self.client.post("/api/v1/pedidos/", data=json.dumps(_payload_base()), content_type="application/json")
         id_pedido = crear.json()["pedido"]["id_pedido"]

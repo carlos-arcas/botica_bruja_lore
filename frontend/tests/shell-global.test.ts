@@ -16,14 +16,15 @@ import {
 test("navegacion principal expone la nueva arquitectura de informacion", () => {
   const rutas = NAVEGACION_PRINCIPAL.map((enlace) => enlace.href);
 
-  assert.deepEqual(rutas, ["/", "/botica-natural", "/guias", "/tarot", "/calendario-ritual"]);
-  assert.equal(rutas.includes("/colecciones"), false);
-  assert.equal(rutas.includes("/la-botica"), false);
+  assert.equal(rutas.includes("/"), true);
+  assert.equal(rutas.includes("/colecciones"), true);
+  assert.equal(rutas.includes("/la-botica"), true);
+  assert.equal(rutas.includes("/guias"), true);
+  assert.equal(rutas.includes("/tarot"), true);
+  assert.equal(rutas.includes("/checkout"), true);
   assert.equal(rutas.includes("/encargo"), false);
-  assert.equal(rutas.includes("/acceso"), false);
-  assert.equal(rutas.includes("/mi-cuenta"), false);
   assert.equal(rutas.includes("/cuenta-demo"), false);
-  assert.equal(rutas.includes("/cesta"), false);
+  assert.equal(NAVEGACION_PRINCIPAL.some((enlace) => enlace.etiqueta === "Mi selección"), true);
 });
 
 test("tienda y guias exponen submenu con destinos reales del repo", () => {
@@ -71,10 +72,30 @@ test("footer mantiene continuidad editorial-comercial sin enlaces descartados de
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/herramientas-esotericas"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/guias"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/calendario-ritual"), true);
-  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/la-botica"), false);
-  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/encargo"), false);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/encargo"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.etiqueta === "Consulta personalizada"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/condiciones-encargo"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/envios-y-preparacion"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/devoluciones"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/privacidad"), true);
+  assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/contacto"), true);
+});
+
+test("footer enlaza las paginas de confianza minimas", () => {
+  const etiquetas = ENLACES_FOOTER.map((enlace) => enlace.etiqueta);
+
+  assert.equal(etiquetas.includes("Condiciones de compra"), true);
+  assert.equal(etiquetas.includes("Envios y preparacion"), true);
+  assert.equal(etiquetas.includes("Devoluciones"), true);
+  assert.equal(etiquetas.includes("Privacidad"), true);
+  assert.equal(etiquetas.includes("Contacto"), true);
+});
+
+test("footer convierte el CTA comercial principal en checkout", () => {
+  const footer = readFileSync("componentes/shell/FooterComercial.tsx", "utf-8");
+
+  assert.match(footer, /href="\/checkout"/);
+  assert.doesNotMatch(footer, /className=\{estilos\.ctaFooter\}>\s*Continuar hacia una solicitud de encargo/);
 });
 
 test("cabecera comercial organiza marca superior, nav y accesos externos", () => {

@@ -7,7 +7,7 @@ import { crearDireccionCuentaCliente, actualizarDireccionCuentaCliente, eliminar
 
 test("rutas de cuenta incluyen vista dedicada de direcciones", () => {
   assert.equal(RUTAS_CUENTA_CLIENTE.direcciones, "/mi-cuenta/direcciones");
-  assert.match(resumenCuentaRealV1().join(" ").toLowerCase(), /direcciones real/);
+  assert.match(resumenCuentaRealV1().join(" ").toLowerCase(), /libreta de direcciones/);
 });
 
 test("estado vacio y resumen de direccion son sobrios y utiles", () => {

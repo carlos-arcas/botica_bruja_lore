@@ -8,8 +8,8 @@ type Props = {
 };
 
 export const metadata: Metadata = construirMetadataSeo({
-  title: "Recibo demo de pedido | La Botica de la Bruja Lore",
-  description: "Confirmación post-checkout de pedido demo en entorno sin cobro real.",
+  title: "Recibo de pedido | La Botica de la Bruja Lore",
+  description: "Confirmacion posterior al checkout reservado.",
   indexable: false,
 });
 

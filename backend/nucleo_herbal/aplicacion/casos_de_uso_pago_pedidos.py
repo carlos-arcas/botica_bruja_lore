@@ -11,18 +11,23 @@ from .casos_de_uso_post_pago_pedidos import ProcesarPostPagoPedido
 from .dto_pago_pedidos import EventoPagoNormalizadoDTO, IntencionPagoPedidoDTO
 from .puertos.pasarela_pago import PuertoPasarelaPago
 from .puertos.repositorios_pedidos import RepositorioPedidos
+from .stock_preventivo_pedidos import ValidarStockPreventivoPedido
 
 logger = logging.getLogger(__name__)
+PROVEEDOR_PAGO_SIMULADO_LOCAL = "simulado_local"
+TIPO_EVENTO_PAGO_SIMULADO_CONFIRMADO = "pago_simulado.confirmado"
 
 
 @dataclass(slots=True)
 class IniciarPagoPedido:
     repositorio_pedidos: RepositorioPedidos
     pasarela_pago: PuertoPasarelaPago
+    validador_stock_preventivo: ValidarStockPreventivoPedido
 
     def ejecutar(self, id_pedido: str, operation_id: str) -> IntencionPagoPedidoDTO:
         pedido = self._obtener_pedido(id_pedido)
         pedido.puede_iniciar_pago()
+        self.validador_stock_preventivo.validar(pedido, operation_id)
         respuesta = self.pasarela_pago.crear_intencion_pago(pedido, operation_id)
         pedido_actualizado = pedido.registrar_intencion_pago(
             proveedor=str(respuesta["proveedor_pago"]),
@@ -85,13 +90,48 @@ class ProcesarWebhookPagoPedido:
         return {"resultado": "ignorado", "id_pedido": actualizado.id_pedido, "tipo_evento": evento.tipo_evento}
 
 
+@dataclass(slots=True)
+class ConfirmarPagoSimuladoPedido:
+    repositorio_pedidos: RepositorioPedidos
+    procesador_post_pago: ProcesarPostPagoPedido
+    validador_stock_preventivo: ValidarStockPreventivoPedido
+
+    def ejecutar(self, id_pedido: str, operation_id: str):
+        pedido = self._obtener_pedido(id_pedido)
+        self._validar_confirmable(pedido)
+        if pedido.estado == "pagado" and (pedido.inventario_descontado or pedido.incidencia_stock_confirmacion):
+            logger.info("pago_simulado_confirmacion_idempotente", extra=_extra_pago(operation_id, pedido, "ya_confirmado"))
+            return pedido
+        self.validador_stock_preventivo.validar(pedido, operation_id)
+        confirmado = self.procesador_post_pago.ejecutar(
+            pedido,
+            operation_id,
+            TIPO_EVENTO_PAGO_SIMULADO_CONFIRMADO,
+        )
+        logger.info("pago_simulado_confirmacion_procesada", extra=_extra_pago(operation_id, confirmado, "ok"))
+        return confirmado
+
+    def _obtener_pedido(self, id_pedido: str):
+        pedido = self.repositorio_pedidos.obtener_por_id(id_pedido)
+        if pedido is None:
+            raise ErrorAplicacionLookup(f"Pedido real no encontrado: {id_pedido}")
+        return pedido
+
+    def _validar_confirmable(self, pedido) -> None:
+        if pedido.estado == "cancelado":
+            raise ErrorDominio("No se puede confirmar pago simulado de un pedido cancelado.")
+        if pedido.proveedor_pago != PROVEEDOR_PAGO_SIMULADO_LOCAL:
+            raise ErrorDominio("Solo se puede confirmar una intencion de pago simulada local.")
+        if not _hay_texto(pedido.id_externo_pago):
+            raise ErrorDominio("El pedido no tiene intencion de pago simulada local.")
+
+
 def _extra_pago(operation_id: str, pedido, resultado: str, tipo_evento: str | None = None, estado_anterior: str | None = None) -> dict[str, object]:
     return {
         "operation_id": operation_id,
         "pedido_id": pedido.id_pedido,
         "proveedor_pago": pedido.proveedor_pago,
         "id_externo_pago": pedido.id_externo_pago,
-        "email_contacto": pedido.cliente.email,
         "moneda": pedido.moneda,
         "importe": str(pedido.total),
         "estado_anterior": estado_anterior or pedido.estado,
@@ -107,7 +147,6 @@ def _extra_evento(operation_id: str, evento: EventoPagoNormalizadoDTO, resultado
         "pedido_id": evento.id_pedido,
         "proveedor_pago": evento.proveedor_pago,
         "id_externo_pago": evento.id_externo_pago,
-        "email_contacto": None,
         "moneda": evento.moneda,
         "importe": str(evento.importe),
         "estado_anterior": "pendiente_pago",
@@ -122,3 +161,7 @@ def _opcional(valor: object) -> str | None:
         return None
     texto = str(valor).strip()
     return texto or None
+
+
+def _hay_texto(valor: str | None) -> bool:
+    return bool(valor and valor.strip())

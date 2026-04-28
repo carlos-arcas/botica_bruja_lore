@@ -54,6 +54,9 @@ def serializar_producto_resumen(dto: ProductoResumenDTO) -> dict:
         "tipo_fiscal": dto.tipo_fiscal,
         "disponible": dto.disponible,
         "estado_disponibilidad": dto.estado_disponibilidad,
+        "disponible_compra": dto.disponible_compra,
+        "cantidad_disponible": dto.cantidad_disponible,
+        "mensaje_disponibilidad": dto.mensaje_disponibilidad,
     }
 
 

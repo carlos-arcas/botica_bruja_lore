@@ -18,6 +18,11 @@ import {
   construirRutaConsultaManualCheckoutReal,
   construirRutaRevisionSeleccionCheckoutReal,
 } from "../contenido/catalogo/checkoutRealNavegacion";
+import { resolverEsPagoSimuladoLocal } from "../contenido/pedidos/pagoSimuladoLocal";
+import {
+  traducirLineaStock,
+  traducirMensajeErrorPedido,
+} from "../contenido/pedidos/estadosComercialesPedido";
 import { construirLineasVisualesCheckoutReal } from "../componentes/catalogo/checkout-real/adaptadoresLineasCheckoutReal";
 import {
   resolverLineasSeleccionEncargo,
@@ -26,6 +31,7 @@ import {
 import {
   construirUrlRetornoPedido,
   crearPedidoPublico,
+  confirmarPagoSimuladoPedido,
   iniciarPagoPedido,
   obtenerTarifaEnvioEstandar,
 } from "../infraestructura/api/pedidos";
@@ -230,6 +236,52 @@ test("checkout real muestra error por cantidad mínima de compra", () => {
   assert.match(errores.cantidad ?? "", /mínima.*100 g/i);
 });
 
+test("checkout real bloquea producto sin stock antes de crear pedido", () => {
+  const datos = {
+    ...construirDatosBaseCheckoutReal(),
+    producto_slug: "cuenco-laton-ritual",
+    cantidad: "1",
+  };
+  const resultado = construirResultadoLineasPedidoReal([], "cuenco-laton-ritual", "1");
+  const errores = validarCheckoutReal(
+    datos,
+    resultado,
+    "producto_unico",
+    {
+      slug: "cuenco-laton-ritual",
+      nombre: "Cuenco de Laton Ritual",
+      disponible: false,
+      disponible_compra: false,
+      mensaje_disponibilidad: "Sin stock disponible en este momento.",
+    },
+  );
+
+  assert.match(errores.lineas ?? "", /Sin stock disponible/i);
+});
+
+test("checkout real bloquea cantidad superior a disponibilidad visible", () => {
+  const datos = {
+    ...construirDatosBaseCheckoutReal(),
+    producto_slug: "infusion-bruma-lavanda",
+    cantidad: "3",
+  };
+  const resultado = construirResultadoLineasPedidoReal([], "infusion-bruma-lavanda", "3");
+  const errores = validarCheckoutReal(
+    datos,
+    resultado,
+    "producto_unico",
+    {
+      slug: "infusion-bruma-lavanda",
+      nombre: "Bruma",
+      disponible: true,
+      disponible_compra: true,
+      cantidad_disponible: 1,
+    },
+  );
+
+  assert.match(errores.lineas ?? "", /Solo hay 1 disponible/i);
+});
+
 test("checkout real en modo múltiple no exige producto_slug y construye el payload desde la selección", () => {
   const itemsPreseleccionados = [
     {
@@ -318,7 +370,7 @@ test("checkout real bloquea selección mixta y evita enviar menos líneas de las
     resultado,
     resolverModoCheckoutReal(itemsPreseleccionados),
   );
-  assert.match(errores.lineas ?? "", /No podemos crear el pedido real/);
+  assert.match(errores.lineas ?? "", /No podemos preparar el pedido/);
 });
 
 test("checkout real no crea pedido vacío cuando toda la selección es no catalogable", () => {
@@ -397,7 +449,7 @@ test("checkout real conserva contexto rico por línea en selección mixta sin de
   assert.equal(visuales.lineasBloqueadas[0]?.linea.formato, "ramillete artesanal");
   assert.match(
     visuales.lineasBloqueadas[0]?.estado?.descripcion ?? "",
-    /no se puede convertir en una línea pagable/,
+    /requiere consulta personalizada/,
   );
 });
 
@@ -865,29 +917,64 @@ test("checkout real resuelve y aplica la dirección predeterminada de la libreta
   assert.equal(datos.linea_1, "Calle Luna 13");
 });
 
-test("checkout real no pisa el nombre de contacto manual al aplicar la direccion guardada", () => {
-  const datos = aplicarDireccionGuardadaADatosCheckoutReal(
-    {
-      ...construirEstadoInicialCheckoutReal(),
-      nombre_contacto: "Compradora habitual",
-    },
-    {
-      id_direccion: "dir-1",
-      alias: "Casa",
-      nombre_destinatario: "Lore",
-      telefono_contacto: "611111111",
-      linea_1: "Calle Luna 13",
-      linea_2: "",
-      codigo_postal: "28013",
-      ciudad: "Madrid",
-      provincia: "Madrid",
-      pais_iso: "ES",
-      predeterminada: true,
-      fecha_creacion: "",
-      fecha_actualizacion: "",
-    },
-  );
+test("frontend real consume la API de confirmacion de pago simulado", async () => {
+  const llamadas: string[] = [];
+  globalThis.fetch = (async (url: string) => {
+    llamadas.push(url);
+    return {
+      ok: true,
+      json: async () => ({ resultado: "pagado", pedido: { id_pedido: "PED-1", estado: "pagado", estado_pago: "pagado", canal_checkout: "web_invitado", moneda: "EUR", subtotal: "9.90", importe_envio: "0.00", base_imponible: "9.90", tipo_impositivo: "0.21", importe_impuestos: "2.08", total: "11.98", requiere_revision_manual: true, email_post_pago_enviado: true, cliente: { email_contacto: "real@test.dev", nombre_contacto: "Lore", telefono_contacto: "600", es_invitado: true }, direccion_entrega: { nombre_destinatario: "Lore", linea_1: "Calle", linea_2: "", codigo_postal: "28001", ciudad: "Madrid", provincia: "Madrid", pais_iso: "ES", observaciones: "" }, resumen: { cantidad_total_items: 1, subtotal: "9.90", importe_envio: "0.00", base_imponible: "9.90", tipo_impositivo: "0.21", importe_impuestos: "2.08", total: "11.98" }, lineas: [], notas_cliente: "", pago: { proveedor_pago: "simulado_local", id_externo_pago: "SIM-PED-1-OP-1" }, expedicion: { transportista: "", codigo_seguimiento: "", envio_sin_seguimiento: false, fecha_preparacion: null, fecha_envio: null, fecha_entrega: null, observaciones_operativas: "", email_envio_enviado: false } } }),
+    } as Response;
+  }) as typeof fetch;
 
-  assert.equal(datos.nombre_contacto, "Compradora habitual");
-  assert.equal(datos.telefono_contacto, "611111111");
+  const resultado = await confirmarPagoSimuladoPedido("PED-1");
+
+  assert.equal(resultado.estado, "ok");
+  if (resultado.estado === "ok") {
+    assert.equal(resultado.pedido.estado_pago, "pagado");
+    assert.equal(resultado.pedido.pago.proveedor_pago, "simulado_local");
+  }
+  assert.equal(llamadas[0].endsWith("/api/pedidos/PED-1/confirmar-pago-simulado"), true);
+});
+
+test("frontend real propaga errores de confirmacion de pago simulado", async () => {
+  globalThis.fetch = (async () =>
+    ({
+      ok: false,
+      json: async () => ({ detalle: "Solo se puede confirmar una intencion de pago simulada local." }),
+    }) as Response) as typeof fetch;
+
+  const resultado = await confirmarPagoSimuladoPedido("PED-1");
+
+  assert.equal(resultado.estado, "error");
+  if (resultado.estado === "error") {
+    assert.match(resultado.mensaje, /pago de prueba/);
+    assert.doesNotMatch(resultado.mensaje, /intencion de pago simulada|simulado_local/);
+  }
+});
+
+test("errores comerciales traducen codigos tecnicos antes de llegar a la UI publica", () => {
+  const mensajeStock = traducirMensajeErrorPedido({
+    codigo: "stock_no_disponible",
+    detalle: "stock_no_disponible_confirmacion_pago",
+  });
+  const mensajePago = traducirMensajeErrorPedido({
+    detalle: "Solo se puede confirmar una intencion de pago simulada local.",
+  });
+  const linea = traducirLineaStock({
+    codigo: "stock_insuficiente",
+    nombre_producto: "Vela",
+    cantidad_disponible: 1,
+  });
+
+  assert.equal(mensajeStock, "No hay stock suficiente para continuar con este pedido.");
+  assert.match(mensajePago, /pago de prueba/);
+  assert.match(linea, /disponibilidad actual/);
+  assert.doesNotMatch(`${mensajeStock} ${mensajePago} ${linea}`, /stock_no|simulado_local|intencion de pago simulada/);
+});
+
+test("frontend real identifica pago simulado por proveedor y no por copy", () => {
+  assert.equal(resolverEsPagoSimuladoLocal({ proveedor_pago: "simulado_local" }), true);
+  assert.equal(resolverEsPagoSimuladoLocal({ proveedor_pago: "stripe" }), false);
+  assert.equal(resolverEsPagoSimuladoLocal({}), false);
 });

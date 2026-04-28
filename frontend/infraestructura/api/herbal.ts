@@ -47,6 +47,9 @@ export type ProductoHerbalMinimoPublico = {
   cantidad_minima_compra?: number;
   disponible: boolean;
   estado_disponibilidad: EstadoDisponibilidadPublica;
+  disponible_compra?: boolean;
+  cantidad_disponible?: number;
+  mensaje_disponibilidad?: string;
 };
 
 export type ProductoSeccionPublica = ProductoHerbalMinimoPublico;
@@ -91,6 +94,9 @@ type ProductoHerbalApi = {
   cantidad_minima_compra?: number;
   disponible?: boolean;
   estado_disponibilidad?: string;
+  disponible_compra?: boolean;
+  cantidad_disponible?: number | null;
+  mensaje_disponibilidad?: string;
 };
 
 type RespuestaListadoHerbal = {
@@ -179,10 +185,13 @@ function normalizarProductoApi(producto: ProductoHerbalApi): ProductoHerbalMinim
     unidad_comercial,
     incremento_minimo_venta: Number.isInteger(producto.incremento_minimo_venta) && (producto.incremento_minimo_venta ?? 0) > 0 ? (producto.incremento_minimo_venta as number) : 1,
     cantidad_minima_compra: Number.isInteger(producto.cantidad_minima_compra) && (producto.cantidad_minima_compra ?? 0) > 0 ? (producto.cantidad_minima_compra as number) : 1,
-    disponible: producto.disponible ?? false,
+    disponible: producto.disponible_compra ?? producto.disponible ?? false,
     estado_disponibilidad: normalizarEstadoDisponibilidadPublica(
       producto.estado_disponibilidad,
     ),
+    disponible_compra: producto.disponible_compra ?? producto.disponible ?? false,
+    cantidad_disponible: typeof producto.cantidad_disponible === "number" ? producto.cantidad_disponible : undefined,
+    mensaje_disponibilidad: producto.mensaje_disponibilidad ?? "",
   };
 }
 

@@ -17,7 +17,7 @@ export function HistorialPedidosDemo({ historial, pedidoReciente }: Props): JSX.
     <>
       {pedidoReciente && <MensajePedidoReciente pedidoReciente={pedidoReciente} />}
       {historial.length === 0 ? (
-        <p className={estilos.estado}>Aún no hay pedidos demo asociados a tu cuenta.</p>
+        <p className={estilos.estado}>Aún no hay pedidos asociados a tu cuenta.</p>
       ) : (
         <ul className={estilos.historial}>
           {historial.map((pedido) => (
@@ -39,8 +39,8 @@ type MensajePedidoRecienteProps = {
 
 function MensajePedidoReciente({ pedidoReciente }: MensajePedidoRecienteProps): JSX.Element {
   const texto = pedidoReciente.disponibleEnHistorial
-    ? `Tu último pedido demo ${pedidoReciente.idPedido} ya aparece resaltado en el historial.`
-    : `Tu último pedido demo ${pedidoReciente.idPedido} aún no aparece en este historial, pero tu cuenta demo sigue conectada.`;
+    ? `Tu último pedido ${pedidoReciente.idPedido} ya aparece resaltado en el historial.`
+    : `Tu último pedido ${pedidoReciente.idPedido} aún no aparece en este historial, pero tu cuenta sigue conectada.`;
 
   return <p className={estilos.exito}>{texto}</p>;
 }
@@ -57,7 +57,7 @@ function ItemHistorialPedido({ pedido, esPedidoReciente }: ItemHistorialPedidoPr
     <li className={clase}>
       <strong>{pedido.id_pedido}</strong>
       {esPedidoReciente && <span className={estilos.insigniaReciente}>Último pedido creado</span>}
-      <span>{pedido.estado} · {pedido.resumen.cantidad_total_items} items · subtotal demo {pedido.resumen.subtotal_demo}</span>
+      <span>{pedido.estado} · {pedido.resumen.cantidad_total_items} items · subtotal orientativo {pedido.resumen.subtotal_demo}</span>
     </li>
   );
 }
