@@ -235,7 +235,7 @@ Uso prohibido:
 - **Bloqueo conocido**: ninguno para el modo check.
 
 ## RUN-002 - Smoke controlado de arranque local backend/frontend
-- **Estado**: `TODO`
+- **Estado**: `DONE`
 - **Objetivo**: comprobar que backend Django y frontend Next arrancan realmente en local/demo, responden a una peticion basica y se cierran por PID registrado.
 - **Alcance permitido**: `run_app.bat`, `setup_entorno.bat`, scripts auxiliares temporales en `.codex_runtime/tmp/`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
 - **Fuera de alcance**: deploy real, pagos reales, banco/PSP real, cambios funcionales de ecommerce, uso de puertos ocupados por procesos ajenos.
@@ -246,4 +246,12 @@ Uso prohibido:
   - validar respuesta basica de backend y frontend;
   - cerrar PIDs registrados y confirmar que no quedan procesos vivos del repo.
 - **Criterio de cierre**: smoke local reproducible con procesos cerrados y evidencias en bitacora.
+- **Evidencia de cierre RUN-002**:
+  - puertos `18080` (backend) y `13080` (frontend) comprobados libres antes de arrancar;
+  - backend Django arrancado con `.venv\Scripts\python.exe manage.py runserver 127.0.0.1:18080 --noreload`;
+  - frontend Next arrancado con `node frontend\node_modules\next\dist\bin\next dev -p 13080 -H 127.0.0.1`;
+  - PIDs registrados y cerrados: `17668`, `19528`, `11800`, `32752`;
+  - `http://127.0.0.1:18080/` responde `404` de Django, confirmando proceso vivo y alcanzable aunque la raiz backend no tenga ruta publica;
+  - `http://127.0.0.1:13080/` responde `200`;
+  - revision final por ruta absoluta del repo confirma que no quedan procesos vivos asociados.
 - **Bloqueo conocido**: ninguno.

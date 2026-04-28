@@ -461,3 +461,58 @@ PY`
   - `RUN-001` queda `DONE` y `RUN-002` queda como primera tarea `TODO` para smoke real controlado.
 - **Bloqueos (si aplica)**: ninguno.
 - **Siguiente paso exacto**: ejecutar `RUN-002` para arrancar backend/frontend en puertos libres, validar respuesta basica y cerrar PIDs registrados.
+
+## Entrada 2026-04-27-RUN-002 (smoke controlado backend/frontend local)
+- **Fecha (UTC)**: 2026-04-27
+- **ID de tarea**: `RUN-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: comprobar que backend Django y frontend Next arrancan en local/demo, responden a una peticion basica y se cierran por PID registrado.
+- **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/05_modelo_de_dominio_y_entidades.md`
+  - `docs/07_arquitectura_tecnica.md`
+  - `docs/08_decisiones_tecnicas_no_negociables.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Archivos tocados**:
+  - `docs/roadmap_codex.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Ejecutar `RUN-002` como primera tarea `TODO` no `BLOCKED`.
+  2. Usar puertos altos (`18080`, `13080`) tras comprobar que estaban libres, para no interferir con procesos ajenos.
+  3. Arrancar Django con `--noreload` para reducir procesos no controlados; aun asi se registraron y cerraron todos los procesos del repo detectados.
+  4. Considerar valido el `404` de la raiz Django como smoke de disponibilidad, porque confirma servidor vivo y alcanzable aunque el backend no exponga home publica en `/`.
+- **Checklist de cierre aplicada (RUN-002)**:
+  1. Tarea correcta confirmada: **Si** (`RUN-002` era la primera `TODO` no `BLOCKED`).
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se modifico producto ni se activo pago real.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90`: **Si**; queda registrado como smoke local, no como go-live real.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - preflight de lock/procesos/git status -> sin lock, sin procesos y sin cambios pendientes.
+  - lectura obligatoria de `AGENTS.md` y docs troncales.
+  - `cmd /c run_app.bat --check` -> OK, sin iniciar servidores.
+  - `Get-NetTCPConnection -LocalPort 18080,13080` -> ambos puertos libres.
+  - backend: `.venv\Scripts\python.exe manage.py runserver 127.0.0.1:18080 --noreload` -> proceso iniciado.
+  - frontend: `node frontend\node_modules\next\dist\bin\next dev -p 13080 -H 127.0.0.1` -> proceso iniciado.
+  - `Invoke-WebRequest http://127.0.0.1:18080/` -> `404` esperado de Django en raiz.
+  - `Invoke-WebRequest http://127.0.0.1:13080/` -> `200`, contenido recibido.
+  - cierre de PIDs asociados al repo -> `17668`, `19528`, `11800`, `32752`.
+  - revision final de procesos por ruta absoluta del repo -> sin procesos vivos.
+- **Resultado verificable**:
+  - backend y frontend arrancan localmente en puertos libres;
+  - ambos responden por HTTP;
+  - no quedan procesos vivos asociados al repo;
+  - `RUN-002` queda `DONE`.
+- **Bloqueos (si aplica)**: ninguno.
+- **Siguiente paso exacto**: seleccionar en la proxima iteracion la primera `TODO` no `BLOCKED`; si no existe, crear una tarea atomica nueva orientada al flujo ecommerce local/demo sin pagos reales.

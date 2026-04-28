@@ -1053,3 +1053,16 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   1. `run_app.bat --check` no arranca backend ni frontend;
   2. `setup_entorno.bat --check` no instala dependencias ni modifica el entorno;
   3. el smoke real de servidores queda separado para una tarea posterior con control de PID.
+
+## 53. Operacion local: smoke controlado backend/frontend (RUN-002)
+- Capacidad: **arranque local verificable de backend Django y frontend Next con control de PID**.
+- Estado: **DONE**.
+- Evidencia implementada:
+  - backend Django arranca en `127.0.0.1:18080` con `--noreload` para evitar procesos no controlados por autoreloader;
+  - frontend Next arranca en `127.0.0.1:13080` usando `node frontend\node_modules\next\dist\bin\next dev`;
+  - ambos servicios responden en local: backend con `404` esperado en raiz sin ruta publica y frontend con `200` en `/`;
+  - los PIDs del ciclo se registran, se cierran y se verifica que no quedan procesos vivos asociados al repo.
+- Regla activa:
+  1. el smoke local no activa pagos reales ni banco/PSP real;
+  2. los servidores de desarrollo se arrancan solo en puertos comprobados como libres;
+  3. cualquier smoke futuro debe registrar PIDs y cerrar procesos del repo antes de terminar.
