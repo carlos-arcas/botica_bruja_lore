@@ -1,6 +1,7 @@
 "use client";
 
-import Image from "next/image";
+import type { CSSProperties } from "react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -88,13 +89,10 @@ function IconoNavegacion({
   }
 
   return (
-    <Image
-      src={src}
-      alt=""
+    <span
       aria-hidden="true"
       className={variante === "principal" ? estilos.iconoEnlace : estilos.iconoSubmenu}
-      width={24}
-      height={24}
+      style={{ "--icono-navegacion": `url(${src})` } as CSSProperties}
     />
   );
 }

@@ -115,7 +115,11 @@
 .iconoEnlace,
 .iconoSubmenu {
   flex: 0 0 auto;
-  object-fit: contain;
+  display: inline-block;
+  background-image: var(--icono-navegacion);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
   opacity: 0.82;
 }
 
