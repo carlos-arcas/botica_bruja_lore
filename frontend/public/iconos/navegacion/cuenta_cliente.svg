@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 120" role="img" aria-labelledby="titulo">
+  <title id="titulo">Cuenta cliente</title>
+  <g fill="none" stroke="#7a3f0e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M47 42a18 18 0 1 0 36 0a18 18 0 0 0-36 0Z"/>
+    <path d="M28 101c4-24 18-37 37-37s33 13 37 37"/>
+    <path d="M25 85c-8-9-11-20-9-33c3-23 23-39 49-39s46 16 49 39c2 13-1 24-9 33"/>
+    <path d="M30 79c-11 2-19 7-25 15M100 79c11 2 19 7 25 15"/>
+    <path d="M36 92c-8 1-15 4-22 8M94 92c8 1 15 4 22 8"/>
+  </g>
+</svg>

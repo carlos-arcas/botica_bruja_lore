@@ -94,6 +94,9 @@
 
 .enlace {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   text-decoration: none;
   color: #5b5349;
   border: 1px solid transparent;
@@ -107,6 +110,18 @@
     color 0.2s ease,
     box-shadow 0.2s ease,
     transform 0.2s ease;
+}
+
+.iconoEnlace,
+.iconoSubmenu {
+  flex: 0 0 auto;
+  object-fit: contain;
+  opacity: 0.82;
+}
+
+.iconoEnlace {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .enlaceConSubmenu {
@@ -218,6 +233,18 @@
     border-color 0.18s ease,
     background-color 0.18s ease,
     transform 0.18s ease;
+}
+
+.submenuCabecera {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+}
+
+.iconoSubmenu {
+  width: 1.65rem;
+  height: 1.65rem;
 }
 
 .submenuEnlace:hover,

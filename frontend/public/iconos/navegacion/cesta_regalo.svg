@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 120" role="img" aria-labelledby="titulo">
+  <title id="titulo">Cesta de seleccion</title>
+  <g fill="none" stroke="#7a3f0e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M31 56h88l-8 45H39z"/>
+    <path d="M48 57c4-26 49-26 54 0"/>
+    <path d="M37 70h77M40 84h72M45 99c15-9 45-9 62 0"/>
+    <path d="M31 54c-7-11-15-18-26-21c13-3 26 1 38 12"/>
+    <path d="M111 53c8-13 20-20 34-22c-6 12-16 20-31 24"/>
+    <path d="M57 48c-2-13-8-23-20-30c16 0 27 10 32 28"/>
+    <path d="M92 49c5-14 14-23 28-27c-3 15-12 25-26 30"/>
+    <path d="M69 74h14v15H69z"/>
+  </g>
+</svg>

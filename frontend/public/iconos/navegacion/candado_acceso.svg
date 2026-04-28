@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 120" role="img" aria-labelledby="titulo">
+  <title id="titulo">Acceso reservado</title>
+  <g fill="none" stroke="#7a3f0e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 52h54v48H36z"/>
+    <path d="M48 52V34c0-15 9-24 17-24s17 9 17 24v18"/>
+    <path d="M61 75a6 6 0 1 0 8 0v12h-8z"/>
+    <path d="M88 79l30-30M103 64l12 12M113 54l9 9"/>
+    <path d="M34 75c-13 0-23-5-30-15c13-3 25 0 36 9"/>
+    <path d="M32 88c-10 1-18 5-25 12"/>
+    <path d="M25 41l4-4l4 4l-4 4z"/>
+  </g>
+</svg>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -33,7 +34,8 @@ export function NavegacionPrincipal({ mostrarLogs }: NavegacionPrincipalProps): 
                 }`.trim()}
                 aria-current={activa ? "page" : undefined}
               >
-                {enlace.etiqueta}
+                <IconoNavegacion src={enlace.icono} />
+                <span>{enlace.etiqueta}</span>
               </Link>
               {enlace.submenu ? (
                 <div className={estilos.submenu} aria-label={`Secciones de ${enlace.etiqueta}`}>
@@ -50,7 +52,10 @@ export function NavegacionPrincipal({ mostrarLogs }: NavegacionPrincipalProps): 
                             }`.trim()}
                             aria-current={activaSubmenu ? "page" : undefined}
                           >
-                            <span>{item.etiqueta}</span>
+                            <span className={estilos.submenuCabecera}>
+                              <IconoNavegacion src={item.icono} variante="submenu" />
+                              <span>{item.etiqueta}</span>
+                            </span>
                             {item.descripcion ? (
                               <span className={estilos.submenuDescripcion}>
                                 {item.descripcion}
@@ -68,5 +73,28 @@ export function NavegacionPrincipal({ mostrarLogs }: NavegacionPrincipalProps): 
         })}
       </ul>
     </nav>
+  );
+}
+
+function IconoNavegacion({
+  src,
+  variante = "principal",
+}: {
+  src?: string;
+  variante?: "principal" | "submenu";
+}): JSX.Element | null {
+  if (!src) {
+    return null;
+  }
+
+  return (
+    <Image
+      src={src}
+      alt=""
+      aria-hidden="true"
+      className={variante === "principal" ? estilos.iconoEnlace : estilos.iconoSubmenu}
+      width={24}
+      height={24}
+    />
   );
 }

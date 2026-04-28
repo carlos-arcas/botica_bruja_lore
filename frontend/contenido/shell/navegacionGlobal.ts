@@ -7,12 +7,14 @@ export type EnlaceSubnavegacion = {
   href: string;
   descripcion?: string;
   coincidencia: CoincidenciaRuta;
+  icono?: string;
 };
 
 export type EnlaceNavegacionGlobal = {
   etiqueta: string;
   href: string;
   coincidencia: CoincidenciaRuta;
+  icono?: string;
   submenu?: EnlaceSubnavegacion[];
 };
 
@@ -37,24 +39,28 @@ const ENLACES_TIENDA: EnlaceSubnavegacion[] = [
     href: "/botica-natural",
     descripcion: "Hierbas, mezclas y fichas comerciales de la botica.",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/hoja_botica.svg",
   },
   {
     etiqueta: "Velas e incienso",
     href: "/velas-e-incienso",
     descripcion: "Velas rituales, humos suaves y atmosferas sensoriales.",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/velas_ritual.svg",
   },
   {
     etiqueta: "Minerales y energia",
     href: "/minerales-y-energia",
     descripcion: "Piedras, minerales y piezas de apoyo energetico.",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/minerales_energia.svg",
   },
   {
     etiqueta: "Herramientas esotericas",
     href: "/herramientas-esotericas",
     descripcion: "Utillaje ritual y objetos de practica simbolica.",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/cartas_oraculo.svg",
   },
 ];
 
@@ -64,53 +70,65 @@ const ENLACES_GUIAS: EnlaceSubnavegacion[] = [
     href: "/guias",
     descripcion: "Indice editorial con rutas de lectura conectadas.",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/luna_botanica.svg",
   },
   {
     etiqueta: "Articulos",
     href: "/guias?vista=articulos",
     descripcion: "Seleccion de articulos y guias publicadas.",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/cartas_oraculo.svg",
   },
   {
     etiqueta: "Glosario botanico",
     href: "/guias?tema=hierbas",
     descripcion: "Entrada rapida al conocimiento herbal y sus terminos.",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/hoja_botica.svg",
   },
   {
     etiqueta: "Propiedades de las plantas",
     href: "/hierbas",
     descripcion: "Fichas de plantas con productos y rituales relacionados.",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/hoja_botica.svg",
   },
   {
     etiqueta: "Rituales",
     href: "/rituales",
     descripcion: "Practicas guiadas enlazadas con plantas y catalogo.",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/velas_ritual.svg",
   },
 ];
 
 export const NAVEGACION_PRINCIPAL: EnlaceNavegacionGlobal[] = [
-  { etiqueta: "Inicio", href: "/", coincidencia: "exacta" },
+  { etiqueta: "Inicio", href: "/", coincidencia: "exacta", icono: "/iconos/navegacion/luna_botanica.svg" },
   {
     etiqueta: "Tienda",
     href: "/botica-natural",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/cesta_regalo.svg",
     submenu: ENLACES_TIENDA,
   },
   {
     etiqueta: "Guias",
     href: "/guias",
     coincidencia: "prefijo",
+    icono: "/iconos/navegacion/hoja_botica.svg",
     submenu: ENLACES_GUIAS,
   },
-  { etiqueta: "Tarot", href: "/tarot", coincidencia: "exacta" },
-  { etiqueta: "Calendario ritual", href: "/calendario-ritual", coincidencia: "exacta" },
-  { etiqueta: "Mi selección", href: "/cesta", coincidencia: "exacta" },
-  { etiqueta: "Checkout", href: "/checkout", coincidencia: "exacta" },
-  { etiqueta: "Acceso", href: "/acceso", coincidencia: "exacta" },
-  { etiqueta: "Mi cuenta", href: "/mi-cuenta", coincidencia: "prefijo" },
+  { etiqueta: "Tarot", href: "/tarot", coincidencia: "exacta", icono: "/iconos/navegacion/cartas_oraculo.svg" },
+  {
+    etiqueta: "Calendario ritual",
+    href: "/calendario-ritual",
+    coincidencia: "exacta",
+    icono: "/iconos/navegacion/luna_botanica.svg",
+  },
+  { etiqueta: "Mi seleccion", href: "/cesta", coincidencia: "exacta", icono: "/iconos/navegacion/cesta_regalo.svg" },
+  { etiqueta: "Checkout", href: "/checkout", coincidencia: "exacta", icono: "/iconos/navegacion/envio_botica.svg" },
+  { etiqueta: "Acceso", href: "/acceso", coincidencia: "exacta", icono: "/iconos/navegacion/candado_acceso.svg" },
+  { etiqueta: "Mi cuenta", href: "/mi-cuenta", coincidencia: "prefijo", icono: "/iconos/navegacion/cuenta_cliente.svg" },
 ];
 
 const ENLACES_BASE_FOOTER: EnlaceFooter[] = [
