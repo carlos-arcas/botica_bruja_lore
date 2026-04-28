@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from backend.configuracion_django.sqlite_paths import resolver_ruta_sqlite
-from backend.configuracion_django.validaciones_entorno import validar_configuracion_produccion
+from backend.configuracion_django.validaciones_entorno import validar_configuracion_pago, validar_configuracion_produccion
 from django.core.exceptions import ImproperlyConfigured
 
 
@@ -232,6 +232,8 @@ USE_X_FORWARDED_HOST = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 
+PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "").strip().rstrip("/")
+BOTICA_PAYMENT_PROVIDER = os.getenv("BOTICA_PAYMENT_PROVIDER", "simulado_local").strip().lower()
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY", "").strip()
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
@@ -240,6 +242,15 @@ PAYMENT_CANCEL_URL = os.getenv("PAYMENT_CANCEL_URL", "").strip()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@botica-lore.local").strip()
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.locmem.EmailBackend").strip()
+
+validar_configuracion_pago(
+    proveedor_pago=BOTICA_PAYMENT_PROVIDER,
+    stripe_public_key=STRIPE_PUBLIC_KEY,
+    stripe_secret_key=STRIPE_SECRET_KEY,
+    stripe_webhook_secret=STRIPE_WEBHOOK_SECRET,
+    payment_success_url=PAYMENT_SUCCESS_URL,
+    payment_cancel_url=PAYMENT_CANCEL_URL,
+)
 
 validar_configuracion_produccion(
     debug=DEBUG,

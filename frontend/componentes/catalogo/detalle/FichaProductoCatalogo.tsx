@@ -7,7 +7,9 @@ import {
   obtenerProductosRelacionados,
 } from "@/contenido/catalogo/detalleCatalogo";
 import { ProductoCatalogo } from "@/contenido/catalogo/catalogo";
+import { EventoVistaProducto } from "@/componentes/analitica/EventoVistaProducto";
 import { BotonAgregarCarrito } from "@/componentes/catalogo/cesta/BotonAgregarCarrito";
+import { resolverMensajeDisponibilidad } from "@/contenido/catalogo/disponibilidadStock";
 
 import estilos from "./fichaProductoCatalogo.module.css";
 
@@ -18,9 +20,11 @@ type Props = {
 export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
   const relacionados = obtenerProductosRelacionados(producto, undefined, 4);
   const guiaRitual = obtenerGuiaRitual(producto.intencion);
+  const mensajeDisponibilidad = resolverMensajeDisponibilidad(producto);
 
   return (
     <>
+      <EventoVistaProducto idProducto={producto.id} slugProducto={producto.slug} />
       <nav aria-label="Breadcrumb" className={estilos.breadcrumb}>
         <Link href="/">Inicio</Link>
         <span>·</span>
@@ -30,19 +34,19 @@ export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
       </nav>
 
       <section className="bloque-home">
-        <p className={estilos.eyebrow}>Colección editorial-comercial</p>
+        <p className={estilos.eyebrow}>Coleccion editorial-comercial</p>
         <h1>{producto.nombre}</h1>
         <p className={estilos.subtitulo}>{producto.subtitulo}</p>
         <p>{producto.descripcion}</p>
         <p>
-          Navegación relacionada: <Link href="/colecciones">colecciones</Link>,{" "}
+          Navegacion relacionada: <Link href="/colecciones">colecciones</Link>,{" "}
           <Link href="/hierbas">fichas herbales</Link> y <Link href="/rituales">fichas rituales</Link>.
         </p>
 
         <div className={estilos.resumenComercial}>
           <p><strong>Precio:</strong> {producto.precioVisible}</p>
-          <p><strong>Disponibilidad:</strong> {producto.disponible ? "Disponible" : "Edición agotada"}</p>
-          <p><strong>Intención:</strong> {obtenerEtiquetaIntencion(producto.intencion)}</p>
+          <p><strong>Disponibilidad:</strong> {producto.disponible ? "Disponible" : "Sin stock"}</p>
+          <p><strong>Intencion:</strong> {obtenerEtiquetaIntencion(producto.intencion)}</p>
           <p><strong>Formato:</strong> {obtenerEtiquetaCategoria(producto.categoria)}</p>
         </div>
 
@@ -54,7 +58,7 @@ export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
       </section>
 
       <section className="bloque-home">
-        <h2>Perfil sensorial y composición editorial</h2>
+        <h2>Perfil sensorial y composicion editorial</h2>
         <p>{producto.notasSensoriales}</p>
       </section>
 
@@ -66,18 +70,25 @@ export function FichaProductoCatalogo({ producto }: Props): JSX.Element {
           ))}
         </ol>
         <div className={estilos.accionesFicha}>
-          <BotonAgregarCarrito slugProducto={producto.slug} />
+          {producto.disponible ? (
+            <Link href={`/checkout?producto=${producto.slug}`} className="boton boton--principal">Comprar ahora</Link>
+          ) : (
+            <button type="button" className="boton boton--principal" disabled aria-disabled="true">Sin stock</button>
+          )}
+          <BotonAgregarCarrito slugProducto={producto.slug} disabled={!producto.disponible} motivoBloqueo={mensajeDisponibilidad} />
           <Link href="/colecciones" className="boton boton--secundario">Volver al listado de colecciones rituales</Link>
-          <Link href="/rituales" className="boton boton--secundario">Explorar rituales relacionados por intención</Link>
-          <Link href="/cesta" className="boton boton--secundario">Ver selección</Link>
-          <Link href={`/encargo?producto=${producto.slug}`} className="boton boton--secundario">Consultar encargo para esta pieza</Link>
+          <Link href="/rituales" className="boton boton--secundario">Explorar rituales relacionados por intencion</Link>
+          <Link href="/cesta" className="boton boton--secundario">Ver seleccion</Link>
+          {!producto.disponible && (
+            <Link href={`/encargo?producto=${producto.slug}`} className="boton boton--secundario">Consultar orientacion para esta pieza</Link>
+          )}
         </div>
       </section>
 
       <section className="bloque-home" aria-labelledby="relacionados-titulo">
         <div className={estilos.cabeceraRelacionados}>
           <h2 id="relacionados-titulo">Productos relacionados</h2>
-          <Link href="/colecciones">Volver al catálogo</Link>
+          <Link href="/colecciones">Volver al catalogo</Link>
         </div>
 
         <ul className={estilos.rejillaRelacionados}>

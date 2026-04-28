@@ -185,6 +185,9 @@ def _a_producto_resumen(producto: Producto, inventario: InventarioProducto | Non
         tipo_fiscal=producto.tipo_fiscal,
         disponible=disponibilidad.disponible,
         estado_disponibilidad=disponibilidad.estado_disponibilidad,
+        disponible_compra=disponibilidad.disponible,
+        cantidad_disponible=disponibilidad.cantidad_disponible,
+        mensaje_disponibilidad=disponibilidad.mensaje_disponibilidad,
     )
 
 

@@ -69,6 +69,8 @@ function LineaSeleccionCard({
 }: LineaSeleccionCardProps): JSX.Element {
   const referenciaVisual = resolverReferenciaEconomicaVisualLinea(linea);
   const tonoEstado = estado?.tono ?? "neutro";
+  const idCantidad = `cantidad-${linea.id_linea}`;
+  const idEstado = estado ? `estado-${linea.id_linea}` : undefined;
 
   return (
     <li className={estilos.linea}>
@@ -101,7 +103,7 @@ function LineaSeleccionCard({
         </div>
 
         {estado ? (
-          <div className={`${estilos.estadoLinea} ${estilos[`tono${capitalizar(tonoEstado)}`]}`}>
+          <div id={idEstado} className={`${estilos.estadoLinea} ${estilos[`tono${capitalizar(tonoEstado)}`]}`}>
             <p>{estado.etiqueta}</p>
             {estado.descripcion ? <span>{estado.descripcion}</span> : null}
           </div>
@@ -129,13 +131,15 @@ function LineaSeleccionCard({
 
         <div className={estilos.controlesLinea}>
           {editable && onCambiarCantidad ? (
-            <label>
+            <label htmlFor={idCantidad}>
               Cantidad
               <input
+                id={idCantidad}
                 type="number"
                 min={1}
                 max={12}
                 value={linea.cantidad}
+                aria-describedby={idEstado}
                 onChange={(event) =>
                   onCambiarCantidad(linea.id_linea, Number(event.target.value))
                 }
@@ -146,6 +150,7 @@ function LineaSeleccionCard({
             <button
               type="button"
               className="boton boton--secundario"
+              aria-label={`Quitar ${linea.nombre} de la selección`}
               onClick={() => onEliminar(linea.id_linea)}
             >
               Quitar línea

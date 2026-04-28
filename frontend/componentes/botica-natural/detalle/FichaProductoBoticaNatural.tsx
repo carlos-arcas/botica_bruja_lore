@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EventoVistaProducto } from "@/componentes/analitica/EventoVistaProducto";
 import {
   construirHrefSeccionPublicaVisible,
   construirNombreSeccionPublica,
@@ -19,6 +20,7 @@ export function FichaProductoBoticaNatural({ producto }: Props): JSX.Element {
 
   return (
     <>
+      <EventoVistaProducto idProducto={producto.sku} slugProducto={producto.slug} />
       <nav aria-label="Breadcrumb" className="botica-natural__breadcrumb">
         <Link href="/">Inicio</Link>
         <span>·</span>
@@ -45,15 +47,15 @@ export function FichaProductoBoticaNatural({ producto }: Props): JSX.Element {
           <p>{producto.descripcion_corta || "Producto publicado en catalogo con informacion comercial minima."}</p>
           <p className="botica-natural__precio">{producto.precio_visible || "Precio no disponible"}</p>
           <EstadoDisponibilidadProducto producto={producto} />
-          <p>La disponibilidad publica es informativa: no reserva unidades y el backend vuelve a validar el stock al crear el pedido.</p>
+          <p>La disponibilidad es orientativa: confirmaremos las unidades al preparar el pedido.</p>
           <div className="botica-natural__acciones">
-            {producto.disponible ? (
-              <BotonAgregarCarrito slugProducto={producto.slug} />
-            ) : (
-              <button type="button" className="boton boton--principal" disabled aria-disabled="true">
-                No disponible para compra
-              </button>
-            )}
+            {producto.disponible ? <Link href={`/checkout?producto=${producto.slug}`} className="boton boton--principal">Comprar ahora</Link> : <button type="button" className="boton boton--principal" disabled aria-disabled="true">No disponible para compra</button>}
+            {producto.disponible ? <BotonAgregarCarrito slugProducto={producto.slug} /> : null}
+            {!producto.disponible ? (
+              <Link href={`/encargo?origen=consulta&producto=${producto.slug}`} className="boton boton--secundario">
+                Consulta personalizada
+              </Link>
+            ) : null}
             <Link href={urlSeccion} className="boton boton--secundario">
               Volver a {nombreSeccion}
             </Link>

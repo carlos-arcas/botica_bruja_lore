@@ -1,9 +1,17 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { BotonLogoutBackoffice } from "@/componentes/admin/BotonLogoutBackoffice";
 import { NavegacionLateralAdmin } from "@/componentes/admin/NavegacionLateralAdmin";
 import { obtenerUsuarioBackofficeSesionActual } from "@/infraestructura/auth/sesionBackoffice";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
+
+export const metadata: Metadata = construirMetadataSeo({
+  title: "Backoffice | La Botica de la Bruja Lore",
+  description: "Area privada de operacion interna.",
+  indexable: false,
+});
 
 export default async function AdminLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
   const usuario = await obtenerUsuarioBackofficeSesionActual();

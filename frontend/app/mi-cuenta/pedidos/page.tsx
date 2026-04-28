@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { PanelCuentaClienteSearchParams } from "@/componentes/cuenta_cliente/PanelCuentaClienteSearchParams";
+import { construirMetadataSeo } from "@/infraestructura/seo/metadataSeo";
 
-export const metadata: Metadata = { title: "Mis pedidos | La Botica de la Bruja Lore", description: "Listado de pedidos reales asociados a la cuenta cliente." };
+export const metadata: Metadata = construirMetadataSeo({
+  title: "Mis pedidos | La Botica de la Bruja Lore",
+  description: "Listado de pedidos reales asociados a la cuenta cliente.",
+  indexable: false,
+});
 
 export default function PaginaPedidosCuentaCliente(): JSX.Element {
   return (

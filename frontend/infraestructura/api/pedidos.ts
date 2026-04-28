@@ -1,4 +1,7 @@
 import { PayloadPedido } from "../../contenido/catalogo/checkoutReal";
+import { emitirEventoEmbudoLocal } from "../../contenido/analitica/embudoLocal";
+import { traducirMensajeErrorPedido } from "../../contenido/pedidos/estadosComercialesPedido";
+import { resolverEsPagoSimuladoLocal } from "../../contenido/pedidos/pagoSimuladoLocal";
 
 export type ExpedicionPedido = {
   transportista: string;
@@ -113,12 +116,23 @@ export type RetornoPago = "success" | "cancel" | null;
 const API_BASE_URL = "/api/pedidos";
 
 export async function crearPedidoPublico(payload: PayloadPedido): Promise<{ estado: "ok"; pedido: PedidoCreado } | ErrorPedidoApi> {
-  return enviarPedido(API_BASE_URL, { method: "POST", body: JSON.stringify(payload) });
+  const resultado = await enviarPedido(API_BASE_URL, { method: "POST", body: JSON.stringify(payload) });
+  if (resultado.estado === "ok") {
+    emitirEventoEmbudoLocal("pedido_creado", {
+      id_pedido: resultado.pedido.id_pedido,
+      ruta: rutaActual(),
+    });
+    return resultado;
+  }
+  if (resultado.codigo === "stock_no_disponible") {
+    emitirEventoEmbudoLocal("error_stock", { codigo_error: resultado.codigo, ruta: rutaActual() });
+  }
+  return resultado;
 }
 
 export async function obtenerPedidoPublico(idPedido: string): Promise<{ estado: "ok"; pedido: PedidoCreado } | ErrorPedidoApi> {
   const idNormalizado = idPedido.trim();
-  if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
+  if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido." };
   return enviarPedido(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}`, { method: "GET", cache: "no-store" });
 }
 
@@ -129,8 +143,37 @@ export function construirUrlDocumentoPedido(idPedido: string): string {
 
 export async function iniciarPagoPedido(idPedido: string): Promise<{ estado: "ok"; pago: PagoPedido } | ErrorPedidoApi> {
   const idNormalizado = idPedido.trim();
-  if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido real." };
-  return enviarPago(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}/iniciar-pago`, { method: "POST" });
+  if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido." };
+  const resultado = await enviarPago(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}/iniciar-pago`, { method: "POST" });
+  if (resultado.estado === "ok" && resolverEsPagoSimuladoLocal(resultado.pago)) {
+    emitirEventoEmbudoLocal("pago_simulado_iniciado", {
+      id_pedido: resultado.pago.id_pedido,
+      proveedor_pago: resultado.pago.proveedor_pago,
+      ruta: rutaActual(),
+    });
+  }
+  return resultado;
+}
+
+export async function confirmarPagoSimuladoPedido(idPedido: string): Promise<{ estado: "ok"; pedido: PedidoCreado } | ErrorPedidoApi> {
+  const idNormalizado = idPedido.trim();
+  if (!idNormalizado) return { estado: "error", mensaje: "Falta el identificador del pedido." };
+  const resultado = await enviarPedido(`${API_BASE_URL}/${encodeURIComponent(idNormalizado)}/confirmar-pago-simulado`, { method: "POST" });
+  if (resultado.estado === "ok") {
+    emitirEventoEmbudoLocal("pago_simulado_confirmado", {
+      id_pedido: resultado.pedido.id_pedido,
+      proveedor_pago: resultado.pedido.pago.proveedor_pago,
+      ruta: rutaActual(),
+    });
+    if (resultado.pedido.estado_pago === "pagado") {
+      emitirEventoEmbudoLocal("pedido_pagado", {
+        id_pedido: resultado.pedido.id_pedido,
+        proveedor_pago: resultado.pedido.pago.proveedor_pago,
+        ruta: rutaActual(),
+      });
+    }
+  }
+  return resultado;
 }
 
 export async function obtenerTarifaEnvioEstandar(): Promise<{ estado: "ok"; envio: TarifaEnvioEstandar } | ErrorPedidoApi> {
@@ -161,13 +204,22 @@ async function enviar(url: string, init: RequestInit): Promise<{ estado: "ok"; d
     if (!respuesta.ok) {
       return {
         estado: "error",
-        mensaje: data?.detalle ?? "No se pudo completar el checkout real.",
+        mensaje: traducirMensajeErrorPedido({
+          codigo: typeof data?.codigo === "string" ? data.codigo : undefined,
+          detalle: data?.detalle,
+        }),
         codigo: typeof data?.codigo === "string" ? data.codigo : undefined,
         lineas: Array.isArray(data?.lineas) ? (data.lineas as LineaErrorStockPedido[]) : undefined,
       };
     }
     return { estado: "ok", data: data as Record<string, unknown> };
   } catch {
-    return { estado: "error", mensaje: "No pudimos conectar con la API del checkout real." };
+    return { estado: "error", mensaje: "No pudimos conectar con el servicio de pedidos. Intentalo de nuevo en unos minutos." };
   }
+}
+
+export { resolverEsPagoSimuladoLocal };
+
+function rutaActual(): string | undefined {
+  return typeof window === "undefined" ? undefined : window.location.pathname;
 }

@@ -1,4 +1,4 @@
-# BitÃƒÂ¡cora operativa Codex
+# Bitácora operativa Codex
 
 ## PropÃƒÂ³sito
 Registro trazable de cada ejecuciÃƒÂ³n autÃƒÂ³noma: tarea, archivos tocados, decisiones, checks, resultado, bloqueos y siguiente paso exacto.
@@ -153,7 +153,7 @@ PY`
   - `CRX-003` queda como primera tarea `TODO` no bloqueada;
   - diff restringido a `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
 - **Bloqueos (si aplica)**: ninguno.
-- **Siguiente paso exacto**: ejecutar `CRX-003` para formalizar protocolo de `BLOCKED`/desbloqueo con campos mÃƒÂ­nimos y consistencia AGENTSÃ¢â€ â€roadmapÃ¢â€ â€bitÃƒÂ¡cora.
+- **Siguiente paso exacto**: ejecutar `CRX-003` para formalizar protocolo de `BLOCKED`/desbloqueo con campos mínimos y consistencia AGENTS?roadmap?bitácora.
 
 ## Entrada 2026-03-26-CRX-003 (protocolo BLOCKED)
 - **Fecha (UTC)**: 2026-03-26
@@ -220,8 +220,8 @@ PY`
   - `docs/roadmap_codex.md`
   - `docs/bitacora_codex.md`
 - **Tensiones detectadas**:
-  1. Secuencia macro histÃƒÂ³rica C1Ã¢â€ â€™C6 (`docs/14`) vs estado real posterior ya implementado (`docs/90`).
-  2. Criterio de `DONE` en roadmaps histÃƒÂ³ricos (Rxx/V2-Rxx) vs estado factual vigente y regla de cierre verificable.
+  1. Secuencia macro histórica C1?C6 (`docs/14`) vs estado real posterior ya implementado (`docs/90`).
+  2. Criterio de `DONE` en roadmaps históricos (Rxx/V2-Rxx) vs estado factual vigente y regla de cierre verificable.
   3. Lectura descontextualizada del reencauce de Ciclo 3 como bloqueo permanente frente a evoluciones posteriores ya registradas.
 - **Decisiones aplicadas**:
   1. Prevalece `docs/90_estado_implementacion.md` para estado real implementado; `docs/14_roadmap.md` queda como secuencia histÃƒÂ³rica de referencia.
@@ -347,7 +347,7 @@ PY`
   - `Select-String -Path docs/roadmap_ecommerce_real_v2.md -Pattern '### V2-R10|\\*\\*Estado\\*\\*: `PLANNED`'`
   - `Select-String -Path docs/90_estado_implementacion.md -Pattern 'release readiness|V2-R10|## 46\\.'`
   - `Get-ChildItem docs -Recurse -File | Select-String -Pattern 'V2-R10|go-live|release readiness|check_release_gate\\.py|check_deployed_stack\\.py' | Select-Object Path,LineNumber,Line | Format-Table -AutoSize | Out-String -Width 200`
-  - `@' ... roadmap_codex.md first TODO detector ... '@ | python -` Ã¢â€ â€™ devuelve `## V2G-001 Ã¢â‚¬â€ AuditorÃƒÂ­a de cierre de \`V2-R10\` (go-live checklist v2)`
+  - `@' ... roadmap_codex.md first TODO detector ... '@ | python -` ? devuelve `## V2G-001 — Auditoría de cierre de \`V2-R10\` (go-live checklist v2)`
   - `git diff --name-only`
 - **Resultado verificable**:
   - `docs/roadmap_codex.md` vuelve a tener una primera tarea `TODO` no `BLOCKED` (`V2G-001`);
@@ -3236,25 +3236,15 @@ PY`
   - El launcher conserva la apertura automatica del home como comportamiento por defecto y dispone de `BOTICA_NO_BROWSER=1` como escape seguro para verificacion automatizada.
   - La tarea se cierra sin tocar codigo de producto, sin crear un launcher alternativo y sin dejar procesos locales residuales.
 - **Bloqueos (si aplica)**: ninguno.
-- **Checklist de cierre aplicada (LOCAL-LAUNCH-003 smoke contractual)**:
-  1. Tarea correcta confirmada: **Si**; `LOCAL-LAUNCH-003` era la primera `TODO` no `BLOCKED` en `docs/roadmap_codex.md`.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo smoke contractual del launcher y trazabilidad documental.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; la corrida propia solo modifica `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; se confirma un launcher ya existente sin declarar capacidad nueva de producto.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: ejecutar `C6-DOC-001` con foco exclusivo en alinear el contrato real del checkout demo legado y su naming canonico.
+- **Siguiente paso exacto**: seleccionar en la proxima iteracion la primera `TODO` no `BLOCKED`; si no existe, crear una tarea atomica nueva orientada al flujo ecommerce local/demo sin pagos reales.
 
-## Entrada 2026-03-27-C6-DOC-001 (contrato real de checkout demo legado)
-- **Fecha (UTC)**: `2026-03-27T16:38:47Z`
-- **ID de tarea**: `C6-DOC-001`
+## Entrada 2026-04-28-ELS-001 (reencauce ecommerce local simulado)
+- **Fecha (UTC)**: 2026-04-28
+- **ID de tarea**: `ELS-001`
 - **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: alinear el contrato real del checkout demo legado con el repo implementado y fijar un naming canonico unico para `/encargo`, sin prometer datos, snapshots ni pasos no implementados.
+- **Objetivo de la ejecucion**: reencauzar oficialmente la fuente de verdad hacia ecommerce local real con pago simulado, deprecando progresivamente la demo legacy sin implementar todavia la pasarela simulada.
 - **Fuentes de verdad consultadas**:
+  - `AGENTS.md`
   - `docs/00_vision_proyecto.md`
   - `docs/02_alcance_y_fases.md`
   - `docs/05_modelo_de_dominio_y_entidades.md`
@@ -3262,1162 +3252,2159 @@ PY`
   - `docs/08_decisiones_tecnicas_no_negociables.md`
   - `docs/90_estado_implementacion.md`
   - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
+  - `docs/10_checkout_y_flujos_ecommerce.md`
+  - `docs/17_migracion_ecommerce_real.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
   - `docs/roadmap_codex.md`
   - `docs/bitacora_codex.md`
-  - `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`
-  - `docs/10_checkout_y_flujos_ecommerce.md`
-  - `docs/13_testing_ci_y_quality_gate.md`
-  - `frontend/app/encargo/page.tsx`
-  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
-  - `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`
-  - `frontend/contenido/catalogo/encargoConsulta.ts`
-  - `frontend/contenido/catalogo/checkoutDemo.ts`
-  - `backend/nucleo_herbal/dominio/pedidos_demo.py`
-  - `backend/nucleo_herbal/presentacion/publica/views_pedidos_demo.py`
-  - `backend/nucleo_herbal/presentacion/publica/email_demo_serializadores.py`
-  - `tests/nucleo_herbal/test_api_pedidos_demo.py`
-  - `frontend/tests/checkout-demo.test.ts`
 - **Archivos tocados**:
-  - `docs/10_checkout_y_flujos_ecommerce.md`
-  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Declarar `/checkout`, `/pedido/[id_pedido]` y `/mi-cuenta` como rutas principales de la fase local.
+  2. Declarar `/encargo`, `/pedido-demo` y `cuenta-demo` como legacy deprecado/controlado, sin borrado inmediato.
+  3. Reservar Stripe para futuro y fijar que el pago simulado entrara por puerto/adaptador.
+  4. Mantener `V2-R10` bloqueado para go-live externo: la validacion local con pago simulado no activa pagos reales ni despliegue real.
+- **Checklist de cierre aplicada (ELS-001)**:
+  1. Tarea correcta confirmada: **Si**; no habia `TODO` ejecutable no bloqueado y el usuario pidio un reencauce documental explicito.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se tocaron frontend, backend funcional, endpoints, Stripe ni CTAs.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90`: **Si**; la fase queda `PLANIFICADO`, no `DONE`.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - lectura obligatoria de `AGENTS.md` y docs troncales.
+  - lectura especifica de `docs/90_estado_implementacion.md`, `docs/roadmap_ecommerce_real_v2.md`, `docs/10_checkout_y_flujos_ecommerce.md`, `docs/17_migracion_ecommerce_real.md` y `docs/02_alcance_y_fases.md`.
+  - `git diff --check` -> OK; solo avisos de normalizacion LF/CRLF en Windows, sin errores de whitespace.
+  - `.venv\Scripts\python.exe scripts\check_repo_operational_integrity.py` -> OK; integridad operativa/documental validada.
+  - `git status --short` -> diff limitado a documentacion permitida y nuevo roadmap local simulado.
+- **Resultado verificable**:
+  - existe `docs/roadmap_ecommerce_local_simulado.md`;
+  - `docs/90_estado_implementacion.md` refleja nueva fase sin declarar implementacion;
+  - `docs/roadmap_ecommerce_real_v2.md` no contradice el bloqueo de `V2-R10`;
+  - queda claro que la pasarela de pago es la unica pieza simulada y que la demo legacy se depreca sin eliminarse.
+- **Bloqueos (si aplica)**: ninguno.
+- **Siguiente paso exacto**: ejecutar `ELS-002`, deprecacion UX de demo legacy, sin borrar rutas demo ni cambiar todavia el contrato funcional real.
+
+## Entrada 2026-04-28-ELS-002 (deprecacion UX demo legacy)
+- **Fecha (UTC)**: 2026-04-28
+- **ID de tarea**: `ELS-002`
+- **Estado final**: `DONE`
+- **Objetivo de la ejecucion**: quitar protagonismo publico al flujo demo legacy y orientar la navegacion comercial normal hacia `/checkout`.
+- **Fuentes de verdad consultadas**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `frontend/app/checkout/page.tsx`
+  - `frontend/app/encargo/page.tsx`
+  - componentes de catalogo/ficha/cesta con CTAs comerciales
+  - tests frontend de shell, checkout real, cesta, catalogo, fichas y legales
+- **Archivos tocados**:
+  - `frontend/contenido/shell/navegacionGlobal.ts`
+  - `frontend/componentes/shell/FooterComercial.tsx`
+  - `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`
+  - `frontend/app/cesta/page.tsx`
+  - `frontend/app/encargo/page.tsx`
+  - `frontend/componentes/catalogo/detalle/FichaProductoCatalogo.tsx`
+  - `frontend/componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx`
+  - `frontend/contenido/legal/paginasLegalesComerciales.ts`
+  - `frontend/componentes/legal/PaginaLegalComercial.tsx`
+  - `frontend/tests/shell-global.test.ts`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `frontend/tests/fichas-publicas-seo.test.ts`
+  - `frontend/tests/legal-comercial.test.ts`
+  - `docs/roadmap_ecommerce_local_simulado.md`
   - `docs/90_estado_implementacion.md`
   - `docs/roadmap_codex.md`
   - `docs/bitacora_codex.md`
 - **Decisiones tomadas**:
-  1. Fijar como naming canonico **checkout demo legado (`/encargo`)** para evitar ambiguedad entre "checkout demo" y "encargo/consulta".
-  2. Reducir `docs/10_checkout_y_flujos_ecommerce.md` al contrato realmente implementado: `PedidoDemo` solo persiste `lineas`, `email`, `canal` e `id_usuario` cuando el canal es `autenticado`, sin direccion, envio demo ni pago demo estructurados.
-  3. Dejar explicito que el formulario de `/encargo` sigue capturando contexto comercial (`nombre`, `telefono`, `mensaje`, `consentimiento`) para borrador/fallback manual, pero que el `POST /api/v1/pedidos-demo/` exige `email`.
-  4. Alinear `docs/13_testing_ci_y_quality_gate.md` y `docs/90_estado_implementacion.md` con el mismo naming y el mismo alcance factual.
-  5. Repriorizar la cola al detectar, durante la validacion obligatoria, una contradiccion local del gate entre `.env.railway.example` y `scripts/check_repo_operational_integrity.py`; se registra como nueva `TODO` `OPS-RWY-005` sin mezclar su correccion en esta corrida.
-- **Checks ejecutados**:
-  - `Select-String -Path 'docs/90_estado_implementacion.md','docs/10_checkout_y_flujos_ecommerce.md','docs/13_testing_ci_y_quality_gate.md','frontend/app/encargo/page.tsx','frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx','frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx','tests/nucleo_herbal/test_api_pedidos_demo.py' -Pattern 'checkout demo','/encargo','encargo','FlujoEncargoConsulta','pedido demo'` -> contraste inicial entre naming documental y flujo real.
-  - `Select-String -Path 'frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx','frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx','backend/nucleo_herbal/presentacion/publica/views_pedidos_demo.py','tests/nucleo_herbal/test_api_pedidos_demo.py','frontend/tests/checkout-demo.test.ts' -Pattern 'email','telefono','direccion','envio','pago','id_usuario','canal','lineas','consentimiento','/encargo','cuenta demo'` -> confirma que el contrato real del pedido demo no persiste direccion/envio/pago y que el flujo depende de `lineas` + `email` + `canal`.
-  - `Select-String -Path 'backend/nucleo_herbal/dominio/pedidos_demo.py','backend/nucleo_herbal/infraestructura/persistencia_django/models.py','backend/nucleo_herbal/presentacion/publica/pedidos_demo_serializadores.py' -Pattern 'estado','creado','confirmado','cancelado_demo','email_contacto','canal_compra','id_usuario'` -> confirma estados validos vigentes y campos persistidos.
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `Select-String` de consistencia final sobre `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md` y `docs/90_estado_implementacion.md` -> `canon_hits=10`, `stale_hits=0`.
-  - `python scripts/check_release_gate.py` -> `ERROR` en `F) Integridad operativa del repo`; detalle: `.env.railway.example` usa `DATABASE_URL=${{Postgres.DATABASE_URL}}`, mientras `scripts/check_repo_operational_integrity.py` exige `DATABASE_URL=${{SERVICE_NAME.DATABASE_URL}}` y prohibe `Postgres.DATABASE_URL`.
-  - `git diff --name-only` -> `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md`, `docs/bitacora_codex.md`.
-- **Resultado verificable**:
-  - `docs/10_checkout_y_flujos_ecommerce.md` deja de sobredimensionar el checkout demo: ya no promete datos de entrega, selector de envio/pago demo, snapshots ampliados ni estados aspiracionales no soportados por dominio.
-  - `docs/13_testing_ci_y_quality_gate.md` y `docs/90_estado_implementacion.md` usan el mismo naming canonico del flujo demo legado y el mismo recorrido contractual.
-  - La validacion minima obligatoria (`check_release_readiness.py`) queda en verde y la verificacion estatica de naming/contrato no detecta residuos de la especificacion anterior.
-  - El gate canónico se ejecuto y revelo una incidencia local ajena a esta tarea, que ahora queda priorizada y trazada como `OPS-RWY-005`.
-- **Bloqueos (si aplica)**:
-  - ninguno para `C6-DOC-001`;
-  - riesgo detectado para la cola siguiente: contradiccion local entre `.env.railway.example` y `scripts/check_repo_operational_integrity.py`, registrada como `OPS-RWY-005`.
-- **Checklist de cierre aplicada (C6-DOC-001 contrato checkout demo legado)**:
-  1. Tarea correcta confirmada: **Si**; `C6-DOC-001` era la primera `TODO` no `BLOCKED` en `docs/roadmap_codex.md` al iniciar la corrida.
+  1. La navegacion principal publica expone `/checkout` y retira `/encargo` y `/cuenta-demo`.
+  2. La cesta serializa la seleccion hacia `/checkout?cesta=...` como CTA principal y conserva `/encargo?origen=seleccion` como orientacion secundaria.
+  3. Las fichas de coleccion y Botica Natural incorporan `Comprar ahora` hacia `/checkout?producto=...`.
+  4. `/encargo` se presenta como canal de consulta personalizada, sin borrarlo ni romper `FlujoEncargoConsulta`.
+  5. Las paginas informativas conservan encargo como CTA secundario, no como accion principal.
+- **Checklist de cierre aplicada (ELS-002)**:
+  1. Tarea correcta confirmada: **Si** (`ELS-002` era la primera `TODO` no `BLOCKED`).
   2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/90_estado_implementacion.md`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
+  3. Alcance respetado sin sobrealcance: **Si**; no se toco backend, Stripe, endpoints ni modelo de pedido.
   4. Evidencia verificable registrada: **Si**.
   5. Checks ejecutados y registrados: **Si**.
   6. Roadmap actualizado: **Si**.
   7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; `git diff --name-only` queda restringido al perimetro documental permitido para la tarea y su cierre operativo.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; el contrato se redujo al estado factual implementado, sin declarar capacidad nueva.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra solo deprecacion UX, no pago simulado.
   10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: ejecutar `OPS-RWY-005` para restaurar el contrato canonico de `DATABASE_URL` y recuperar el gate canónico antes de retomar el residual de Ciclo 6.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:shell` -> OK.
+  - `npm --prefix frontend run test:checkout-real` -> OK.
+  - `npm --prefix frontend run test:cesta` -> OK.
+  - `npm --prefix frontend run test:legal` -> OK.
+  - `npm --prefix frontend run test:fichas-seo` -> OK.
+  - `npm --prefix frontend run lint` -> OK.
+  - `npm --prefix frontend run test:catalogo-detalle` -> OK.
+  - `npm --prefix frontend run build` -> OK.
+  - `npm --prefix frontend run test:catalogo` -> OK al repetirlo en solitario; la primera ejecucion fallo por `EPERM` al limpiar `.tmp-tests` mientras otros comandos paralelos usaban la misma carpeta temporal.
+  - `git diff --check` -> OK; solo avisos LF/CRLF de Windows.
+- **Resultado verificable**:
+  - recorrido publico normal navega hacia `/checkout`;
+  - `/encargo` sigue existiendo como consulta personalizada secundaria;
+  - `/pedido-demo` y `cuenta-demo` no se promocionan como CTAs principales;
+  - build frontend pasa.
+- **Bloqueos (si aplica)**: ninguno.
+- **Siguiente paso exacto**: ejecutar `ELS-003`, pasarela simulada local por puerto/adaptador, sin activar Stripe ni pagos reales.
 
-## Entrada 2026-03-27-CAT-FILT-001 (paridad de filtros publicos multiseccion)
-- **Fecha (UTC)**: `2026-03-27T17:15:00Z`
-- **ID de tarea**: `CAT-FILT-001`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: extender el mismo sistema visible de filtrado de `botica-natural` a `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas`, sin tocar dominio ni backend y dejando la peticion explicita del mantenedor registrada en la cola oficial.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
+## Entrada 2026-04-28-ELS-003 (pasarela simulada local por puerto)
+- **Tarea seleccionada**: `ELS-003 - Pasarela simulada local por puerto`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: incorporar una pasarela local simulada como adaptador del puerto de pago, seleccionable por configuracion y sin mover la simulacion a dominio, vistas ni componentes.
+- **Documentos/fuentes leidas**:
   - `AGENTS.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `backend/nucleo_herbal/aplicacion/puertos/pasarela_pago.py`
+  - `backend/nucleo_herbal/infraestructura/pagos_stripe.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pago_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - tests backend existentes de pago/pedido/post-pago relacionados.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/infraestructura/pagos_simulados.py`
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
+  - `backend/configuracion_django/settings.py`
+  - `tests/nucleo_herbal/test_pago_real.py`
+  - `tests/nucleo_herbal/test_api_pago_real.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
   - `docs/roadmap_codex.md`
   - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. `ProveedorPago` se amplia a `"stripe" | "simulado_local"` y se valida contra `PROVEEDORES_PAGO_VALIDOS`.
+  2. La pasarela simulada vive en infraestructura e implementa `PuertoPasarelaPago`.
+  3. El `id_externo_pago` simulado es auditable y determinista por pedido/operacion (`SIM-{id_pedido}-{operation_id}` normalizado).
+  4. `BOTICA_PAYMENT_PROVIDER` queda por defecto en `simulado_local`; `stripe` sigue disponible bajo configuracion explicita.
+  5. Webhook, confirmacion simulada, reembolsos simulados y post-pago simulado quedan fuera de esta fase.
+- **Checklist de cierre aplicada (ELS-003)**:
+  1. Tarea correcta confirmada: **Si** (`ELS-003` era la primera `TODO` no `BLOCKED`).
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se toco frontend, Stripe real, endpoints nuevos, stock ni post-pago.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; hay cambios previos ELS-001/ELS-002 no revertidos.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra adaptador implementado y confirmacion pendiente.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.\\.venv\\Scripts\\python.exe manage.py test tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real` -> OK, 21 tests.
+  - `.\\.venv\\Scripts\\python.exe manage.py test tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_casos_de_uso_pedidos_real tests.nucleo_herbal.test_operacion_pedidos_real tests.nucleo_herbal.infraestructura.test_devoluciones_postventa backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario` -> fallo de entorno: `ModuleNotFoundError: No module named 'pytest'` al importar `tests.nucleo_herbal.test_casos_de_uso_pedidos_real`.
+  - `.\\.venv\\Scripts\\python.exe manage.py test tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_operacion_pedidos_real tests.nucleo_herbal.infraestructura.test_devoluciones_postventa backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario` -> OK, 84 tests.
+  - `.\\.venv\\Scripts\\python.exe manage.py check` -> OK.
+  - `git diff --check` -> OK; solo avisos LF/CRLF de Windows.
+  - `git diff --numstat` -> OK; no aparecen binarios en el diff versionado.
+- **Resultado verificable**:
+  - existe pasarela simulada limpia por puerto/adaptador;
+  - el wiring selecciona proveedor por configuracion;
+  - Stripe queda disponible pero no activo por defecto local;
+  - `PedidoDemo` no participa en la nueva capacidad.
+- **Bloqueos (si aplica)**: ninguno; queda una limitacion de entorno para ejecutar el modulo pytest-only sin instalar `pytest`.
+- **Siguiente paso exacto**: ejecutar `ELS-004`, consolidar checkout real como flujo unico local, sin borrar legacy ni implementar confirmacion/webhook simulado fuera de fase.
+
+## Entrada 2026-04-28-ELS-004 (confirmacion local de pago simulado)
+- **Tarea seleccionada**: `ELS-004 - Confirmacion local de pago simulado`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: permitir confirmar una intencion `simulado_local` en local y procesar el pedido real como pagado reutilizando `ProcesarPostPagoPedido`.
+- **Documentos/fuentes leidas**:
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pago_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_post_pago_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/views_pago_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls_pedidos.py`
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/pagos_simulados.py`
+  - tests de pago y post-pago existentes.
+- **Archivos tocados**:
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pago_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
+  - `backend/nucleo_herbal/presentacion/publica/views_pago_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/urls_pedidos.py`
+  - `tests/nucleo_herbal/test_pago_real.py`
+  - `tests/nucleo_herbal/test_api_pago_real.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. La confirmacion simulada tiene caso de uso propio (`ConfirmarPagoSimuladoPedido`) y no vive en la vista.
+  2. El caso de uso valida pedido existente, proveedor `simulado_local`, referencia externa e inexistencia de cancelacion.
+  3. La transicion a pagado, descuento de stock, incidencia y email se delegan en `ProcesarPostPagoPedido`.
+  4. El endpoint devuelve el pedido actualizado con el serializador existente de pedido real.
+  5. Stripe conserva su webhook y se rechaza confirmar por ruta simulada un pedido con proveedor `stripe`.
+- **Checklist de cierre aplicada (ELS-004)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente ELS-004 como confirmacion simulada y se reencauzo el roadmap operativo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se toco frontend, documento fiscal, backoffice, Stripe real ni reembolso simulado.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001/ELS-003 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra confirmacion local implementada y webhook simulado pendiente.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.\\.venv\\Scripts\\python.exe manage.py test tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real` -> OK, 28 tests.
+  - `.\\.venv\\Scripts\\python.exe manage.py test backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario tests.nucleo_herbal.test_api_pago_real tests.nucleo_herbal.test_pago_real` -> OK, 36 tests.
+  - `.\\.venv\\Scripts\\python.exe manage.py check` -> OK.
+  - `git diff --check` -> OK; solo avisos LF/CRLF de Windows.
+  - `git diff --numstat` -> OK; no aparecen binarios en el diff versionado.
+- **Resultado verificable**:
+  - pedido real con intencion `simulado_local` se confirma en local;
+  - stock y email se procesan por post-pago real;
+  - falta de stock deja incidencia operativa sin descuento parcial;
+  - pedido Stripe no puede confirmarse por endpoint simulado;
+  - webhook Stripe sigue pasando tests.
+- **Bloqueos (si aplica)**: ninguno.
+- **Siguiente paso exacto**: ejecutar `ELS-005`, consolidar `/checkout` como flujo unico local y conectar la confirmacion simulada desde frontend sin borrar legacy.
+
+## Entrada 2026-04-28-ELS-005 (UI de pago simulado en checkout real)
+- **Tarea seleccionada**: `ELS-005 - UI de pago simulado en checkout real`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: permitir completar desde frontend el flujo pedido real -> intencion `simulado_local` -> confirmacion local -> retorno success del pedido real.
+- **Documentos/fuentes leidas**:
+  - `frontend/app/checkout/page.tsx`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - tests frontend de checkout real
+  - endpoint backend `POST /api/v1/pedidos/{id_pedido}/confirmar-pago-simulado/`.
+- **Archivos tocados**:
+  - `frontend/contenido/pedidos/pagoSimuladoLocal.ts`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - `frontend/app/api/pedidos/[id_pedido]/confirmar-pago-simulado/route.ts`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/tests/checkout-real.test.ts`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. La deteccion de pago simulado se encapsula en `resolverEsPagoSimuladoLocal`, comparando proveedor `simulado_local`.
+  2. La UI prepara la confirmacion local tras `iniciarPagoPedido` cuando el proveedor devuelto es simulado.
+  3. La accion visible usa copy de pasarela local: "Pago simulado local" y "Confirmar pago de prueba".
+  4. La confirmacion redirige a `/pedido/[id_pedido]?retorno_pago=success` reutilizando `construirUrlRetornoPedido`.
+  5. La ruta externa de pago queda disponible para proveedores no simulados; no se elimina Stripe del codigo.
+- **Checklist de cierre aplicada (ELS-005)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio ELS-005 como UI de pago simulado y se actualizo el roadmap operativo.
+  2. Una sola tarea ejecutada en la corrida: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se toco backend, cuenta real, backoffice, `/encargo` ni Stripe frontend real.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks ejecutados y registrados: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-004 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra UI de pago simulado implementada.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:checkout-real` -> OK.
+  - `npm --prefix frontend run lint` -> OK.
+  - `npm --prefix frontend run build` -> OK.
+  - `git diff --check` -> OK; solo avisos LF/CRLF de Windows.
+  - `git diff --numstat` -> OK; no aparecen binarios en el diff versionado.
+- **Resultado verificable**:
+  - el recibo real puede iniciar pago, detectar `simulado_local` y mostrar confirmacion local;
+  - el cliente API llama a `/api/pedidos/{id}/confirmar-pago-simulado`;
+  - la UI no muestra confirmacion simulada para proveedor no simulado;
+  - no se usa `/encargo` ni `PedidoDemo` para cerrar la compra.
+- **Bloqueos (si aplica)**: ninguno.
+- **Siguiente paso exacto**: ejecutar `ELS-006`, consolidar `/checkout` como flujo unico local y eliminar restos de copy/atajos que presenten la compra normal como coexistencia temporal.
+
+## Entrada 2026-04-28-ELS-006 (stock preventivo antes de pago)
+- **Tarea seleccionada**: `ELS-006 - Stock preventivo antes de iniciar pago`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: impedir que un pedido real avance a intencion de pago o confirmacion simulada cuando el inventario disponible no cubre sus lineas.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pago_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_post_pago_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/puertos/repositorios_inventario.py`
+  - `backend/nucleo_herbal/aplicacion/errores_pedidos.py`
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - tests de pago real, pago simulado y post-pago/inventario.
+- **Archivos tocados en esta ejecucion**:
+  - `backend/nucleo_herbal/aplicacion/stock_preventivo_pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pago_pedidos.py`
+  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
+  - `backend/nucleo_herbal/presentacion/publica/views_pago_pedidos.py`
+  - `tests/nucleo_herbal/test_pago_real.py`
+  - `tests/nucleo_herbal/test_api_pago_real.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear `ValidarStockPreventivoPedido` en aplicacion, no en vistas ni dominio, usando `RepositorioInventario`.
+  2. Reutilizar `ErrorStockPedido` y `LineaStockError` para mantener contrato serializable `stock_no_disponible` con detalle por linea.
+  3. Validar stock en `IniciarPagoPedido` antes de llamar a la pasarela para no crear intenciones si falla inventario.
+  4. Revalidar en `ConfirmarPagoSimuladoPedido` antes de `ProcesarPostPagoPedido`; la rama idempotente ya confirmada queda antes para no fallar por stock ya descontado.
+  5. Mantener `ProcesarPostPagoPedido` intacto como segunda barrera para concurrencia, webhooks y cambios tardios.
+- **Checklist de cierre aplicada (ELS-006)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente `ELS-006` de stock preventivo y se actualizo el roadmap operativo para reflejarlo.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se toco frontend, reservas, multi-almacen, logistica ni Stripe real.
+  4. Evidencia verificable registrada: **Si**; tests backend y checks registrados.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-005 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra ELS-006 como implementado sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `pytest -q tests/nucleo_herbal/test_pago_real.py tests/nucleo_herbal/test_api_pago_real.py backend/nucleo_herbal/infraestructura/persistencia_django/tests/test_post_pago_inventario.py` -> no ejecutado: `pytest` no esta en PATH.
+  - `.venv\Scripts\python.exe -m pytest -q ...` -> no ejecutado: `pytest` no esta instalado en `.venv`.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario` -> **OK**, 41 tests.
+  - `.venv\Scripts\python.exe manage.py check` -> **OK**.
+  - `git diff --check` -> **OK**; solo avisos de normalizacion LF/CRLF en Windows.
+- **Evidencia de cierre**:
+  - iniciar pago con stock insuficiente devuelve conflicto y no persiste referencia externa;
+  - iniciar pago con unidad incompatible devuelve conflicto y no crea intencion;
+  - confirmar pago simulado revalida stock y no marca pagado si falla;
+  - post-pago sigue cubierto con incidencia de stock y descuento idempotente;
+  - Stripe conserva tests de intencion y webhook.
+- **Siguiente paso exacto**: ejecutar `ELS-007`, checkout real como flujo unico local, sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-007 (stock visible en superficies comerciales)
+- **Tarea seleccionada**: `ELS-007 - Disponibilidad de stock visible en ficha, cesta y checkout`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: exponer disponibilidad suficiente en ficha, cesta y checkout para que el usuario detecte bloqueos de stock antes de iniciar pago.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - endpoints publicos actuales de producto/catalogo
+  - repositorios/API frontend de catalogo
+  - componentes de ficha de producto y cesta
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - tests frontend de catalogo, cesta y checkout.
+- **Archivos tocados en esta ejecucion**:
+  - `backend/nucleo_herbal/aplicacion/dto.py`
+  - `backend/nucleo_herbal/aplicacion/disponibilidad_publica.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_rituales.py`
+  - `backend/nucleo_herbal/presentacion/publica/serializadores.py`
+  - `backend/nucleo_herbal/presentacion/tests/test_publico_producto_detalle.py`
+  - `frontend/infraestructura/api/herbal.ts`
+  - `frontend/contenido/catalogo/disponibilidadStock.ts`
+  - `frontend/contenido/catalogo/checkoutReal.ts`
+  - `frontend/componentes/catalogo/disponibilidad/EstadoDisponibilidadProducto.tsx`
+  - `frontend/componentes/catalogo/detalle/FichaProductoCatalogo.tsx`
+  - `frontend/componentes/catalogo/cesta/BotonAgregarCarrito.tsx`
+  - `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/package.json`
+  - `frontend/tests/checkout-real.test.ts`
+  - `frontend/tests/cesta-ritual.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener el contrato publico existente `disponible`/`estado_disponibilidad` y ampliarlo de forma aditiva con `disponible_compra`, `cantidad_disponible` y `mensaje_disponibilidad`.
+  2. Centralizar reglas de UI de disponibilidad en `frontend/contenido/catalogo/disponibilidadStock.ts`, fuera de componentes.
+  3. Bloquear compra directa en ficha y avance a `/checkout` en cesta cuando la linea no sea comprable.
+  4. Mostrar errores preventivos de stock del backend en el recibo/checkout con copy comercial, sin exponer codigos tecnicos.
+  5. Conservar `/encargo` solo como consulta secundaria cuando el producto no es comprable.
+- **Checklist de cierre aplicada (ELS-007)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente stock visible para ficha, cesta y checkout.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se implementaron reservas temporales, cambios de precio, backoffice ni pago simulado nuevo.
+  4. Evidencia verificable registrada: **Si**; contrato, UI y tests quedan documentados.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-006 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra ELS-007 como implementado sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test backend.nucleo_herbal.presentacion.tests.test_publico_producto_detalle tests.nucleo_herbal.test_api_pago_real backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario` -> **OK**, 33 tests.
+  - `.venv\Scripts\python.exe manage.py check` -> **OK**.
+  - `npm --prefix frontend test -- checkout-real.test.ts cesta-ritual.test.ts botica-natural.test.ts checkout-real-ui.test.ts rituales-disponibilidad-contrato.test.ts` -> no ejecutado: el paquete no define script generico `test`.
+  - `npm --prefix frontend run test:cesta` -> **OK**, 16 tests.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 55 tests.
+  - `npm --prefix frontend run test:botica-natural` -> **OK**, 17 tests.
+  - `npm --prefix frontend run test:rituales-disponibilidad` -> **OK**, 2 tests.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> primer intento fallo por contrato frontend demasiado estricto en productos relacionados; corregido y segundo intento **OK**.
+  - `npm --prefix frontend run test:catalogo` -> **OK**, 12 tests.
+  - `npm --prefix frontend run test:catalogo-detalle` -> **OK**, 10 tests.
+  - `npm --prefix frontend run test:structured-data-seo` -> **OK**, 8 tests.
+- **Evidencia de cierre**:
+  - el producto publico expone disponibilidad consumible por frontend;
+  - ficha de producto muestra disponibilidad y bloquea compra directa sin stock;
+  - cesta marca lineas no comprables y bloquea el avance a checkout;
+  - checkout/recibo muestra errores preventivos de stock devueltos por backend;
+  - el copy publico evita codigos tecnicos y no reactiva `/encargo` como compra.
+- **Siguiente paso exacto**: ejecutar `ELS-008`, consolidar checkout real como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-008 (cesta real limpia)
+- **Tarea seleccionada**: `ELS-008 - Cesta real limpia: solo lineas comprables`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: convertir la cesta en una superficie ecommerce real que no arrastra lineas artesanales, no catalogadas o fuera de contrato hacia `/checkout`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `frontend/contenido/catalogo/cestaRitual.ts`
+  - `frontend/contenido/catalogo/checkoutReal.ts`
+  - componentes de cesta/carrito
+  - componentes de ficha que anaden productos
+  - tests frontend de cesta y checkout.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/contenido/catalogo/cestaReal.ts`
+  - `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`
+  - `frontend/package.json`
+  - `frontend/tests/cesta-ritual.test.ts`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear `cestaReal.ts` como helper puro para clasificar lineas en `comprable`, `requiere_consulta`, `invalida` o `sin_stock`.
+  2. Mantener `cestaRitual.ts` como compatibilidad/persistencia existente y no borrar logica legacy.
+  3. Serializar hacia `/checkout` solo `convertirCestaAItemsCheckoutReal(cesta)`.
+  4. Bloquear el CTA principal si hay cualquier linea de consulta, invalida o sin stock, aunque existan lineas comprables.
+  5. Mostrar `/encargo?origen=seleccion` solo como salida secundaria para lineas de consulta personalizada.
+- **Checklist de cierre aplicada (ELS-008)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente cesta real limpia como prompt 08.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se toco backend, pago, backoffice, promociones ni descuentos.
+  4. Evidencia verificable registrada: **Si**; tests frontend y build registrados.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-007 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra ELS-008 como implementado sin go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:cesta` -> **OK**, 20 tests.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 56 tests.
+  - `npm --prefix frontend run test:catalogo` -> **OK**, 12 tests.
+  - `npm --prefix frontend run test:catalogo-detalle` -> **OK**, 10 tests.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**.
+- **Evidencia de cierre**:
+  - cesta con solo lineas comprables permite checkout;
+  - cesta con linea fuera de contrato bloquea el CTA real;
+  - las lineas de consulta ofrecen salida secundaria a `/encargo`;
+  - eliminar la linea bloqueante desbloquea el checkout;
+  - no se genera payload real con lineas fuera de contrato.
+- **Siguiente paso exacto**: ejecutar `ELS-009`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-009 (cuenta real principal)
+- **Tarea seleccionada**: `ELS-009 - Cuenta real como unica cuenta visible`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: consolidar `/mi-cuenta` como cuenta visible del ecommerce real y retirar protagonismo a `cuenta-demo` sin borrar legacy.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - frontend de `/mi-cuenta`
+  - frontend de `cuenta-demo`
+  - API frontend de cuentas reales y demo
+  - checkout real
+  - tests frontend de cuenta, checkout y navegacion.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`
+  - `frontend/contenido/cuenta_cliente/rutasCuentaCliente.ts`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/app/checkout/page.tsx`
+  - `frontend/tests/cuenta-cliente.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `RUTAS_CUENTA_CLIENTE.legadoDemo` como ruta legacy, pero retirar su CTA visible desde `/mi-cuenta`.
+  2. Mostrar en `/mi-cuenta` datos de cuenta, pedidos reales, direcciones guardadas, enlaces a pedido real y documento fiscal.
+  3. Limpiar copy publico de checkout/recibo para que hable de compra y pedido reales, no de coexistencia demo.
+  4. No tocar backend: el checkout ya prioriza sesion/direcciones de cuenta real y permite invitado.
+  5. Ejecutar test legacy de `cuenta-demo` para validar que la deprecacion UX no borra compatibilidad.
+- **Checklist de cierre aplicada (ELS-009)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente cuenta real principal como prompt 09.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se borraron rutas, modelos ni endpoints demo, y no se tocaron pagos.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-008 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra cuenta real principal sin declarar retirada destructiva de legacy.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:cuenta-cliente` -> **OK**, 7 tests.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 56 tests.
+  - `npm --prefix frontend run test:shell` -> **OK**, 10 tests.
+  - `npm --prefix frontend run test:cuenta-demo` -> **OK**, 19 tests.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**.
+- **Evidencia de cierre**:
+  - navegacion principal no expone `/cuenta-demo` y mantiene `/mi-cuenta`;
+  - `/mi-cuenta` ya no muestra CTA "Legado demo";
+  - cuenta real muestra pedidos reales, direcciones guardadas y documento fiscal;
+  - checkout real no depende de `CuentaDemo` y usa cuenta real/invitado;
+  - `cuenta-demo` sigue pasando tests legacy.
+- **Siguiente paso exacto**: ejecutar `ELS-010`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-010 (recibo real local)
+- **Tarea seleccionada**: `ELS-010 - Pedido real, recibo y documento fiscal sin olor a demo`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: pulir `/pedido/[id_pedido]`, recibo y documento fiscal para que operen como ecommerce real local con pago simulado, sin lenguaje de demo antigua.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `frontend/app/pedido/[id_pedido]/page.tsx`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - `backend/nucleo_herbal/presentacion/publica/documento_pedido_html.py`
+  - `backend/nucleo_herbal/presentacion/publica/views_pedidos.py`
+  - tests frontend/backend de pedido real y documento fiscal.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/contenido/pedidos/reciboPedidoReal.ts`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/app/pedido/[id_pedido]/page.tsx`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `frontend/tests/pedido-real-operacion-ui.test.ts`
+  - `frontend/package.json`
+  - `backend/nucleo_herbal/presentacion/publica/documento_pedido_html.py`
+  - `tests/nucleo_herbal/test_api_pedidos_real.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Extraer copy/estado de recibo a `reciboPedidoReal.ts` para reducir reglas en JSX.
+  2. Cambiar el recibo a copy de detalle de pedido: fecha, estado, pago, contacto, entrega, lineas, totales, documento fiscal y seguimiento.
+  3. Comunicar `simulado_local` como "Pago confirmado en entorno local simulado" sin presentar toda la tienda como demo.
+  4. Mantener documento fiscal HTML como documento trazable con desglose, sin prometer numeracion fiscal legal avanzada.
+  5. No tocar calculo fiscal, pasarela, stock, backoffice ni `/pedido-demo`.
+- **Checklist de cierre aplicada (ELS-010)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente recibo real local como prompt 10.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambiaron fiscalidad profunda, pago, stock, backoffice, PDF ni legacy.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-009 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra recibo real local sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_api_pedidos_real` -> **OK**, 23 tests.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 57 tests.
+  - `npm --prefix frontend run test:cuenta-cliente` -> **OK**, 7 tests.
+  - `npm exec -- tsc --module commonjs --target es2020 --outDir .tmp-tests tests/pedido-real-operacion-ui.test.ts && node .tmp-tests/pedido-real-operacion-ui.test.js` -> **OK**, 4 tests.
+  - `.venv\Scripts\python.exe manage.py check` -> **OK**.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**.
+- **Evidencia de cierre**:
+  - `/pedido/[id_pedido]` ya no usa copy de "real v1", "pedido demo", "coexistencia" o "legacy";
+  - recibo real muestra documento fiscal, cuenta, seguimiento y seguir comprando;
+  - pago simulado aparece como entorno local simulado;
+  - documento fiscal HTML incluye proveedor, nota local simulada cuando aplica y desglose fiscal.
+- **Siguiente paso exacto**: ejecutar `ELS-011`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-011 (backoffice operativo ecommerce local)
+- **Tarea seleccionada**: `ELS-011 - Backoffice operativo minimo para ecommerce local`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: preparar Django Admin para operar pedidos reales locales creados desde `/checkout` con pago simulado.
+- **Nota de orden**: se ejecuta backoffice por prompt explicito del usuario, adelantandolo frente al bloque documental previo de checkout unico; la reordenacion queda registrada en roadmap y bitacora.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_backoffice_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
+  - tests existentes de operacion de pedidos y admin.
+- **Archivos tocados en esta ejecucion**:
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin_pedidos.py`
+  - `tests/nucleo_herbal/infraestructura/test_admin_django.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Reutilizar `MarcarPedidoPreparando`, `MarcarPedidoEnviado` y `MarcarPedidoEntregado` desde aplicacion para acciones de Django Admin.
+  2. Usar los campos editables del pedido (`transportista`, `codigo_seguimiento`, `envio_sin_seguimiento`, `observaciones_operativas`) como control manual previo al envio.
+  3. Mantener `PedidoDemo` sin cambios y sin mezclarlo con acciones de `PedidoRealModelo`.
+  4. No crear panel nuevo: Django Admin cubre el backoffice minimo pedido.
+  5. No tocar modelos ni migraciones.
+- **Checklist de cierre aplicada (ELS-011)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente backoffice operativo minimo como prompt 11.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambio checkout, pasarela, modelos, CRM ni flujos demo.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-010 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra backoffice operativo minimo sin go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.infraestructura.test_admin_django` -> **OK**, 20 tests.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_api_backoffice` -> **OK**, 6 tests.
+- **Evidencia de cierre**:
+  - admin de pedidos reales lista email, cliente, total, estado, pago, proveedor y pago simulado;
+  - filtros operativos permiten localizar estados, revision manual, incidencia de stock y pago simulado;
+  - acciones admin preparan, envian y entregan pedidos reales mediante casos de uso;
+  - envio sin tracking se rechaza salvo marca explicita de envio sin seguimiento;
+  - logs de aplicacion incluyen actor, pedido, estado anterior/nuevo, `operation_id` y resultado.
+- **Siguiente paso exacto**: ejecutar `ELS-012`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-012 (postventa local simulada/manual)
+- **Tarea seleccionada**: `ELS-012 - Reembolso y devolucion simulada/manual coherente`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: adaptar devoluciones, reembolso y restitucion a pago `simulado_local` con operacion manual, segura y trazable.
+- **Nota de orden**: se ejecuta postventa local por prompt explicito del usuario; el checkout unico queda desplazado a `ELS-013`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin_pedidos.py`
+  - casos de uso existentes de reembolso/restitucion
+  - tests de devoluciones/postventa existentes.
+- **Archivos tocados en esta ejecucion**:
+  - `backend/nucleo_herbal/dominio/pedidos.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_postventa_local.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/models_pedidos.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/admin_pedidos.py`
+  - `tests/nucleo_herbal/test_operacion_pedidos_real.py`
+  - `tests/nucleo_herbal/infraestructura/test_devoluciones_postventa.py`
+  - `tests/nucleo_herbal/infraestructura/test_admin_django.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear `casos_de_uso_postventa_local.py` para no mezclar reembolso simulado con el caso historico Stripe/incidencia.
+  2. Ejecutar reembolso simulado solo para `proveedor_pago=simulado_local`, con id externo `SIM-REF-{id_pedido}-{operation_id}`.
+  3. No enviar emails nuevos desde el caso de reembolso simulado/manual.
+  4. Usar restitucion postventa separada para devoluciones aceptadas, manteniendo la restitucion antigua de cancelacion por incidencia sin relajarla.
+  5. Considerar que la restitucion no aplica si el pedido no desconto inventario.
+- **Checklist de cierre aplicada (ELS-012)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente postventa local simulada/manual como prompt 12.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se creo portal, no se cambiaron modelos, no se activo Stripe ni se toco fiscalidad profunda.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md`, `docs/roadmap_ecommerce_local_simulado.md`, nota V2).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-011 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra postventa local sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_operacion_pedidos_real` -> **OK**, 25 tests.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.infraestructura.test_devoluciones_postventa` -> **OK**, 15 tests.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.infraestructura.test_admin_django` -> **OK**, 20 tests tras ajuste de expectativa.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.infraestructura.test_repositorio_pedidos_real` -> **OK**, 5 tests.
+  - `.venv\Scripts\python.exe manage.py test backend.nucleo_herbal.infraestructura.persistencia_django.tests.test_post_pago_inventario` -> **OK**, 8 tests.
+- **Evidencia de cierre**:
+  - devolucion aceptada `simulado_local` ejecuta reembolso sin llamada a Stripe;
+  - reembolso simulado/manual es idempotente y deja `fecha_reembolso`;
+  - restitucion postventa incrementa inventario y registra un unico movimiento;
+  - proveedores no simulados se omiten en admin local;
+  - devolucion aceptada queda resuelta cuando reembolso y restitucion aplicable estan cerrados.
+- **Siguiente paso exacto**: ejecutar `ELS-013`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-013 (SEO y noindex operativo)
+- **Tarea seleccionada**: `ELS-013 - SEO y noindex operativo`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: asegurar que rutas transaccionales, privadas y legacy demo quedan no indexables sin degradar SEO de catalogo/fichas/editorial.
+- **Nota de orden**: se ejecuta SEO/noindex por prompt explicito del usuario; checkout unico queda desplazado a `ELS-014`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - helper SEO frontend `frontend/infraestructura/seo/metadataSeo.ts`
+  - contrato SEO `docs/seo_contrato.json`
+  - rutas `/checkout`, `/pedido/[id_pedido]`, `/encargo`, `/pedido-demo`, `/mi-cuenta`, auth y backoffice
+  - tests SEO, checkout, cuenta, shell y legacy demo existentes.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/seo_contrato.json`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+  - `frontend/app/checkout/page.tsx`
+  - `frontend/app/pedido/[id_pedido]/page.tsx`
+  - `frontend/app/mi-cuenta/page.tsx`
+  - `frontend/app/mi-cuenta/pedidos/page.tsx`
+  - `frontend/app/mi-cuenta/direcciones/page.tsx`
+  - `frontend/app/acceso/page.tsx`
+  - `frontend/app/registro/page.tsx`
+  - `frontend/app/recuperar-password/page.tsx`
+  - `frontend/app/verificar-email/page.tsx`
+  - `frontend/app/login/page.tsx`
+  - `frontend/app/admin/login/page.tsx`
+  - `frontend/app/admin/(panel)/layout.tsx`
+  - `frontend/tests/seo-contrato-regresion.test.ts`
+- **Decisiones tomadas**:
+  1. Mantener la politica SEO existente: `noindex` con `follow=true` mediante `construirMetadataSeo`.
+  2. No crear sitemap/robots en Next porque el repo ya los publica desde Django y los valida contra `docs/seo_contrato.json`.
+  3. Declarar cuenta, auth y backoffice como transaccionales/noindex en el contrato para que el sitemap los excluya.
+  4. Conservar catalogo, fichas y editorial como indexables/canonical segun contrato existente.
+  5. No tocar contenido comercial ni rutas legacy; solo metadata/contrato.
+- **Checklist de cierre aplicada (ELS-013)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente SEO/noindex operativo como prompt 13.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambio funcionalidad de checkout, backend funcional, URLs ni contenido de producto.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-012 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra noindex operativo sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:seo:contrato` -> **OK**.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_seo_contrato_backend tests.nucleo_herbal.test_healthcheck` -> **OK**, 14 tests.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 57 tests.
+  - `npm --prefix frontend run test:cuenta-cliente` -> **OK**, 7 tests.
+  - `npm --prefix frontend run test:shell` -> **OK**, 10 tests.
+  - `npm --prefix frontend run test:checkout-demo` -> **OK**, 35 tests.
+  - `npm --prefix frontend run build` -> **OK**.
+  - `git diff --check` -> **OK** con avisos CRLF existentes.
+- **Evidencia de cierre**:
+  - checkout, pedido real, cuenta, auth y backoffice declaran metadata `noindex`;
+  - legacy demo y `/encargo` permanecen no indexables y fuera del sitemap contractual;
+  - contrato SEO backend excluye transaccionales/noindex del sitemap;
+  - pruebas SEO confirman que catalogo/fichas/editorial conservan metadata indexable y canonical.
+- **Siguiente paso exacto**: ejecutar `ELS-014`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-014 (limpieza de copy comercial)
+- **Tarea seleccionada**: `ELS-014 - Limpieza de copy comercial`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: retirar de superficies publicas el lenguaje de demo tecnica, V1, legacy, coexistencia, contrato/API/payload y ajustar el tono a tienda artesanal/editorial.
+- **Nota de orden**: se ejecuta copy comercial por prompt explicito del usuario; checkout unico queda desplazado a `ELS-015`.
+- **Lectura de contexto realizada**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - componentes de home, ficha, cesta, checkout real, pedido real, cuenta real y rutas legacy visibles
+  - tests frontend de checkout, cesta, encargo, cuenta, legal, landings/fichas SEO y Botica Natural.
+- **Archivos tocados en esta ejecucion**:
+  - copy frontend publico en home, fichas, cesta, checkout, recibo, pedido, cuenta, consulta artesanal y rutas legacy conservadas
+  - tests frontend textuales relacionados
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener nombres internos `PedidoDemo`, `CuentaDemo`, `Payload*` y rutas legacy cuando son contratos de codigo, pero retirarlos del copy visible.
+  2. Sustituir referencias a "pago simulado local" por "pago de prueba en entorno local" solo en recibo/pago donde la transparencia es necesaria.
+  3. Cambiar mensajes de disponibilidad para no mencionar backend/API ni prometer reserva de stock.
+  4. Mantener `/encargo`, `/pedido-demo` y `cuenta-demo` accesibles con copy secundario/controlado.
+  5. No tocar logica de pagos, URLs, backend funcional ni claims de producto.
+- **Checklist de cierre aplicada (ELS-014)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente limpieza de copy comercial como prompt 14.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambiaron pagos, URLs, backend funcional ni rutas legacy.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-013 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra limpieza de copy sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - Busqueda final de terminos prohibidos en frontend publico principal -> **OK**, sin coincidencias para frases visibles prohibidas.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 57 tests.
+  - `npm --prefix frontend run test:checkout-demo` -> **OK**, 35 tests.
+  - `npm --prefix frontend run test:encargo` -> **OK**, 24 tests.
+  - `npm --prefix frontend run test:cesta` -> **OK**, 20 tests.
+  - `npm --prefix frontend run test:cuenta-cliente` -> **OK**, 7 tests.
+  - `npm --prefix frontend run test:cuenta-demo` -> **OK**, 19 tests.
+  - `npm --prefix frontend run test:legal` -> **OK**, 6 tests.
+  - `npm --prefix frontend run test:landings-seo` -> **OK**, 2 tests.
+  - `npm --prefix frontend run test:fichas-seo` -> **OK**, 3 tests.
+  - `npm --prefix frontend run test:botica-natural` -> **OK**, 17 tests.
+  - `npm --prefix frontend run build` -> **OK**.
+  - `git diff --check` -> **OK** con avisos CRLF existentes.
+- **Evidencia de cierre**:
+  - superficies publicas principales no muestran "pedido demo", "cuenta demo", "real v1", "legacy", "coexistencia", "backend/API" o "contrato final" como copy visible;
+  - el recibo real conserva transparencia de entorno local sin presentar la tienda como demo;
+  - legacy conserva rutas y contratos internos, con copy rebajado y no promocional;
+  - tests textuales y build validan el nuevo tono comercial.
+- **Siguiente paso exacto**: ejecutar `ELS-015`, crear gate local ecommerce simulado sin desbloquear go-live externo ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-015 (gate local ecommerce simulado)
+- **Tarea seleccionada**: `ELS-015 - Gate local ecommerce simulado`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: crear un quality gate local, estatico y de solo lectura para validar ecommerce real local con pago simulado sin declarar go-live externo.
+- **Nota de orden**: se ejecuta gate local por prompt explicito del usuario; checkout unico queda desplazado a `ELS-016`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `scripts/check_release_gate.py`
+  - `scripts/check_release_readiness.py`
+  - `scripts/check_operational_reconciliation.py`
+  - `scripts/check_repo_operational_integrity.py`
+  - tests existentes de scripts operativos
+  - `docs/13_testing_ci_y_quality_gate.md`.
+- **Archivos tocados en esta ejecucion**:
+  - `scripts/check_ecommerce_local_simulado.py`
+  - `tests/scripts/test_check_ecommerce_local_simulado.py`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Implementar un gate estatico y de solo lectura para no requerir servidores, Playwright, URLs externas ni base remota.
+  2. Usar severidades `OK`, `WARNING` y `BLOCKER`, con `WARNING` no bloqueante por defecto.
+  3. Emitir JSON con `--json` y permitir endurecimiento local con `--fail-on warning`.
+  4. Tratar legacy existente y documentado como `WARNING`, no como fallo, porque sigue siendo compatibilidad controlada.
+  5. Reafirmar en el gate que `V2-R10` sigue bloqueado y no se activan pagos reales.
+- **Checklist de cierre aplicada (ELS-015)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente gate local ecommerce simulado como prompt 15.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se lanzo servidor, no se hizo E2E, no se toco Stripe ni release gate principal.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-014 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra gate local sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.scripts.test_check_ecommerce_local_simulado` -> **OK**, 4 tests.
+  - `.venv\Scripts\python.exe manage.py test tests.scripts` -> **OK**, 48 tests.
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 1 WARNING, 16 OK.
+  - `python scripts/check_ecommerce_local_simulado.py --json` -> **OK**, JSON valido con 0 BLOCKER, 1 WARNING, 16 OK.
+  - `.venv\Scripts\python.exe manage.py check` -> **OK**.
+  - `git diff --check` -> **OK** con avisos CRLF existentes.
+- **Evidencia de cierre**:
+  - gate local valida contratos minimos de roadmap, rutas, pago simulado, confirmacion, checkout/recibo, cuenta, backoffice, noindex, CTAs a `/pedido-demo` y bloqueo `V2-R10`;
+  - tests cubren fixture OK, blocker por roadmap ausente, warning legacy documentado, JSON y exit code.
+- **Siguiente paso exacto**: ejecutar `ELS-016`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-016 (seed local comprable)
+- **Tarea seleccionada**: `ELS-016 - Seed local comprable`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: asegurar datos locales minimos para ejecutar producto publicado -> stock disponible -> cesta -> checkout -> pago simulado -> pedido real -> documento/recibo.
+- **Nota de orden**: se ejecuta seed local comprable por prompt explicito del usuario; checkout unico queda desplazado a `ELS-017`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `scripts/bootstrap_demo_release.py`
+  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
+  - modelos ORM de producto, secciones, cuenta cliente e inventario
+  - tests existentes de bootstrap/seed.
+- **Archivos tocados en esta ejecucion**:
+  - `scripts/bootstrap_ecommerce_local_simulado.py`
+  - `tests/scripts/test_bootstrap_ecommerce_local_simulado.py`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear un script local explicito en `scripts/` en vez de ampliar `seed_demo_publico`, para no mezclar `PedidoDemo`/demo legacy con ecommerce real local.
+  2. Sembrar productos con prefijo `LOCAL-ECOM-` y actualizar por SKU para evitar duplicados.
+  3. Garantizar un producto comprable por seccion publica comercial relevante: `botica-natural`, `velas-e-incienso`, `minerales-y-energia`, `herramientas-esotericas`.
+  4. Crear inventario con unidad base igual a unidad comercial para pasar stock preventivo.
+  5. Incluir cuenta cliente local con direccion predeterminada como apoyo opcional, sin crear pedidos ni pagos.
+  6. Implementar `--dry-run` con rollback transaccional y `--json` para tooling local.
+- **Checklist de cierre aplicada (ELS-016)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente datos locales minimos comprables como prompt 16.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se tocaron checkout, pasarela, Stripe, migraciones, imagenes ni datos de produccion.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Pendiente de cierre final**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra seed local sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.scripts.test_bootstrap_ecommerce_local_simulado` -> **OK**, 4 tests.
+  - `python -m py_compile scripts/bootstrap_ecommerce_local_simulado.py` -> **OK**; artefactos `.pyc` generados para el nuevo script/test eliminados despues.
+- **Evidencia de cierre**:
+  - bootstrap local crea secciones, intencion/planta local, cuatro productos publicados comprables, inventario compatible y cuenta cliente opcional;
+  - tests cubren producto comprable, inventario compatible, tipos fiscales/unidades validas, idempotencia, no duplicacion y dry-run.
+- **Siguiente paso exacto**: ejecutar `ELS-017`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+### Actualizacion de cierre ELS-016
+- `scripts/bootstrap_ecommerce_local_simulado.py` ajustado a 298 LOC tras verificacion de tamano razonable.
+- `.venv\Scripts\python.exe manage.py test tests.scripts.test_bootstrap_ecommerce_local_simulado` -> **OK**, 4 tests tras el ajuste final.
+- `.venv\Scripts\python.exe manage.py test backend.nucleo_herbal.presentacion.tests.test_publico_producto_detalle backend.nucleo_herbal.presentacion.tests.test_backoffice_inventario` -> **OK**, 14 tests.
+- `.venv\Scripts\python.exe manage.py check` -> **OK**.
+- `python scripts/bootstrap_ecommerce_local_simulado.py --dry-run` -> **OK**, rollback transaccional sin persistir.
+- `python scripts/bootstrap_ecommerce_local_simulado.py --dry-run --json` -> **OK**.
+- `git diff --check` -> **OK** con avisos CRLF existentes.
+- Nota: una primera ejecucion paralela de `--dry-run` y `--dry-run --json` contra SQLite produjo `database is locked`; se repitio en secuencia y paso correctamente. No es bloqueo del script, sino limitacion esperable de SQLite local ante escrituras simultaneas.
+
+## Entrada 2026-04-28-ELS-017 (regresion compra local simulada)
+- **Tarea seleccionada**: `ELS-017 - Regresion compra local simulada`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: proteger por tests el recorrido catalogo -> ficha -> cesta -> checkout -> pago simulado -> pedido real -> recibo/documento -> cuenta.
+- **Nota de orden**: se ejecuta regresion de compra local por prompt explicito del usuario; checkout unico queda como siguiente tarea `ELS-018`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - tests backend de pedido real, pago, stock, cuenta y documento
+  - tests frontend de cesta, checkout real, cuenta y navegacion
+  - `scripts/check_ecommerce_local_simulado.py`
+  - `docs/13_testing_ci_y_quality_gate.md`
+- **Archivos tocados en esta ejecucion**:
+  - `tests/nucleo_herbal/test_regresion_compra_local_simulada.py`
+  - `frontend/tests/compra-local-simulada.test.ts`
+  - `frontend/package.json`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear regresion por capas en vez de introducir Playwright/E2E pesado, porque no hay infraestructura E2E dedicada en este alcance.
+  2. Cubrir backend con API real Django para catalogo/ficha, creacion de pedido, pago simulado, stock, documento y cuenta real.
+  3. Cubrir frontend con contratos puros de cesta, payload checkout, cliente API de pedidos, pago simulado y CTAs principales.
+  4. Afirmar explicitamente que el flujo principal no usa `PedidoDemo`, `/pedido-demo`, `cuenta-demo` ni `/encargo` como compra.
+  5. Documentar la matriz de cobertura y el hueco aceptado de E2E browser.
+- **Checklist de cierre aplicada (ELS-017)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente regresion completa del recorrido de compra local como prompt 17.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se introdujo E2E pesado, no se toco Stripe real, no se borro legacy ni se cambio diseno.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos ELS-001 a ELS-016 sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra regresion QA sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_regresion_compra_local_simulada` -> **OK**, 3 tests.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_api_pago_real tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_api_cuentas_cliente` -> **OK**, 51 tests.
+  - `npm --prefix frontend run test:compra-local` -> **OK**, 3 tests.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 57 tests.
+  - `npm --prefix frontend run test:cesta` -> **OK**, 20 tests.
+  - `npm --prefix frontend run test:cuenta-cliente` -> **OK**, 7 tests.
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 1 WARNING esperado por legacy visible documentado, 16 OK.
+  - `.venv\Scripts\python.exe manage.py check` -> **OK**.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**.
+  - `git diff --check` -> **OK** con avisos CRLF existentes.
+- **Evidencia de cierre**:
+  - compra invitado llega a pedido real pagado con `simulado_local`, descuento de inventario, documento fiscal y sin `PedidoDemo`;
+  - compra de usuario real con direccion guardada aparece en cuenta real;
+  - stock insuficiente bloquea iniciar pago sin crear intencion;
+  - frontend valida conversion de cesta comprable a payload real y API de confirmacion simulada sin rutas legacy;
+  - matriz de recorrido queda documentada en `docs/13_testing_ci_y_quality_gate.md`.
+- **Siguiente paso exacto**: ejecutar `ELS-018`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-018 (rendimiento frontend ecommerce)
+- **Tarea seleccionada**: `ELS-018 - Rendimiento frontend ecommerce`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: optimizar rendimiento percibido de home -> catalogo/secciones -> ficha -> cesta -> checkout -> pedido sin cambiar negocio.
+- **Nota de orden**: se ejecuta rendimiento frontend por prompt explicito del usuario; checkout unico queda desplazado a `ELS-019`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - rutas frontend de home, Botica Natural, ficha, cesta, checkout y pedido
+  - componentes de imagen/card, metadata SEO y configuracion Next
+  - tests frontend de catalogo, tarjetas, cesta, checkout y compra local.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/componentes/botica-natural/AccionesTarjetaProductoBoticaNatural.tsx`
+  - `frontend/componentes/botica-natural/TarjetaProductoBoticaNatural.tsx`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/tests/botica-natural.test.ts`
+  - `frontend/tests/cards-media-clickable.test.ts`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Dividir la tarjeta de producto para que imagen/texto/enlaces se rendericen sin hidratar toda la card.
+  2. Mantener cantidad/carrito en `AccionesTarjetaProductoBoticaNatural`, que es el unico subcomponente cliente nuevo.
+  3. Memoizar `resolverContextoPreseleccionado` en checkout para evitar reparsing de cesta/slug en cada render.
+  4. No tocar imagenes binarias, configuracion de CDN, backend, pagos ni reglas de negocio.
+  5. No introducir medicion Web Vitals/E2E browser porque no existe runner estable en esta fase.
+- **Checklist de cierre aplicada (ELS-018)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente optimizacion de rendimiento frontend como prompt 18.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambio negocio, backend, pasarela, diseno global ni imagenes binarias.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra optimizacion frontend sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:botica-natural` -> **OK**, 18 tests.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 57 tests.
+  - `npm --prefix frontend run test:compra-local` -> **OK**, 3 tests.
+  - `npm --prefix frontend run test:cesta` -> **OK**, 20 tests.
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/cards-media-clickable.test.ts && node .tmp-tests/cards-media-clickable.test.js` -> **OK**, 6 tests.
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 1 WARNING esperado por legacy visible documentado, 16 OK.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**; `/botica-natural` baja de 4.36 kB a 3.26 kB y `/checkout` de 9.49 kB a 9.44 kB en el reporte Next local.
+  - `git diff --check` -> **OK** con avisos CRLF existentes.
+- **Evidencia de cierre**:
+  - la card publica de Botica Natural ya no contiene `"use client"`;
+  - la interaccion de carrito queda acotada al subcomponente cliente;
+  - checkout conserva flujo real, errores de stock y pago simulado;
+  - build frontend pasa y no quedan `.tmp-tests` ni `.next` versionables.
+- **Siguiente paso exacto**: ejecutar `ELS-019`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-019 (accesibilidad y usabilidad de compra)
+- **Tarea seleccionada**: `ELS-019 - Accesibilidad y usabilidad de compra`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: mejorar accesibilidad y usabilidad del flujo catalogo/ficha -> cesta -> checkout -> pago simulado -> pedido sin cambiar negocio.
+- **Nota de orden**: se ejecuta accesibilidad por prompt explicito del usuario; checkout unico queda desplazado a `ELS-020`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - componentes de ficha, cesta, checkout, selector de lineas y recibo real
+  - tests frontend de checkout, cesta, pedido y compra local.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`
+  - `frontend/componentes/catalogo/seleccion/ListaLineasSeleccion.tsx`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `frontend/tests/cesta-ritual.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Asociar campos del checkout con `label/htmlFor`, `id`, `aria-invalid` y errores enlazados.
+  2. Enfocar el bloque de error del checkout cuando aparece un error de validacion o stock.
+  3. Mantener botones deshabilitados, pero enlazarlos a explicaciones visibles con `aria-describedby`.
+  4. Mejorar controles de cantidad/eliminacion en cesta sin cambiar el modelo ni el comportamiento de carrito.
+  5. Anunciar carga, mensajes y pago simulado en recibo con roles/ARIA, sin cambiar pago ni backend.
+- **Checklist de cierre aplicada (ELS-019)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente accesibilidad y usabilidad del flujo de compra como prompt 19.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambio negocio, backend, pago, imagenes, servicios externos ni rediseÃ±o global.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra mejora de accesibilidad sin declarar go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 59 tests.
+  - `npm --prefix frontend run test:cesta` -> **OK**, 21 tests.
+  - `npm --prefix frontend run test:compra-local` -> **OK**, 3 tests.
+  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/pedido-real-operacion-ui.test.ts && node .tmp-tests/pedido-real-operacion-ui.test.js` -> **OK**, 4 tests.
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 1 WARNING esperado por legacy visible documentado, 16 OK.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**.
+  - `git diff --check` -> **OK** con avisos CRLF existentes.
+- **Evidencia de cierre**:
+  - checkout real es mas navegable por teclado y comunica errores con foco/ARIA;
+  - cesta explica bloqueos y mejora cantidad/eliminacion para lector de pantalla;
+  - recibo/pedido anuncia carga, estados y pago simulado local;
+  - no quedan `.tmp-tests` ni `.next` versionables.
+- **Siguiente paso exacto**: ejecutar `ELS-020`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-020 (seguridad local ecommerce simulado)
+- **Tarea seleccionada**: `ELS-020 - Seguridad local ecommerce simulado`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: revisar y endurecer seguridad basica de fase local simulada para secretos, proveedor de pago, Stripe futuro, confirmacion simulada y exposicion.
+- **Nota de orden**: se ejecuta seguridad local por prompt explicito del usuario; checkout unico queda desplazado a `ELS-021`.
+- **Lectura de contexto realizada**:
+  - `.env.railway.example`
+  - `frontend/.env.example`
+  - `backend/configuracion_django/settings.py`
+  - `backend/configuracion_django/validaciones_entorno.py`
+  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
+  - `backend/nucleo_herbal/infraestructura/pagos_simulados.py`
+  - `backend/nucleo_herbal/infraestructura/pagos_stripe.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pago_pedidos.py`
+  - tests de pago/ACL/deploy guards.
+- **Archivos tocados en esta ejecucion**:
+  - `.env.railway.example`
+  - `frontend/.env.example`
+  - `backend/configuracion_django/validaciones_entorno.py`
+  - `backend/configuracion_django/settings.py`
+  - `backend/nucleo_herbal/aplicacion/casos_de_uso_pago_pedidos.py`
+  - `tests/nucleo_herbal/test_deploy_guards.py`
+  - `tests/nucleo_herbal/test_api_pago_real.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Validar proveedor de pago al cargar settings, no tarde en el wiring.
+  2. Mantener `simulado_local` como default seguro.
+  3. Requerir configuracion completa si se selecciona `stripe`, incluso en local.
+  4. Eliminar email de contacto de logs de pago.
+  5. Documentar que Stripe queda reservado para futuro y que secretos no van en frontend.
+- **Checklist de cierre aplicada (ELS-020)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente seguridad local como prompt 20.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se activo Stripe, no se hizo pentest, no se cambio negocio.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra seguridad local sin go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_deploy_guards` -> **OK**, 12 tests.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_api_pago_real` -> **OK**, 18 tests.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_api_pedidos_real tests.nucleo_herbal.test_regresion_compra_local_simulada` -> **OK**, 26 tests.
+  - `.venv\Scripts\python.exe manage.py check` -> **OK**.
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 1 WARNING esperado por legacy visible documentado, 16 OK.
+  - `git diff --check` -> **OK**.
+- **Evidencia de cierre**:
+  - proveedor invalido falla temprano;
+  - Stripe seleccionado sin claves falla sin imprimir valores secretos;
+  - confirmacion simulada rechaza pedidos cancelados y proveedor no simulado;
+  - logs de pago no incluyen email de contacto;
+  - variables de entorno documentan modo seguro por defecto.
+- **Siguiente paso exacto**: ejecutar `ELS-021`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-021 (analitica local de embudo)
+- **Tarea seleccionada**: `ELS-021 - Analitica local de embudo sin terceros`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: medir localmente el embudo vista producto -> cesta -> checkout -> pedido -> pago simulado -> pedido pagado sin servicios externos ni datos personales.
+- **Nota de orden**: se ejecuta analitica local por prompt explicito del usuario; checkout unico queda desplazado a `ELS-022`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `frontend/componentes/catalogo/detalle/FichaProductoCatalogo.tsx`
+  - `frontend/componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx`
+  - `frontend/componentes/catalogo/cesta/BotonAgregarCarrito.tsx`
+  - `frontend/componentes/botica-natural/AccionesTarjetaProductoBoticaNatural.tsx`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - tests frontend de cesta, checkout y compra local.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/contenido/analitica/embudoLocal.ts`
+  - `frontend/componentes/analitica/EventoVistaProducto.tsx`
+  - `frontend/componentes/catalogo/detalle/FichaProductoCatalogo.tsx`
+  - `frontend/componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx`
+  - `frontend/componentes/catalogo/cesta/BotonAgregarCarrito.tsx`
+  - `frontend/componentes/botica-natural/AccionesTarjetaProductoBoticaNatural.tsx`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - `frontend/tests/analitica-local.test.ts`
+  - `frontend/package.json`
+  - `frontend/.env.example`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Usar analitica local frontend por consola estructurada en vez de endpoint persistente para evitar nueva superficie HTTP y almacenamiento innecesario.
+  2. Centralizar contrato y emision en `embudoLocal.ts`, sin `console.info` disperso por componentes.
+  3. Mantener `checkout_abandonado` fuera de alcance porque inferirlo sin tracking invasivo requiere mas senales de sesion/navegacion.
+  4. Excluir PII del contrato: email, telefono, nombre, direccion y codigo postal.
+- **Checklist de cierre aplicada (ELS-021)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente analitica local como prompt 21.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se creo dashboard, endpoint, persistencia ni servicio externo.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra analitica local sin terceros ni persistencia.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:analitica-local` -> **OK**, 4 tests.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 59 tests.
+  - `npm --prefix frontend run test:compra-local` -> **OK**, 3 tests.
+  - `npm --prefix frontend run test:cesta` -> **OK**, 21 tests.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**.
+  - `git diff --check` -> **OK** con avisos CRLF existentes.
+- **Evidencia de cierre**:
+  - eventos locales disponibles: `producto_visto`, `producto_anadido_cesta`, `checkout_iniciado`, `pedido_creado`, `pago_simulado_iniciado`, `pago_simulado_confirmado`, `pedido_pagado`, `error_stock`;
+  - emision desactivable con `NEXT_PUBLIC_ANALITICA_LOCAL=false`;
+  - contrato sin PII y sin envio a terceros;
+  - tests dedicados cubren contrato, desactivacion, emision y pago simulado.
+- **Siguiente paso exacto**: ejecutar `ELS-022`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-022 (legal y confianza comercial minima)
+- **Tarea seleccionada**: `ELS-022 - Legal y confianza comercial minima`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: ordenar paginas legales/comerciales minimas para ecommerce local simulado sin claims sanitarios, sin prometer cumplimiento legal definitivo y sin activar pago real.
+- **Nota de orden**: se ejecuta legal/confianza por prompt explicito del usuario; checkout unico queda desplazado a `ELS-023`.
+- **Lectura de contexto realizada**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `frontend/contenido/legal/paginasLegalesComerciales.ts`
+  - `frontend/componentes/legal/PaginaLegalComercial.tsx`
+  - `frontend/componentes/shell/FooterComercial.tsx`
+  - `frontend/contenido/shell/navegacionGlobal.ts`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - tests legales, footer, checkout y SEO.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/contenido/legal/paginasLegalesComerciales.ts`
+  - `frontend/componentes/legal/PaginaLegalComercial.tsx`
+  - `frontend/componentes/shell/FooterComercial.tsx`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/app/devoluciones/page.tsx`
+  - `frontend/app/contacto/page.tsx`
+  - `frontend/tests/legal-comercial.test.ts`
+  - `frontend/tests/shell-global.test.ts`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `frontend/tests/paginas-informativas-seo.test.ts`
+  - `frontend/tests/seo-contrato-regresion.test.ts`
+  - `docs/seo_contrato.json`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener la ruta historica `/condiciones-encargo`, pero reencuadrarla como condiciones de compra y consulta artesanal.
+  2. Crear `/devoluciones` y `/contacto` como paginas informativas no indexables, enlazadas desde footer.
+  3. No crear politica legal definitiva ni prometer go-live externo.
+  4. Declarar limites de producto sin claims sanitarios: uso tradicional, ritual, aromatico, cultural o decorativo; no sustituye consejo medico ni garantiza resultados.
+  5. Mantener `/envios-y-preparacion` como unica pagina legal/comercial estrategica indexable.
+- **Checklist de cierre aplicada (ELS-022)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente legal/confianza como prompt 22.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se toco backend, pago real, cookies de terceros ni fiscalidad profunda.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra legal/confianza local sin go-live externo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:legal` -> **OK**, 8 tests.
+  - `npm --prefix frontend run test:shell` -> **OK**, 11 tests.
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 60 tests.
+  - `npm --prefix frontend run test:paginas-informativas-seo` -> **OK**, 3 tests.
+  - `npm --prefix frontend run test:seo:contrato` -> **OK**.
+  - `rg -n "cura(n|r|ción)|milagro|tratamiento garantizado|diagnostica|diagnóstico|sana(r|ción)|propiedades medicinales" frontend/app frontend/componentes frontend/contenido -S` -> **OK**, solo apariciones de negacion/limite o diagnostico tecnico de admin.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**.
+  - `git diff --check` -> **OK** con avisos CRLF existentes.
+- **Evidencia de cierre**:
+  - footer enlaza condiciones, envios, devoluciones, privacidad y contacto;
+  - checkout enlaza condiciones, privacidad, envios y devoluciones;
+  - `/devoluciones` y `/contacto` existen y son noindex segun contrato SEO;
+  - copy legal advierte que no sustituye revision legal profesional;
+  - no se activan cookies publicitarias, pago real ni servicios externos.
+- **Siguiente paso exacto**: ejecutar `ELS-023`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-023 (guardrail legacy demo congelado)
+- **Tarea seleccionada**: `ELS-023 - Guardrail legacy demo congelado`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: congelar formalmente el flujo demo legacy para impedir que nuevas capacidades dependan de `/encargo`, `/pedido-demo`, `PedidoDemo` o `cuenta-demo`, sin borrar legacy.
+- **Nota de orden**: se ejecuta guardrail legacy por prompt explicito del usuario; checkout unico queda desplazado a `ELS-024`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `scripts/check_ecommerce_local_simulado.py`
+  - `tests/scripts/test_check_ecommerce_local_simulado.py`
+  - rutas y tests legacy/checkout real mediante busqueda estatica.
+- **Archivos tocados en esta ejecucion**:
+  - `scripts/check_ecommerce_local_simulado.py`
+  - `tests/scripts/test_check_ecommerce_local_simulado.py`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Integrar el guardrail en el gate local existente para que forme parte de la validacion recurrente.
+  2. Bloquear dependencias explicitas de `PedidoDemo`, `PayloadPedidoDemo`, `CuentaDemo`, `pedidosDemo` y `cuentasDemo` en checkout real.
+  3. Bloquear `cuenta-demo` en navegacion principal.
+  4. Mantener `/encargo` como `WARNING` cuando aparece como consulta secundaria, no como blocker.
+  5. Documentar retirada futura, sin ejecutarla.
+- **Checklist de cierre aplicada (ELS-023)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente congelar legacy demo y crear guardrail.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se borro legacy, no se migro data demo, no se toco pago ni checkout funcional.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra guardrail legacy sin declarar retirada.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe -m unittest tests.scripts.test_check_ecommerce_local_simulado` -> **OK**, 8 tests.
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 2 WARNING esperados, 18 OK.
+  - `.venv\Scripts\python.exe manage.py check` -> **OK**.
+  - `git diff --check` -> pendiente en cierre final.
+- **Evidencia de cierre**:
+  - gate bloquea demo en checkout real;
+  - gate bloquea `cuenta-demo` en navegacion principal;
+  - gate mantiene `/encargo` solo como consulta secundaria con warning;
+  - roadmap local lista legacy conservado, prohibiciones nuevas y retirada futura.
+- **Siguiente paso exacto**: ejecutar `ELS-024`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-024 (operativa local ecommerce simulado)
+- **Tarea seleccionada**: `ELS-024 - Operativa local ecommerce simulado`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: crear una guia operativa local unica para levantar, poblar, probar y validar ecommerce real local con pago simulado sin depender de memoria ni prompts previos.
+- **Nota de orden**: se ejecuta operativa local por prompt explicito del usuario; checkout unico queda desplazado a `ELS-025`.
+- **Lectura de contexto realizada**:
+  - `AGENTS.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/16_admin_operativa_django.md`
+  - `scripts/bootstrap_ecommerce_local_simulado.py`
+  - `scripts/check_ecommerce_local_simulado.py`
+  - `frontend/package.json`
+  - `.env.railway.example`
+  - `frontend/.env.example`
+- **Archivos tocados en esta ejecucion**:
+  - `docs/operativa_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear una guia nueva porque no existe `README.md` ni una guia unica equivalente.
+  2. Documentar comandos verificados separados de comandos documentados pero no ejecutados.
+  3. No arrancar servidores persistentes ni ejecutar comandos mutantes salvo `bootstrap --dry-run`.
+  4. Reafirmar que Stripe no se activa y `V2-R10` no se desbloquea.
+- **Checklist de cierre aplicada (ELS-024)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente documentacion operativa local.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambio codigo funcional, deploy ni pago.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra guia operativa local sin declarar produccion lista.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.\setup_entorno.bat --check` -> **OK**.
+  - `.\run_app.bat --check` -> **OK**.
+  - `.venv\Scripts\python.exe scripts/bootstrap_ecommerce_local_simulado.py --help` -> **OK**.
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py --help` -> **OK**.
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 2 WARNING esperados, 18 OK.
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py --json` -> **OK**.
+  - `.venv\Scripts\python.exe scripts/bootstrap_ecommerce_local_simulado.py --dry-run` -> **OK**, cambios revertidos.
+  - busqueda de linter documental -> **OK sin linter dedicado localizado**.
+- **Evidencia de cierre**:
+  - guia operativa creada;
+  - guia enlazada desde roadmap local y estado de implementacion;
+  - comandos documentados distinguen verificados vs no ejecutados;
+  - troubleshooting cubre stock, producto ausente, pago simulado, cuenta, documento y gate.
+- **Siguiente paso exacto**: ejecutar `ELS-025`, consolidar `/checkout` como flujo unico local sin borrar legacy ni activar pagos reales.
+
+## Entrada 2026-04-28-ELS-025 (checklist final presentacion ecommerce local)
+- **Tarea seleccionada**: `ELS-025 - Checklist final de presentacion portfolio/ecommerce local`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: crear una checklist final para validar si la web esta presentable como pieza portfolio/ecommerce local real con pago simulado, sin venderla como produccion real.
+- **Lectura de contexto realizada**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/operativa_ecommerce_local_simulado.md`
+  - `docs/13_testing_ci_y_quality_gate.md`
+  - `scripts/check_ecommerce_local_simulado.py`
+  - `AGENTS.md`
+- **Archivos tocados en esta ejecucion**:
+  - `docs/checklist_presentacion_ecommerce_local.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear una checklist nueva y practica porque no existia un documento especifico de presentacion portfolio/ecommerce local.
+  2. Usar estados `OK / REVISAR / BLOQUEA PRESENTACION` para evitar maquillar limitaciones.
+  3. Incluir guion de demo y promesas prohibidas para distinguir portfolio/local de go-live real.
+  4. No tocar codigo funcional, no activar Stripe y no cerrar `V2-R10`.
+- **Checklist de cierre aplicada (ELS-025)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente checklist final de presentacion.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo documentacion y enlaces vivos.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra checklist sin declarar produccion lista.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 2 WARNING esperados, 18 OK.
+  - `git diff --check` -> **OK**.
+  - conteo de lineas de `docs/checklist_presentacion_ecommerce_local.md` -> **OK**, 86 lineas.
+- **Evidencia de cierre**:
+  - checklist creada con cobertura de identidad, home, catalogo, ficha, cesta, checkout, pago simulado, pedido, cuenta, admin, stock, documento, SEO, legal, accesibilidad, rendimiento, gates y limites;
+  - checklist enlazada desde roadmap local y estado de implementacion;
+  - guion de demo y lista de promesas prohibidas documentados;
+  - siguiente salto real documenta staging, Stripe sandbox/real, backup/restore, revision legal, E2E y `V2-R10`.
+- **Siguiente paso exacto**: ejecutar una pasada manual de presentacion siguiendo `docs/checklist_presentacion_ecommerce_local.md` y registrar cualquier `BLOQUEA PRESENTACION` como prompt correctivo atomico.
+
+## Entrada 2026-04-28-ELS-026 (catalogo vendible por seccion)
+- **Tarea seleccionada**: `ELS-026 - Catalogo vendible por seccion`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: auditar y corregir coherencia del catalogo vendible para que cada producto publico comprable tenga contrato comercial completo por seccion.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/06_catalogo_y_taxonomias.md`
+  - modelos `ProductoModelo` e `InventarioProductoModelo`
+  - repositorio publico de productos por seccion
+  - serializadores publicos de producto
+  - `scripts/bootstrap_ecommerce_local_simulado.py`
+  - frontend de secciones/ficha/card de producto
+  - tests de exposicion publica y bootstrap local
+- **Archivos tocados en esta ejecucion**:
+  - `scripts/bootstrap_ecommerce_local_simulado.py`
+  - `tests/nucleo_herbal/test_catalogo_vendible_local.py`
+  - `docs/06_catalogo_y_taxonomias.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Ampliar el bootstrap local en vez de crear fixtures paralelos, para mantener un dataset local canonico e idempotente.
+  2. Fijar minimos: 5 productos propios en `botica-natural` y 3 en cada seccion comercial abierta restante.
+  3. Validar imagen/fallback y CTA mediante contrato estatico sobre frontend existente, sin tocar imagenes ni redisenar fichas.
+  4. Mantener productos sin stock como no comprables via disponibilidad publica, no como error ni checkout activo.
+- **Checklist de cierre aplicada (ELS-026)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio auditoria de catalogo vendible por seccion.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se tocaron pasarela, pedidos, Stripe, imagenes ni legacy.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra contrato vendible local sin declarar produccion lista.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_catalogo_vendible_local` -> **OK**, 5 tests.
+  - `.venv\Scripts\python.exe -m unittest tests.scripts.test_bootstrap_ecommerce_local_simulado` -> **FALLO ESPERADO DE COMANDO INCORRECTO**, Django settings no configurado con `unittest` puro.
+  - `.venv\Scripts\python.exe manage.py test tests.scripts.test_bootstrap_ecommerce_local_simulado` -> **OK**, 4 tests.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_exposicion_publica` -> **OK**, 26 tests.
+  - `.venv\Scripts\python.exe scripts/bootstrap_ecommerce_local_simulado.py --dry-run` -> **OK**, 14 productos y 14 inventarios en dry-run.
+  - `.venv\Scripts\python.exe manage.py check` -> **OK**.
+  - `.venv\Scripts\python.exe scripts/check_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 2 WARNING esperados, 18 OK.
+  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_catalogo_vendible_local tests.nucleo_herbal.test_exposicion_publica tests.scripts.test_bootstrap_ecommerce_local_simulado` -> **OK**, 35 tests.
+  - `git diff --check` -> **OK**.
+- **Evidencia de cierre**:
+  - bootstrap local garantiza masa vendible por seccion;
+  - contrato automatizado valida producto vendible completo;
+  - se comprueba que las secciones abiertas no reciben fallback herbal ajeno;
+  - producto sin stock queda como no comprable;
+  - criterios de producto vendible y seccion publicable quedan documentados en catalogo/taxonomias.
+- **Siguiente paso exacto**: auditar visualmente las paginas de seccion abiertas y decidir si `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` deben mostrar grid completo de productos o seguir como hero hasta un prompt frontend especifico.
+
+## Entrada 2026-04-28-ELS-027 (errores y estados vacios comerciales)
+- **Tarea seleccionada**: `ELS-027 - Errores y estados vacios comerciales`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: mejorar estados vacios, errores y bloqueos del flujo comercial para que catalogo, ficha, cesta, checkout y pedido no muestren pantallas rotas ni codigos tecnicos al usuario.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - componentes de Botica Natural, cesta, checkout real y recibo real
+  - API frontend de pedidos
+  - tests frontend de cesta, checkout real y Botica Natural.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/contenido/pedidos/estadosComercialesPedido.ts`
+  - `frontend/infraestructura/api/pedidos.ts`
+  - `frontend/componentes/catalogo/checkout-real/FlujoCheckoutReal.tsx`
+  - `frontend/componentes/catalogo/checkout-real/ReciboPedidoReal.tsx`
+  - `frontend/componentes/botica-natural/ListadoProductosBoticaNatural.tsx`
+  - `frontend/componentes/botica-natural/detalle/FichaProductoBoticaNatural.tsx`
+  - `frontend/app/botica-natural/[slug]/not-found.tsx`
+  - `frontend/tests/checkout-real.test.ts`
+  - `frontend/tests/checkout-real-ui.test.ts`
+  - `frontend/tests/botica-natural.test.ts`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Centralizar traduccion de errores comerciales en un helper puro de `contenido/pedidos`, sin acoplar componentes a codigos internos.
+  2. Normalizar mensajes en la API frontend para que checkout/recibo reciban copy seguro por defecto, conservando `codigo` y `lineas` solo como contrato interno.
+  3. Mantener `/encargo` como salida secundaria solo en producto no comprable o estado vacio de consulta, no como compra principal.
+  4. No tocar backend ni pasarela porque el problema es de presentacion y resiliencia UI.
+- **Checklist de cierre aplicada (ELS-027)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 27.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambio backend, pago, Stripe ni negocio.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra ELS-027 como capacidad implementada y testeada.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:checkout-real` -> **OK**, 62 tests.
+  - `npm --prefix frontend run test:botica-natural` -> **OK**, 19 tests.
+  - `npm --prefix frontend run test:cesta` -> **OK**, 21 tests.
+  - `npm --prefix frontend run test:compra-local` -> **OK**, 3 tests.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**.
+  - `npm --prefix frontend run clean:tmp-tests` -> **OK**.
+  - `git diff --check` -> **OK** con avisos CRLF existentes.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`) -> **OK**, sin coincidencias; `.next` queda ignorado por build.
+- **Evidencia de cierre**:
+  - los errores de stock/pago/pedido se traducen a mensajes humanos antes de mostrarse;
+  - checkout ofrece volver a cesta y revisar disponibilidad;
+  - recibo controla pedido no cargado y errores de pago simulado sin exponer detalles tecnicos;
+  - Botica Natural cubre seccion vacia, producto no encontrado y producto sin stock con CTAs utiles.
+- **Siguiente paso exacto**: ejecutar una revision visual ligera de estados vacios/error en navegador local con datos reales del bootstrap y registrar cualquier ajuste visual como prompt UX atomico.
+
+## Entrada 2026-04-28-ELS-028 (estabilidad visual de secciones comerciales)
+- **Tarea seleccionada**: `ELS-028 - Estabilidad visual de secciones comerciales`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: unificar la presentacion visual y funcional de las secciones comerciales para que compartan estructura, grid, tarjetas, disponibilidad, CTAs y estados sin duplicar componentes.
+- **Lectura de contexto realizada**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/09_ux_ui_y_navegacion.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - rutas `/botica-natural`, `/velas-e-incienso`, `/minerales-y-energia`, `/herramientas-esotericas` y `/colecciones`
+  - componentes de secciones, tarjetas, listados, fichas y CSS global
+  - tests frontend de secciones/catalogo/fichas.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/contenido/catalogo/seccionesComerciales.ts`
+  - `frontend/componentes/catalogo/secciones/SeccionComercialProductos.tsx`
+  - `frontend/componentes/catalogo/secciones/ListadoProductosSeccionComercial.tsx`
+  - `frontend/componentes/botica-natural/ListadoProductosBoticaNatural.tsx`
   - `frontend/app/botica-natural/page.tsx`
   - `frontend/app/velas-e-incienso/page.tsx`
   - `frontend/app/minerales-y-energia/page.tsx`
   - `frontend/app/herramientas-esotericas/page.tsx`
-  - `frontend/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx`
-  - `frontend/infraestructura/api/herbal.ts`
-  - `backend/nucleo_herbal/presentacion/publica/views.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios.py`
   - `frontend/tests/botica-natural.test.ts`
-  - `frontend/tests/velas-e-incienso-publico.test.ts`
-  - `frontend/tests/minerales-y-energia-publico.test.ts`
-  - `frontend/tests/herramientas-esotericas-publico.test.ts`
-  - `frontend/tests/comercial-multiseccion-regresion.test.ts`
-- **Archivos tocados**:
-  - `frontend/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx`
-  - `frontend/app/velas-e-incienso/page.tsx`
-  - `frontend/app/minerales-y-energia/page.tsx`
-  - `frontend/app/herramientas-esotericas/page.tsx`
-  - `frontend/tests/botica-natural.test.ts`
-  - `frontend/tests/velas-e-incienso-publico.test.ts`
-  - `frontend/tests/minerales-y-energia-publico.test.ts`
-  - `frontend/tests/herramientas-esotericas-publico.test.ts`
-  - `frontend/tests/comercial-multiseccion-regresion.test.ts`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Registrar la peticion explicita del mantenedor como `CAT-FILT-001` dentro de la misma cola operativa, sin abrir backlog paralelo y sin reemplazar `OPS-RWY-005` como siguiente trabajo autonomo.
-  2. Reutilizar el contrato de filtros existente de `botica-natural` en vez de abrir un sistema nuevo: el backend ya soporta `beneficio`, `formato`, `modo_uso`, `precio_min` y `precio_max` por `seccion_publica`.
-  3. Parametrizar `PanelFiltrosBoticaNatural` con `rutaSeccion` y `textoAyuda` para evitar hardcodear `/botica-natural` y mantener una sola implementacion del rail de filtros.
-  4. Cablear `searchParams` y el rail de filtros solo en `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas`, sin tocar fichas, detalle ni contratos backend ya cerrados.
-  5. Dejar trazada una limitacion real no bloqueante: el seed local actual no rellena metadatos de filtro (`beneficio_principal`, `formato_comercial`, `modo_uso`, `precio_numerico`), asi que la utilidad comercial plena del filtrado dependera de curar datos reales/importados.
-  6. Restaurar los dos artefactos versionados bajo `frontend/.tmp-tests/` al estado previo del repo tras la limpieza temporal del runner, para no dejar una deriva ajena al objetivo de la tarea.
-- **Checks ejecutados**:
-  - `npm run lint -- --file app/velas-e-incienso/page.tsx --file app/minerales-y-energia/page.tsx --file app/herramientas-esotericas/page.tsx --file componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx` -> `OK`.
-  - `npm run test:botica-natural` -> `OK` (18 tests en verde).
-  - `npm run clean:tmp-tests` -> `OK`.
-  - `npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/types/fetch-next.d.ts tests/velas-e-incienso-publico.test.ts tests/minerales-y-energia-publico.test.ts tests/herramientas-esotericas-publico.test.ts tests/comercial-multiseccion-regresion.test.ts infraestructura/api/herbal.ts contenido/home/seccionesPrincipales.ts componentes/admin/sincronizacionProductosAdmin.ts` -> `OK`.
-  - `node .tmp-tests/tests/velas-e-incienso-publico.test.js` -> `OK`.
-  - `node .tmp-tests/tests/minerales-y-energia-publico.test.js` -> `OK`.
-  - `node .tmp-tests/tests/herramientas-esotericas-publico.test.js` -> `OK`.
-  - `node .tmp-tests/tests/comercial-multiseccion-regresion.test.js` -> `OK`.
-  - `.\.venv\Scripts\python.exe manage.py shell -c "from backend.nucleo_herbal.infraestructura.persistencia_django.models import ProductoModelo; ..."` -> confirma que los productos publicados de `botica-natural`, `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` siguen con metadatos de filtro vacios en el seed local actual.
-  - `git diff --name-only -- frontend/componentes/botica-natural/filtros/PanelFiltrosBoticaNatural.tsx frontend/app/velas-e-incienso/page.tsx frontend/app/minerales-y-energia/page.tsx frontend/app/herramientas-esotericas/page.tsx frontend/tests/botica-natural.test.ts frontend/tests/velas-e-incienso-publico.test.ts frontend/tests/minerales-y-energia-publico.test.ts frontend/tests/herramientas-esotericas-publico.test.ts frontend/tests/comercial-multiseccion-regresion.test.ts docs/roadmap_codex.md docs/bitacora_codex.md` -> solo archivos del perimetro propio de la tarea.
-- **Resultado verificable**:
-  - `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` ya renderizan el rail de filtros visible, aceptan `searchParams` y propagan esos filtros al helper publico multiseccion.
-  - `PanelFiltrosBoticaNatural` deja de estar acoplado a una sola ruta y se reutiliza con una configuracion minima por seccion.
-  - La regresion estatica protege la nueva paridad multiseccion sin tocar el contrato backend ya existente.
-  - La limitacion real de datos locales queda explicitada: el sistema de filtrado esta desplegado, pero el seed actual no trae metadatos para que los filtros produzcan segmentacion util en local.
-- **Bloqueos (si aplica)**:
-  - ninguno para `CAT-FILT-001`;
-  - limitacion no bloqueante detectada: el dataset local demo carece de metadatos de filtro y requerira una tarea posterior de curacion/importacion si se quiere utilidad comercial plena en local.
-- **Checklist de cierre aplicada (CAT-FILT-001 paridad de filtros publicos multiseccion)**:
-  1. Tarea correcta confirmada: **Si**; la corrida responde a una peticion explicita del mantenedor registrada como `CAT-FILT-001` dentro de `docs/roadmap_codex.md`, sin abrir una cola paralela.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo frontend del rail de filtros, regresion estatica y trazabilidad en roadmap/bitacora.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; los cambios propios de la corrida quedan limitados a frontend afectado + `docs/roadmap_codex.md` + `docs/bitacora_codex.md`. El diff global sigue mostrando `docs/10_checkout_y_flujos_ecommerce.md`, `docs/13_testing_ci_y_quality_gate.md` y `docs/90_estado_implementacion.md` como cambios previos ajenos que no se tocaron en esta ejecucion.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `docs/90_estado_implementacion.md` ya marcaba las tres secciones como publicas DB-backed y esta corrida solo cierra la paridad de filtros visible.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: ejecutar `OPS-RWY-005` para restaurar el contrato canonico de `DATABASE_URL` y recuperar el gate canonico antes de abordar la curacion de metadatos de filtro en datos locales.
-
-## Entrada 2026-03-27-OPS-RWY-005 (contrato canonico DATABASE_URL en Railway example)
-- **Fecha (UTC)**: `2026-03-27T19:15:49Z`
-- **ID de tarea**: `OPS-RWY-005`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: restaurar un unico contrato versionado para `DATABASE_URL` entre `.env.railway.example`, el check de integridad operativa y su cobertura automatica, sin tocar producto ni mezclar despliegue real.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `.env.railway.example`
-  - `docs/deploy_railway.md`
-  - `docs/release_readiness_minima.md`
-  - `scripts/check_repo_operational_integrity.py`
-  - `scripts/check_release_readiness.py`
-  - `scripts/check_release_gate.py`
-  - `tests/scripts/test_check_repo_operational_integrity.py`
-- **Archivos tocados**:
-  - `scripts/check_repo_operational_integrity.py`
-  - `tests/scripts/test_check_repo_operational_integrity.py`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Tomar `DATABASE_URL=${{Postgres.DATABASE_URL}}` como contrato canonico porque ya era la version trazada simultaneamente en `.env.railway.example` y `docs/deploy_railway.md`.
-  2. Corregir solo el check de integridad y su test, evitando tocar `.env.railway.example` o la documentacion operativa que ya estaban alineadas.
-  3. Mantener el alcance estrictamente local y documental: sin despliegue real, sin cambios de secretos y sin mezclar los bloqueos externos de `AUT-003` / `OPS-RWY-003`.
-- **Checks ejecutados**:
-  - `python -m unittest tests.scripts.test_check_repo_operational_integrity` -> `OK` (6 tests).
-  - `python scripts/check_repo_operational_integrity.py` -> `OK`.
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `python scripts/check_release_gate.py` -> `OK`.
-  - `git diff --name-only -- scripts/check_repo_operational_integrity.py tests/scripts/test_check_repo_operational_integrity.py docs/roadmap_codex.md docs/bitacora_codex.md` -> diff limitado al perimetro propio de la tarea.
-- **Resultado verificable**:
-  - `scripts/check_repo_operational_integrity.py` deja de contradecir el contrato Railway versionado y vuelve a validar `.env.railway.example`.
-  - `tests/scripts/test_check_repo_operational_integrity.py` protege el placeholder canonico `Postgres.DATABASE_URL`.
-  - El gate canónico completo vuelve a pasar en verde y la primera `TODO` no `BLOCKED` retorna al residual de Ciclo 6 (`C6-INT-001`).
-- **Bloqueos (si aplica)**:
-  - ninguno para `OPS-RWY-005`;
-  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
-- **Checklist de cierre aplicada (OPS-RWY-005 contrato canonico DATABASE_URL)**:
-  1. Tarea correcta confirmada: **Si**; `OPS-RWY-005` era la primera `TODO` no `BLOCKED` tras `CAT-FILT-001`.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo script/test de integridad y trazabilidad en roadmap/bitacora.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `scripts/check_repo_operational_integrity.py`, `tests/scripts/test_check_repo_operational_integrity.py`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos no tocados en esta corrida.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; se cerró una contradiccion local de tooling/documentacion, sin declarar nueva capacidad de producto.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: ejecutar `C6-INT-001` para cerrar la continuidad minima entre `cuenta-demo` y el checkout demo legado `/encargo`.
-
-## Entrada 2026-03-27-C6-INT-001 (continuidad minima cuenta-demo -> /encargo)
-- **Fecha (UTC)**: `2026-03-27T19:35:12Z`
-- **ID de tarea**: `C6-INT-001`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: cerrar la continuidad minima entre `cuenta-demo` y el checkout demo legado `/encargo`, de forma que volver tras entrar o crear cuenta demo reactive el canal autenticado sin paso manual extra y sin tocar backend ni el contrato de `PedidoDemo`.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
-  - `frontend/componentes/catalogo/encargo/BloqueIdentificacionCheckoutDemo.tsx`
-  - `frontend/componentes/cuenta_demo/AreaCuentaDemo.tsx`
-  - `frontend/contenido/catalogo/checkoutDemo.ts`
-  - `frontend/contenido/catalogo/estadoCheckoutDemo.ts`
-  - `frontend/contenido/cuenta_demo/estadoCuentaDemo.ts`
-  - `frontend/tests/checkout-demo.test.ts`
-  - `frontend/tests/checkout-demo-ui.test.ts`
-  - `frontend/tests/cuenta-demo.test.ts`
-- **Archivos tocados**:
-  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
-  - `frontend/tests/checkout-demo-ui.test.ts`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Corregir la brecha en el propio handoff del checkout demo: cuando el usuario deriva desde `/encargo` a `cuenta-demo`, el borrador se guarda preparado para retorno autenticado (`continuarComoInvitado=false`) en lugar de conservar el estado invitado previo.
-  2. Mantener el alcance estrictamente frontend y sin reabrir cuenta demo ni backend, porque la API y el contrato de `PedidoDemo` ya soportaban `id_usuario` opcional y el problema era solo de continuidad local.
-  3. Añadir regresion estatica minima sobre ese cableado para evitar volver a dejar el retorno a `cuenta-demo` en modo manual.
-- **Checks ejecutados**:
-  - `npm run lint -- --file componentes/catalogo/encargo/FlujoEncargoConsulta.tsx` -> `OK`.
-  - `npm run test:checkout-demo` -> `OK` (bateria especifica de checkout demo, post-checkout y UI en verde).
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `git diff --name-only -- frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx frontend/tests/checkout-demo-ui.test.ts docs/roadmap_codex.md docs/bitacora_codex.md` -> diff propio limitado al perimetro de la tarea.
-- **Resultado verificable**:
-  - el desvio a `cuenta-demo` desde `/encargo` deja preparado el regreso en modo autenticado, eliminando la reactivacion manual de la cuenta demo al volver del login o registro;
-  - el modo invitado sigue disponible porque el usuario puede volver a pulsar `Continuar como invitado` tras retornar, sin tocar el contrato existente de `PedidoDemo`;
-  - la regresion estatica protege que el borrador del checkout demo se persista listo para retorno autenticado y con retorno seguro.
-- **Bloqueos (si aplica)**:
-  - ninguno para `C6-INT-001`;
-  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
-- **Checklist de cierre aplicada (C6-INT-001 continuidad minima cuenta-demo -> /encargo)**:
-  1. Tarea correcta confirmada: **Si**; `C6-INT-001` era la primera `TODO` no `BLOCKED` al iniciar la corrida.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se toco el handoff frontend de `/encargo`, su regresion minima y la trazabilidad obligatoria.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/tests/checkout-demo-ui.test.ts`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos no tocados en esta ejecucion.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `docs/90_estado_implementacion.md` ya marcaba `Cuenta demo` y `Checkout demo` como `DONE`, y esta corrida solo cierra el residual de integracion minima.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: ejecutar `C6-QA-001` para cubrir de forma integrada el recorrido `cesta -> encargo -> recibo -> email demo` y alinear el gate con esa proteccion contractual.
-
-## Entrada 2026-03-27-C6-QA-001 (cobertura integrada cesta -> encargo -> recibo -> email demo)
-- **Fecha (UTC)**: `2026-03-27T19:55:04Z`
-- **ID de tarea**: `C6-QA-001`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: reforzar la cobertura integrada del recorrido critico demo desde cesta/encargo hasta recibo y email demo, dejando el gate canónico alineado con esa proteccion contractual sin reabrir Ciclo 3 ni tocar producto.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `frontend/tests/checkout-demo.test.ts`
-  - `tests/nucleo_herbal/test_api_pedidos_demo.py`
-  - `scripts/check_release_gate.py`
-- **Archivos tocados**:
-  - `frontend/tests/checkout-demo.test.ts`
-  - `scripts/check_release_gate.py`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Reforzar la cobertura integrada en el borde frontend sin tocar codigo de producto: la nueva regresion arranca en la seleccion de cesta, construye el payload de `/encargo`, crea el pedido demo, resuelve la ruta de recibo y valida el email demo final.
-  2. No modificar `tests/nucleo_herbal/test_api_pedidos_demo.py`: la suite backend ya contenia el recorrido integral defendible; la brecha real era que el gate canónico no la exigia.
-  3. Alinear `scripts/check_release_gate.py` con un bloque bloqueante nuevo (`C7`) que ejecuta `tests.nucleo_herbal.test_api_pedidos_demo`, de modo que la proteccion integrada ya existente en backend quede dentro del cierre canónico.
-  4. Mantener el alcance estrictamente en tests/gate/trazabilidad, sin reabrir dominio, UI funcional ni contratos de `PedidoDemo`.
-- **Checks ejecutados**:
-  - `npm run test:checkout-demo` -> `OK` (22 tests de checkout demo, 5 de post-checkout y 9 de UI en verde).
-  - `python manage.py test tests.nucleo_herbal.test_api_pedidos_demo` -> `OK` (9 tests).
-  - `python -m unittest tests.scripts.test_check_release_gate_contract tests.scripts.test_check_release_gate_frontend` -> `OK` (10 tests).
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `python scripts/check_release_gate.py` -> `OK`.
-  - `git diff --name-only -- frontend/tests/checkout-demo.test.ts scripts/check_release_gate.py docs/roadmap_codex.md docs/bitacora_codex.md` -> diff propio limitado al perimetro de la tarea.
-- **Resultado verificable**:
-  - el recorrido critico demo queda cubierto en frontend como contrato continuo `cesta -> payload -> recibo -> email demo`, sin depender de saltos manuales entre helpers aislados;
-  - el gate canónico deja de omitir la suite backend que ya valida `pedido -> detalle -> email demo`, por lo que la cobertura integrada pasa a ser obligatoria en cierre;
-  - no se toca codigo de producto ni se reabre Ciclo 3: el cambio es de blindaje QA y trazabilidad operacional.
-- **Bloqueos (si aplica)**:
-  - ninguno para `C6-QA-001`;
-  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
-- **Checklist de cierre aplicada (C6-QA-001 cobertura integrada demo)**:
-  1. Tarea correcta confirmada: **Si**; `C6-QA-001` era la primera `TODO` no `BLOCKED` al iniciar la corrida.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron tests, gate y la trazabilidad obligatoria.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `frontend/tests/checkout-demo.test.ts`, `scripts/check_release_gate.py`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos no tocados en esta ejecucion.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `docs/90_estado_implementacion.md` ya declaraba el flujo demo legado como `DONE`, y esta corrida solo cierra el residual de cobertura integrada.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: ejecutar `C6-TRACE-001` para normalizar marcadores historicos ambiguos en `docs/90_estado_implementacion.md` y dejar una matriz compacta de recorridos criticos unida a frontend/backend/tests.
-
-## Entrada 2026-03-27-C6-TRACE-001 (historico normalizado + matriz compacta)
-- **Fecha (UTC)**: `2026-03-27T20:19:42Z`
-- **ID de tarea**: `C6-TRACE-001`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: normalizar la traza historica ambigua de `docs/90_estado_implementacion.md` y dejar una matriz compacta de recorridos criticos enlazada a rutas frontend, endpoints/backend y pruebas reales, sin tocar producto ni reabrir ciclos cerrados.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`
-  - `docs/13_testing_ci_y_quality_gate.md`
-  - `backend/configuracion_django/urls.py`
-  - `backend/nucleo_herbal/presentacion/publica/urls.py`
-  - `backend/nucleo_herbal/presentacion/publica/urls_rituales.py`
-  - `backend/nucleo_herbal/presentacion/publica/urls_pedidos_demo.py`
-  - `backend/nucleo_herbal/presentacion/publica/urls_cuentas_demo.py`
-  - `backend/nucleo_herbal/presentacion/publica/urls_calendario_ritual.py`
-  - `backend/nucleo_herbal/presentacion/backoffice_urls.py`
   - `frontend/tests/home-raiz-secciones.test.ts`
-  - `frontend/tests/comercial-multiseccion-regresion.test.ts`
-  - `frontend/tests/checkout-demo.test.ts`
-  - `frontend/tests/checkout-demo-ui.test.ts`
-  - `frontend/tests/cuenta-demo.test.ts`
-  - `frontend/tests/calendario-ritual.test.ts`
-  - `frontend/tests/backoffice-admin.test.ts`
-  - `frontend/tests/backoffice-flujos.test.ts`
-  - `tests/nucleo_herbal/test_exposicion_publica.py`
-  - `tests/nucleo_herbal/test_api_pedidos_demo.py`
-  - `tests/nucleo_herbal/test_api_cuentas_demo.py`
-  - `tests/nucleo_herbal/test_api_backoffice.py`
-  - `tests/nucleo_herbal/test_contratos_api_publica_frontend.py`
-  - `tests/nucleo_herbal/test_contratos_api_publica_demo_frontend.py`
-- **Archivos tocados**:
+  - `frontend/tests/layout-comercial-full-width.test.ts`
   - `docs/90_estado_implementacion.md`
-  - `docs/13_testing_ci_y_quality_gate.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
   - `docs/roadmap_codex.md`
   - `docs/bitacora_codex.md`
 - **Decisiones tomadas**:
-  1. Normalizar solo los marcadores historicos absorbidos por cierres oficiales como `DONE (histórico normalizado)`, sin reescribir el historial funcional ni tocar el `EN_PROGRESO` real de `8.1 Transición formal demo -> real`.
-  2. Reemplazar los encabezados ambiguos `Ciclo 3 en progreso` por encabezados explícitos `Histórico Ciclo 3 ...` para evitar lecturas falsas del estado actual.
-  3. Ubicar la matriz compacta de recorridos criticos en `docs/13_testing_ci_y_quality_gate.md`, porque es el punto donde conviven gate, contratos API y suites de cobertura.
-  4. Referenciar esa matriz desde `docs/90_estado_implementacion.md` en lugar de duplicar dos fuentes de verdad parciales.
-  5. Mantener el alcance estrictamente documental: sin cambios de frontend/backend y sin alterar cierres factuales ya validados.
-- **Checks ejecutados**:
-  - `Select-String -Path docs/90_estado_implementacion.md -Pattern 'Ciclo 3 en progreso|EN_PROGRESO|DONE \\(histórico normalizado\\)|matriz compacta de recorridos críticos' -Encoding UTF8` -> `ciclo3_en_progreso_hits=0`; solo queda `Estado: **EN_PROGRESO**.` en la línea `109` (`8.1 Transición formal demo -> real`).
-  - `Select-String -Path docs/13_testing_ci_y_quality_gate.md -Pattern 'Matriz compacta de recorridos críticos|Secciones públicas comerciales|Checkout demo legado|Backoffice mínimo staff' -Encoding UTF8` -> `matriz_hits=6`.
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `python scripts/check_release_gate.py` -> `OK`.
-  - `git diff --name-only -- docs/90_estado_implementacion.md docs/13_testing_ci_y_quality_gate.md docs/roadmap_codex.md docs/bitacora_codex.md` -> `docs/13_testing_ci_y_quality_gate.md`, `docs/90_estado_implementacion.md`, `docs/bitacora_codex.md`, `docs/roadmap_codex.md`.
-- **Resultado verificable**:
-  - `docs/90_estado_implementacion.md` deja de mezclar cierres oficiales con etiquetas historicas `EN_PROGRESO` del viejo Ciclo 3; la lectura rapida ahora apunta explicitamente a `docs/roadmap_codex.md` para cola viva y a `docs/13_testing_ci_y_quality_gate.md` para la matriz de recorridos.
-  - `docs/13_testing_ci_y_quality_gate.md` incorpora una matriz viva y compacta que une recorrido critico, ruta frontend, endpoint/backend y cobertura principal para secciones publicas, herbal/ritual, checkout demo legado, recibo/email demo, cuenta demo, calendario ritual y backoffice.
-  - La trazabilidad documental queda alineada con la auditoria de Ciclo 6 (`B06-I3` + `B06-O2`) sin tocar producto ni abrir deuda nueva.
-- **Bloqueos (si aplica)**:
-  - ninguno para `C6-TRACE-001`;
-  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
-- **Checklist de cierre aplicada (C6-TRACE-001 historico normalizado + matriz compacta)**:
-  1. Tarea correcta confirmada: **Si**; `C6-TRACE-001` era la primera `TODO` no `BLOCKED` al iniciar la corrida.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/90_estado_implementacion.md`, `docs/13_testing_ci_y_quality_gate.md`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a los cuatro documentos del alcance. El worktree conserva cambios previos ajenos no tocados en esta ejecucion.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la corrida solo aclara trazabilidad historica y documenta la matriz de cobertura sin declarar capacidad nueva.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: ejecutar `C6-UX-001` para homogeneizar el microcopy comercial demo entre `/encargo` y el recibo/email demo contra el canon documental ya fijado.
-
-## Entrada 2026-03-27-C6-UX-001 (microcopy comercial demo homogeneizado)
-- **Fecha (UTC)**: `2026-03-27T20:39:04Z`
-- **ID de tarea**: `C6-UX-001`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: homogeneizar el microcopy comercial del flujo demo legado para que `/encargo`, la confirmacion y el email demo visible en UI usen el mismo canon de naming y de honestidad operativa, sin tocar contratos ni reabrir el checkout demo.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/10_checkout_y_flujos_ecommerce.md`
-  - `docs/15_glosario_del_proyecto.md`
-  - `docs/ciclos/ciclo_06_prompt_01_auditoria_backlog.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `frontend/app/encargo/page.tsx`
-  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
-  - `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`
-  - `frontend/tests/checkout-demo.test.ts`
-  - `frontend/tests/checkout-demo-ui.test.ts`
-- **Archivos tocados**:
-  - `frontend/app/encargo/page.tsx`
-  - `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`
-  - `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Usar `checkout demo` para nombrar el recorrido `/encargo` y `pedido demo` para el objeto creado, siguiendo el canon fijado en `C6-DOC-001` y el glosario que evita llamar "compra" a una transaccion no real.
-  2. Hacer explicito `sin cobro real` tanto al iniciar el flujo como en la confirmacion final, porque `docs/10_checkout_y_flujos_ecommerce.md` lo fija como garantia contractual minima del demo.
-  3. Mantener intacta la salida manual existente (`consulta artesanal/manual`) y no tocar ni `PedidoDemo`, ni API, ni el email demo backend: el cambio queda limitado al copy visible y a la trazabilidad obligatoria.
-- **Checks ejecutados**:
-  - `Select-String -Path 'frontend/app/encargo/page.tsx','frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx','frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx' -Pattern 'Checkout demo|pedido demo|sin cobro real' -Encoding UTF8 | Measure-Object` -> `microcopy_hits=32`.
-  - `npm run lint -- --file app/encargo/page.tsx --file componentes/catalogo/encargo/FlujoEncargoConsulta.tsx --file componentes/catalogo/encargo/ReciboPedidoDemo.tsx` -> `OK`.
-  - `npm run test:checkout-demo` -> `OK` (22 + 5 + 9 tests en verde).
-  - `git diff --name-only -- frontend/app/encargo/page.tsx frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx docs/roadmap_codex.md docs/bitacora_codex.md` -> diff propio limitado a los cinco archivos del perimetro.
-  - `python scripts/check_release_readiness.py` -> `OK`.
-- **Resultado verificable**:
-  - `/encargo` deja de presentarse como "solicitud artesanal" y pasa a nombrarse como `checkout demo` que crea un `pedido demo` sin cobro real, manteniendo la consulta manual como salida honesta.
-  - el recibo alinea titulo, estado, CTA de repeticion y bloque de email demo con el mismo vocabulario de `pedido demo`, eliminando contradicciones visibles entre inicio y cierre del recorrido.
-  - tras cerrar `C6-UX-001`, ya no quedan tareas `TODO` no `BLOCKED` en `docs/roadmap_codex.md`; la cola ejecutable pasa a vacia y el backlog restante queda totalmente bloqueado por `AUT-003` y `OPS-RWY-003`.
-- **Bloqueos (si aplica)**:
-  - ninguno para `C6-UX-001`;
-  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
-- **Checklist de cierre aplicada (C6-UX-001 microcopy comercial demo)**:
-  1. Tarea correcta confirmada: **Si**; `C6-UX-001` era la primera `TODO` no `BLOCKED` al iniciar la corrida.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `/encargo`, el recibo demo y la trazabilidad obligatoria.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `frontend/app/encargo/page.tsx`, `frontend/componentes/catalogo/encargo/FlujoEncargoConsulta.tsx`, `frontend/componentes/catalogo/encargo/ReciboPedidoDemo.tsx`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos no tocados en esta ejecucion.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; el flujo demo legado ya estaba `DONE` y esta corrida solo cierra la brecha residual de microcopy `B06-O1`.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: revalidar `AUT-003` comprobando si ya existen `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro para restore drill; si siguen ausentes, mantener el bloqueo exacto sin tocar codigo de producto.
-
-## Entrada 2026-03-27-NAV-SHELL-001 (reordenacion de navegacion y cabecera)
-- **Fecha (UTC)**: `2026-03-27T23:19:04Z`
-- **ID de tarea**: `NAV-SHELL-001`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: alinear la navegacion publica con la IA pedida por el mantenedor: limpiar el nav principal, convertir `Tienda` y `Guias` en hubs desplegables, mover `Carrito` y `Login/Mi cuenta` fuera de la barra y recolocar la marca en una cabecera superior horizontal.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `frontend/contenido/shell/navegacionGlobal.ts`
-  - `frontend/componentes/shell/CabeceraComercial.tsx`
-  - `frontend/componentes/shell/NavegacionPrincipal.tsx`
-  - `frontend/componentes/shell/shellComercial.module.css`
-  - `frontend/app/guias/page.tsx`
-  - `frontend/app/calendario-ritual/page.tsx`
-  - `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx`
-  - `frontend/app/acceso/page.tsx`
-  - `frontend/app/login/page.tsx`
-  - `frontend/app/mi-cuenta/page.tsx`
-  - `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`
-  - `frontend/app/cesta/page.tsx`
-  - `frontend/componentes/catalogo/cesta/IndicadorCestaRitual.tsx`
-  - `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`
-  - `frontend/tests/shell-global.test.ts`
-- **Archivos tocados**:
-  - `frontend/contenido/shell/navegacionGlobal.ts`
-  - `frontend/componentes/shell/CabeceraComercial.tsx`
-  - `frontend/componentes/shell/NavegacionPrincipal.tsx`
-  - `frontend/componentes/shell/AccesosCabecera.tsx`
-  - `frontend/componentes/shell/shellComercial.module.css`
-  - `frontend/componentes/catalogo/cesta/IndicadorCestaRitual.tsx`
-  - `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`
-  - `frontend/app/cesta/page.tsx`
-  - `frontend/app/acceso/page.tsx`
-  - `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`
-  - `frontend/tests/shell-global.test.ts`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Quitar del nav principal `Colecciones`, `La Botica`, `Encargo`, `Acceso`, `Mi cuenta` y `Cuenta demo`, porque la peticion del mantenedor exige una cabecera mas limpia y ya no quiere esos accesos dentro del rail central.
-  2. Reagrupar el plano comercial bajo `Tienda` y el plano editorial bajo `Guias`, respetando la separacion editorial/comercial ya fijada por `docs/05_modelo_de_dominio_y_entidades.md`.
-  3. Mover `Carrito` y `Login/Mi cuenta` a un bloque externo de cabecera, junto a `Acceso admin`, para tratarlos como accesos utilitarios y no como destinos del mapa principal.
-  4. Renombrar `Mi seleccion` a `Carrito` y sacar el CTA visible de la cesta del flujo legado `/encargo`, apuntandolo al checkout real ya disponible.
-  5. Mantener el alcance estrictamente en navegacion/cabecera y no reabrir ni el contenido profundo de `Guias`, ni el dominio de `Calendario ritual`, ni el backend de autenticacion.
-- **Checks ejecutados**:
-  - `npm run lint -- --file app/acceso/page.tsx --file app/cesta/page.tsx --file componentes/catalogo/cesta/IndicadorCestaRitual.tsx --file componentes/catalogo/cesta/VistaCestaRitual.tsx --file componentes/cuenta_cliente/PanelCuentaCliente.tsx --file componentes/shell/AccesosCabecera.tsx --file componentes/shell/CabeceraComercial.tsx --file componentes/shell/NavegacionPrincipal.tsx --file contenido/shell/navegacionGlobal.ts` -> `OK`.
-  - `npm run test:shell` -> `OK`.
-  - `npm run test:cesta` -> `OK`.
-  - `npm run build` -> `OK`.
-  - `cmd /c start "codex-next-dev" /b npm.cmd run dev -- --hostname 127.0.0.1 --port 3000 ^> .codex-dev.log 2^>^&1` -> servidor local levantado para verificacion visual.
-  - `Invoke-WebRequest http://127.0.0.1:3000` -> `200`.
-  - `npx --yes @playwright/cli -s=navhome open http://127.0.0.1:3000` -> `OK`.
-  - `npx --yes @playwright/cli -s=navhome resize 1440 1100` -> `OK`.
-  - `npx --yes @playwright/cli -s=navhome snapshot` -> `OK`.
-  - `npx --yes @playwright/cli -s=navhome screenshot` -> `C:\Users\arcas\.codex\worktrees\d70a\botica_bruja_lore\frontend\.playwright-cli\page-2026-03-27T23-13-01-171Z.png`.
-  - `git diff --name-only` -> `frontend/app/acceso/page.tsx`, `frontend/app/cesta/page.tsx`, `frontend/componentes/catalogo/cesta/IndicadorCestaRitual.tsx`, `frontend/componentes/catalogo/cesta/VistaCestaRitual.tsx`, `frontend/componentes/cuenta_cliente/PanelCuentaCliente.tsx`, `frontend/componentes/shell/CabeceraComercial.tsx`, `frontend/componentes/shell/NavegacionPrincipal.tsx`, `frontend/componentes/shell/shellComercial.module.css`, `frontend/contenido/shell/navegacionGlobal.ts`, `frontend/tests/shell-global.test.ts`.
-  - `git ls-files --others --exclude-standard` -> `frontend/componentes/shell/AccesosCabecera.tsx`.
-- **Resultado verificable**:
-  - la cabecera publica deja a la marca en una franja superior horizontal y el nav principal queda reducido a `Inicio`, `Tienda`, `Guias`, `Tarot` y `Calendario ritual`;
-  - `Tienda` despliega `Botica`, `Velas e incienso`, `Minerales y energia` y `Herramientas esotericas`, mientras `Guias` despliega `Compendio`, `Articulos`, `Glosario botanico`, `Propiedades de las plantas` y `Rituales`;
-  - `Carrito`, `Login/Mi cuenta` y `Acceso admin` quedan fuera del nav principal, alineados con el comportamiento pedido por el mantenedor;
-  - `Mi seleccion` desaparece como nomenclatura visible y la cesta ya no deriva al flujo legado `/encargo`;
-  - la verificacion visual Playwright confirma que el hero ya no queda pegado a la izquierda del nav anterior, sino bajo una cabecera superior mas coherente.
-- **Bloqueos (si aplica)**:
-  - ninguno para `NAV-SHELL-001`;
-  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
-- **Checklist de cierre aplicada (NAV-SHELL-001 navegacion y cabecera)**:
-  1. Tarea correcta confirmada: **Si**; la cola estaba en estado vacio / backlog totalmente bloqueado y esta corrida responde a una peticion explicita del mantenedor registrada como `NAV-SHELL-001` en `docs/roadmap_codex.md`, sin abrir una cola paralela.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron navegacion/cabecera, etiquetado de cesta/cuenta y la trazabilidad obligatoria.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; `git diff --name-only` queda limitado a archivos del perimetro y el unico untracked propio es `frontend/componentes/shell/AccesosCabecera.tsx`. El harness deja marcas de timestamp en `frontend/.tmp-tests`, pero `git diff -- frontend/.tmp-tests` no muestra cambios de contenido y esos artefactos no forman parte de la entrega.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `Calendario ritual`, cuenta real y checkout real ya existian segun `docs/90_estado_implementacion.md`, y esta corrida solo corrige su exposicion en navegacion sin declarar capacidades nuevas.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: revalidar `AUT-003` comprobando si ya existen `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro para restore drill; si siguen ausentes, mantener el bloqueo exacto sin tocar codigo de producto.
-
-## Entrada 2026-03-27-AUT-003 (revalidacion de bloqueo externo smoke/restore)
-- **Fecha (UTC)**: `2026-03-27T23:33:34Z`
-- **ID de tarea**: `AUT-003`
-- **Estado final**: `BLOCKED`
-- **Objetivo de la ejecucion**: revalidar si el cierre externo de `V2-R10` ya podia ejecutarse desde este runner o si el bloqueo seguia intacto por ausencia de variables y entorno seguro para smoke post-deploy + backup/restore.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `docs/release_readiness_minima.md`
-  - `docs/deploy_railway.md`
-  - `scripts/check_deployed_stack.py`
-  - `scripts/backup_restore_postgres.py`
-- **Archivos tocados**:
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. No tocar codigo de producto porque no existe ninguna `TODO` no `BLOCKED` y `docs/90_estado_implementacion.md` mantiene el cierre de `V2-R10` como dependencia externa.
-  2. Revalidar el primer bloqueo vivo (`AUT-003`) con los checks mas especificos que el entorno permite: smoke post-deploy y backup/restore.
-  3. Mantener `AUT-003` en `BLOCKED` porque faltan `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`, y sigue sin existir dump permitido ni base temporal segura para el restore drill.
-  4. Mantener `OPS-RWY-003` aparte y sin revalidacion profunda porque sigue dependiendo de acceso externo verificable a Railway UI/logs, fuera de este runner.
-- **Checks ejecutados**:
-  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
-  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
-  - `python scripts/backup_restore_postgres.py backup --dry-run` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
-  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
-  - `python scripts/check_release_readiness.py` -> `OK`.
-- **Resultado verificable**:
-  - sigue sin existir ninguna `TODO` no `BLOCKED`; la cola ejecutable permanece vacia.
-  - `AUT-003` sigue `BLOCKED` porque el runner no dispone de las variables minimas para ejecutar ni smoke post-deploy ni backup/restore.
-  - `OPS-RWY-003` sigue `BLOCKED` porque tampoco existe acceso externo verificable a Railway UI/logs desde este entorno.
-  - no se toco codigo de producto; solo gobernanza documental para dejar trazabilidad del bloqueo real.
-- **Bloqueos (si aplica)**:
-  - `AUT-003` depende de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, un dump permitido y una base temporal segura fuera de produccion.
-  - `OPS-RWY-003` depende de acceso externo verificable a Railway UI/logs y variables reales de despliegue.
-- **Diagnostico concreto**: el runner actual no puede ni iniciar la revalidacion externa de `AUT-003` porque faltan las variables base del smoke y del backup/restore; por tanto el backlog sigue totalmente bloqueado.
-- **Causa probable**: las URLs/credenciales reales del despliegue y la infraestructura temporal de restore drill no estan expuestas en este entorno de automatizacion.
-- **Evidencia verificable**:
-  - `python scripts/check_deployed_stack.py` falla antes de hacer red por ausencia de `BACKEND_BASE_URL`.
-  - `python scripts/backup_restore_postgres.py backup --dry-run` falla por ausencia de `DATABASE_URL`.
-  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` falla por ausencia de `BOTICA_RESTORE_DATABASE_URL`.
-  - la comprobacion de entorno confirma `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
-- **Impacto sobre la tarea**: no es posible cerrar `AUT-003`, no puede declararse `PASS` de go-live y tampoco procede abrir implementacion local de producto.
-- **Dependencia que bloquea**: provision externa de URLs/credenciales reales, dump permitido y base temporal segura; para `OPS-RWY-003`, acceso verificable a Railway UI/logs.
-- **Siguiente accion exacta**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
-- **Criterio de desbloqueo**: las cuatro variables y el entorno temporal seguro existen y permiten ejecutar de verdad el smoke post-deploy y el backup/restore sin errores de configuracion previos.
-- **Fecha/punto de revision**: siguiente corrida con variables reales disponibles o revision manual el `2026-03-29` UTC, lo que ocurra primero.
-- **Checklist de cierre aplicada (AUT-003 revalidacion de bloqueo externo)**:
-  1. Tarea correcta confirmada: **No aplica**; no habia `TODO` no `BLOCKED` y la corrida se limita a revalidar el primer bloqueo externo vivo.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio se limita a los dos documentos canonicos y el worktree conserva cambios previos ajenos no tocados en esta ejecucion.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la corrida solo revalida un bloqueo externo y no declara capacidad nueva.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: aportar las variables reales y el entorno temporal seguro para reejecutar `AUT-003`; si siguen ausentes en la siguiente corrida, mantener `BLOCKED` sin tocar codigo de producto.
-
-## Entrada 2026-03-27-LOCAL-LAUNCH-004 (guardarrail de puertos y reutilizacion)
-- **Fecha (UTC)**: `2026-03-27T23:36:48Z`
-- **ID de tarea**: `LOCAL-LAUNCH-004`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: corregir el launcher canonico `run_app.bat` para que no vuelva a fallar con `EADDRINUSE` cuando `3000/8000` esten ocupados por procesos residuales, reutilizando listeners del propio worktree y abortando con mensaje claro solo si el puerto lo ocupa un proceso ajeno.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `run_app.bat`
-  - `setup_entorno.bat`
-- **Archivos tocados**:
-  - `run_app.bat`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Registrar la incidencia reportada por el mantenedor como tarea extraordinaria `LOCAL-LAUNCH-004`, porque la cola autonoma estaba vacia / totalmente bloqueada y no correspondia abrir un backlog paralelo.
-  2. Limitar el cambio a `run_app.bat`: sin tocar frontend/backend de producto, sin cambiar puertos canonicos y sin matar procesos ajenos automaticamente desde el launcher.
-  3. Anadir una inspeccion previa de `127.0.0.1:3000` y `127.0.0.1:8000` que clasifica listeners como `repo` o `foreign` segun su `CommandLine`; si el proceso es del propio worktree, el launcher lo reutiliza, y si es ajeno, corta con error explicito.
-  4. Mantener `setup_entorno.bat`, migraciones y arranque normal cuando no hay conflicto ajeno; el fix evita el `EADDRINUSE` visible del frontend y deja trazabilidad concreta del puerto bloqueado.
-  5. Limpiar manualmente los arboles residuales detectados durante la verificacion (`taskkill /PID 42636 /T /F` y `taskkill /PID 49300 /T /F`) para revalidar el arranque del launcher en limpio, sin incorporar ese comportamiento destructivo al script.
-- **Checks ejecutados**:
-  - `Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort 3000 -State Listen | Select-Object LocalAddress,LocalPort,OwningProcess,State | Format-List` -> `3000` estaba en `Listen` por `PID 30728`.
-  - `Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort 8000 -State Listen | Select-Object LocalAddress,LocalPort,OwningProcess,State | Format-List` -> en la primera reproduccion `8000` estaba en `Listen` por `PID 46820`.
-  - `Get-CimInstance Win32_Process -Filter "ProcessId = 30728"` -> `CommandLine` apunta a `...botica_bruja_lore\frontend\node_modules\next\dist\server\lib\start-server.js`.
-  - `Get-CimInstance Win32_Process -Filter "ProcessId = 46820"` -> `CommandLine` apunta a un `manage.py runserver 127.0.0.1:8000` ajeno a este worktree.
-  - `cmd /c run_app.bat` -> tras el fix devuelve `exit code 1` con `[ERROR] El puerto 8000 ya esta en uso por python.exe (PID 46820) y no pertenece a este repo.` en vez de volver a caer en `EADDRINUSE`.
-  - `cmd /c "taskkill /PID 42636 /T /F && taskkill /PID 49300 /T /F"` -> `OK`; se cerraron los arboles residuales detectados para revalidar el arranque.
-  - `cmd /c "set BOTICA_NO_BROWSER=1&& run_app.bat"` -> `OK`; el launcher reporta `Backend Django ya estaba en ejecucion ... Se reutiliza.` y `Frontend Next ya estaba en ejecucion ... Se reutiliza.` cuando los listeners ya pertenecen al propio repo.
-  - `Invoke-WebRequest http://127.0.0.1:3000/ -UseBasicParsing | Select-Object StatusCode | Format-List` -> `StatusCode : 200`.
-  - `git diff --name-only -- run_app.bat docs/roadmap_codex.md docs/bitacora_codex.md` -> diff propio limitado a `run_app.bat`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
-- **Resultado verificable**:
-  - `run_app.bat` ya no lanza `next dev`/`runserver` a ciegas cuando `3000/8000` estan ocupados.
-  - el caso reportado por el mantenedor queda cubierto: si el listener de `3000` pertenece a este repo, el launcher lo reutiliza y deja de romperse por `EADDRINUSE`; si `8000` o `3000` pertenecen a otro proceso, el script corta con diagnostico explicito.
-  - el frontend del repo queda operativo tras la reutilizacion (`GET /` en `3000` devuelve `200`).
-- **Bloqueos (si aplica)**:
-  - ninguno para `LOCAL-LAUNCH-004`;
-  - permanecen aparte los bloqueos externos `AUT-003` y `OPS-RWY-003`.
-- **Checklist de cierre aplicada (LOCAL-LAUNCH-004 guardarrail de puertos y reutilizacion)**:
-  1. Tarea correcta confirmada: **Si**; la cola estaba vacia / totalmente bloqueada y la peticion explicita del mantenedor se registro como `LOCAL-LAUNCH-004` en `docs/roadmap_codex.md`.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `run_app.bat` y la trazabilidad obligatoria en roadmap/bitacora.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio queda limitado a `run_app.bat`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`. El worktree conserva cambios previos ajenos en frontend/docs que no se tocaron en esta ejecucion.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la tarea solo endurece el launcher local existente y no declara capacidad nueva de producto.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: revalidar `AUT-003` comprobando si ya existen `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL` y entorno temporal seguro para restore drill; si siguen ausentes, mantener el bloqueo exacto sin tocar codigo de producto.
-
-## Entrada 2026-03-27-AUT-003 (revalidacion de bloqueo externo con gate local en verde)
-- **Fecha (UTC)**: `2026-03-27T23:54:36Z`
-- **ID de tarea**: `AUT-003`
-- **Estado final**: `BLOCKED`
-- **Objetivo de la ejecucion**: revalidar si el cierre externo de `V2-R10` ya podia activarse desde este runner tras los cambios locales recientes o si la cola seguia vacia / totalmente bloqueada por falta de variables reales para smoke post-deploy y backup/restore.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `docs/release_readiness_minima.md`
-  - `docs/deploy_railway.md`
-  - `scripts/check_release_gate.py`
-  - `scripts/check_release_readiness.py`
-  - `scripts/check_deployed_stack.py`
-  - `scripts/backup_restore_postgres.py`
-- **Archivos tocados**:
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. No tocar codigo de producto porque no existe ninguna `TODO` no `BLOCKED` y la fuente factual superior (`docs/90_estado_implementacion.md`) mantiene el cierre de `V2-R10` como dependencia externa.
-  2. Revalidar `AUT-003` con doble evidencia: salud local del repo (`check_release_gate.py` y `check_release_readiness.py`) y bloqueo externo especifico (`check_deployed_stack.py` + `backup_restore_postgres.py`).
-  3. Mantener `AUT-003` en `BLOCKED` porque siguen ausentes `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`, y tampoco existe dump permitido ni base temporal segura para el restore drill.
-  4. Mantener `OPS-RWY-003` separado y tambien bloqueado, porque sigue dependiendo de acceso externo verificable a Railway UI/logs y no de deuda local del repo.
-- **Checks ejecutados**:
-  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `python scripts/check_release_gate.py` -> `OK`.
-  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
-  - `python scripts/backup_restore_postgres.py backup --dry-run` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
-  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
-  - `git status --short` -> el worktree conserva cambios previos ajenos en frontend/run_app y esta corrida suma solo trazabilidad documental canonica.
-- **Resultado verificable**:
-  - el gate tecnico canonico y el readiness documental siguen en `OK`, asi que no aparece deuda local nueva que justifique abrir trabajo de producto.
-  - sigue sin existir ninguna `TODO` no `BLOCKED`; la cola ejecutable permanece vacia.
-  - `AUT-003` sigue `BLOCKED` porque el runner no dispone de las variables minimas para ejecutar smoke post-deploy ni backup/restore reales.
-  - `OPS-RWY-003` sigue `BLOCKED` porque tampoco existe acceso externo verificable a Railway UI/logs desde este entorno.
-  - no se toco codigo de producto; solo gobernanza documental para dejar trazabilidad fresca del bloqueo real.
-- **Bloqueos (si aplica)**:
-  - `AUT-003` depende de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, un dump permitido y una base temporal segura fuera de produccion.
-  - `OPS-RWY-003` depende de acceso externo verificable a Railway UI/logs y variables reales de despliegue.
-- **Diagnostico concreto**: el repositorio pasa el gate local, pero el runner actual sigue sin poder iniciar la validacion externa de `AUT-003` porque faltan las variables base del smoke y del backup/restore; por tanto el backlog sigue totalmente bloqueado.
-- **Causa probable**: las URLs/credenciales reales del despliegue y la infraestructura temporal de restore drill no estan expuestas en este entorno de automatizacion.
-- **Evidencia verificable**:
-  - la comprobacion de entorno confirma `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
-  - `python scripts/check_deployed_stack.py` falla antes de hacer red por ausencia de `BACKEND_BASE_URL`.
-  - `python scripts/backup_restore_postgres.py backup --dry-run` falla por ausencia de `DATABASE_URL`.
-  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` falla por ausencia de `BOTICA_RESTORE_DATABASE_URL`.
-  - `python scripts/check_release_gate.py` y `python scripts/check_release_readiness.py` terminan en `OK`, descartando una regresion local del repo como causa del bloqueo.
-- **Impacto sobre la tarea**: no es posible cerrar `AUT-003`, no puede declararse `PASS` de go-live y tampoco procede abrir implementacion local de producto.
-- **Dependencia que bloquea**: provision externa de URLs/credenciales reales, dump permitido y base temporal segura; para `OPS-RWY-003`, acceso verificable a Railway UI/logs.
-- **Siguiente accion exacta**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
-- **Criterio de desbloqueo**: las cuatro variables y el entorno temporal seguro existen y permiten ejecutar de verdad el smoke post-deploy y el backup/restore sin errores de configuracion previos.
-- **Fecha/punto de revision**: siguiente corrida con variables reales disponibles o revision manual el `2026-03-30` UTC, lo que ocurra primero.
-- **Checklist de cierre aplicada (AUT-003 revalidacion externa con gate local en verde)**:
-  1. Tarea correcta confirmada: **No aplica**; no habia `TODO` no `BLOCKED` y la corrida se limita a revalidar el primer bloqueo externo vivo.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio agregado en esta corrida se limita a los dos documentos canonicos y el worktree conserva cambios previos ajenos en `frontend/.tmp-tests`, shell frontend y `run_app.bat`.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la corrida solo revalida un bloqueo externo y no declara capacidad nueva.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: mantener `AUT-003` en `BLOCKED` hasta disponer de las variables reales, el dump permitido y la base temporal segura; cuando existan, reejecutar smoke post-deploy y backup/restore reales antes de cualquier cierre de go-live.
-
-## Entrada 2026-03-28-CAL-VRT-001 (calendario virtual mensual, seed ritual real y conexion local)
-- **Fecha (UTC)**: `2026-03-28T00:32:14Z`
-- **ID de tarea**: `CAL-VRT-001`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: completar la feature de calendario virtual con vista mensual, notas por dia y anadido de rituales desde la lista publicada, sembrar en la BBDD local rituales reales conectados a productos reales para pruebas y corregir la incidencia visible donde las tiendas no cargaban productos.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `backend/configuracion_django/settings.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`
-  - `backend/nucleo_herbal/presentacion/publica/views.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
-  - `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx`
-  - `frontend/infraestructura/api/calendarioRitual.ts`
-  - `frontend/infraestructura/api/herbal.ts`
-  - `frontend/infraestructura/api/rituales.ts`
-  - `run_app.bat`
-  - `frontend/.env.local` (solo para verificacion local, no versionado)
-- **Archivos tocados**:
-  - `backend/configuracion_django/settings.py`
-  - `backend/configuracion_django/middleware_cors.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_catalogo.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_rituales.py`
-  - `frontend/componentes/calendario_ritual/CalendarioRitualEditorial.tsx`
-  - `frontend/componentes/calendario_ritual/ResumenEditorialPorFecha.tsx`
-  - `frontend/componentes/calendario_ritual/calendarioRitualEditorial.module.css`
-  - `frontend/contenido/calendario_ritual/calendarioVirtual.ts`
-  - `frontend/contenido/calendario_ritual/formatoCalendarioVirtual.ts`
-  - `frontend/infraestructura/calendario_ritual/almacenCalendarioVirtual.ts`
-  - `frontend/package.json`
-  - `frontend/tests/calendario-virtual.test.ts`
-  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
-  - `tests/nucleo_herbal/test_contratos_api_publica_frontend.py`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Registrar la peticion del mantenedor como tarea extraordinaria `CAL-VRT-001` porque la cola autonoma seguia vacia / totalmente bloqueada y no correspondia inventar trabajo paralelo.
-  2. Mantener el calendario virtual en frontend como agenda local del navegador, separada de la logica oficial de `ReglaCalendario`, respetando la frontera de dominio fijada por `docs/05_modelo_de_dominio_y_entidades.md`.
-  3. Resolver la prueba de datos con seed real e idempotente en vez de insertar manualmente filas sueltas: 14 productos publicos, 5 rituales publicados y 5 reglas activas del calendario para marzo/abril de 2026.
-  4. Corregir la conexion cliente-servidor del calendario desde la capa de integracion: middleware CORS minimo y controlado para el frontend local, en lugar de duplicar API o mover logica editorial al cliente.
-  5. Mantener fuera de alcance los binarios de imagen y cualquier refactor global ajeno al calendario/rituales/catalogo.
-- **Checks ejecutados**:
-  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`.
-  - `npm run test:calendario-ritual` -> `OK`.
-  - `.venv\Scripts\python.exe manage.py seed_demo_publico` -> `OK`; resultado local: `intenciones: creados=2, actualizados=2`, `plantas: creados=2, actualizados=2`, `productos: creados=0, actualizados=14`, `rituales: creados=5, actualizados=0`, `reglas_calendario: creados=5, actualizados=0`.
-  - `npm run lint -- --file componentes/calendario_ritual/CalendarioRitualEditorial.tsx --file componentes/calendario_ritual/ResumenEditorialPorFecha.tsx --file contenido/calendario_ritual/calendarioVirtual.ts --file contenido/calendario_ritual/formatoCalendarioVirtual.ts --file infraestructura/calendario_ritual/almacenCalendarioVirtual.ts` -> `OK`.
-  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_contratos_api_publica_frontend tests.nucleo_herbal.infraestructura.test_seed_demo_publico_command` -> `OK`.
-  - `Invoke-WebRequest http://127.0.0.1:8010/api/v1/herbal/secciones/botica-natural/productos/` -> `200`; devuelve 5 productos publicos en `botica-natural`.
-  - `Invoke-WebRequest http://127.0.0.1:8010/api/v1/calendario-ritual/?fecha=2026-03-28` -> `200`; devuelve 4 rituales activos.
-  - `Invoke-WebRequest http://127.0.0.1:8010/api/v1/rituales/ -Headers @{ Origin = 'http://127.0.0.1:3000' }` -> `200`; cabeceras `Access-Control-Allow-Origin: http://127.0.0.1:3000` y `Vary: Origin`.
-  - `npx --yes @playwright/cli open http://127.0.0.1:3000/botica-natural` + `snapshot` -> confirma 5 fichas renderizadas.
-  - `npx --yes @playwright/cli goto http://127.0.0.1:3000/calendario-ritual` + `snapshot` + `fill` + `click` -> confirma selector con 6 rituales publicados, 4 sugerencias editoriales activas y guardado local de nota + 1 ritual para `2026-03-28`.
-  - `npx --yes @playwright/cli localstorage-list` -> `botica_bruja_calendario_virtual_v1={"2026-03-28":{"nota":"Prueba local de agenda para cierre de marzo","rituales":["altar-lunar-cuarzo"]}}`.
-  - `Get-NetTCPConnection -State Listen -LocalPort 3000,8010` -> listeners activos en `3000` (frontend) y `8010` (backend) durante la verificacion.
-- **Resultado verificable**:
-  - `/botica-natural` vuelve a renderizar las 5 fichas publicas de la seccion y deja de mostrar el error HTTP visible en la captura original.
-  - `/calendario-ritual` deja de ser solo una consulta por fecha: ahora ofrece rejilla mensual, nota editable, anadido/eliminacion de rituales publicados por dia, marcadores visuales y sugerencias editoriales activas.
-  - el seed local deja preparada una base coherente de pruebas con productos reales de catalogo y rituales reales conectados a esos productos.
-  - los fetch cliente del calendario dejan de fallar por CORS y el runtime del componente deja de romper por `ReferenceError: formatearMes is not defined`.
-- **Bloqueos (si aplica)**:
-  - ninguno para `CAL-VRT-001`;
-  - permanecen aparte `AUT-003` y `OPS-RWY-003` como bloqueos externos de go-live.
-- **Checklist de cierre aplicada (CAL-VRT-001 calendario virtual + seed + conexion local)**:
-  1. Tarea correcta confirmada: **Si**; la cola estaba vacia / totalmente bloqueada y la peticion explicita del mantenedor se registro como `CAL-VRT-001` en `docs/roadmap_codex.md`.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron calendario virtual, seed publico, integracion local CORS y la trazabilidad obligatoria.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio de esta tarea queda en calendario/seed/CORS/tests/docs. El worktree conserva cambios previos ajenos en shell/cesta/navegacion y artefactos temporales `.tmp-tests` / `.playwright-cli` que no se han revertido ni mezclado en la implementacion.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; el calendario ritual ya existia como capacidad editorial parcial y esta corrida cierra la brecha entre definido y usable en local sin declarar compra real ni cambiar el dominio oficial.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: volver a estado de cola vacia / backlog bloqueado y, salvo nueva peticion explicita del mantenedor, revalidar `AUT-003` y `OPS-RWY-003` cuando exista evidencia externa nueva.
-
-## Entrada 2026-03-28-AUT-003 (revalidacion externa sin variables reales en el runner)
-- **Fecha (UTC)**: `2026-03-28T00:13:27Z`
-- **ID de tarea**: `AUT-003`
-- **Estado final**: `BLOCKED`
-- **Objetivo de la ejecucion**: revalidar si aparecio evidencia nueva para desbloquear el smoke post-deploy y el backup/restore reales de `V2-R10`, o si la cola seguia vacia / totalmente bloqueada por ausencia de variables operativas reales.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `docs/release_readiness_minima.md`
-  - `docs/deploy_railway.md`
-  - `scripts/check_release_gate.py`
-  - `scripts/check_release_readiness.py`
-  - `scripts/check_deployed_stack.py`
-  - `scripts/backup_restore_postgres.py`
-- **Archivos tocados**:
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. No tocar codigo de producto porque sigue sin existir ninguna `TODO` no `BLOCKED` y `docs/90_estado_implementacion.md` mantiene el cierre de `V2-R10` como dependencia externa.
-  2. Revalidar `AUT-003` con el check mas especifico disponible para el bloqueo (`check_deployed_stack.py` y `backup_restore_postgres.py`) y con los checks normativos de release/trazabilidad (`check_release_readiness.py` y `check_release_gate.py`).
-  3. Mantener `AUT-003` en `BLOCKED` porque el runner sigue sin exponer `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`; por tanto no es posible ejecutar smoke post-deploy ni backup/restore reales.
-  4. Mantener `OPS-RWY-003` aparte y tambien bloqueado porque continua dependiendo de acceso externo verificable a Railway UI/logs.
-- **Checks ejecutados**:
-  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
-  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
-  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
-  - `python scripts/check_release_gate.py` -> `OK`.
-  - `git status --short` -> el worktree conserva cambios previos ajenos en frontend/run_app y esta corrida suma solo trazabilidad documental canonica.
-- **Resultado verificable**:
-  - `python scripts/check_release_gate.py` y `python scripts/check_release_readiness.py` siguen en `OK`, asi que no aparece deuda local nueva de release/trazabilidad.
-  - `python scripts/check_deployed_stack.py` ni siquiera puede iniciar el smoke remoto porque `BACKEND_BASE_URL` sigue ausente.
-  - `python scripts/backup_restore_postgres.py` sigue sin poder planificar backup/restore por ausencia de `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
-  - sigue sin existir ninguna `TODO` no `BLOCKED`; la cola ejecutable permanece vacia.
-  - no se toco codigo de producto; solo gobernanza documental append-only para dejar evidencia fresca del bloqueo externo.
-- **Bloqueos (si aplica)**:
-  - `AUT-003` depende de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, un dump permitido y una base temporal segura fuera de produccion.
-  - `OPS-RWY-003` depende de acceso externo verificable a Railway UI/logs y variables reales de despliegue.
-- **Diagnostico concreto**: el repo sigue sano localmente, pero el runner actual continua sin las variables base del smoke post-deploy ni del backup/restore; por tanto `AUT-003` no puede avanzar y el backlog sigue totalmente bloqueado.
-- **Causa probable**: las URLs/credenciales reales del despliegue y la infraestructura temporal de restore drill siguen sin estar expuestas en este entorno de automatizacion.
-- **Evidencia verificable**:
-  - la comprobacion de entorno confirma `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING` y `BOTICA_RESTORE_DATABASE_URL=MISSING`.
-  - `python scripts/check_deployed_stack.py` falla antes de hacer red por ausencia de `BACKEND_BASE_URL`.
-  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` falla por ausencia de `DATABASE_URL`.
-  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` falla por ausencia de `BOTICA_RESTORE_DATABASE_URL`.
-  - `python scripts/check_release_gate.py` y `python scripts/check_release_readiness.py` terminan en `OK`, descartando una regresion local del repo como causa del bloqueo.
-- **Impacto sobre la tarea**: no es posible cerrar `AUT-003`, no puede declararse `PASS` de go-live y tampoco procede abrir implementacion local de producto.
-- **Dependencia que bloquea**: provision externa de URLs/credenciales reales, dump permitido y base temporal segura; para `OPS-RWY-003`, acceso verificable a Railway UI/logs.
-- **Siguiente accion exacta**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
-- **Criterio de desbloqueo**: las cuatro variables y el entorno temporal seguro existen y permiten ejecutar de verdad el smoke post-deploy y el backup/restore sin errores de configuracion previos.
-- **Fecha/punto de revision**: siguiente corrida con variables reales disponibles o revision manual el `2026-03-31` UTC, lo que ocurra primero.
-- **Checklist de cierre aplicada (AUT-003 revalidacion externa sin variables reales)**:
-  1. Tarea correcta confirmada: **No aplica**; no habia ninguna `TODO` no `BLOCKED` y la corrida se limita a revalidar el primer bloqueo externo vivo.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio agregado en esta corrida se limita a los dos documentos canonicos y el worktree conserva cambios previos ajenos en `frontend/.tmp-tests`, shell frontend y `run_app.bat`.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; la corrida solo revalida un bloqueo externo y no declara capacidad nueva.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: mantener `AUT-003` en `BLOCKED` hasta disponer de las variables reales, el dump permitido y la base temporal segura; cuando existan, reejecutar smoke post-deploy y backup/restore reales antes de cualquier cierre de go-live.
-
-## Entrada 2026-03-28-ROADMAP-SAN-001 (repriorizacion canonica por regresion local del gate)
-- **Fecha (UTC)**: `2026-03-28T00:35:08Z`
-- **ID de tarea**: `ROADMAP-SAN-001`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: sanear `docs/roadmap_codex.md` y `docs/bitacora_codex.md` al detectar que la prioridad real cambió durante la revalidación de `AUT-003`: el gate canónico local ya no está en verde y la cola deja de ser “solo bloqueo externo”.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `docs/release_readiness_minima.md`
-  - `docs/deploy_railway.md`
-  - `scripts/check_release_gate.py`
-  - `scripts/check_release_readiness.py`
-  - `scripts/check_deployed_stack.py`
-  - `scripts/backup_restore_postgres.py`
-  - `scripts/check_bootstrap_demo_expected_counts.py`
-  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
-  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
-- **Archivos tocados**:
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. No tocar codigo de producto porque la cola partia sin `TODO` ejecutable, el worktree ya estaba sucio con cambios concurrentes en seed/CORS/tests y la regla obligatoria en este caso es sanear roadmap/bitacora antes de cualquier implementacion.
-  2. Revalidar `AUT-003` con sus checks especificos (`check_deployed_stack.py`, `backup_restore_postgres.py`) y con los checks normativos de release/trazabilidad (`check_release_readiness.py`, `check_release_gate.py`).
-  3. Declarar obsoleta la descripcion de “cola vacia / backlog totalmente bloqueado solo por entorno externo”, porque `python scripts/check_release_gate.py` ahora falla localmente en `C4) Test scripts operativos críticos`.
-  4. Registrar una nueva primera `TODO` no `BLOCKED` (`AUT-006`) para restaurar el gate local alineando el contrato de conteos bootstrap con el seed canónico expandido.
-  5. Mantener `AUT-003` y `OPS-RWY-003` en `BLOCKED`, porque las variables reales de despliegue y el entorno seguro de restore drill siguen ausentes en este runner.
-- **Checks ejecutados**:
-  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
-  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
-  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
-  - `python scripts/check_release_gate.py` -> `ERROR`; bloque `C4) Test scripts operativos críticos` falla por `tests.scripts.test_check_bootstrap_demo_expected_counts.CheckBootstrapDemoExpectedCountsTests.test_calcular_conteos_esperados_desde_seed_canonico` con `AssertionError: 4 != 2`.
-  - `git diff -- backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py tests/nucleo_herbal/test_contratos_api_publica_frontend.py backend/configuracion_django/settings.py` -> confirma cambios concurrentes en seed/CORS/tests y que el seed/test del comando ya reflejan `4` intenciones publicas, `4` plantas publicadas, `14` productos, `5` rituales y `5` reglas de calendario activas.
-  - `Select-String -Path docs/roadmap_codex.md -Pattern '^- \\*\\*Estado\\*\\*: `TODO`'` -> sin coincidencias antes del saneamiento.
-- **Resultado verificable**:
-  - la cola deja de describirse como vacia: tras el saneamiento, la primera `TODO` no `BLOCKED` pasa a ser `AUT-006`.
-  - `AUT-003` sigue sin poder avanzar por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL`.
-  - `OPS-RWY-003` sigue `BLOCKED` por acceso externo verificable pendiente a Railway UI/logs.
-  - no se tocó codigo de producto ni se revirtieron cambios concurrentes; esta corrida solo deja gobernanza canonica consistente con la evidencia real del runner.
-- **Bloqueos (si aplica)**:
-  - `AUT-003` depende de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, un dump permitido y una base temporal segura fuera de produccion.
-  - `OPS-RWY-003` depende de acceso externo verificable a Railway UI/logs y variables reales de despliegue.
-  - `AUT-006` queda **ejecutable** localmente; no esta bloqueada, pero debe respetar el worktree sucio y no revertir la expansion concurrente del seed.
-- **Diagnostico concreto**: el repo ya no esta “solo bloqueado externamente”; existe una regresion local verificable del gate en `C4)` causada por deriva entre el seed canónico expandido y el test contractual de conteos bootstrap.
-- **Causa probable**: el seed demo fue ampliado y dividido (`seed_demo_publico_catalogo.py` + `seed_demo_publico_rituales.py`) y la prueba `tests/scripts/test_check_bootstrap_demo_expected_counts.py` quedo anclada al contrato anterior (`2/2/14/1`).
-- **Evidencia verificable**:
-  - `python scripts/check_release_gate.py` falla con `AssertionError: 4 != 2` en `test_calcular_conteos_esperados_desde_seed_canonico`.
-  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py` ya valida el seed nuevo (`4/4/14/5` + `5` reglas activas), así que el drift está en el contrato bootstrap y no en el nuevo seed.
-  - las variables externas necesarias para `AUT-003` siguen ausentes, por lo que el bloqueo externo no desapareció; simplemente dejó de ser la prioridad inmediata.
-- **Impacto sobre la tarea**: no procede seguir tratando `AUT-003` como siguiente paso efectivo hasta recuperar primero el gate local; la cola correcta debe exponer `AUT-006` como primera `TODO` no `BLOCKED`.
-- **Dependencia que bloquea**: ninguna para `ROADMAP-SAN-001`; el saneamiento era autocontenible. Los bloqueos externos permanecen en `AUT-003` y `OPS-RWY-003`.
-- **Siguiente accion exacta**: ejecutar `AUT-006` ajustando `scripts/check_bootstrap_demo_expected_counts.py` y/o `tests/scripts/test_check_bootstrap_demo_expected_counts.py` al seed canónico expandido, rerun de `python manage.py test tests.scripts` y `python scripts/check_release_gate.py`, y solo despues volver a revalidar `AUT-003`.
-- **Criterio de desbloqueo**: no aplica para esta corrida documental; la salida correcta era dejar el roadmap honesto y la siguiente `TODO` exacta visible.
-- **Fecha/punto de revision**: siguiente corrida inmediata tras este saneamiento, empezando por `AUT-006`.
-- **Checklist de cierre aplicada (ROADMAP-SAN-001 repriorizacion canonica)**:
-  1. Tarea correcta confirmada: **Si**; no habia `TODO` no `BLOCKED` y la evidencia nueva obligaba a sanear roadmap/bitacora al cambiar la prioridad real.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio de esta corrida queda limitado a los dos documentos canonicos y se preservan los cambios previos ajenos del worktree.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; `docs/90_estado_implementacion.md` sigue marcando `AUT-003` como bloqueo externo, pero la evidencia local del gate obliga a interponer `AUT-006` antes de revalidarlo.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: ejecutar `AUT-006` y no volver a `AUT-003` hasta que `python scripts/check_release_gate.py` deje `C4)` en verde otra vez.
-
-## Entrada 2026-03-28-RADAR-SAN-002 (revalidacion canonica de cola frente a gate y docs/90)
-- **Fecha (UTC)**: `2026-03-28T08:43:57Z`
-- **ID de tarea**: `RADAR-SAN-002`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: revalidar si la primera `TODO` no `BLOCKED` seguia siendo real, comprobar si aparecio evidencia nueva para desbloquear `AUT-003` y dejar trazada la contradiccion vigente entre la cola canonica y `docs/90_estado_implementacion.md`.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `docs/release_readiness_minima.md`
-  - `docs/deploy_railway.md`
-  - `scripts/check_release_readiness.py`
-  - `scripts/check_release_gate.py`
-  - `scripts/check_deployed_stack.py`
-  - `scripts/backup_restore_postgres.py`
-- **Archivos tocados**:
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. No crear una nueva `TODO`: `AUT-006` ya existe, sigue siendo ejecutable y continua siendo la primera `TODO` no `BLOCKED` real.
-  2. Mantener `AUT-003` y `OPS-RWY-003` en `BLOCKED` porque el runner sigue sin `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` ni `BOTICA_RESTORE_DATABASE_URL`.
-  3. Registrar en el radar canónico que `docs/90_estado_implementacion.md` quedó desfasado respecto a la cola real y al gate de hoy, sin tocar `docs/90` porque queda fuera del perimetro permitido de esta corrida.
-  4. No tocar codigo de producto, tests, CI ni dependencias; el saneamiento queda limitado a trazabilidad documental canonica.
-- **Checks ejecutados**:
-  - comprobacion de entorno -> `BACKEND_BASE_URL=MISSING`, `FRONTEND_BASE_URL=MISSING`, `DATABASE_URL=MISSING`, `BOTICA_RESTORE_DATABASE_URL=MISSING`.
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `python scripts/check_release_gate.py` -> `ERROR`; solo falla `C4) Test scripts operativos críticos` por `tests.scripts.test_check_bootstrap_demo_expected_counts.CheckBootstrapDemoExpectedCountsTests.test_calcular_conteos_esperados_desde_seed_canonico` con `AssertionError: 4 != 2`.
-  - `python scripts/check_deployed_stack.py` -> `ERROR: La variable obligatoria BACKEND_BASE_URL no esta definida.`
-  - `python scripts/backup_restore_postgres.py backup --dry-run --backup-dir "$env:TEMP\\botica_backups"` -> `[ERROR] Debes definir --database-url o DATABASE_URL.`
-  - `python scripts/backup_restore_postgres.py restore-drill --dry-run --dump-file C:\nope\missing.dump` -> `[ERROR] Debes definir --restore-database-url o BOTICA_RESTORE_DATABASE_URL.`
-  - `Select-String -Path docs/90_estado_implementacion.md -Pattern 'Ruta operativa vigente|cola autonoma local|AUT-003|V2-R10'` -> confirma que `docs/90` sigue describiendo cola local agotada y siguiente paso exclusivamente externo.
-- **Resultado verificable**:
-  - `AUT-006` sigue siendo la primera `TODO` no `BLOCKED` real; no hace falta crear una tarea nueva ni reabrir una ya cerrada.
-  - `AUT-003` no puede avanzar hoy porque faltan las variables externas minimas para smoke post-deploy y backup/restore.
-  - la contradiccion vigente queda explicitada: `docs/90_estado_implementacion.md` sigue diciendo que la cola local esta agotada, pero la evidencia ejecutada hoy demuestra que el gate local continua roto en `C4)` y mantiene trabajo local pendiente.
-  - el saneamiento se limita a `docs/roadmap_codex.md` y `docs/bitacora_codex.md`, sin tocar producto.
-- **Bloqueos (si aplica)**:
-  - `AUT-003` sigue bloqueada por ausencia de `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL`, `BOTICA_RESTORE_DATABASE_URL`, dump permitido y base temporal segura.
-  - `OPS-RWY-003` sigue bloqueada por acceso externo pendiente a Railway UI/logs y variables reales del servicio.
-  - la contradiccion con `docs/90_estado_implementacion.md` queda detectada, pero su correccion documental no entra en el perimetro permitido de esta corrida.
-- **Checklist de cierre aplicada (RADAR-SAN-002 revalidacion canonica)**:
-  1. Tarea correcta confirmada: **Si**; la corrida responde a una inspeccion explicita de radar y se registra en el radar canonico sin alterar el orden de la cola ejecutable.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio de esta corrida queda limitado a los dos documentos canonicos y se preservan los cambios ajenos del worktree.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; precisamente se deja trazado que `docs/90` quedo desalineado respecto a la cola real y al gate ejecutado hoy.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: ejecutar `AUT-006` para reparar `C4)` del gate canónico y solo despues volver a revalidar `AUT-003`.
-
-## Entrada 2026-03-28-CUENTA-001 (alta escalonada + Google + recuperacion email)
-- **Fecha (UTC)**: `2026-03-28T10:36:18Z`
-- **ID de tarea**: `CUENTA-001`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: implementar el alta real en dos pasos (credenciales + onboarding opcional de envio), anadir alta/login con Google sobre la misma `CuentaCliente`, mantener la recuperacion de password funcional y exigir datos de envio/contacto pendientes cuando falten en checkout real.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Archivos tocados**:
-  - `backend/configuracion_django/settings.py`
-  - `backend/nucleo_herbal/aplicacion/dto.py`
-  - `backend/nucleo_herbal/aplicacion/casos_de_uso_google_cuenta_cliente.py`
-  - `backend/nucleo_herbal/aplicacion/puertos/repositorios_cuentas_cliente.py`
-  - `backend/nucleo_herbal/aplicacion/puertos/verificador_google_identity.py`
-  - `backend/nucleo_herbal/infraestructura/google_identity.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/models.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/repositorios_cuentas_cliente.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/migrations/0037_cuenta_cliente_google_sub.py`
-  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
-  - `backend/nucleo_herbal/presentacion/publica/urls_cuentas_cliente.py`
-  - `backend/nucleo_herbal/presentacion/publica/views_cuentas_cliente.py`
-  - `frontend/.env.example`
-  - `.env.railway.example`
-  - `frontend/app/api/cuenta/[...ruta]/route.ts`
-  - `frontend/app/mi-cuenta/direcciones/page.tsx`
-  - `frontend/componentes/cuenta_cliente/FormularioCuentaCliente.tsx`
-  - `frontend/componentes/cuenta_cliente/BotonGoogleCuentaCliente.tsx`
-  - `frontend/componentes/cuenta_cliente/PanelDireccionesCuentaCliente.tsx`
-  - `frontend/contenido/cuenta_cliente/rutasCuentaCliente.ts`
-  - `frontend/infraestructura/api/cuentasCliente.ts`
-  - `frontend/contenido/catalogo/checkoutRealDirecciones.ts`
-  - `tests/nucleo_herbal/test_api_cuentas_cliente.py`
-  - `tests/nucleo_herbal/test_casos_de_uso_google_cuenta_cliente.py`
-  - `frontend/tests/cuenta-cliente.test.ts`
-  - `frontend/tests/cuenta-cliente-proxy.test.ts`
-  - `frontend/tests/checkout-real.test.ts`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Modelar Google como variante de autenticacion sobre la misma `CuentaCliente`, almacenando `google_sub` y vinculando por email si la cuenta ya existe, sin abrir un segundo perfil de cliente.
-  2. Reutilizar `/mi-cuenta/direcciones` como onboarding opcional tras el alta real; el usuario puede omitirlo, pero checkout real reutiliza la libreta y sigue exigiendo datos de contacto/envio antes de comprar.
-  3. Mantener la recuperacion de password por email como canal canonico funcional y no implementar SMS en esta corrida, porque su version fiable de produccion depende de proveedor externo con coste y queda fuera del alcance aprobado.
-  4. Corregir el proxy Next de cuenta para reenviar tambien `PUT` y `DELETE`, desbloqueando la libreta de direcciones ya implementada en backend.
-- **Checks ejecutados**:
-  - `.venv\Scripts\python.exe manage.py test tests.nucleo_herbal.test_api_cuentas_cliente tests.nucleo_herbal.test_casos_de_uso_google_cuenta_cliente backend.nucleo_herbal.presentacion.tests.test_cuenta_cliente_direcciones` -> `OK (28 tests)`.
-  - `.venv\Scripts\python.exe manage.py makemigrations --check --dry-run` -> `No changes detected`.
-  - `npm run test:cuenta-cliente` -> `OK`.
-  - `npm run test:cuenta-proxy` -> `OK`.
-  - `npm run test:checkout-real` -> `OK`.
-  - `npm run lint -- --file app/mi-cuenta/direcciones/page.tsx --file app/api/cuenta/[...ruta]/route.ts --file componentes/cuenta_cliente/FormularioCuentaCliente.tsx --file componentes/cuenta_cliente/PanelDireccionesCuentaCliente.tsx --file componentes/cuenta_cliente/BotonGoogleCuentaCliente.tsx --file contenido/cuenta_cliente/rutasCuentaCliente.ts --file infraestructura/api/cuentasCliente.ts --file contenido/catalogo/checkoutRealDirecciones.ts` -> `OK`.
-  - `git status --short` -> worktree sucio preexistente en seed/calendario/shell; la corrida suma solo el perimetro de cuenta/auth/tests/docs y no revierte cambios ajenos.
-- **Resultado verificable**:
-  - `POST /api/v1/cuenta/google/` crea o vincula una `CuentaCliente` real, inicia sesion backend y devuelve `es_nueva_cuenta` para decidir si redirigir a onboarding.
-  - `/registro` y `/acceso` ya permiten entrada por email/password o por Google; el alta nueva deriva a onboarding opcional de direcciones y el login existente entra en la cuenta real sin abrir rutas paralelas.
-  - `/mi-cuenta/direcciones?onboarding=1` funciona como segundo paso opcional y checkout real precarga telefono/nombre desde la direccion guardada cuando existe.
-  - la recuperacion de password por email sigue cubierta y en verde; no se introduce SMS ni dependencia nueva de terceros en este alcance.
-- **Bloqueos (si aplica)**: ninguno para `CUENTA-001`; permanecen aparte `AUT-003` y `OPS-RWY-003` como bloqueos externos y `AUT-006` como primera `TODO` no `BLOCKED` autonoma.
-- **Checklist de cierre aplicada (CUENTA-001)**:
-  1. Tarea correcta confirmada: **Si**; es una peticion explicita del mantenedor registrada en `docs/roadmap_codex.md`, sin abrir cola paralela y sin alterar el orden autonomo mas alla de la excepcion documentada.
-  2. Una sola tarea ejecutada en la corrida: **Si**.
-  3. Alcance respetado sin sobrealcance: **Si**; solo se tocaron auth/cuenta real, onboarding de direcciones, tests asociados y trazabilidad obligatoria.
-  4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
-  7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff propio de la corrida queda acotado al perimetro de cuenta/auth/tests/docs y convive con cambios ajenos preexistentes del worktree sin revertirlos.
-  9. Definido vs implementado validado con `docs/90` cuando aplica: **Si**; se confirmo que verificacion email, recuperacion por email y libreta ya existian, y se anadio solo la brecha nueva pedida (Google + onboarding opcional) sin declarar capacidades inexistentes.
-  10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: retomar `AUT-006` como primera `TODO` no `BLOCKED` de la cola autonoma y no extender auth/cuenta fuera de este perimetro salvo nueva peticion explicita del mantenedor.
-
-## Entrada 2026-03-28-AUT-006 (conteos bootstrap demo alineados)
-- **Fecha (UTC)**: `2026-03-28T11:28:51Z`
-- **ID de tarea**: `AUT-006`
-- **Estado final**: `DONE`
-- **Objetivo de la ejecucion**: recuperar `C4) Test scripts operativos criticos` del gate canonico alineando el test contractual de conteos bootstrap con el `seed_demo_publico` vigente, sin tocar el seed concurrente ni rebajar cobertura.
-- **Fuentes de verdad consultadas**:
-  - `docs/00_vision_proyecto.md`
-  - `docs/02_alcance_y_fases.md`
-  - `docs/05_modelo_de_dominio_y_entidades.md`
-  - `docs/07_arquitectura_tecnica.md`
-  - `docs/08_decisiones_tecnicas_no_negociables.md`
-  - `docs/90_estado_implementacion.md`
-  - `docs/99_fuente_de_verdad.md`
-  - `AGENTS.md`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-  - `scripts/check_bootstrap_demo_expected_counts.py`
-  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_catalogo.py`
-  - `backend/nucleo_herbal/infraestructura/persistencia_django/management/commands/seed_demo_publico_rituales.py`
-  - `tests/nucleo_herbal/infraestructura/test_seed_demo_publico_command.py`
-- **Archivos tocados**:
-  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py`
-  - `docs/roadmap_codex.md`
-  - `docs/bitacora_codex.md`
-- **Decisiones tomadas**:
-  1. Mantener `scripts/check_bootstrap_demo_expected_counts.py` sin cambios porque ya deriva los conteos del seed canónico vigente; la deriva estaba en el test contractual.
-  2. Sustituir los literales obsoletos `2/2/14/1` por el contrato vigente `4/4/14/5` solo en la prueba que valida el seed real.
-  3. Desacoplar las pruebas de `main()` del contrato de negocio usando conteos sintéticos, para que sigan verificando el comportamiento del script sin fijar accidentalmente el contrato antiguo.
-  4. Cerrar `AUT-006` y devolver la cola a estado de backlog totalmente bloqueado, porque no quedan `TODO` no `BLOCKED` y el siguiente frente real sigue siendo externo (`AUT-003` / `OPS-RWY-003`).
-- **Checks ejecutados**:
-  - `python -m unittest tests.scripts.test_check_bootstrap_demo_expected_counts` -> `OK`.
-  - `python scripts/check_release_readiness.py` -> `OK`.
-  - `python manage.py test tests.scripts` -> `OK`.
-  - `python scripts/check_release_gate.py` -> `OK`; `C4)` vuelve a verde y el veredicto final del gate pasa a `OK — gate tecnico superado`.
-  - `npm run clean:tmp-tests` -> `OK`; limpia el residuo generado por los checks frontend.
-  - `git diff --name-only` -> `docs/roadmap_codex.md`, `tests/scripts/test_check_bootstrap_demo_expected_counts.py` antes de actualizar esta bitacora.
-- **Resultado verificable**:
-  - `tests/scripts/test_check_bootstrap_demo_expected_counts.py` ya valida el seed expandido (`4` intenciones publicas, `4` plantas publicadas, `14` productos publicados, `5` rituales publicados).
-  - `python manage.py test tests.scripts` deja de fallar por `AssertionError: 4 != 2`.
-  - `python scripts/check_release_gate.py` termina en `VEREDICTO: OK — gate tecnico superado`.
-- **Bloqueos (si aplica)**:
-  - ninguno para `AUT-006`;
-  - permanecen fuera de esta tarea `AUT-003` y `OPS-RWY-003` como bloqueos externos vigentes.
-- **Checklist de cierre aplicada (AUT-006)**:
-  1. Tarea correcta confirmada: **Si**; `AUT-006` era la primera `TODO` no `BLOCKED` en `docs/roadmap_codex.md`.
+  1. Mantener una unica composicion comun para secciones comerciales en vez de duplicar paginas por familia.
+  2. Conservar filtros solo en Botica Natural mediante slot opcional; las demas secciones usan el mismo grid sin rail.
+  3. Reutilizar `TarjetaProductoBoticaNatural` como tarjeta comercial publica compartida porque ya contiene imagen/fallback, precio, disponibilidad, ficha y carrito.
+  4. Hacer que `velas-e-incienso`, `minerales-y-energia` y `herramientas-esotericas` consulten productos reales por seccion, sin tocar backend.
+- **Checklist de cierre aplicada (ELS-028)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente estabilidad visual de secciones comerciales.
   2. Una sola tarea ejecutada: **Si**.
-  3. Alcance respetado: **Si**; solo se tocaron el test contractual y la trazabilidad obligatoria.
+  3. Alcance respetado sin sobrealcance: **Si**; no se tocaron backend, pago, stock, imagenes ni checkout.
   4. Evidencia verificable registrada: **Si**.
-  5. Checks ejecutados y registrados: **Si**.
-  6. Roadmap actualizado: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
   7. Bitacora actualizada: **Si**.
-  8. Diff dentro del perimetro permitido: **Si**; el diff final queda limitado a `tests/scripts/test_check_bootstrap_demo_expected_counts.py`, `docs/roadmap_codex.md` y `docs/bitacora_codex.md`.
-  9. Definido vs implementado validado con `docs/90_estado_implementacion.md` cuando aplica: **Si**; al cerrar `AUT-006`, la cola vuelve a quedar coherente con el estado de backlog bloqueado por dependencia externa descrito en `docs/90`.
+  8. Diff dentro del perimetro permitido: **Si**; se conservan cambios previos sin revertir.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra capacidad de presentacion comercial compartida.
   10. Siguiente paso exacto definido: **Si**.
-- **Siguiente paso exacto**: aportar `BACKEND_BASE_URL`, `FRONTEND_BASE_URL`, `DATABASE_URL` y `BOTICA_RESTORE_DATABASE_URL` reales, mas un dump permitido y una base temporal segura fuera de produccion, y reejecutar `python scripts/check_deployed_stack.py`, `python scripts/backup_restore_postgres.py backup` y `python scripts/backup_restore_postgres.py restore-drill --dump-file <dump real>`.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:botica-natural` -> **OK**, 20 tests.
+  - `npm --prefix frontend run test:home-raiz` -> **OK**, 7 tests.
+  - `npm --prefix frontend run test:catalogo` -> **OK**, 12 tests.
+  - `npm --prefix frontend run test:catalogo-detalle` -> **OK**, 10 tests.
+  - `npm --prefix frontend run test:fichas-seo` -> **OK**, 3 tests.
+  - `npm --prefix frontend run test:cards-media-clickable` -> **FALLO ESPERADO**, script no existe.
+  - `cd frontend; npm run clean:tmp-tests; npx tsc --module commonjs --target es2020 --outDir .tmp-tests tests/cards-media-clickable.test.ts; node .tmp-tests/cards-media-clickable.test.js` -> **OK**, 6 tests.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**; registra avisos de conexion esperados para secciones dinamicas si backend local no esta levantado.
+- **Evidencia de cierre**:
+  - cuatro secciones comerciales principales usan `SeccionComercialProductos`;
+  - las secciones no herbales dejaron de ser solo hero y muestran catalogo publico cuando hay backend/datos;
+  - Botica Natural conserva filtros y comparte listado/tarjeta/estado con el resto;
+  - no se introducen imagenes, claims sanitarios ni rutas legacy nuevas.
+- **Siguiente paso exacto**: levantar backend/frontend con bootstrap local y hacer revision visual desktop/mobile de las cuatro secciones para ajustar solo espaciado/copy si se detecta friccion.
+
+## Entrada 2026-04-28-ELS-029 (plan retirada legacy demo)
+- **Tarea seleccionada**: `ELS-029 - Plan retirada legacy demo`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: crear un plan tecnico de retirada gradual de `/encargo`, `/pedido-demo`, `PedidoDemo` y `cuenta-demo`, sin ejecutar borrados ni cambios funcionales.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `scripts/check_ecommerce_local_simulado.py`
+  - referencias reales a rutas, modelos, endpoints, componentes y tests legacy mediante `rg`.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/plan_retirada_legacy_demo.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener el trabajo como plan documental: no se eliminan rutas, modelos, migraciones, datos, endpoints ni tests legacy.
+  2. Separar retirada en fases verificables: ocultar navegacion, congelar escritura, lectura historica, migracion/exportacion, retirada de endpoints, retirada de modelos/migraciones y limpieza de tests.
+  3. Exigir rollback y tests por fase antes de cualquier retirada real.
+  4. Mantener el guardrail legacy como defensa permanente contra reintroduccion de `PedidoDemo`/`CuentaDemo` en el flujo real.
+- **Checklist de cierre aplicada (ELS-029)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 29.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambio codigo funcional ni datos.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo documentacion y enlaces vivos.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra como `DONE documental`, no como legacy eliminado.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 18 checks OK y 2 WARNING esperados por legacy visible documentado y `/encargo` como consulta secundaria.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `docs/plan_retirada_legacy_demo.md` inventaria superficies legacy y define fases A-G con precondiciones, tests y rollback;
+  - roadmap local enlaza el plan desde la seccion de retirada futura y guias operativas;
+  - estado de implementacion registra que el legacy sigue `DEPRECATED_CONTROLLED`.
+- **Siguiente paso exacto**: ejecutar una fase A futura, en prompt separado, para auditar y retirar cualquier resto de navegacion publica legacy que no sea consulta secundaria.
+
+## Entrada 2026-04-28-ELS-030 (auditoria final automatizable)
+- **Tarea seleccionada**: `ELS-030 - Auditoria final automatizable`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: crear una auditoria final documental y automatizable que consolide estado, riesgos, blockers y warnings del ecommerce local simulado antes de presentacion u optimizacion.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/checklist_presentacion_ecommerce_local.md`
+  - `docs/operativa_ecommerce_local_simulado.md`
+  - `docs/plan_retirada_legacy_demo.md`
+  - `scripts/check_ecommerce_local_simulado.py`
+  - tests de scripts existentes y scripts de release/check.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/auditoria_final_ecommerce_local_simulado.md`
+  - `scripts/audit_ecommerce_local_simulado.py`
+  - `tests/scripts/test_audit_ecommerce_local_simulado.py`
+  - `docs/operativa_ecommerce_local_simulado.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear un script separado de auditoria para no cambiar el contrato del gate local existente.
+  2. Reutilizar `check_ecommerce_local_simulado.evaluar()` como fuente de guardrails de ruta, pago, SEO, legacy y `V2-R10`.
+  3. Agregar checks estaticos de documentacion clave, catalogo vendible, checklist, regresion local y plan legacy.
+  4. Mantener la auditoria como solo lectura: no corrige problemas, no activa Stripe y no declara go-live.
+- **Checklist de cierre aplicada (ELS-030)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 30.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se cambio UX, pago, catalogo funcional ni legacy.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; script, tests y documentacion.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra como auditoria local, no como go-live.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `python -m unittest tests.scripts.test_audit_ecommerce_local_simulado` -> **OK**, 6 tests.
+  - `python -m unittest tests.scripts.test_check_ecommerce_local_simulado tests.scripts.test_audit_ecommerce_local_simulado` -> **OK**, 14 tests.
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 18 checks OK y 2 WARNING esperados por legacy documentado y `/encargo` como consulta secundaria.
+  - `python scripts/audit_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 1 WARNING y 5 OK.
+  - `python scripts/audit_ecommerce_local_simulado.py --json` -> **OK**, 0 BLOCKER, 1 WARNING y 5 OK.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - la auditoria documental resume listo/simulado/legacy/bloqueos/riesgos/calidad/siguiente roadmap;
+  - el script agrega resultados de gate local y checks estaticos clave;
+  - los tests cubren blockers principales pedidos por el prompt.
+- **Siguiente paso exacto**: resolver cualquier `BLOCKER` de auditoria si aparece; si solo quedan warnings esperados de legacy, preparar revision visual manual del recorrido completo.
+
+## Entrada 2026-04-28-ELS-031 (recorrido de presentacion)
+- **Tarea seleccionada**: `ELS-031 - Recorrido de presentacion`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: definir un guion estable para presentar a terceros el ecommerce local real con pago simulado sin declarar produccion ni reactivar demo legacy.
+- **Lectura de contexto realizada**:
+  - `docs/checklist_presentacion_ecommerce_local.md`
+  - `docs/auditoria_final_ecommerce_local_simulado.md`
+  - `docs/operativa_ecommerce_local_simulado.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - rutas/componentes de home, Botica Natural, cesta, checkout, pedido, cuenta y secciones comerciales.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/guion_demo_ecommerce_local.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/operativa_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear solo documentacion de guion; no se detecto necesidad de tocar UI/copy funcional.
+  2. Usar `/botica-natural` como seccion recomendada por su filtro y dataset local estable.
+  3. Mantener `/encargo` fuera del recorrido principal, solo como consulta secundaria si alguien pregunta por productos fuera de catalogo.
+  4. Explicar el pago simulado como entorno local y no como demo general ni cobro real.
+- **Checklist de cierre aplicada (ELS-031)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 31.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se implementaron features, no se activo pago real ni se toco deploy.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo documentacion.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra como `DONE documental`.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 18 checks OK y 2 WARNING esperados por legacy documentado y `/encargo` como consulta secundaria.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `docs/guion_demo_ecommerce_local.md` cubre ruta, dato, accion, resultado, frase, riesgo y recuperacion por paso;
+  - el recorrido recomendado usa `/checkout`, `Pedido`, `/pedido/[id_pedido]` y `/mi-cuenta`;
+  - el documento lista que no decir y que si destacar en la demo.
+- **Siguiente paso exacto**: ejecutar una revision visual manual desktop/mobile siguiendo el guion con backend/frontend levantados y datos bootstrap.
+
+## Entrada 2026-04-28-ELS-032 (Stripe reservado)
+- **Tarea seleccionada**: `ELS-032 - Stripe reservado`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: preparar y documentar el cambio futuro de `simulado_local` a `stripe` sin activar Stripe real ni romper el modo local simulado.
+- **Lectura de contexto realizada**:
+  - `backend/nucleo_herbal/infraestructura/pagos_simulados.py`
+  - `backend/nucleo_herbal/infraestructura/pagos_stripe.py`
+  - `backend/nucleo_herbal/presentacion/publica/dependencias.py`
+  - `backend/configuracion_django/settings.py`
+  - `backend/configuracion_django/validaciones_entorno.py`
+  - `.env.railway.example`
+  - `frontend/.env.example`
+  - `docs/release_readiness_minima.md`
+  - tests de pago, deploy guards y gate local.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/pagos_modo_local_y_stripe.md`
+  - `scripts/check_ecommerce_local_simulado.py`
+  - `tests/scripts/test_check_ecommerce_local_simulado.py`
+  - `tests/nucleo_herbal/test_deploy_guards.py`
+  - `docs/release_readiness_minima.md`
+  - `docs/operativa_ecommerce_local_simulado.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener `simulado_local` como default y no exigir claves Stripe en local.
+  2. No tocar el adaptador Stripe funcional ni webhooks: ya estan detras del puerto y quedan reservados.
+  3. Anadir guardrail al gate local para detectar el proveedor del entorno de ejecucion.
+  4. Documentar precondiciones, pruebas y rollback antes de cualquier fase Stripe.
+- **Checklist de cierre aplicada (ELS-032)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 32.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se activo Stripe, no se toco checkout ni deploy.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; documentacion, guardrail y tests.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra Stripe como reservado, no activo.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `python manage.py test tests.nucleo_herbal.test_pago_real tests.nucleo_herbal.test_api_pago_real` -> **OK**, 35 tests.
+  - `python manage.py test tests.nucleo_herbal.test_deploy_guards` -> **OK**, 13 tests.
+  - `python -m unittest tests.scripts.test_check_ecommerce_local_simulado` -> **OK**, 11 tests.
+  - `python manage.py check` -> **OK**.
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 19 checks OK y 2 WARNING esperados por legacy documentado y `/encargo` como consulta secundaria.
+  - `python scripts/audit_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 1 WARNING y 5 OK.
+  - `python scripts/check_release_readiness.py` -> **OK**.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `docs/pagos_modo_local_y_stripe.md` documenta contrato local/futuro, precondiciones, pruebas y rollback;
+  - el gate local marca `stripe` como warning fuera de modo local y proveedor desconocido como blocker;
+  - tests aseguran que el modo local no intenta exigir claves Stripe.
+- **Siguiente paso exacto**: mantener Stripe reservado hasta una fase dedicada de staging/Stripe sandbox con smoke externo y rollback probado.
+
+## Entrada 2026-04-28-ELS-033 (staging futuro)
+- **Tarea seleccionada**: `ELS-033 - Staging futuro`.
+- **Estado final**: `DONE documental`.
+- **Objetivo de la ejecucion**: preparar documentacion y checks minimos para un futuro entorno staging sin desplegar, activar servicios externos, activar Stripe ni desbloquear `V2-R10`.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `.env.railway.example`
+  - `docs/release_readiness_minima.md`
+  - scripts de release/readiness, deploy smoke, backup/restore, gate local y auditoria.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/preparacion_staging_ecommerce.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener la tarea como documentacion preparatoria; no se crearon scripts ni se toco configuracion productiva.
+  2. Documentar staging inicial con `BOTICA_PAYMENT_PROVIDER=simulado_local`.
+  3. Reservar Stripe sandbox para fase futura explicita y Stripe real para go-live posterior.
+  4. Referenciar checks existentes sin hacerlos bloqueantes cuando dependen de URLs/variables externas.
+- **Checklist de cierre aplicada (ELS-033)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 33.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se desplego, no se activo Stripe y no se tocaron servicios externos.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo documentacion.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra como preparacion staging, no como go-live.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 19 checks OK y 2 WARNING esperados por legacy documentado y `/encargo` como consulta secundaria.
+  - `python scripts/audit_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 1 WARNING esperado por legacy controlado y 5 OK.
+  - `python scripts/check_release_readiness.py` -> **OK**.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `docs/preparacion_staging_ecommerce.md` distingue local, staging y produccion;
+  - documenta variables, servicios, base temporal, URLs, backup/restore drill, checks pre/post deploy y rollback;
+  - explicita que no desbloquea `V2-R10`, no activa produccion y no activa pago real;
+  - `docs/roadmap_ecommerce_real_v2.md` mantiene `V2-R10` en `BLOCKED`.
+- **Siguiente paso exacto**: cuando se apruebe una fase externa, preparar variables reales de staging y ejecutar smoke post-deploy/backup-restore contra una base temporal autorizada, manteniendo `simulado_local`.
+
+## Entrada 2026-04-28-ELS-034 (auditoria dependencias demo/real)
+- **Tarea seleccionada**: `ELS-034 - Auditoria dependencias demo/real`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: auditar dependencias entre modulos demo legacy y modulos reales, corregir acoplamientos pequenos y reforzar guardrails.
+- **Lectura de contexto realizada**:
+  - estructura backend de dominio/aplicacion/infraestructura/presentacion para pedidos, pagos, cuenta real y demo;
+  - estructura frontend de checkout real, pedido real, cuenta real, `/encargo`, `pedido-demo` y `cuenta-demo`;
+  - `scripts/check_ecommerce_local_simulado.py`;
+  - tests del guardrail local.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/auditoria_dependencias_demo_real.md`
+  - `frontend/contenido/catalogo/checkoutReal.ts`
+  - `scripts/check_ecommerce_local_simulado.py`
+  - `tests/scripts/test_check_ecommerce_local_simulado.py`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Corregir el blocker pequeno: `checkoutReal.ts` ya no importa `LineaNoConvertiblePedido` desde `checkoutDemo`.
+  2. Ampliar el guardrail para bloquear imports demo desde checkout, pedido, cuenta y APIs frontend reales.
+  3. Mantener `encargoConsulta` como warning transitorio porque extraerlo requiere una microfase propia de preseleccion compartida.
+  4. No tocar backend funcional: no se detectaron imports reales a `PedidoDemo`/`CuentaDemo`.
+- **Checklist de cierre aplicada (ELS-034)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 34.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo auditoria, guardrail, test y correccion pequena.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; documentacion, guardrail, test y helper frontend real.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra como auditoria y guardrail, no como retirada legacy.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `python -m unittest tests.scripts.test_check_ecommerce_local_simulado` -> **OK**, 13 tests.
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 19 checks OK y 3 WARNING esperados (`legacy_visible_documentado`, `checkout_real_encargo_consulta_controlada`, `encargo_consulta_secundaria`).
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**; el build muestra avisos existentes de endpoints locales no disponibles en secciones durante generacion estatica.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`, `frontend/.next`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `docs/auditoria_dependencias_demo_real.md` contiene mapa de checkout real, pedido real, cuenta real, pago simulado y demo legacy;
+  - el blocker detectado queda corregido;
+  - el warning de `encargoConsulta` queda documentado con tarea futura;
+  - el gate bloquea regresiones hacia `checkoutDemo`, `PedidoDemo`, `CuentaDemo`, `pedidosDemo` y `cuentasDemo`.
+- **Siguiente paso exacto**: extraer `resolverContextoPreseleccionado` a un helper neutral de preseleccion compartida para que checkout real no importe desde `encargoConsulta`.
+
+## Entrada 2026-04-28-ELS-035 (estado unico documental)
+- **Tarea seleccionada**: `ELS-035 - Estado unico documental`.
+- **Estado final**: `DONE documental`.
+- **Objetivo de la ejecucion**: consolidar documentacion viva para evitar contradicciones entre fase local simulada, ecommerce real V2, demo legacy, `V2-R10` bloqueado y roadmap futuro.
+- **Lectura de contexto realizada**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/10_checkout_y_flujos_ecommerce.md`
+  - `docs/17_migracion_ecommerce_real.md`
+  - documentos nuevos de operativa, checklist, auditoria final, pagos, staging, retirada legacy y dependencias demo/real.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/00_vision_proyecto.md`
+  - `docs/02_alcance_y_fases.md`
+  - `docs/10_checkout_y_flujos_ecommerce.md`
+  - `docs/17_migracion_ecommerce_real.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/99_fuente_de_verdad.md`
+  - `docs/roadmap_ecommerce_real_v2.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Conservar documentos historicos y anadir notas de vigencia en lugar de borrarlos.
+  2. Hacer de `docs/90_estado_implementacion.md` la lectura rapida operativa para agentes.
+  3. Normalizar referencias antiguas a "demo sin compra real" como fase fundacional, no flujo vigente.
+  4. Normalizar referencias a Stripe como capacidad preparada/reservada, no proveedor activo local.
+  5. Mantener `V2-R10` en `BLOCKED`.
+- **Checklist de cierre aplicada (ELS-035)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 35.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo documentacion, sin codigo funcional ni tests.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo documentacion.
+  9. Definido vs implementado validado con `docs/90`: **Si**; lectura rapida actualizada.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - busqueda dirigida de terminos contradictorios (`compra real no est`, `PSP real v1 activo`, `Cuando Stripe confirma`, `si Stripe confirma`, `fase actual.*demo`) -> **OK**, sin contradiccion vigente sin normalizacion.
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 19 checks OK y 3 WARNING esperados por legacy/preseleccion controlada.
+  - `python scripts/audit_ecommerce_local_simulado.py` -> **OK**, 0 BLOCKER, 1 WARNING esperado por legacy controlado y 5 OK.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`, `frontend/.next`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `docs/90_estado_implementacion.md` incluye "Lectura rapida para agentes";
+  - `docs/99_fuente_de_verdad.md` incorpora la fase local simulada en la precedencia;
+  - documentos fundacionales/historicos quedan marcados como normalizados;
+  - `docs/roadmap_ecommerce_real_v2.md` mantiene `V2-R10` bloqueado y Stripe no activo local.
+- **Siguiente paso exacto**: ejecutar una revision puntual de los documentos historicos restantes solo si futuros prompts detectan otra frase sin nota de vigencia; no reabrir V1/V2 por defecto.
+
+## Entrada 2026-04-28-ELS-036 (barrido deuda menor ecommerce local)
+- **Tarea seleccionada**: `ELS-036 - Barrido deuda menor ecommerce local`.
+- **Estado final**: `DONE documental`.
+- **Objetivo de la ejecucion**: auditar marcadores de deuda menor (`TODO`, `FIXME`, `HACK`, `temporal`, `demo`, `legacy`, `v1`, `coexistencia`, `pendiente`, `simulado`), corregir solo deuda pequena y documentar deuda residual.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/auditoria_final_ecommerce_local_simulado.md`
+  - `scripts/check_ecommerce_local_simulado.py`
+- **Archivos tocados en esta ejecucion**:
+  - `docs/deuda_residual_ecommerce_local.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Mantener marcadores `demo`/`legacy` cuando pertenecen a historico normalizado, legacy controlado, tests o guardrails.
+  2. Corregir solo deuda documental segura: titulos duplicados de ELS-23/ELS-24 en el roadmap local.
+  3. No tocar codigo funcional ni eliminar legacy porque el barrido no autoriza refactors grandes.
+  4. Registrar `encargoConsulta` como deuda mayor ya conocida, pendiente de microfase neutral.
+- **Checklist de cierre aplicada (ELS-036)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 36.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo documentacion y clasificacion de deuda.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo documentacion.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra como barrido documental, no como retirada legacy.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - busqueda inicial de marcadores de deuda en `backend`, `frontend`, `scripts`, `tests` y `docs` -> **OK**, hallazgos clasificados; volumen alto esperado por historico/legacy.
+  - busqueda dirigida exacta de `TODO`/`FIXME`/`HACK` fuera de `docs/` -> **OK**, sin coincidencias en `backend`, `frontend`, `scripts` ni `tests`.
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, sin `BLOCKER`; warnings esperados por legacy controlado.
+  - `python scripts/audit_ecommerce_local_simulado.py` -> **OK**, sin `BLOCKER`.
+  - `git diff --check` -> **OK**; puede mostrar avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `docs/deuda_residual_ecommerce_local.md` clasifica marcadores validos, legacy permitido, deuda corregida, deuda mayor y blockers;
+  - `docs/roadmap_ecommerce_local_simulado.md` enlaza el informe de deuda residual;
+  - `docs/90_estado_implementacion.md` registra ELS-036 con reglas activas;
+  - no se detectan blockers nuevos para ecommerce local simulado.
+- **Siguiente paso exacto**: crear una microfase para extraer `resolverContextoPreseleccionado` desde `encargoConsulta` a un helper neutral compartido por checkout real y consulta legacy.
+
+## Entrada 2026-04-28-ELS-037 (entorno local reproducible)
+- **Tarea seleccionada**: `ELS-037 - Entorno local reproducible`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: definir y verificar el contrato minimo para levantar ecommerce local simulado sin ambiguedad de variables, comandos, datos, backend, frontend, pago simulado y gates.
+- **Lectura de contexto realizada**:
+  - `README.md` -> no existe en la raiz del repo;
+  - `.env.example` -> no existia en la raiz del repo;
+  - `.env.railway.example`;
+  - `docs/operativa_ecommerce_local_simulado.md`;
+  - `docs/roadmap_ecommerce_local_simulado.md`;
+  - `scripts/bootstrap_ecommerce_local_simulado.py`;
+  - `scripts/check_ecommerce_local_simulado.py`;
+  - `frontend/package.json`;
+  - `manage.py`, `requirements.txt`, `setup_entorno.bat` y `run_app.bat`.
+- **Archivos tocados en esta ejecucion**:
+  - `.env.example`
+  - `scripts/check_entorno_local_ecommerce.py`
+  - `tests/scripts/test_check_entorno_local_ecommerce.py`
+  - `docs/checklist_entorno_local_ecommerce.md`
+  - `docs/operativa_ecommerce_local_simulado.md`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Crear `.env.example` raiz porque no existia y el contrato local necesitaba variables backend sin secretos.
+  2. Crear `scripts/check_entorno_local_ecommerce.py` como verificador de solo lectura, sin arrancar servidores ni conectarse a servicios externos.
+  3. Mantener `BOTICA_PAYMENT_PROVIDER=simulado_local` como default recomendado y tratar `stripe` en entorno como warning, no modo local.
+  4. Documentar comandos reales y marcar limites no verificados automaticos.
+- **Checklist de cierre aplicada (ELS-037)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 37.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se dockeriza, no se despliega, no se activa Stripe.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; entorno ejemplo, script/checklist, test de script y documentacion viva.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra como contrato local, no como go-live.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `python -m unittest tests.scripts.test_check_entorno_local_ecommerce` -> **OK**, 5 tests.
+  - `python scripts/check_entorno_local_ecommerce.py` -> **OK**, 14 checks OK, 0 warnings, 0 blockers.
+  - `python scripts/check_entorno_local_ecommerce.py --json` -> **OK**, salida JSON valida con 14 OK.
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 19 checks OK y 3 WARNING esperados por legacy/preseleccion controlada.
+  - `.\setup_entorno.bat --check` -> **OK**, detecta `.venv`, `requirements.txt`, `npm` y `frontend/node_modules` sin instalar.
+  - `.\run_app.bat --check` -> **OK**, detecta backend y frontend sin iniciar servidores.
+  - `python scripts/bootstrap_ecommerce_local_simulado.py --help` -> **OK**, muestra `--dry-run` y `--json`.
+  - `python -m unittest tests.scripts.test_check_ecommerce_local_simulado tests.scripts.test_audit_ecommerce_local_simulado` -> **OK**, 19 tests.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`, `frontend/.next`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `.env.example` documenta variables backend locales sin secretos;
+  - `docs/checklist_entorno_local_ecommerce.md` documenta instalacion, migraciones, bootstrap, arranque, compra local, gates, tests y troubleshooting;
+  - `scripts/check_entorno_local_ecommerce.py` valida archivos/variables/scripts/checklist/proveedor sin servicios externos;
+  - `tests/scripts/test_check_entorno_local_ecommerce.py` cubre el contrato.
+- **Siguiente paso exacto**: ejecutar una prueba reproducible manual completa en una maquina limpia o worktree nuevo siguiendo `docs/checklist_entorno_local_ecommerce.md`, sin activar Stripe ni versionar bases locales.
+
+## Entrada 2026-04-28-ELS-038 (mapa final de rutas)
+- **Tarea seleccionada**: `ELS-038 - Mapa final de rutas`.
+- **Estado final**: `DONE documental + guardrail`.
+- **Objetivo de la ejecucion**: auditar y documentar rutas publicas, privadas, transaccionales, API, backoffice y legacy para evitar confusion entre flujo real, pago simulado y demo legacy.
+- **Lectura de contexto realizada**:
+  - estructura `frontend/app`;
+  - rutas API frontend en `frontend/app/api`;
+  - URLs backend publicas y backoffice;
+  - `docs/roadmap_ecommerce_local_simulado.md`;
+  - `docs/seo_contrato.json`;
+  - tests de SEO/navegacion (`seo-contrato-regresion`, `shell-global`) y gate local.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/mapa_rutas_ecommerce_local.md`
+  - `scripts/check_ecommerce_local_simulado.py`
+  - `tests/scripts/test_check_ecommerce_local_simulado.py`
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. No tocar rutas ni metadata: el contrato SEO existente ya cubre noindex transaccional y legacy.
+  2. Documentar rutas comerciales nuevas como activas aunque parte de su estrategia SEO siga pendiente de contrato especifico.
+  3. Mantener `/encargo` como warning controlado de consulta secundaria.
+  4. Anadir guardrail de presencia/coherencia minima del mapa de rutas al gate local.
+- **Checklist de cierre aplicada (ELS-038)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 38.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se borran rutas ni se cambia routing.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; documentacion, gate y test de gate.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se registra como mapa/guardrail, no como cambio funcional.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `python -m unittest tests.scripts.test_check_ecommerce_local_simulado` -> **OK**, 14 tests.
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 20 checks OK y 3 WARNING esperados por legacy/preseleccion controlada.
+  - `npm --prefix frontend run test:seo:contrato` -> **OK**, contrato SEO completo.
+  - `npm --prefix frontend run test:shell` -> **OK**, 11 tests.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - eliminacion de `frontend/.tmp-tests` generado por tests frontend -> **OK**.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`, `frontend/.next`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `docs/mapa_rutas_ecommerce_local.md` clasifica rutas por estado, indexacion, flujo, proteccion y CTA;
+  - el gate local bloquea ausencia del mapa;
+  - no se detectaron CTAs principales nuevos hacia legacy durante la auditoria.
+- **Siguiente paso exacto**: cerrar la estrategia SEO de las secciones comerciales nuevas (`/botica-natural`, `/velas-e-incienso`, `/minerales-y-energia`, `/herramientas-esotericas`) en el contrato SEO si se decide indexarlas.
+
+## Entrada 2026-04-28-ELS-039 (cierre roadmap local simulado)
+- **Tarea seleccionada**: `ELS-039 - Cierre roadmap local simulado`.
+- **Estado final**: `DONE documental`.
+- **Objetivo de la ejecucion**: cerrar documentalmente el roadmap de ecommerce local simulado, evaluar evidencias de hitos principales y separar proximos hitos sin mezclarlos con go-live real.
+- **Lectura de contexto realizada**:
+  - `docs/roadmap_ecommerce_local_simulado.md`;
+  - `docs/90_estado_implementacion.md`;
+  - `docs/auditoria_final_ecommerce_local_simulado.md`;
+  - `docs/checklist_presentacion_ecommerce_local.md`;
+  - `docs/deuda_residual_ecommerce_local.md`;
+  - gates locales `scripts/check_ecommerce_local_simulado.py` y `scripts/audit_ecommerce_local_simulado.py`.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/roadmap_ecommerce_local_simulado.md`
+  - `docs/90_estado_implementacion.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Cerrar el roadmap local como `CERRADO_LOCALMENTE`, no como produccion lista.
+  2. Clasificar `ELS-01` a `ELS-38` como `DONE` o `DONE documental`, sin hitos `PARTIAL`, `BLOCKED` ni `NOT_STARTED` dentro del roadmap local.
+  3. Mantener los warnings del gate como deuda aceptada: legacy visible controlado, `/encargo` como consulta secundaria y preseleccion heredada `encargoConsulta`.
+  4. Separar los proximos hitos (`staging`, Stripe sandbox, E2E browser real, revision legal, backup/restore, `V2-R10`, retirada fisica legacy) fuera del cierre local.
+- **Checklist de cierre aplicada (ELS-039)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 39.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo documentacion/estado, sin codigo funcional.
+  4. Evidencia verificable registrada: **Si**; gate local y auditoria final ejecutados.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y `docs/roadmap_ecommerce_local_simulado.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**; solo documentos de estado/cierre.
+  9. Definido vs implementado validado con `docs/90`: **Si**; cierre local separado de go-live y `V2-R10`.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 20 checks OK y 3 WARNING esperados por legacy/preseleccion controlada.
+  - `python scripts/audit_ecommerce_local_simulado.py` -> **OK**, 5 resultados OK y 1 WARNING agregado del gate local; sin `BLOCKER`.
+  - `git diff --check` -> **OK**; muestra avisos CRLF existentes del worktree.
+  - busqueda de artefactos prohibidos versionables (`*.pyc`, `*.sqlite3`, `*.db`, `*.mo`, `*.zip`, `*.pdf`, `.tmp-tests`, `__pycache__`, `frontend/.next`) -> **OK**, sin coincidencias.
+- **Evidencia de cierre**:
+  - `docs/roadmap_ecommerce_local_simulado.md` registra `CERRADO_LOCALMENTE`, matriz final y proximos hitos fuera del roadmap;
+  - `docs/90_estado_implementacion.md` registra ELS-039, flujo vigente, legacy deprecado, pago `simulado_local`, Stripe reservado y `V2-R10` bloqueado;
+  - la auditoria final mantiene el proyecto presentable como local/portfolio, no como produccion real.
+- **Siguiente paso exacto**: abrir una fase separada para staging futuro o para E2E browser real, sin activar Stripe ni cerrar `V2-R10`.
+
+## Entrada 2026-04-28-ELS-040 (auditoria de merge final)
+- **Tarea seleccionada**: `ELS-040 - Auditoria de merge final`.
+- **Estado final**: `DONE`.
+- **Dictamen**: `MERGEABLE_WITH_WARNINGS`.
+- **Objetivo de la ejecucion**: revisar el resultado completo del roadmap ecommerce local simulado antes de merge/revision final, sin implementar nuevas fases ni activar Stripe.
+- **Lectura de contexto realizada**:
+  - diff completo por `git status --short`, `git diff --stat`, `git diff --numstat` y `git diff --name-only`;
+  - `docs/roadmap_ecommerce_local_simulado.md`;
+  - `docs/90_estado_implementacion.md`;
+  - `docs/auditoria_final_ecommerce_local_simulado.md`;
+  - `docs/checklist_presentacion_ecommerce_local.md`;
+  - `docs/mapa_rutas_ecommerce_local.md`;
+  - scripts/gates y tests modificados.
+- **Archivos tocados en esta ejecucion**:
+  - `tests/scripts/test_audit_ecommerce_local_simulado.py`
+  - `docs/pagos_modo_local_y_stripe.md`
+  - `docs/roadmap_codex.md`
+  - `docs/bitacora_codex.md`
+- **Decisiones tomadas**:
+  1. Corregir como fix menor imprescindible el fixture valido de auditoria para incluir `docs/mapa_rutas_ecommerce_local.md`, exigido por el gate vigente.
+  2. Reemplazar placeholders Stripe `pk_...`, `sk_...` y `whsec_...` por marcadores angulares para reducir falsos positivos de secreto.
+  3. Mantener dictamen con warnings porque quedan legacy controlado, `encargoConsulta` como deuda transitoria y ausencia deliberada de staging/E2E/go-live.
+- **Checklist de cierre aplicada (ELS-040)**:
+  1. Tarea correcta confirmada: **Si**; el usuario pidio explicitamente el prompt 40.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; solo auditoria y fixes menores de contrato/documentacion.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md`).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90`: **Si**; el cierre local no se confunde con produccion ni `V2-R10`.
+  10. Siguiente paso exacto definido: **Si**.
+- **Checks ejecutados**:
+  - `git status --short` -> **OK**, diff amplio revisable; sin binarios prohibidos en status.
+  - `git diff --stat` / `git diff --numstat` / `git diff --name-only` -> **OK**, diff auditado.
+  - busqueda de binarios/artefactos prohibidos en status -> **OK**, sin coincidencias.
+  - busqueda de migraciones en status -> **OK**, sin coincidencias.
+  - `python manage.py check` -> **OK**.
+  - tests backend criticos (`python manage.py test ...`) -> **OK**, 139 tests.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - tests frontend criticos (`test:cesta`, `test:checkout-real`, `test:compra-local`, `test:cuenta-cliente`, `test:botica-natural`, `test:shell`, `test:legal`, `test:seo:contrato`, `test:analitica-local`) -> **OK**.
+  - tests de scripts puros -> **OK**, 25 tests tras corregir fixture.
+  - test bootstrap Django -> **OK**, 4 tests.
+  - `npm --prefix frontend run build` -> **OK**; genera warnings de fetch local esperados cuando backend no esta levantado.
+  - `python scripts/check_ecommerce_local_simulado.py` -> **OK**, 20 OK y 3 WARNING esperados.
+  - `python scripts/audit_ecommerce_local_simulado.py` -> **OK**, 5 OK y 1 WARNING agregado.
+  - `git diff --check` -> **OK**; avisos CRLF existentes.
+- **Warnings aceptados**:
+  1. legacy demo visible documentado y planificado para retirada posterior;
+  2. `/encargo` enlazado como consulta secundaria;
+  3. `FlujoCheckoutReal` reutiliza `encargoConsulta` como adaptador transitorio;
+  4. no hay staging, E2E browser real, backup/restore real ni revision legal profesional;
+  5. `V2-R10` sigue bloqueado.
+- **Blockers**: ninguno detectado.
+- **Siguiente paso exacto**: preparar PR/merge review con dictamen `MERGEABLE_WITH_WARNINGS` y abrir rama separada para staging o E2E browser real.

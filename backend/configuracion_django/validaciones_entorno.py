@@ -11,6 +11,8 @@ _BACKENDS_NO_SEGUROS_PROD = {
     "django.core.mail.backends.filebased.EmailBackend",
 }
 
+_PROVEEDORES_PAGO_SOPORTADOS = {"simulado_local", "stripe"}
+
 
 def _requiere_no_vacio(nombre: str, valor: str) -> None:
     if valor.strip():
@@ -48,3 +50,32 @@ def validar_configuracion_produccion(*,
         raise ImproperlyConfigured(
             "EMAIL_BACKEND de desarrollo no permitida cuando DEBUG=false. Configura backend SMTP real."
         )
+
+
+def validar_configuracion_pago(*,
+    proveedor_pago: str,
+    stripe_public_key: str,
+    stripe_secret_key: str,
+    stripe_webhook_secret: str,
+    payment_success_url: str,
+    payment_cancel_url: str,
+) -> None:
+    proveedor = proveedor_pago.strip().lower()
+    if proveedor not in _PROVEEDORES_PAGO_SOPORTADOS:
+        raise ImproperlyConfigured(
+            "BOTICA_PAYMENT_PROVIDER debe ser simulado_local o stripe."
+        )
+    if proveedor != "stripe":
+        return
+
+    for nombre, valor in (
+        ("STRIPE_PUBLIC_KEY", stripe_public_key),
+        ("STRIPE_SECRET_KEY", stripe_secret_key),
+        ("STRIPE_WEBHOOK_SECRET", stripe_webhook_secret),
+        ("PAYMENT_SUCCESS_URL", payment_success_url),
+        ("PAYMENT_CANCEL_URL", payment_cancel_url),
+    ):
+        if not valor.strip():
+            raise ImproperlyConfigured(
+                f"{nombre} es obligatoria cuando BOTICA_PAYMENT_PROVIDER=stripe."
+            )

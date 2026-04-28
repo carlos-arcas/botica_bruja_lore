@@ -9,7 +9,7 @@ import {
 } from "../contenido/legal/paginasLegalesComerciales";
 
 test("páginas legales/comerciales mantienen estructura mínima tipada", () => {
-  assert.equal(PAGINAS_LEGALES_COMERCIALES.length, 3);
+  assert.equal(PAGINAS_LEGALES_COMERCIALES.length, 5);
 
   PAGINAS_LEGALES_COMERCIALES.forEach((pagina) => {
     assert.ok(pagina.titulo.length > 10);
@@ -26,11 +26,11 @@ test("páginas legales/comerciales mantienen estructura mínima tipada", () => {
 
 test("obtenerPaginaLegalComercial resuelve por ruta y falla con ruta inexistente", () => {
   const privacidad = obtenerPaginaLegalComercial("/privacidad");
-  assert.equal(privacidad.titulo, "Privacidad y contacto básico");
+  assert.equal(privacidad.titulo, "Privacidad basica");
 
   assert.throws(
     () => obtenerPaginaLegalComercial("/ruta-inexistente"),
-    /Página legal\/comercial no encontrada/,
+    /Pagina legal\/comercial no encontrada/,
   );
 });
 
@@ -44,7 +44,7 @@ test("enlaces legales de footer se mantienen sincronizados con páginas", () => 
 
 test("describirCanalPublico comunica fallback honesto cuando no hay configuración", () => {
   const sinCanal = describirCanalPublico({ email: null, whatsapp: null });
-  assert.match(sinCanal, /no hay un canal público configurado/);
+  assert.match(sinCanal, /no hay un canal publico configurado/);
 
   const conCanal = describirCanalPublico({ email: "equipo@botica.es", whatsapp: "34600123123" });
   assert.match(conCanal, /email \(equipo@botica.es\)/);
@@ -58,4 +58,37 @@ test("solo envíos y preparación queda como página legal estratégica", () => 
   assert.equal(indexables.length, 1);
   assert.equal(indexables[0]?.ruta, "/envios-y-preparacion");
   assert.equal(indexables[0]?.seo.incluirEnSitemap, true);
+});
+
+test("las páginas informativas no empujan encargo como CTA principal", () => {
+  PAGINAS_LEGALES_COMERCIALES.forEach((pagina) => {
+    assert.notEqual(pagina.ctaPrincipal.href, "/encargo");
+  });
+
+  assert.equal(
+    PAGINAS_LEGALES_COMERCIALES.some((pagina) => pagina.ctaSecundaria.href === "/encargo"),
+    true,
+  );
+});
+
+test("paginas legales cubren compra, envios, devoluciones, privacidad y contacto", () => {
+  const rutas = PAGINAS_LEGALES_COMERCIALES.map((pagina) => pagina.ruta);
+
+  assert.deepEqual(rutas, [
+    "/condiciones-encargo",
+    "/envios-y-preparacion",
+    "/devoluciones",
+    "/privacidad",
+    "/contacto",
+  ]);
+  assert.equal(ENLACES_LEGALES_FOOTER.some((enlace) => enlace.href === "/devoluciones"), true);
+  assert.equal(ENLACES_LEGALES_FOOTER.some((enlace) => enlace.href === "/contacto"), true);
+});
+
+test("copy legal evita claims sanitarios y declara limite profesional", () => {
+  const texto = JSON.stringify(PAGINAS_LEGALES_COMERCIALES).toLowerCase();
+
+  assert.equal(/cura|curacion|milagro|tratamiento garantizado/.test(texto), false);
+  assert.match(texto, /no sustituyen consejo medico/);
+  assert.match(texto, /revision legal profesional/);
 });

@@ -12,7 +12,7 @@ export function validarCamposRegistroDemo(campos: CamposCuentaDemo): string[] {
   const errores: string[] = [];
 
   if (!campos.email.trim() || !campos.email.includes("@")) {
-    errores.push("Introduce un email válido para la cuenta demo.");
+    errores.push("Introduce un email valido para la cuenta.");
   }
 
   if (!campos.nombre_visible.trim()) {
@@ -20,7 +20,7 @@ export function validarCamposRegistroDemo(campos: CamposCuentaDemo): string[] {
   }
 
   if (campos.clave_acceso_demo.trim().length < 4) {
-    errores.push("La clave demo debe tener al menos 4 caracteres.");
+    errores.push("La clave debe tener al menos 4 caracteres.");
   }
 
   return errores;
@@ -30,11 +30,11 @@ export function validarCamposAutenticacionDemo(campos: Pick<CamposCuentaDemo, "e
   const errores: string[] = [];
 
   if (!campos.email.trim() || !campos.email.includes("@")) {
-    errores.push("Introduce el email usado en tu cuenta demo.");
+    errores.push("Introduce el email usado en tu cuenta.");
   }
 
   if (!campos.clave_acceso_demo.trim()) {
-    errores.push("La clave demo es obligatoria para entrar.");
+    errores.push("La clave es obligatoria para entrar.");
   }
 
   return errores;

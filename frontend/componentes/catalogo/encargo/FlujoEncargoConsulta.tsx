@@ -153,14 +153,14 @@ export function FlujoEncargoConsulta({
           linea,
           estado: lineaBloqueada
             ? {
-                etiqueta: "Línea bloqueada para pedido demo",
+                etiqueta: "Linea para consulta artesanal",
                 descripcion: lineaBloqueada.motivo,
                 tono: "bloqueada",
               }
             : {
                 etiqueta: "Lista para revisión del pedido demo",
                 descripcion:
-                  "La línea conserva contexto rico y se revisará antes de confirmar el pedido demo.",
+                  "La pieza conserva su contexto y se revisara antes de confirmar la solicitud.",
                 tono: "convertible",
               },
         };
@@ -322,14 +322,14 @@ export function FlujoEncargoConsulta({
     setResumen(resumenConsulta);
     if (Object.keys(erroresCheckout).length > 0) {
       setMensajeConsultaManual(
-        "No podemos crear el pedido demo con esta selección, pero sí puedes enviarla como consulta artesanal usando el resumen y los canales disponibles aquí mismo.",
+        "No podemos convertir toda la seleccion en compra directa, pero puedes enviarla como consulta artesanal usando el resumen y los canales disponibles aqui mismo.",
       );
       guardarBorradorCheckoutDemo(datos, continuarComoInvitado);
       return;
     }
 
     setMensajeConsultaManual(
-      "Si prefieres revisión artesanal en lugar de pedido demo, también puedes copiar este resumen o abrir un canal manual.",
+      "Si prefieres revision artesanal, tambien puedes copiar este resumen o abrir un canal manual.",
     );
     setEstadoEnvio("enviando");
     const payload = construirPayloadPedidoDemo(
@@ -384,12 +384,8 @@ export function FlujoEncargoConsulta({
       <h1 id="titulo-encargo">Preparar pedido demo</h1>
       <p>
         {contexto.modo === "seleccion"
-          ? "Has llegado desde tu selección. Revisamos las líneas elegidas y tú ajustas solo la intención final del pedido demo, sin arrastrar parches ni textos técnicos."
-          : "Cuéntanos qué pieza te interesa y en qué contexto deseas usarla. Al final tendrás un resumen claro para crear el pedido demo o pasarlo a consulta manual por un canal real, si está configurado."}
-      </p>
-      <p className={estilos.estado}>
-        Este checkout demo crea un pedido demo sin cobro real y mantiene una salida manual honesta cuando alguna línea no
-        entra en contrato.
+          ? "Has llegado desde tu seleccion. Revisamos las lineas elegidas y tu editas solo tu intencion sin perder el contexto de tu seleccion."
+          : "Cuéntanos qué pieza te interesa y en qué contexto deseas usarla. Al final tendrás un texto listo para copiar o enviar por un canal real, si está configurado."}
       </p>
 
       {contexto.modo === "seleccion" ? (
@@ -410,12 +406,12 @@ export function FlujoEncargoConsulta({
           {lineasNoConvertiblesDemo.length > 0 && (
             <div className={estilos.error} role="alert">
               <p>
-                Esta selección no se enviará como pedido demo completo mientras
+                Esta seleccion se mantendra como consulta artesanal mientras
                 existan líneas fuera de catálogo o no comprables.
               </p>
               <p>
                 Mantén estas piezas como consulta artesanal o retíralas de tu
-                selección antes de enviar el pedido demo.
+                seleccion antes de enviar la solicitud.
               </p>
             </div>
           )}
@@ -559,8 +555,7 @@ export function FlujoEncargoConsulta({
               actualizarCampo("consentimiento", event.target.checked)
             }
           />
-          Acepto compartir estos datos para crear un pedido demo en esta
-          experiencia sin cobro real.
+          Acepto compartir estos datos para preparar esta solicitud artesanal.
         </label>
         {errores.consentimiento && (
           <p className={estilos.error}>{errores.consentimiento}</p>
@@ -572,8 +567,8 @@ export function FlujoEncargoConsulta({
           disabled={estadoEnvio === "enviando"}
         >
           {estadoEnvio === "enviando"
-            ? "Creando pedido demo..."
-            : "Crear pedido demo"}
+            ? "Enviando solicitud..."
+            : "Enviar solicitud"}
         </button>
       </form>
 

@@ -19,11 +19,10 @@ export function construirRutaOnboardingEnvioCuenta(mensaje?: string): string {
 
 export function resumenCuentaRealV1(): string[] {
   return [
-    "Registro y login reales con sesión segura basada en backend.",
-    "Acceso y alta con Google sobre la misma cuenta real, sin abrir un sistema paralelo.",
-    "Mis pedidos reales asociados automáticamente al usuario autenticado.",
-    "Verificación de email real con confirmación por token y reenvío controlado.",
-    "Libreta de direcciones real con una única predeterminada por cuenta y onboarding opcional tras el alta.",
-    "CuentaDemo permanece congelada como flujo legado explícito.",
+    "Registro y acceso a tu cuenta de cliente.",
+    "Pedidos asociados automaticamente a tu usuario.",
+    "Verificacion de email y reenvio controlado cuando lo necesites.",
+    "Libreta de direcciones con una direccion predeterminada por cuenta.",
+    "La experiencia principal se centraliza en Mi cuenta.",
   ];
 }

@@ -20,10 +20,21 @@ export default function PaginaEncargo({ searchParams }: Props): JSX.Element {
     <main className="contenedor-home">
       <FlujoEncargoConsulta slugPreseleccionado={searchParams?.producto} cestaPreseleccionada={searchParams?.cesta} origenPreseleccionado={searchParams?.origen} />
       <section className="bloque-home">
-        <h2>Antes de confirmar tu pedido demo</h2>
+        <h2>Canal de consulta personalizada</h2>
         <p>
-          Consulta estas páginas para entender cómo revisamos el pedido demo, cómo tratamos tiempos e incidencias y qué
-          uso damos a tus datos de contacto dentro de esta demo.
+          Esta ruta queda para encargos artesanales, dudas de selección o piezas que necesitan revisión humana. Para una compra normal,
+          utiliza el checkout principal.
+        </p>
+        <div className="hero-portada__acciones">
+          <Link href="/checkout" className="boton boton--principal">Ir al checkout</Link>
+          <Link href="/colecciones" className="boton boton--secundario">Explorar colecciones</Link>
+        </div>
+      </section>
+      <section className="bloque-home">
+        <h2>Antes de enviar tu solicitud</h2>
+        <p>
+          Consulta estas páginas para entender cómo confirmamos encargos, cómo tratamos tiempos e incidencias y qué uso damos
+          a tus datos de contacto dentro de este canal de consulta.
         </p>
         <div className="hero-portada__acciones">
           <Link href="/condiciones-encargo" className="boton boton--secundario">Condiciones del encargo</Link>

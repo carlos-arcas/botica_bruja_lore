@@ -39,7 +39,7 @@ export function PantallaVerificarEmail({ token = null }: Props): JSX.Element {
 
   return (
     <section className="bloque-home">
-      <p>Cuenta real v1.1</p>
+      <p>Mi cuenta</p>
       <h1>Verificación de email</h1>
       <p>{cargando ? "Comprobando enlace de verificación..." : resolverMensajeConfirmacion(estado)}</p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>

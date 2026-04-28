@@ -12,11 +12,11 @@ type FormularioCuentaDemoProps = {
 export function FormularioRegistroDemo({ campos, cargando, onActualizarCampo, onSubmit }: FormularioCuentaDemoProps): JSX.Element {
   return (
     <form className={estilos.panel} onSubmit={onSubmit} noValidate>
-      <h2>Registro demo</h2>
+      <h2>Crear cuenta</h2>
       <CampoTexto etiqueta="Email" value={campos.email} onChange={(valor) => onActualizarCampo("email", valor)} type="email" />
       <CampoTexto etiqueta="Nombre visible" value={campos.nombre_visible} onChange={(valor) => onActualizarCampo("nombre_visible", valor)} />
-      <CampoTexto etiqueta="Clave demo" value={campos.clave_acceso_demo} onChange={(valor) => onActualizarCampo("clave_acceso_demo", valor)} type="password" />
-      <button className="boton boton--principal" type="submit" disabled={cargando}>Crear cuenta demo</button>
+      <CampoTexto etiqueta="Clave de acceso" value={campos.clave_acceso_demo} onChange={(valor) => onActualizarCampo("clave_acceso_demo", valor)} type="password" />
+      <button className="boton boton--principal" type="submit" disabled={cargando}>Crear cuenta</button>
     </form>
   );
 }
@@ -24,10 +24,10 @@ export function FormularioRegistroDemo({ campos, cargando, onActualizarCampo, on
 export function FormularioAccesoDemo({ campos, cargando, onActualizarCampo, onSubmit }: FormularioCuentaDemoProps): JSX.Element {
   return (
     <form className={estilos.panel} onSubmit={onSubmit} noValidate>
-      <h2>Acceso demo</h2>
+      <h2>Acceso</h2>
       <CampoTexto etiqueta="Email" value={campos.email} onChange={(valor) => onActualizarCampo("email", valor)} type="email" />
-      <CampoTexto etiqueta="Clave demo" value={campos.clave_acceso_demo} onChange={(valor) => onActualizarCampo("clave_acceso_demo", valor)} type="password" />
-      <button className="boton boton--secundario" type="submit" disabled={cargando}>Entrar con cuenta demo</button>
+      <CampoTexto etiqueta="Clave de acceso" value={campos.clave_acceso_demo} onChange={(valor) => onActualizarCampo("clave_acceso_demo", valor)} type="password" />
+      <button className="boton boton--secundario" type="submit" disabled={cargando}>Entrar</button>
     </form>
   );
 }

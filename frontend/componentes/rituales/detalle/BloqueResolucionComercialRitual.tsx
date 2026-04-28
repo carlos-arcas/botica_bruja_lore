@@ -25,7 +25,7 @@ export function BloqueResolucionComercialRitual({ productos }: Props): JSX.Eleme
           {productos.map((producto) => (
             <li key={producto.sku}>
               <h3>{producto.nombre}</h3>
-              <p>SKU demo: {producto.sku}</p>
+              <p>Referencia: {producto.sku}</p>
               <p>
                 Tipo: {producto.tipo_producto} · Categoría: {producto.categoria_comercial}
               </p>
