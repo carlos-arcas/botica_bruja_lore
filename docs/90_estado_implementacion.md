@@ -144,6 +144,18 @@ Resumen ejecutivo de estado real: existe recorrido funcional y defendible desde 
   3. la regresion verifica que el flujo principal no usa `PedidoDemo`, `/pedido-demo`, `cuenta-demo` ni `/encargo` para cerrar compra;
   4. no introduce E2E browser ni dependencias externas.
 
+## 4.2 Nueva fase planificada: retirada demo/legacy y flujo profesional real
+- Capacidad: **Retirada completa de demo/legacy y profesionalizacion del flujo ecommerce real**.
+- Estado inicial: **PLANIFICADO**.
+- Documento rector: `docs/roadmap_retirada_demo_legacy_profesional.md`.
+- Bitacora: `docs/bitacora_retirada_demo_legacy_profesional.md`.
+- Decision vigente:
+  1. el objetivo ya no es conservar legacy como deuda aceptada, sino retirarlo por fases verificables;
+  2. `/checkout`, `/pedido/[id_pedido]`, `/mi-cuenta`, `Pedido`, cuenta real, stock real, documento y backoffice real quedan como flujo unico objetivo;
+  3. `PedidoDemo`, `CuentaDemo`, `/encargo`, `/pedido-demo` y `cuenta-demo` no deben sostener ninguna capacidad activa al final de la fase;
+  4. la retirada no activa Stripe, no desbloquea `V2-R10` y no permite borrar datos demo sin politica explicita;
+  5. la ultima tarea de la fase debe revisar todas las tareas y devolver a `TODO` cualquier cierre sin evidencia suficiente.
+
 ## 5. Estado por capacidades
 | Capacidad | Estado actual | Ciclo asociado | Evidencia / referencia | Notas operativas |
 |---|---|---|---|---|

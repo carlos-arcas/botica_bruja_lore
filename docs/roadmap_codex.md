@@ -932,3 +932,50 @@ Uso prohibido:
   - se sustituyeron placeholders Stripe con forma de secreto por marcadores angulares en documentacion.
 - **Dictamen**: `MERGEABLE_WITH_WARNINGS`.
 - **Bloqueo conocido**: ninguno; quedan warnings controlados de legacy, preseleccion heredada y ausencia de staging/E2E/go-live real.
+
+## RDL-000 - Crear roadmap de retirada demo/legacy profesional
+- **Estado**: `DONE`
+- **Objetivo**: registrar la nueva fase pedida por el mantenedor para eliminar demo/legacy y corregir los problemas de compra, seguridad y arquitectura detectados en auditoria estricta.
+- **Documento rector principal**: `docs/roadmap_retirada_demo_legacy_profesional.md`.
+- **Alcance permitido**: documentacion de roadmap/bitacora y automatizacion recurrente.
+- **Fuera de alcance**: borrar legacy, tocar frontend/backend funcional, activar Stripe, cerrar `V2-R10`.
+- **Evidencia de cierre**:
+  - `docs/roadmap_retirada_demo_legacy_profesional.md`;
+  - `docs/bitacora_retirada_demo_legacy_profesional.md`;
+  - entrada de trazabilidad en `docs/bitacora_codex.md`;
+  - automatizacion recurrente de 10 minutos creada para continuar por la primera `TODO`.
+- **Siguiente paso**: `RDL-001`.
+
+## RDL-001 - Corregir mojibake y copy no profesional
+- **Estado**: `DONE`
+- **Objetivo**: eliminar texto corrupto y restos visibles de lenguaje demo/legacy en superficies publicas reales.
+- **Documento rector principal**: `docs/roadmap_retirada_demo_legacy_profesional.md`.
+- **Alcance permitido**: frontend publico real, copy de checkout/recibo/cuenta/navegacion, tests textuales afectados.
+- **Fuera de alcance**: borrar rutas legacy, cambiar pagos, tocar modelos, activar Stripe.
+- **Checks obligatorios**:
+  - busqueda final de `Ã`, `Â`, `demo`, `legacy`, `coexistencia`, `real v1` en frontend publico real;
+  - `npm --prefix frontend run lint`;
+  - tests frontend afectados;
+  - `npm --prefix frontend run build`;
+  - `git diff --check`.
+- **Criterio de cierre**: no queda mojibake ni lenguaje demo/legacy en superficies reales principales y los tests/build pasan.
+- **Evidencia de cierre**:
+  - `/encargo` se posiciona como consulta personalizada en metadata;
+  - `PanelDireccionesCuentaCliente` ya no muestra mojibake en textos visibles;
+  - `frontend/tests/cuenta-cliente.test.ts` importa el contrato Google que ya ejercitaba;
+  - busqueda de mojibake en frontend real sin resultados.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:cuenta-cliente` -> OK;
+  - `npm --prefix frontend run lint` -> OK;
+  - `npm --prefix frontend run build` -> OK;
+  - `git diff --check` -> OK.
+- **Siguiente paso**: `RDL-002` del roadmap especifico.
+
+## RDL-002 - Separar checkout real de helpers legacy
+- **Estado**: `TODO`
+- **Objetivo**: extraer helpers neutrales para seleccion/preseleccion y eliminar imports de `encargoConsulta`, `seleccionEncargo` y almacenamiento `Encargo` desde checkout real.
+- **Documento rector principal**: `docs/roadmap_retirada_demo_legacy_profesional.md`.
+- **Alcance permitido**: helpers de cesta/preseleccion, checkout real, tests de checkout/cesta y guardrail legacy.
+- **Fuera de alcance**: borrar `/encargo`, cambiar pago, tocar modelos, activar Stripe o cerrar `V2-R10`.
+- **Checks obligatorios**: tests de checkout real, tests de cesta, guardrail legacy, lint, build y `git diff --check`.
+- **Criterio de cierre**: `/checkout` no importa modulos de `/encargo` ni nombres `Encargo`; el legacy puede consumir helper neutral, no al reves.

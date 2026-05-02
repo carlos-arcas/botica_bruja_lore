@@ -9,9 +9,9 @@ type Props = {
 };
 
 export const metadata: Metadata = construirMetadataSeo({
-  title: "Checkout demo | La Botica de la Bruja Lore",
+  title: "Consulta personalizada | La Botica de la Bruja Lore",
   description:
-    "Prepara un pedido demo sin cobro real o conserva el resumen para una consulta manual si el canal está configurado.",
+    "Prepara una consulta personalizada para encargos artesanales o piezas que necesitan revisión manual.",
   indexable: false,
 });
 
