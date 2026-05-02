@@ -6,6 +6,7 @@ import {
   RUTAS_CUENTA_CLIENTE,
   resumenCuentaRealV1,
 } from "../contenido/cuenta_cliente/rutasCuentaCliente";
+import { continuarConGoogleCuentaCliente } from "../infraestructura/api/cuentasCliente";
 
 test("rutas canonicas de cuenta real separan acceso real y legado", () => {
   assert.equal(RUTAS_CUENTA_CLIENTE.registro, "/registro");

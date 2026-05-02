@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 120" role="img" aria-labelledby="titulo">
+  <title id="titulo">Velas rituales</title>
+  <g fill="none" stroke="#7a3f0e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 95h96c10 0 18-7 18-16c-10 5-24 7-41 7H45c-15 0-27-3-35-8c0 10 6 17 14 17Z"/>
+    <path d="M34 42h26v45H34z"/>
+    <path d="M90 30h30v57H90z"/>
+    <path d="M43 38c-6-9 2-16 5-23c4 7 11 14 4 23"/>
+    <path d="M101 27c-8-10 4-18 7-25c5 8 11 16 3 25"/>
+    <path d="M73 79c5-15 12-26 26-33"/>
+    <path d="M74 40c9-8 6-20 0-31c18 15 5 27 0 31Z"/>
+    <path d="M18 82c12-10 25-16 40-16M101 86c9-14 17-22 31-28"/>
+    <path d="M63 75c-11-10-23-14-38-12"/>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 120" role="img" aria-labelledby="titulo">
+  <title id="titulo">Minerales y energia</title>
+  <g fill="none" stroke="#7a3f0e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M55 98L34 70l11-51l29 15l-4 52z"/>
+    <path d="M87 100L69 82l10-62l32-10l7 56z"/>
+    <path d="M31 99h89M45 20l18 25l-8 53M79 20l18 32l-10 48M111 11L97 52l20 14"/>
+    <path d="M26 75c-8 2-15 7-20 15M116 77c8 3 14 8 18 15M18 44l6-6l6 6l-6 6zM122 39l5-5l5 5l-5 5z"/>
+  </g>
+</svg>

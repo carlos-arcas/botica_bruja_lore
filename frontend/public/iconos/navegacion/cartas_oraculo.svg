@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 120" role="img" aria-labelledby="titulo">
+  <title id="titulo">Cartas de oraculo</title>
+  <g fill="none" stroke="#7a3f0e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M29 29l37-7l13 68l-37 7z"/>
+    <path d="M54 20h42v74H54z"/>
+    <path d="M78 27l34 11l-21 65l-34-11"/>
+    <path d="M75 72c-8-14-4-26 11-35c11 12 11 24 0 35"/>
+    <path d="M86 37v45M75 52c5 2 9 5 11 10M97 52c-5 2-9 5-11 10"/>
+    <path d="M47 95c-9 0-18 4-27 10M93 97c9 0 17 3 25 9"/>
+  </g>
+</svg>

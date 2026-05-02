@@ -5408,3 +5408,96 @@ PY`
   5. `V2-R10` sigue bloqueado.
 - **Blockers**: ninguno detectado.
 - **Siguiente paso exacto**: preparar PR/merge review con dictamen `MERGEABLE_WITH_WARNINGS` y abrir rama separada para staging o E2E browser real.
+
+## Entrada 2026-05-01-RDL-000 (roadmap retirada demo/legacy profesional)
+- **Tarea seleccionada**: `RDL-000 - Crear roadmap y automatizacion de retirada`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: convertir la peticion explicita del mantenedor en una cola atomica para eliminar demo/legacy, corregir seguridad/UX/arquitectura y dejar el flujo profesional real.
+- **Lectura de contexto realizada**:
+  - `AGENTS.md`;
+  - `docs/00_vision_proyecto.md`;
+  - `docs/02_alcance_y_fases.md`;
+  - `docs/05_modelo_de_dominio_y_entidades.md`;
+  - `docs/07_arquitectura_tecnica.md`;
+  - `docs/08_decisiones_tecnicas_no_negociables.md`;
+  - `docs/90_estado_implementacion.md`;
+  - `docs/99_fuente_de_verdad.md`;
+  - `docs/auditoria_final_ecommerce_local_simulado.md`;
+  - `docs/plan_retirada_legacy_demo.md`.
+- **Archivos tocados en esta ejecucion**:
+  - `docs/roadmap_retirada_demo_legacy_profesional.md`;
+  - `docs/bitacora_retirada_demo_legacy_profesional.md`;
+  - `docs/roadmap_codex.md`;
+  - `docs/90_estado_implementacion.md`;
+  - `docs/bitacora_codex.md`.
+- **Decisiones tomadas**:
+  1. Abrir fase nueva planificada de retirada total demo/legacy sin ejecutar aun borrado funcional.
+  2. Ordenar la retirada empezando por copy/mojibake, despues desacoplamiento de checkout, navegacion, congelacion de escritura demo, datos, frontend/backend legacy, seguridad de pedido, checkout estandar, precio backend y E2E visual.
+  3. Exigir que `RDL-012` revise todas las tareas y devuelva a `TODO` cualquier tarea cerrada sin evidencia.
+  4. Mantener `V2-R10` bloqueado y Stripe no activo.
+- **Checklist de cierre aplicada (RDL-000)**:
+  1. Tarea correcta confirmada: **Si**; peticion explicita del mantenedor fuera de cola previa, registrada ahora en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada: **Si**; solo roadmap/bitacora/automatizacion.
+  3. Alcance respetado sin sobrealcance: **Si**; no se toca codigo funcional.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si**.
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90`: **Si**; se marca como fase `PLANIFICADO`, no como retirada ya ejecutada.
+  10. Siguiente paso exacto definido: **Si**; `RDL-001`.
+- **Checks ejecutados**:
+  - `git diff --check` -> **OK**; solo avisos CRLF del worktree.
+  - detector de primera `TODO` en `docs/roadmap_codex.md` -> **OK**, devuelve `RDL-001`.
+- **Evidencia de cierre**:
+  - roadmap especifico con tareas `RDL-001` a `RDL-012`;
+  - bitacora especifica inicial;
+  - `docs/90_estado_implementacion.md` registra la nueva fase planificada;
+  - `docs/roadmap_codex.md` deja `RDL-001` como primera tarea ejecutable.
+- **Siguiente paso exacto**: ejecutar `RDL-001` para corregir mojibake y copy no profesional.
+
+## Entrada 2026-05-01-RDL-001 (retirada demo/legacy profesional)
+- **Tarea seleccionada**: `RDL-001 - Corregir mojibake y copy no profesional`.
+- **Estado final**: `DONE`.
+- **Objetivo de la ejecucion**: limpiar texto corrupto y copy demo visible en superficies reales principales, manteniendo legacy sin borrado funcional.
+- **Lectura de contexto realizada**:
+  - `AGENTS.md`;
+  - `docs/roadmap_retirada_demo_legacy_profesional.md`;
+  - `docs/bitacora_retirada_demo_legacy_profesional.md`;
+  - `docs/90_estado_implementacion.md`;
+  - componentes y tests de cuenta real y `/encargo`.
+- **Archivos tocados en esta ejecucion**:
+  - `frontend/app/encargo/page.tsx`;
+  - `frontend/componentes/cuenta_cliente/PanelDireccionesCuentaCliente.tsx`;
+  - `frontend/tests/cuenta-cliente.test.ts`;
+  - `docs/roadmap_retirada_demo_legacy_profesional.md`;
+  - `docs/roadmap_codex.md`;
+  - `docs/bitacora_retirada_demo_legacy_profesional.md`;
+  - `docs/bitacora_codex.md`.
+- **Decisiones tomadas**:
+  1. Reencuadrar `/encargo` como consulta personalizada en metadata, sin eliminar la ruta.
+  2. Corregir mojibake de cuenta real y dejar los textos demo de modulos legacy para fases posteriores.
+  3. Arreglar el import faltante del test de cuenta cliente para que el contrato que ya se comprobaba sea ejecutable.
+- **Checklist de cierre aplicada (RDL-001)**:
+  1. Tarea correcta confirmada: **Si**; primera `TODO` no bloqueada en `docs/roadmap_codex.md`.
+  2. Una sola tarea ejecutada: **Si**.
+  3. Alcance respetado sin sobrealcance: **Si**; no se borra legacy ni se toca pago/modelos.
+  4. Evidencia verificable registrada: **Si**.
+  5. Checks/comandos ejecutados con resultado: **Si**.
+  6. Roadmap actualizado: **Si** (`docs/roadmap_codex.md` y roadmap especifico).
+  7. Bitacora actualizada: **Si**.
+  8. Diff dentro del perimetro permitido: **Si**.
+  9. Definido vs implementado validado con `docs/90`: **Si**; la retirada sigue en progreso y no se declara produccion lista.
+  10. Siguiente paso exacto definido: **Si**; `RDL-002`.
+- **Checks ejecutados**:
+  - `npm --prefix frontend run test:cuenta-cliente` -> **OK**.
+  - `npm --prefix frontend run lint` -> **OK**.
+  - `npm --prefix frontend run build` -> **OK**; warnings esperados de fetch local durante build.
+  - `rg -n "Ã|Â|â€¦" frontend/app frontend/componentes frontend/contenido frontend/infraestructura -S` -> **OK**, sin resultados.
+  - `rg -n "Checkout demo|pedido demo|cuenta demo|real v1|coexistencia|legacy" frontend/app frontend/componentes frontend/contenido frontend/infraestructura -S` -> **WARNING controlado**, restos solo en legacy/compatibilidad.
+  - `git diff --check` -> **OK**; solo avisos CRLF.
+- **Evidencia de cierre**:
+  - metadata de `/encargo` ya no se presenta como checkout demo;
+  - `PanelDireccionesCuentaCliente` no contiene mojibake visible;
+  - test de cuenta cliente pasa y cubre Google/cuenta/direcciones.
+- **Siguiente paso exacto**: ejecutar `RDL-002 - Separar checkout real de helpers legacy`.

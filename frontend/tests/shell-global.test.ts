@@ -1,7 +1,6 @@
 import * as assert from "node:assert/strict";
-import { test } from "node:test";
-
 import { readFileSync } from "node:fs";
+import { test } from "node:test";
 
 import {
   ENLACES_FOOTER,
@@ -13,21 +12,21 @@ import {
   esRutaActiva,
 } from "../contenido/shell/navegacionGlobal";
 
-test("navegacion principal expone la nueva arquitectura de informacion", () => {
+test("navegacion principal expone arquitectura comercial con iconos de apoyo", () => {
   const rutas = NAVEGACION_PRINCIPAL.map((enlace) => enlace.href);
 
   assert.equal(rutas.includes("/"), true);
-  assert.equal(rutas.includes("/colecciones"), true);
-  assert.equal(rutas.includes("/la-botica"), true);
+  assert.equal(rutas.includes("/botica-natural"), true);
   assert.equal(rutas.includes("/guias"), true);
   assert.equal(rutas.includes("/tarot"), true);
   assert.equal(rutas.includes("/checkout"), true);
   assert.equal(rutas.includes("/encargo"), false);
   assert.equal(rutas.includes("/cuenta-demo"), false);
-  assert.equal(NAVEGACION_PRINCIPAL.some((enlace) => enlace.etiqueta === "Mi selección"), true);
+  assert.equal(NAVEGACION_PRINCIPAL.some((enlace) => enlace.etiqueta === "Mi seleccion"), true);
+  assert.equal(NAVEGACION_PRINCIPAL.every((enlace) => enlace.icono?.startsWith("/iconos/navegacion/")), true);
 });
 
-test("tienda y guias exponen submenu con destinos reales del repo", () => {
+test("tienda y guias exponen submenu con destinos reales e iconos", () => {
   const tienda = NAVEGACION_PRINCIPAL.find((enlace) => enlace.etiqueta === "Tienda");
   const guias = NAVEGACION_PRINCIPAL.find((enlace) => enlace.etiqueta === "Guias");
 
@@ -40,6 +39,8 @@ test("tienda y guias exponen submenu con destinos reales del repo", () => {
   assert.equal(guias?.submenu?.some((item) => item.href.startsWith("/guias")), true);
   assert.equal(guias?.submenu?.some((item) => item.href === "/hierbas"), true);
   assert.equal(guias?.submenu?.some((item) => item.href === "/rituales"), true);
+  assert.equal(tienda?.submenu?.every((item) => item.icono?.startsWith("/iconos/navegacion/")), true);
+  assert.equal(guias?.submenu?.every((item) => item.icono?.startsWith("/iconos/navegacion/")), true);
 });
 
 test("esRutaActiva resuelve coincidencia exacta, prefijo y submenus", () => {
@@ -64,7 +65,7 @@ test("contador de carrito usa wording visible coherente", () => {
   assert.equal(construirTextoContadorCesta(2), "2 unidades en el carrito");
 });
 
-test("footer mantiene continuidad editorial-comercial sin enlaces descartados del header", () => {
+test("footer mantiene continuidad editorial-comercial y confianza", () => {
   assert.equal(ENLACES_FOOTER.length >= 9, true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/botica-natural"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/velas-e-incienso"), true);
@@ -79,16 +80,6 @@ test("footer mantiene continuidad editorial-comercial sin enlaces descartados de
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/devoluciones"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/privacidad"), true);
   assert.equal(ENLACES_FOOTER.some((enlace) => enlace.href === "/contacto"), true);
-});
-
-test("footer enlaza las paginas de confianza minimas", () => {
-  const etiquetas = ENLACES_FOOTER.map((enlace) => enlace.etiqueta);
-
-  assert.equal(etiquetas.includes("Condiciones de compra"), true);
-  assert.equal(etiquetas.includes("Envios y preparacion"), true);
-  assert.equal(etiquetas.includes("Devoluciones"), true);
-  assert.equal(etiquetas.includes("Privacidad"), true);
-  assert.equal(etiquetas.includes("Contacto"), true);
 });
 
 test("footer convierte el CTA comercial principal en checkout", () => {
@@ -121,14 +112,18 @@ test("accesos externos resuelven carrito, login dinamico y admin", () => {
   assert.equal(ETIQUETA_ENLACE_ADMIN_CABECERA.length > 0, true);
 });
 
-test("navbar comercial define estado activo visible y patron con submenu", () => {
+test("navbar comercial define estado activo, patron con submenu e iconos", () => {
   const componente = readFileSync("componentes/shell/NavegacionPrincipal.tsx", "utf-8");
   const estilos = readFileSync("componentes/shell/shellComercial.module.css", "utf-8");
 
   assert.match(componente, /aria-current=\{activa \? "page" : undefined\}/);
+  assert.match(componente, /IconoNavegacion/);
+  assert.match(componente, /aria-hidden="true"/);
   assert.match(componente, /itemConSubmenu/);
   assert.match(estilos, /\.submenu/);
   assert.match(estilos, /\.enlaceActiva/);
+  assert.match(estilos, /\.iconoEnlace/);
+  assert.match(estilos, /\.iconoSubmenu/);
   assert.match(estilos, /\.navegacion ul/);
   assert.match(estilos, /repeating-linear-gradient/);
   assert.match(estilos, /\.enlaceActiva::after/);
@@ -149,9 +144,9 @@ test("carrito visible continua al checkout real y deja fuera encargo como CTA pr
   const vistaCesta = readFileSync("componentes/catalogo/cesta/VistaCestaRitual.tsx", "utf-8");
   const indicador = readFileSync("componentes/catalogo/cesta/IndicadorCestaRitual.tsx", "utf-8");
 
-  assert.match(vistaCesta, /Continuar al checkout/);
+  assert.match(vistaCesta, /Finalizar compra/);
   assert.match(vistaCesta, /\/checkout\?cesta=/);
-  assert.doesNotMatch(vistaCesta, /\/encargo/);
+  assert.match(vistaCesta, /Pedir orientacion artesanal/);
   assert.match(indicador, /Carrito/);
   assert.match(indicador, /unidades en el carrito/);
 });

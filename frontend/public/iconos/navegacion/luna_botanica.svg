@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 120" role="img" aria-labelledby="titulo">
+  <title id="titulo">Luna botanica</title>
+  <g fill="none" stroke="#7a3f0e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M54 13c-24 18-29 55-8 77c12 13 29 18 45 13c-22-4-39-22-42-45c-3-18 3-34 15-45c-3 0-7 0-10 0Z"/>
+    <path d="M62 87c23-5 38-19 48-43M72 86c9 1 18 5 27 12M86 72c10-1 20 1 30 7M94 56c9-4 18-5 27-3"/>
+    <path d="M79 72c-8-6-15-8-23-7M91 59c-7-4-13-6-20-5M105 45c-5-3-10-5-16-5"/>
+    <path d="M25 42l5-5l5 5l-5 5zM112 29l4-4l4 4l-4 4z"/>
+  </g>
+</svg>
